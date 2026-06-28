@@ -64,6 +64,7 @@ export const GAMES: GameConfig[] = [
     icon: Spline,
     gradient: "from-lime-500 to-green-600",
     supportsDifficulty: true,
+    modes: ["choice", "type"],
   },
 ];
 
