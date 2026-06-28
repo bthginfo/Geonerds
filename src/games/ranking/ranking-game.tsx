@@ -1,8 +1,8 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import { AnimatePresence, motion } from "framer-motion";
-import { ArrowRight, Undo2 } from "lucide-react";
+import { AnimatePresence, Reorder, motion } from "framer-motion";
+import { ArrowRight, Check, GripVertical } from "lucide-react";
 import type { Country } from "@/lib/types";
 import type { PlayHandlers } from "@/components/game/game-shell";
 import { poolForDifficulty, countryName } from "@/data/countries";
@@ -11,11 +11,11 @@ import { GameTopBar, ScorePill, StreakPill, RoundPill, TimerPill } from "@/compo
 import { Button } from "@/components/ui/button";
 import { BASE_POINTS, DIFFICULTY_MULTIPLIER, streakMultiplier } from "@/lib/scoring";
 import { sound } from "@/lib/sound";
-import { sample, pickOne, formatNumber, cn } from "@/lib/utils";
+import { sample, shuffle, pickOne, formatNumber, cn } from "@/lib/utils";
 import { useT } from "@/i18n/I18nProvider";
 
 type Metric = "population" | "area" | "gdp" | "density";
-const PER_ROUND_BUDGET_MS = 14000;
+const PER_ROUND_BUDGET_MS = 16000;
 
 function mval(c: Country, m: Metric): number {
   if (m === "population") return c.population;
@@ -35,8 +35,8 @@ function fmt(v: number, m: Metric, locale: string): string {
 
 interface RankRound {
   metric: Metric;
-  items: Country[]; // shuffled display order
-  sorted: Country[]; // correct order, highest → lowest
+  items: Country[];
+  sorted: Country[]; // highest → lowest
 }
 
 export function RankingGame({ difficulty, roundCount, timed, onFinish, onExit }: PlayHandlers) {
@@ -50,7 +50,6 @@ export function RankingGame({ difficulty, roundCount, timed, onFinish, onExit }:
     for (let i = 0; i < count; i++) {
       const metric = pickOne<Metric>(["population", "area", "gdp", "density"]);
       const pool = base.filter((c) => (metric === "gdp" ? (c.gdp ?? 0) > 0 : mval(c, metric) > 0));
-      // pick n with distinct values
       const picked: Country[] = [];
       const seen = new Set<number>();
       for (const c of sample(pool, pool.length)) {
@@ -63,17 +62,16 @@ export function RankingGame({ difficulty, roundCount, timed, onFinish, onExit }:
       }
       if (picked.length < n) continue;
       const sorted = [...picked].sort((a, b) => mval(b, metric) - mval(a, metric));
-      out.push({ metric, items: picked, sorted });
+      out.push({ metric, items: shuffle(picked), sorted });
     }
     return out;
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [difficulty, roundCount]);
+  }, [difficulty, roundCount, n]);
 
   const total = rounds.length;
   const budget = total * PER_ROUND_BUDGET_MS;
 
   const [idx, setIdx] = useState(0);
-  const [order, setOrder] = useState<Country[]>([]);
+  const [arrangement, setArrangement] = useState<Country[]>(() => rounds[0]?.items ?? []);
   const [answered, setAnswered] = useState(false);
   const [score, setScore] = useState(0);
   const [streak, setStreak] = useState(0);
@@ -116,17 +114,11 @@ export function RankingGame({ difficulty, roundCount, timed, onFinish, onExit }:
 
   if (!round) return null;
 
-  function tap(c: Country) {
-    if (answered || order.includes(c)) return;
-    const next = [...order, c];
-    setOrder(next);
-    if (next.length === round.items.length) check(next);
-  }
-
-  function check(finalOrder: Country[]) {
+  function submit() {
+    if (answered) return;
     setAnswered(true);
     let correctSpots = 0;
-    finalOrder.forEach((c, i) => {
+    arrangement.forEach((c, i) => {
       if (c.cca3 === round.sorted[i].cca3) correctSpots++;
     });
     const perfect = correctSpots === round.items.length;
@@ -152,12 +144,13 @@ export function RankingGame({ difficulty, roundCount, timed, onFinish, onExit }:
       doFinish();
       return;
     }
-    setIdx((i) => i + 1);
-    setOrder([]);
+    const ni = idx + 1;
+    setIdx(ni);
+    setArrangement(rounds[ni].items);
     setAnswered(false);
   }
 
-  const metricLabel = t(`hl.metric.${round.metric}`);
+  const correctSpots = arrangement.filter((c, i) => c.cca3 === round.sorted[i].cca3).length;
 
   return (
     <div className="flex flex-1 flex-col">
@@ -170,73 +163,66 @@ export function RankingGame({ difficulty, roundCount, timed, onFinish, onExit }:
       <div className="mx-auto flex w-full max-w-md flex-1 flex-col px-4 py-4">
         <div className="text-center">
           <div className="text-lg font-bold">{t("ranking.prompt")}</div>
-          <div className="text-sm text-muted-foreground">{t("ranking.by", { metric: metricLabel })}</div>
+          <div className="text-sm text-muted-foreground">{t("ranking.by", { metric: t(`hl.metric.${round.metric}`) })}</div>
         </div>
 
-        <div className="mt-5 space-y-2.5">
-          {round.items.map((c) => {
-            const pos = order.findIndex((o) => o.cca3 === c.cca3);
-            const placed = pos >= 0;
+        <Reorder.Group axis="y" values={arrangement} onReorder={setArrangement} className="mt-5 space-y-2.5">
+          {arrangement.map((c, i) => {
             const correctRank = round.sorted.findIndex((s) => s.cca3 === c.cca3);
-            const isRightSpot = answered && pos === correctRank;
+            const isRight = answered && i === correctRank;
             return (
-              <button
+              <Reorder.Item
                 key={c.cca3}
-                disabled={answered || placed}
-                onClick={() => tap(c)}
+                value={c}
+                dragListener={!answered}
                 className={cn(
-                  "flex w-full items-center gap-3 rounded-xl border-2 px-3 py-3 text-left transition-all",
-                  !answered && !placed && "border-border bg-card hover:border-primary/50 hover:bg-muted/50",
-                  !answered && placed && "border-primary bg-primary/5",
-                  answered && isRightSpot && "border-success bg-success/15",
-                  answered && !isRightSpot && "border-danger bg-danger/15"
+                  "flex select-none items-center gap-3 rounded-xl border-2 bg-card px-3 py-3",
+                  !answered && "cursor-grab border-border active:cursor-grabbing",
+                  answered && isRight && "border-success bg-success/15",
+                  answered && !isRight && "border-danger bg-danger/15"
                 )}
               >
-                {placed && (
-                  <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-primary text-sm font-bold text-primary-foreground">
-                    {pos + 1}
-                  </span>
-                )}
+                <span
+                  className={cn(
+                    "flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-sm font-bold",
+                    answered ? (isRight ? "bg-success text-white" : "bg-danger text-white") : "bg-primary text-primary-foreground"
+                  )}
+                >
+                  {i + 1}
+                </span>
                 <FlagImage code={c.flag} alt="" className="aspect-[4/3] w-9 shrink-0" />
                 <span className="flex-1 font-semibold">{countryName(c, locale)}</span>
-                {answered && (
+                {answered ? (
                   <span className="text-sm tabular-nums text-muted-foreground">{fmt(mval(c, round.metric), round.metric, locale)}</span>
+                ) : (
+                  <GripVertical className="h-5 w-5 shrink-0 text-muted-foreground" />
                 )}
-              </button>
+              </Reorder.Item>
             );
           })}
-        </div>
+        </Reorder.Group>
 
-        <div className="mt-auto flex items-center justify-between gap-3 pt-6">
+        <div className="mt-auto pt-6">
           {!answered ? (
-            <Button
-              variant="ghost"
-              size="sm"
-              className="gap-1.5"
-              disabled={order.length === 0}
-              onClick={() => setOrder((o) => o.slice(0, -1))}
-            >
-              <Undo2 className="h-4 w-4" />
-              {t("route.undo")}
+            <Button className="w-full gap-2" onClick={submit}>
+              <Check className="h-5 w-5" />
+              {t("ranking.submit")}
             </Button>
           ) : (
-            <span className="text-sm font-medium text-muted-foreground">
-              {t("ranking.correctSpots", {
-                n: order.filter((o, i) => o.cca3 === round.sorted[i].cca3).length,
-                total: round.items.length,
-              })}
-            </span>
+            <div className="flex items-center justify-between gap-3">
+              <span className="text-sm font-medium text-muted-foreground">
+                {t("ranking.correctSpots", { n: correctSpots, total: round.items.length })}
+              </span>
+              <AnimatePresence>
+                <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
+                  <Button onClick={next} className="gap-1.5">
+                    {idx + 1 >= total ? t("common.continue") : t("common.next")}
+                    <ArrowRight className="h-4 w-4" />
+                  </Button>
+                </motion.div>
+              </AnimatePresence>
+            </div>
           )}
-          <AnimatePresence>
-            {answered && (
-              <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
-                <Button onClick={next} className="gap-1.5">
-                  {idx + 1 >= total ? t("common.continue") : t("common.next")}
-                  <ArrowRight className="h-4 w-4" />
-                </Button>
-              </motion.div>
-            )}
-          </AnimatePresence>
         </div>
       </div>
     </div>

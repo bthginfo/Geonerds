@@ -98,9 +98,10 @@ export const messages: Record<Locale, Dict> = {
     "games.route.name": "Land Route",
     "games.route.short": "Travel country to country by land.",
 
-    "ranking.prompt": "Tap from highest to lowest",
+    "ranking.prompt": "Drag into order — highest first",
     "ranking.by": "by {metric}",
     "ranking.correctSpots": "{n} of {total} in the right spot",
+    "ranking.submit": "Submit order",
 
     "languages.clue.currency": "Currency",
     "languages.clue.language": "Language",
@@ -315,9 +316,10 @@ export const messages: Record<Locale, Dict> = {
     "games.route.name": "Landweg finden",
     "games.route.short": "Reise von Land zu Land über Landgrenzen.",
 
-    "ranking.prompt": "Tippe von höchstem zu niedrigstem",
+    "ranking.prompt": "Ziehe in die richtige Reihenfolge – höchster zuerst",
     "ranking.by": "nach {metric}",
     "ranking.correctSpots": "{n} von {total} richtig platziert",
+    "ranking.submit": "Reihenfolge einreichen",
 
     "languages.clue.currency": "Währung",
     "languages.clue.language": "Sprache",
