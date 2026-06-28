@@ -31,7 +31,11 @@ export type GameId =
   | "higher-lower"
   | "map-click"
   | "draw"
-  | "border-chain";
+  | "border-chain"
+  | "ranking"
+  | "languages"
+  | "pin"
+  | "route";
 
 export type Difficulty = "easy" | "medium" | "hard";
 

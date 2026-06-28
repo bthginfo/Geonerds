@@ -7,6 +7,10 @@ import {
   Pencil,
   Spline,
   Lightbulb,
+  ListOrdered,
+  Languages,
+  Crosshair,
+  Route,
   type LucideIcon,
 } from "lucide-react";
 import type { AnswerMode, GameId } from "@/lib/types";
@@ -93,6 +97,37 @@ export const GAMES: GameConfig[] = [
     countOptions: [5, 10, 20, 0],
     supportsTimed: true,
     defaultTimed: true,
+  },
+  {
+    id: "ranking",
+    icon: ListOrdered,
+    gradient: "from-teal-500 to-emerald-600",
+    supportsDifficulty: true,
+    countOptions: [8, 12, 20, 0],
+    supportsTimed: true,
+  },
+  {
+    id: "languages",
+    icon: Languages,
+    gradient: "from-fuchsia-500 to-purple-600",
+    supportsDifficulty: true,
+    countOptions: [10, 25, 50, 0],
+    supportsTimed: true,
+  },
+  {
+    id: "pin",
+    icon: Crosshair,
+    gradient: "from-orange-500 to-red-500",
+    supportsDifficulty: true,
+    countOptions: [10, 15, 20, 0],
+    supportsTimed: true,
+  },
+  {
+    id: "route",
+    icon: Route,
+    gradient: "from-green-500 to-lime-600",
+    supportsDifficulty: true,
+    countOptions: [5, 10, 0],
   },
 ];
 

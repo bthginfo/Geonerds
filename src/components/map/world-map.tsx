@@ -39,6 +39,7 @@ export function WorldMap({
   flashOk,
   flagByCcn3,
   dots = [],
+  getFill,
   resetSignal = 0,
 }: {
   onPick: (ccn3: string) => void;
@@ -47,6 +48,8 @@ export function WorldMap({
   flashOk?: boolean;
   flagByCcn3: (ccn3: string) => string | undefined;
   dots?: MapDot[];
+  /** Optional persistent fill class per country (used by the route game). */
+  getFill?: (ccn3: string) => string | undefined;
   resetSignal?: number;
 }) {
   const [features, setFeatures] = useState<CountryFeature[] | null>(null);
@@ -187,6 +190,8 @@ export function WorldMap({
             const isFlash = c.ccn3 != null && flashCcn3 === c.ccn3;
             let cls = c.ccn3 ? "fill-muted-foreground/15 hover:fill-primary/30" : "fill-muted-foreground/15";
             if (isFound) cls = "fill-success/40";
+            const custom = c.ccn3 ? getFill?.(c.ccn3) : undefined;
+            if (custom) cls = custom;
             if (isFlash) cls = flashOk ? "fill-success/60" : "fill-danger/60";
             return (
               <path

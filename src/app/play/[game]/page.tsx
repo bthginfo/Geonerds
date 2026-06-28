@@ -15,6 +15,10 @@ import { HigherLowerGame } from "@/games/higher-lower/higher-lower-game";
 import { MapClickGame } from "@/games/map-click/map-click-game";
 import { DrawGame } from "@/games/draw/draw-game";
 import { BorderChainGame } from "@/games/border-chain/border-chain-game";
+import { RankingGame } from "@/games/ranking/ranking-game";
+import { LanguagesGame } from "@/games/languages/languages-game";
+import { PinGame } from "@/games/pin/pin-game";
+import { RouteGame } from "@/games/route/route-game";
 
 const COMPONENTS: Record<GameId, (h: PlayHandlers) => React.ReactNode> = {
   flags: (h) => <FlagGame {...h} />,
@@ -25,6 +29,10 @@ const COMPONENTS: Record<GameId, (h: PlayHandlers) => React.ReactNode> = {
   "map-click": (h) => <MapClickGame {...h} />,
   draw: (h) => <DrawGame {...h} />,
   "border-chain": (h) => <BorderChainGame {...h} />,
+  ranking: (h) => <RankingGame {...h} />,
+  languages: (h) => <LanguagesGame {...h} />,
+  pin: (h) => <PinGame {...h} />,
+  route: (h) => <RouteGame {...h} />,
 };
 
 export default function PlayPage() {
