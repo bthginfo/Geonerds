@@ -62,6 +62,7 @@ export const messages: Record<Locale, Dict> = {
     "trivia.reveal": "Reveal another fact",
     "trivia.clues": "{n} of {max} facts revealed",
     "trivia.allRevealed": "All facts revealed",
+    "trivia.worth": "Worth {pts} pts",
 
     "home.heroTitle": "Become a geography nerd.",
     "home.heroSubtitle": "Flags, capitals, country shapes and more — fast, beautiful quizzes for desktop and mobile.",
@@ -246,6 +247,7 @@ export const messages: Record<Locale, Dict> = {
     "trivia.reveal": "Weiteren Fakt aufdecken",
     "trivia.clues": "{n} von {max} Fakten aufgedeckt",
     "trivia.allRevealed": "Alle Fakten aufgedeckt",
+    "trivia.worth": "Wert: {pts} Pkt",
 
     "home.heroTitle": "Werde zum Geografie-Nerd.",
     "home.heroSubtitle": "Flaggen, Hauptstädte, Länderumrisse und mehr – schnelle, schöne Quizze für Desktop und Handy.",

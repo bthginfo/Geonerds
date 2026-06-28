@@ -42,10 +42,19 @@ export function scoreForAnswer({
   return Math.round(raw);
 }
 
+export const MAX_DRAW_POINTS = 250;
+
 /** Points for the Draw-the-Outline game based on shape overlap (0..1). */
-export function scoreForDrawing(overlap: number, difficulty: Difficulty): number {
+export function scoreForDrawing(overlap: number, difficulty: Difficulty, streak = 0): number {
   const clamped = Math.min(1, Math.max(0, overlap));
-  return Math.round(clamped * 250 * DIFFICULTY_MULTIPLIER[difficulty]);
+  return Math.round(clamped * MAX_DRAW_POINTS * DIFFICULTY_MULTIPLIER[difficulty] * streakMultiplier(streak));
+}
+
+/** Potential points for a Trivia answer given clues revealed (1..4). */
+export const TRIVIA_REVEAL_FACTOR = [1, 0.7, 0.45, 0.25];
+export function scoreForTrivia(revealed: number, difficulty: Difficulty, streak: number): number {
+  const factor = TRIVIA_REVEAL_FACTOR[Math.min(Math.max(revealed, 1), 4) - 1];
+  return Math.round(BASE_POINTS * factor * DIFFICULTY_MULTIPLIER[difficulty] * streakMultiplier(streak));
 }
 
 export function accuracy(correct: number, total: number): number {

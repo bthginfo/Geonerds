@@ -12,15 +12,13 @@ import { triviaClues, randomFact } from "@/lib/facts";
 import { FlagImage } from "@/components/flag-image";
 import { GameTopBar, ScorePill, StreakPill, RoundPill, TimerPill } from "@/components/game/hud";
 import { Button } from "@/components/ui/button";
-import { scoreForAnswer } from "@/lib/scoring";
+import { scoreForTrivia } from "@/lib/scoring";
 import { matchAnswer } from "@/lib/fuzzy";
 import { sound } from "@/lib/sound";
 import { useT } from "@/i18n/I18nProvider";
 
 const MAX_CLUES = 4;
 const PER_ROUND_BUDGET_MS = 15000;
-// Score multiplier by how many clues were revealed (1..4).
-const REVEAL_FACTOR = [1, 0.7, 0.45, 0.25];
 
 interface TriviaRound {
   answer: Country;
@@ -99,8 +97,7 @@ export function TriviaGame({ difficulty, mode, roundCount, timed, onFinish, onEx
     setLastCorrect(correct);
     if (correct) {
       sound.correct();
-      const base = scoreForAnswer({ correct: true, difficulty, streak });
-      const earned = Math.round(base * REVEAL_FACTOR[Math.min(revealed, MAX_CLUES) - 1]);
+      const earned = scoreForTrivia(revealed, difficulty, streak);
       scoreRef.current += earned;
       setScore((s) => s + earned);
       correctRef.current += 1;
@@ -154,8 +151,13 @@ export function TriviaGame({ difficulty, mode, roundCount, timed, onFinish, onEx
 
       <div className="mx-auto flex w-full max-w-md flex-1 flex-col px-4 py-5">
         <div className="text-center text-lg font-bold">{t("trivia.prompt")}</div>
-        <div className="mt-1 text-center text-xs text-muted-foreground">
-          {t("trivia.clues", { n: Math.min(revealed, maxClues), max: maxClues })}
+        <div className="mt-1 flex items-center justify-center gap-2 text-center text-xs text-muted-foreground">
+          <span>{t("trivia.clues", { n: Math.min(revealed, maxClues), max: maxClues })}</span>
+          {!answered && (
+            <span className="rounded-full bg-primary/10 px-2 py-0.5 font-semibold text-primary">
+              {t("trivia.worth", { pts: scoreForTrivia(revealed, difficulty, streak) })}
+            </span>
+          )}
         </div>
 
         <div className="mt-4 flex-1 space-y-2">

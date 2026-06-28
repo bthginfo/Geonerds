@@ -17,7 +17,7 @@ import { Button } from "@/components/ui/button";
 
 const DOT_THRESHOLD_KM2 = 25_000;
 const MAX_WRONG = 3;
-const WRONG_PENALTY = 20;
+const WRONG_PENALTY = 25;
 const TIME_PER_TARGET_MS = 12_000;
 
 const flagByCcn3Map = new Map(COUNTRIES.filter((c) => c.ccn3).map((c) => [String(c.ccn3), c.flag]));
