@@ -4,6 +4,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { geoNaturalEarth1, geoPath } from "d3-geo";
 import { select } from "d3-selection";
 import { zoom, zoomIdentity, type ZoomBehavior } from "d3-zoom";
+import { Plus, Minus } from "lucide-react";
 import { loadCountries, type CountryFeature } from "@/lib/geo";
 
 const W = 980;
@@ -71,7 +72,7 @@ export function WorldMap({
     if (!svgRef.current) return;
     const sel = select(svgRef.current);
     const z = zoom<SVGSVGElement, unknown>()
-      .scaleExtent([1, 12])
+      .scaleExtent([1, 80])
       .translateExtent([
         [0, 0],
         [W, H],
@@ -94,6 +95,11 @@ export function WorldMap({
     select(svgRef.current).call(zoomRef.current.transform, zoomIdentity);
   }, [resetSignal]);
 
+  function zoomBy(factor: number) {
+    if (!svgRef.current || !zoomRef.current) return;
+    select(svgRef.current).call(zoomRef.current.scaleBy, factor);
+  }
+
   // Tap detection that works for mouse & touch regardless of d3-zoom.
   function onPointerDown(e: React.PointerEvent) {
     tapRef.current = { x: e.clientX, y: e.clientY, time: Date.now() };
@@ -109,56 +115,78 @@ export function WorldMap({
     if (ccn3) onPick(ccn3);
   }
 
-  const strokeW = 0.6 / t.k;
+  // Keep outlines and flag pins a constant size on screen at any zoom level.
+  const strokeW = 0.9 / t.k;
+  const markerW = 22 / t.k;
+  const markerH = (markerW * 3) / 4;
 
   return (
-    <svg
-      ref={svgRef}
-      viewBox={`0 0 ${W} ${H}`}
-      className="absolute inset-0 h-full w-full touch-none select-none"
-      style={{ touchAction: "none" }}
-      onPointerDown={onPointerDown}
-      onPointerUp={onPointerUp}
-      role="application"
-      aria-label="World map"
-    >
-      <rect x={0} y={0} width={W} height={H} className="fill-transparent" />
-      <g transform={`translate(${t.x},${t.y}) scale(${t.k})`}>
-        {prepared.map((c) => {
-          const isFound = found.has(c.ccn3);
-          const isFlash = flashCcn3 === c.ccn3;
-          let cls = "fill-muted-foreground/20 hover:fill-primary/30";
-          if (isFound) cls = "fill-success/40";
-          if (isFlash) cls = flashOk ? "fill-success/60" : "fill-danger/60";
-          return (
-            <path
-              key={c.key}
-              data-ccn3={c.ccn3}
-              d={c.d}
-              className={`${cls} stroke-border transition-colors`}
-              style={{ strokeWidth: strokeW }}
-            />
-          );
-        })}
-        {prepared.map((c) => {
-          if (!found.has(c.ccn3)) return null;
-          const code = flagByCcn3(c.ccn3);
-          if (!code) return null;
-          const size = 14;
-          return (
-            <image
-              key={`f-${c.key}`}
-              href={`/flags/${code}.svg`}
-              x={c.cx - size / 2}
-              y={c.cy - (size * 3) / 8}
-              width={size}
-              height={(size * 3) / 4}
-              preserveAspectRatio="xMidYMid slice"
-              style={{ pointerEvents: "none" }}
-            />
-          );
-        })}
-      </g>
-    </svg>
+    <>
+      <svg
+        ref={svgRef}
+        viewBox={`0 0 ${W} ${H}`}
+        className="absolute inset-0 h-full w-full touch-none select-none"
+        style={{ touchAction: "none" }}
+        onPointerDown={onPointerDown}
+        onPointerUp={onPointerUp}
+        role="application"
+        aria-label="World map"
+      >
+        <rect x={0} y={0} width={W} height={H} className="fill-transparent" />
+        <g transform={`translate(${t.x},${t.y}) scale(${t.k})`}>
+          {prepared.map((c) => {
+            const isFound = found.has(c.ccn3);
+            const isFlash = flashCcn3 === c.ccn3;
+            let cls = "fill-muted-foreground/15 hover:fill-primary/30";
+            if (isFound) cls = "fill-success/40";
+            if (isFlash) cls = flashOk ? "fill-success/60" : "fill-danger/60";
+            return (
+              <path
+                key={c.key}
+                data-ccn3={c.ccn3}
+                d={c.d}
+                className={`${cls} stroke-slate-400/80 transition-colors dark:stroke-slate-500/70`}
+                style={{ strokeWidth: strokeW, strokeLinejoin: "round" }}
+              />
+            );
+          })}
+          {prepared.map((c) => {
+            if (!found.has(c.ccn3)) return null;
+            const code = flagByCcn3(c.ccn3);
+            if (!code) return null;
+            return (
+              <image
+                key={`f-${c.key}`}
+                href={`/flags/${code}.svg`}
+                x={c.cx - markerW / 2}
+                y={c.cy - markerH / 2}
+                width={markerW}
+                height={markerH}
+                preserveAspectRatio="xMidYMid slice"
+                style={{ pointerEvents: "none" }}
+              />
+            );
+          })}
+        </g>
+      </svg>
+
+      <div className="absolute bottom-3 right-3 z-10 flex flex-col overflow-hidden rounded-xl border border-border bg-card/90 shadow-md backdrop-blur">
+        <button
+          onClick={() => zoomBy(1.8)}
+          aria-label="Zoom in"
+          className="flex h-10 w-10 items-center justify-center text-foreground hover:bg-muted active:scale-95"
+        >
+          <Plus className="h-5 w-5" />
+        </button>
+        <div className="h-px bg-border" />
+        <button
+          onClick={() => zoomBy(1 / 1.8)}
+          aria-label="Zoom out"
+          className="flex h-10 w-10 items-center justify-center text-foreground hover:bg-muted active:scale-95"
+        >
+          <Minus className="h-5 w-5" />
+        </button>
+      </div>
+    </>
   );
 }
