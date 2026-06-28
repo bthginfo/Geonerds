@@ -19,6 +19,7 @@ import { RankingGame } from "@/games/ranking/ranking-game";
 import { LanguagesGame } from "@/games/languages/languages-game";
 import { PinGame } from "@/games/pin/pin-game";
 import { RouteGame } from "@/games/route/route-game";
+import { WatersGame } from "@/games/waters/waters-game";
 
 const COMPONENTS: Record<GameId, (h: PlayHandlers) => React.ReactNode> = {
   flags: (h) => <FlagGame {...h} />,
@@ -33,6 +34,7 @@ const COMPONENTS: Record<GameId, (h: PlayHandlers) => React.ReactNode> = {
   languages: (h) => <LanguagesGame {...h} />,
   pin: (h) => <PinGame {...h} />,
   route: (h) => <RouteGame {...h} />,
+  waters: (h) => <WatersGame {...h} />,
 };
 
 export default function PlayPage() {

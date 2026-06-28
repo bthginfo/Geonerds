@@ -31,6 +31,8 @@ export interface PlayHandlers {
   roundCount: number;
   /** Whether the optional countdown timer is enabled. */
   timed: boolean;
+  /** Game-specific variant id (e.g. flag scope); "" if none. */
+  variant: string;
   onFinish: (r: PlayResult) => void;
   onExit: () => void;
 }
@@ -53,6 +55,7 @@ export function GameShell({
   const [mode, setMode] = useState<AnswerMode>(config?.modes?.[0] ?? "choice");
   const [roundCount, setRoundCount] = useState<number>(config?.countOptions?.[0] ?? 12);
   const [timed, setTimed] = useState<boolean>(config?.defaultTimed ?? false);
+  const [variant, setVariant] = useState<string>(config?.variants?.default ?? "");
   const [runKey, setRunKey] = useState(0);
   const [result, setResult] = useState<RunResult | null>(null);
   const [isRecord, setIsRecord] = useState(false);
@@ -96,6 +99,7 @@ export function GameShell({
           mode,
           roundCount,
           timed,
+          variant,
           onFinish: handleFinish,
           onExit: () => setPhase("setup"),
         })}
@@ -144,6 +148,30 @@ export function GameShell({
         </motion.div>
 
         <div className="mt-8 space-y-5">
+          {config.variants && (
+            <div>
+              <h2 className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                {t(config.variants.labelKey)}
+              </h2>
+              <div className="flex flex-wrap gap-2">
+                {config.variants.options.map((v) => (
+                  <button
+                    key={v}
+                    onClick={() => setVariant(v)}
+                    className={cn(
+                      "rounded-lg border-2 px-3 py-2 text-sm font-semibold transition-all",
+                      variant === v
+                        ? "border-primary bg-primary/5 text-foreground"
+                        : "border-border bg-card text-muted-foreground hover:bg-muted/40"
+                    )}
+                  >
+                    {t(`scope.${v}`)}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
           {config.supportsDifficulty && (
             <div>
               <h2 className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">

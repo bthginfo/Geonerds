@@ -11,6 +11,7 @@ import {
   Languages,
   Crosshair,
   Route,
+  Waves,
   type LucideIcon,
 } from "lucide-react";
 import type { AnswerMode, GameId } from "@/lib/types";
@@ -28,6 +29,8 @@ export interface GameConfig {
   supportsTimed?: boolean;
   /** Default state of the timed toggle. */
   defaultTimed?: boolean;
+  /** Optional game-specific variant selector (e.g. flag scope). */
+  variants?: { labelKey: string; default: string; options: string[] };
 }
 
 export const GAMES: GameConfig[] = [
@@ -39,6 +42,11 @@ export const GAMES: GameConfig[] = [
     modes: ["choice", "type"],
     countOptions: [10, 25, 50, 0],
     supportsTimed: true,
+    variants: {
+      labelKey: "scope.label",
+      default: "world",
+      options: ["world", "Africa", "Americas", "Asia", "Europe", "Oceania"],
+    },
   },
   {
     id: "capitals",
@@ -127,7 +135,17 @@ export const GAMES: GameConfig[] = [
     icon: Route,
     gradient: "from-green-500 to-lime-600",
     supportsDifficulty: true,
+    modes: ["choice", "type"],
     countOptions: [5, 10, 0],
+  },
+  {
+    id: "waters",
+    icon: Waves,
+    gradient: "from-cyan-500 to-sky-600",
+    supportsDifficulty: true,
+    modes: ["choice", "type"],
+    countOptions: [10, 25, 0],
+    supportsTimed: true,
   },
 ];
 

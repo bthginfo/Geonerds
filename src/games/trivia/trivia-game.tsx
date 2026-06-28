@@ -7,7 +7,8 @@ import type { Country } from "@/lib/types";
 import type { PlayHandlers } from "@/components/game/game-shell";
 import { poolForDifficulty, countryName } from "@/data/countries";
 import { countryAccepted } from "@/games/aliases";
-import { makeChoices, pickQuestions } from "@/games/round-utils";
+import { pickQuestions } from "@/games/round-utils";
+import { sample, shuffle } from "@/lib/utils";
 import { triviaClues, randomFact } from "@/lib/facts";
 import { FlagImage } from "@/components/flag-image";
 import { GameTopBar, ScorePill, StreakPill, RoundPill, TimerPill } from "@/components/game/hud";
@@ -33,12 +34,17 @@ export function TriviaGame({ difficulty, mode, roundCount, timed, onFinish, onEx
   const rounds = useMemo<TriviaRound[]>(() => {
     const pool = poolForDifficulty(difficulty);
     const count = roundCount === 0 ? pool.length : roundCount;
-    return pickQuestions(pool, count).map((answer) => ({
-      answer,
-      clues: triviaClues(answer, locale).slice(0, MAX_CLUES),
-      options: makeChoices(answer, pool, difficulty).map((c) => ({ id: c.cca3, label: countryName(c, locale) })),
-      accepted: countryAccepted(answer),
-    }));
+    return pickQuestions(pool, count).map((answer) => {
+      // Cross-region distractors so the early clues (continent, hemisphere…) help.
+      const distractors = sample(pool.filter((c) => c.cca3 !== answer.cca3), 3);
+      const options = shuffle([answer, ...distractors]).map((c) => ({ id: c.cca3, label: countryName(c, locale) }));
+      return {
+        answer,
+        clues: triviaClues(answer, locale).slice(0, MAX_CLUES),
+        options,
+        accepted: countryAccepted(answer),
+      };
+    });
   }, [difficulty, roundCount, locale]);
 
   const total = rounds.length;

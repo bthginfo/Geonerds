@@ -25,6 +25,8 @@ export interface QuizOption {
 export interface QuizRound {
   key: string;
   prompt: React.ReactNode;
+  /** Optional prompt shown once answered (e.g. the full flag with text restored). */
+  revealPrompt?: React.ReactNode;
   options: QuizOption[];
   correctId: string;
   accepted: string[];
@@ -189,7 +191,7 @@ export function QuizGame({
             className="flex flex-1 flex-col"
           >
             <div className="relative flex flex-1 items-center justify-center py-4">
-              {round.prompt}
+              {answered && round.revealPrompt ? round.revealPrompt : round.prompt}
               <AnimatePresence>
                 {gain != null && (
                   <motion.div

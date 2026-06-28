@@ -53,6 +53,13 @@ export const messages: Record<Locale, Dict> = {
 
     "setup.rounds": "Rounds",
     "setup.all": "All",
+    "scope.label": "Flags",
+    "scope.world": "World",
+    "scope.Africa": "Africa",
+    "scope.Americas": "Americas",
+    "scope.Asia": "Asia",
+    "scope.Europe": "Europe",
+    "scope.Oceania": "Oceania",
     "setup.timed": "Timed mode",
     "setup.timed.desc": "Race against the clock for a speed bonus",
 
@@ -97,6 +104,8 @@ export const messages: Record<Locale, Dict> = {
     "games.pin.short": "Tap where it is on the world map.",
     "games.route.name": "Land Route",
     "games.route.short": "Travel country to country by land.",
+    "games.waters.name": "Rivers & Lakes",
+    "games.waters.short": "Identify the highlighted river or lake.",
 
     "ranking.prompt": "Drag into order — highest first",
     "ranking.by": "by {metric}",
@@ -118,6 +127,8 @@ export const messages: Record<Locale, Dict> = {
     "route.undo": "Undo",
     "route.notNeighbour": "Not a neighbour!",
     "route.optimal": "Shortest: {n} steps",
+    "route.from": "In {from} — which country next, towards {to}?",
+    "route.hint": "Reveal next step (no points)",
 
     "howto.flags": "A flag is shown. In multiple-choice mode pick the correct country; in type mode, type its name — minor typos and either English or German names are accepted. Faster answers and longer streaks score more.",
     "howto.capitals": "A country is shown. Choose or type its capital city. Speed and streaks boost your score.",
@@ -130,7 +141,8 @@ export const messages: Record<Locale, Dict> = {
     "howto.ranking": "Several countries are shown. Tap them in order from highest to lowest for the given stat (population, area or GDP). You score for every country you place in the right spot.",
     "howto.languages": "A clue is shown — a currency, or a word in a country's native script. Pick the matching country. The four options never share the clue, so there's exactly one right answer.",
     "howto.pin": "A place is named. Tap where you think it is on the map. The closer your pin, the more points — scored by distance in kilometres. Pinch or scroll to zoom in for accuracy.",
-    "howto.route": "You get a start and a destination country. Build a land route by tapping countries that border each other, step by step, until you reach the destination. Shorter routes score more.",
+    "howto.route": "You get a start and a destination country — only those two are shown. Name (or pick) a country that borders where you are and lies on the way; each correct step appears on the map until you arrive.",
+    "howto.waters": "A river or lake is highlighted on the map. Choose or type which one it is.",
 
     "hl.metric.population": "Population",
     "hl.metric.area": "Area",
@@ -271,6 +283,13 @@ export const messages: Record<Locale, Dict> = {
 
     "setup.rounds": "Runden",
     "setup.all": "Alle",
+    "scope.label": "Flaggen",
+    "scope.world": "Welt",
+    "scope.Africa": "Afrika",
+    "scope.Americas": "Amerika",
+    "scope.Asia": "Asien",
+    "scope.Europe": "Europa",
+    "scope.Oceania": "Ozeanien",
     "setup.timed": "Zeitmodus",
     "setup.timed.desc": "Gegen die Uhr spielen für einen Tempo-Bonus",
 
@@ -315,6 +334,8 @@ export const messages: Record<Locale, Dict> = {
     "games.pin.short": "Tippe auf der Weltkarte, wo es liegt.",
     "games.route.name": "Landweg finden",
     "games.route.short": "Reise von Land zu Land über Landgrenzen.",
+    "games.waters.name": "Flüsse & Seen",
+    "games.waters.short": "Erkenne den markierten Fluss oder See.",
 
     "ranking.prompt": "Ziehe in die richtige Reihenfolge – höchster zuerst",
     "ranking.by": "nach {metric}",
@@ -336,6 +357,8 @@ export const messages: Record<Locale, Dict> = {
     "route.undo": "Zurück",
     "route.notNeighbour": "Kein Nachbar!",
     "route.optimal": "Kürzester: {n} Schritte",
+    "route.from": "In {from} – welches Land als Nächstes, Richtung {to}?",
+    "route.hint": "Nächsten Schritt zeigen (keine Punkte)",
 
     "howto.flags": "Eine Flagge wird gezeigt. Im Multiple-Choice-Modus wählst du das richtige Land; im Tippmodus tippst du den Namen – kleine Tippfehler sowie deutsche oder englische Namen werden akzeptiert. Schnelle Antworten und lange Serien geben mehr Punkte.",
     "howto.capitals": "Ein Land wird gezeigt. Wähle oder tippe seine Hauptstadt. Tempo und Serien erhöhen deine Punktzahl.",
@@ -348,7 +371,8 @@ export const messages: Record<Locale, Dict> = {
     "howto.ranking": "Mehrere Länder werden gezeigt. Tippe sie in der Reihenfolge von höchstem zu niedrigstem Wert an (Einwohner, Fläche oder BIP). Für jedes richtig platzierte Land gibt es Punkte.",
     "howto.languages": "Ein Hinweis wird gezeigt – eine Währung oder ein Wort in der Landesschrift. Wähle das passende Land. Die vier Optionen teilen den Hinweis nie, es gibt also genau eine richtige Antwort.",
     "howto.pin": "Ein Ort wird genannt. Tippe auf der Karte, wo er liegt. Je näher dein Pin, desto mehr Punkte – bewertet nach Entfernung in Kilometern. Zoome für mehr Genauigkeit hinein.",
-    "howto.route": "Du bekommst ein Start- und ein Ziel-Land. Baue einen Landweg, indem du Schritt für Schritt aneinandergrenzende Länder antippst, bis du das Ziel erreichst. Kürzere Wege geben mehr Punkte.",
+    "howto.route": "Du bekommst ein Start- und ein Ziel-Land – nur diese beiden sind sichtbar. Nenne (oder wähle) ein Land, das an dein aktuelles grenzt und auf dem Weg liegt; jeder richtige Schritt erscheint auf der Karte, bis du ankommst.",
+    "howto.waters": "Ein Fluss oder See ist auf der Karte markiert. Wähle oder tippe, welcher es ist.",
 
     "hl.metric.population": "Einwohner",
     "hl.metric.area": "Fläche",

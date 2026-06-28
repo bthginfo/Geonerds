@@ -9,24 +9,39 @@ import { PinMap } from "@/components/map/pin-map";
 import { GameTopBar, ScorePill, StreakPill, RoundPill, TimerPill } from "@/components/game/hud";
 import { Button } from "@/components/ui/button";
 import { poolForDifficulty, countryName } from "@/data/countries";
-import { pickQuestions } from "@/games/round-utils";
+import { PLACES } from "./places";
 import { BASE_POINTS, DIFFICULTY_MULTIPLIER, streakMultiplier } from "@/lib/scoring";
 import { sound } from "@/lib/sound";
-import { haversineKm, formatNumber } from "@/lib/utils";
+import { haversineKm, formatNumber, sample, shuffle } from "@/lib/utils";
 import { useT } from "@/i18n/I18nProvider";
 
 const PER_ROUND_BUDGET_MS = 15000;
 const MAX_DIST = 5000; // km at which points reach zero
 const GOOD_DIST = 800; // km that counts toward a streak
 
+interface PinTarget {
+  label: string;
+  lng: number;
+  lat: number;
+}
+
 export function PinGame({ difficulty, roundCount, timed, onFinish, onExit }: PlayHandlers) {
   const { t, locale } = useT();
 
-  const targets = useMemo<Country[]>(() => {
-    const pool = poolForDifficulty(difficulty).filter((c) => c.latlng);
-    const count = roundCount === 0 ? pool.length : roundCount;
-    return pickQuestions(pool, count);
-  }, [difficulty, roundCount]);
+  const targets = useMemo<PinTarget[]>(() => {
+    const countryPool: PinTarget[] = poolForDifficulty(difficulty)
+      .filter((c): c is Country & { latlng: [number, number] } => !!c.latlng)
+      .map((c) => ({ label: countryName(c, locale), lng: c.latlng[1], lat: c.latlng[0] }));
+    const placePool: PinTarget[] = PLACES.map((p) => ({ label: locale === "de" ? p.de : p.en, lng: p.lng, lat: p.lat }));
+
+    const fullCount = countryPool.length + placePool.length;
+    const count = roundCount === 0 ? fullCount : roundCount;
+    // Roughly 45% cities/landmarks, the rest countries.
+    const placeCount = Math.min(placePool.length, Math.round(count * 0.45));
+    const places = sample(placePool, placeCount);
+    const countries = sample(countryPool, count - places.length);
+    return shuffle([...places, ...countries]);
+  }, [difficulty, roundCount, locale]);
 
   const total = targets.length;
   const budget = total * PER_ROUND_BUDGET_MS;
@@ -47,7 +62,7 @@ export function PinGame({ difficulty, roundCount, timed, onFinish, onExit }: Pla
   const finishedRef = useRef(false);
 
   const target = targets[idx];
-  const targetLngLat = target?.latlng ? ([target.latlng[1], target.latlng[0]] as [number, number]) : null;
+  const targetLngLat = target ? ([target.lng, target.lat] as [number, number]) : null;
 
   function doFinish() {
     if (finishedRef.current) return;
@@ -122,7 +137,7 @@ export function PinGame({ difficulty, roundCount, timed, onFinish, onExit }: Pla
       <div className="mx-auto flex w-full max-w-3xl items-center gap-3 px-4 py-3">
         <Crosshair className="h-6 w-6 shrink-0 text-primary" />
         <div className="min-w-0 flex-1">
-          <div className="truncate text-xl font-bold">{t("pin.prompt", { place: countryName(target, locale) })}</div>
+          <div className="truncate text-xl font-bold">{t("pin.prompt", { place: target.label })}</div>
           <div className="text-xs text-muted-foreground">
             {revealed ? t("pin.away", { km: formatNumber(distKm, locale) }) : t("pin.tapToPlace")}
           </div>

@@ -2,27 +2,30 @@
 
 import { cn } from "@/lib/utils";
 
+interface ObscureRegion {
+  x: number;
+  y: number;
+  w: number;
+  h: number;
+  /** Solid colour matching the flag underneath, so the text reads as removed. */
+  color: string;
+}
+
 /**
- * Flags whose lettering would give the country away. We blur just the text
- * region (percentages of the 4:3 flag box) so the flag stays recognisable
- * while the name/motto becomes unreadable.
+ * A few flags carry prominent lettering that gives the country away. We cover it
+ * with a clean solid patch (not a blur) while it's a question; the full flag is
+ * shown again on reveal. Most coats-of-arms have text too small to read at this
+ * size, so they're left untouched.
  */
-const FLAG_OBSCURE: Record<string, { x: number; y: number; w: number; h: number }[]> = {
-  br: [{ x: 33, y: 39, w: 34, h: 22 }], // "ORDEM E PROGRESSO"
-  sv: [{ x: 35, y: 28, w: 30, h: 44 }], // coat of arms text ring
-  ni: [{ x: 37, y: 33, w: 26, h: 34 }], // "REPUBLICA DE NICARAGUA"
-  cr: [{ x: 30, y: 30, w: 26, h: 40 }], // "REPUBLICA COSTA RICA"
-  bo: [{ x: 35, y: 28, w: 30, h: 44 }], // "BOLIVIA"
-  do: [{ x: 39, y: 28, w: 22, h: 44 }], // "República Dominicana"
-  gt: [{ x: 36, y: 38, w: 28, h: 24 }], // scroll text
-  bn: [{ x: 28, y: 58, w: 44, h: 20 }], // Jawi banner naming Brunei
+const FLAG_OBSCURE: Record<string, ObscureRegion[]> = {
+  br: [{ x: 35, y: 45, w: 30, h: 11, color: "#002776" }], // "ORDEM E PROGRESSO" band on the globe
 };
 
 interface FlagImageProps {
   code: string;
   alt?: string;
   className?: string;
-  /** Obscure giveaway text (used in quizzes; off for reveal/results). */
+  /** Cover giveaway text (used in quizzes; off for reveal/results). */
   hideText?: boolean;
   rounded?: boolean;
 }
@@ -38,22 +41,18 @@ export function FlagImage({ code, alt = "", className, hideText = false, rounded
       )}
     >
       {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img
-        src={`/flags/${code}.svg`}
-        alt={alt}
-        draggable={false}
-        className="h-full w-full object-cover"
-      />
+      <img src={`/flags/${code}.svg`} alt={alt} draggable={false} className="h-full w-full object-cover" />
       {regions?.map((r, i) => (
         <div
           key={i}
           aria-hidden
-          className="absolute backdrop-blur-md"
+          className="absolute"
           style={{
             left: `${r.x}%`,
             top: `${r.y}%`,
             width: `${r.w}%`,
             height: `${r.h}%`,
+            backgroundColor: r.color,
           }}
         />
       ))}

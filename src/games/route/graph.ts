@@ -19,7 +19,7 @@ export function ccn3Neighbors(ccn3: string): Set<string> {
 }
 
 /** BFS distances from a start ccn3 to every reachable country. */
-function distancesFrom(start: string): Map<string, number> {
+export function distancesFrom(start: string): Map<string, number> {
   const dist = new Map<string, number>([[start, 0]]);
   const queue = [start];
   while (queue.length) {

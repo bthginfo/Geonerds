@@ -136,6 +136,8 @@ export function BorderChainGame({ difficulty, mode, roundCount, timed, onFinish,
     sound.wrong();
     attemptsRef.current += 1;
     setStreak(0);
+    scoreRef.current = Math.max(0, scoreRef.current - 10);
+    setScore((s) => Math.max(0, s - 10));
   }
 
   function submit() {

@@ -40,6 +40,7 @@ export function WorldMap({
   flagByCcn3,
   dots = [],
   getFill,
+  visibleSet,
   resetSignal = 0,
 }: {
   onPick: (ccn3: string) => void;
@@ -50,6 +51,8 @@ export function WorldMap({
   dots?: MapDot[];
   /** Optional persistent fill class per country (used by the route game). */
   getFill?: (ccn3: string) => string | undefined;
+  /** If set, only these countries are drawn (others hidden). */
+  visibleSet?: Set<string>;
   resetSignal?: number;
 }) {
   const [features, setFeatures] = useState<CountryFeature[] | null>(null);
@@ -186,6 +189,7 @@ export function WorldMap({
         <rect x={0} y={0} width={W} height={H} className="fill-transparent" />
         <g transform={`translate(${t.x},${t.y}) scale(${t.k})`}>
           {prepared.map((c) => {
+            if (visibleSet && (!c.ccn3 || !visibleSet.has(c.ccn3))) return null;
             const isFound = c.ccn3 ? found.has(c.ccn3) : false;
             const isFlash = c.ccn3 != null && flashCcn3 === c.ccn3;
             let cls = c.ccn3 ? "fill-muted-foreground/15 hover:fill-primary/30" : "fill-muted-foreground/15";
