@@ -1,6 +1,6 @@
 import type { Country, Locale } from "./types";
 import { getCountryByCca3 } from "@/data/countries";
-import { formatNumber, pickOne } from "./utils";
+import { formatNumber, pickOne, shuffle } from "./utils";
 
 const REGION_DE: Record<string, string> = {
   Africa: "Afrika",
@@ -114,28 +114,138 @@ function neighbourPhrase(c: Country, locale: Locale): string | null {
   return locale === "de" ? `Zu seinen Nachbarn zählt ${sample}.` : `Its neighbours include ${sample}.`;
 }
 
+/** Iconic dishes by cca3 — used as a culture clue and post-answer fact. */
+const FOODS: Record<string, string> = {
+  AFG: "Kabuli Pulao", ALB: "Tavë kosi", DZA: "Couscous", AGO: "Muamba de galinha",
+  ARG: "Asado", ARM: "Khorovats", AUS: "Meat pie", AUT: "Wiener Schnitzel",
+  AZE: "Plov", BHS: "Conch salad", BHR: "Machboos", BGD: "Hilsa curry",
+  BRB: "Cou-cou and flying fish", BLR: "Draniki", BEL: "Moules-frites", BTN: "Ema datshi",
+  BOL: "Salteñas", BIH: "Ćevapi", BWA: "Seswaa", BRA: "Feijoada", BGR: "Banitsa",
+  KHM: "Fish amok", CMR: "Ndolé", CAN: "Poutine", CPV: "Cachupa", CHL: "Empanadas",
+  CHN: "Peking duck", COL: "Bandeja paisa", COG: "Poulet moambé", COD: "Moambe",
+  CRI: "Gallo pinto", CIV: "Attiéké", HRV: "Peka", CUB: "Ropa vieja", CYP: "Halloumi",
+  CZE: "Svíčková", DNK: "Smørrebrød", DOM: "La bandera", ECU: "Ceviche", EGY: "Koshari",
+  SLV: "Pupusas", ERI: "Zigni", EST: "Verivorst", ETH: "Injera", FJI: "Kokoda",
+  FIN: "Karjalanpiirakka", FRA: "Coq au vin", GMB: "Domoda", GEO: "Khachapuri",
+  DEU: "Bratwurst", GHA: "Jollof rice", GRC: "Moussaka", GTM: "Pepián", GUY: "Pepperpot",
+  HTI: "Griot", HND: "Baleadas", HUN: "Goulash", ISL: "Plokkfiskur", IND: "Biryani",
+  IDN: "Nasi goreng", IRN: "Chelo kabab", IRQ: "Masgouf", IRL: "Irish stew",
+  ISR: "Falafel", ITA: "Pizza", JAM: "Ackee and saltfish", JPN: "Sushi", JOR: "Mansaf",
+  KAZ: "Beshbarmak", KEN: "Nyama choma", KOR: "Kimchi", KWT: "Machboos", KGZ: "Beshbarmak",
+  LAO: "Larb", LBN: "Tabbouleh", LTU: "Cepelinai", LUX: "Judd mat Gaardebounen",
+  MDG: "Romazava", MWI: "Nsima", MYS: "Nasi lemak", MDV: "Garudhiya", MLT: "Pastizzi",
+  MUS: "Dholl puri", MEX: "Tacos", MDA: "Mămăligă", MNG: "Buuz", MAR: "Tagine",
+  MOZ: "Piri-piri chicken", MMR: "Mohinga", NPL: "Dal bhat", NLD: "Stamppot",
+  NZL: "Hāngī", NIC: "Gallo pinto", NGA: "Egusi soup", NOR: "Lutefisk", OMN: "Shuwa",
+  PAK: "Nihari", PAN: "Sancocho", PRY: "Sopa paraguaya", PER: "Ceviche", PHL: "Adobo",
+  POL: "Pierogi", PRT: "Bacalhau", QAT: "Machboos", ROU: "Sarmale", RUS: "Borscht",
+  SAU: "Kabsa", SEN: "Thieboudienne", SRB: "Ćevapi", SGP: "Hainanese chicken rice",
+  SVK: "Bryndzové halušky", SVN: "Potica", ZAF: "Bobotie", ESP: "Paella",
+  LKA: "Rice and curry", SUR: "Pom", SWE: "Köttbullar", CHE: "Fondue", SYR: "Kibbeh",
+  TWN: "Beef noodle soup", TJK: "Qurutob", TZA: "Ugali", THA: "Pad Thai", TTO: "Doubles",
+  TUN: "Couscous", TUR: "Kebab", TKM: "Plov", UGA: "Matoke", UKR: "Borscht",
+  ARE: "Shawarma", GBR: "Fish and chips", USA: "Hamburger", URY: "Chivito", UZB: "Plov",
+  VEN: "Arepas", VNM: "Phở", YEM: "Mandi", ZMB: "Nshima", ZWE: "Sadza",
+};
+
+function foodPhrase(c: Country, locale: Locale): string | null {
+  const dish = FOODS[c.cca3];
+  if (!dish) return null;
+  return locale === "de" ? `Ein berühmtes Gericht ist ${dish}.` : `A famous dish here is ${dish}.`;
+}
+
+function sizeRankPhrase(c: Country, locale: Locale): string | null {
+  if (c.area >= 2_500_000) {
+    return locale === "de" ? "Eines der größten Länder der Welt." : "One of the world's largest countries.";
+  }
+  if (c.area > 0 && c.area <= 1000) {
+    return locale === "de" ? "Eines der kleinsten Länder der Welt." : "One of the world's smallest countries.";
+  }
+  return null;
+}
+
+function densityPhrase(c: Country, locale: Locale): string | null {
+  if (c.area <= 0 || !c.population) return null;
+  const d = c.population / c.area;
+  if (d >= 300) return locale === "de" ? "Sehr dicht besiedelt." : "Very densely populated.";
+  if (d <= 12) return locale === "de" ? "Sehr dünn besiedelt." : "Very sparsely populated.";
+  return null;
+}
+
+function islandPhrase(c: Country, locale: Locale): string | null {
+  if (c.borders.length === 0 && !c.landlocked) {
+    return locale === "de" ? "Ein Inselstaat." : "An island nation.";
+  }
+  return null;
+}
+
+function languagesPhrase(c: Country, locale: Locale): string | null {
+  if (!c.languages.length) return null;
+  const langs = c.languages.slice(0, 2).join(locale === "de" ? " und " : " and ");
+  return locale === "de" ? `Hier spricht man ${langs}.` : `People here speak ${langs}.`;
+}
+
+function firstNonNull(gens: Array<() => string | null>): string | null {
+  for (const g of shuffle(gens)) {
+    const v = g();
+    if (v) return v;
+  }
+  return null;
+}
+
 /**
- * Ordered clues (vague → specific) for the Trivia game. Never reveals the
- * country name; capital/neighbours are excluded as they give it away.
+ * Four escalating clues for the Trivia game, from vague to easy:
+ *   1) continent  2) a distinctive stat  3) a culture clue (dish/language/currency)
+ *   4) the capital city (near give-away, so the round is always solvable).
  */
 export function triviaClues(c: Country, locale: Locale): string[] {
-  const ordered = [
-    locale === "de" ? `Liegt in ${regionName(c, locale)}.` : `Located in ${regionName(c, locale)}.`,
+  // Each tier picks randomly among several categories for variety, while the
+  // overall order escalates from vague (continent) to easy (capital).
+  const tier1 = firstNonNull([
+    () => (locale === "de" ? `Liegt in ${regionName(c, locale)}.` : `Located in ${regionName(c, locale)}.`),
+    () => sizeRankPhrase(c, locale),
+    () => hemispherePhrase(c, locale),
+    () => islandPhrase(c, locale),
+  ]);
+  const tier2 = firstNonNull([
+    () => populationPhrase(c, locale),
+    () => areaPhrase(c, locale),
+    () => bordersPhrase(c, locale),
+    () => landlockedPhrase(c, locale),
+    () => densityPhrase(c, locale),
+    () => (locale === "de" ? `Region: ${subregionName(c, locale)}.` : `Subregion: ${subregionName(c, locale)}.`),
+  ]);
+  const tier3 = firstNonNull([
+    () => foodPhrase(c, locale),
+    () => languagesPhrase(c, locale),
+    () => currencyPhrase(c, locale),
+    () => neighbourPhrase(c, locale),
+  ]);
+  // Build the first three clues, backfilling so we have three distinct ones…
+  const core: string[] = [tier1, tier2, tier3].filter((x): x is string => !!x);
+  const extras = [
     populationPhrase(c, locale),
-    landlockedPhrase(c, locale) ?? hemispherePhrase(c, locale),
-    locale === "de" ? `Region: ${subregionName(c, locale)}.` : `Region: ${subregionName(c, locale)}.`,
-    bordersPhrase(c, locale),
     areaPhrase(c, locale),
-    languagePhrase(c, locale),
+    foodPhrase(c, locale),
     currencyPhrase(c, locale),
-  ].filter((x): x is string => !!x);
-  // de-duplicate while preserving order
-  return Array.from(new Set(ordered));
+    languagesPhrase(c, locale),
+    bordersPhrase(c, locale),
+  ];
+  for (const e of extras) {
+    if (core.length >= 3) break;
+    if (e && !core.includes(e)) core.push(e);
+  }
+  // …then the capital as the final, easiest clue so the round is solvable.
+  const giveaway = capitalPhrase(c, locale) ?? neighbourPhrase(c, locale) ?? currencyPhrase(c, locale);
+  const ordered = Array.from(new Set(core)).slice(0, 3);
+  if (giveaway && !ordered.includes(giveaway)) ordered.push(giveaway);
+  return ordered;
 }
 
 /** A single interesting fact for display after a correct answer (may include capital). */
 export function randomFact(c: Country, locale: Locale): string {
   const pool = [
+    foodPhrase(c, locale),
     capitalPhrase(c, locale),
     populationPhrase(c, locale),
     areaPhrase(c, locale),
