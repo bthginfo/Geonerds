@@ -10,6 +10,7 @@ import { useT } from "@/i18n/I18nProvider";
 import { FlagGame } from "@/games/flags/flag-game";
 import { CapitalsGame } from "@/games/capitals/capitals-game";
 import { OutlineGame } from "@/games/outline/outline-game";
+import { TriviaGame } from "@/games/trivia/trivia-game";
 import { HigherLowerGame } from "@/games/higher-lower/higher-lower-game";
 import { MapClickGame } from "@/games/map-click/map-click-game";
 import { DrawGame } from "@/games/draw/draw-game";
@@ -19,6 +20,7 @@ const COMPONENTS: Record<GameId, (h: PlayHandlers) => React.ReactNode> = {
   flags: (h) => <FlagGame {...h} />,
   capitals: (h) => <CapitalsGame {...h} />,
   outline: (h) => <OutlineGame {...h} />,
+  trivia: (h) => <TriviaGame {...h} />,
   "higher-lower": (h) => <HigherLowerGame {...h} />,
   "map-click": (h) => <MapClickGame {...h} />,
   draw: (h) => <DrawGame {...h} />,

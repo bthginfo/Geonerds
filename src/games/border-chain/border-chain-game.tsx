@@ -7,7 +7,7 @@ import type { PlayHandlers } from "@/components/game/game-shell";
 import { COUNTRIES, getCountryByCca3, poolForDifficulty, countryName } from "@/data/countries";
 import { countryAccepted } from "@/games/aliases";
 import { FlagImage } from "@/components/flag-image";
-import { GameTopBar, ScorePill, StreakPill, TimerPill } from "@/components/game/hud";
+import { GameTopBar, ScorePill, StreakPill, TimerPill, RoundPill } from "@/components/game/hud";
 import { Button } from "@/components/ui/button";
 import { matchAnswer } from "@/lib/fuzzy";
 import { scoreForAnswer } from "@/lib/scoring";
@@ -21,17 +21,19 @@ function neighborsOf(c: Country): Country[] {
   return c.borders.map((b) => getCountryByCca3(b)).filter((x): x is Country => !!x);
 }
 
-export function BorderChainGame({ difficulty, mode, onFinish, onExit }: PlayHandlers) {
+export function BorderChainGame({ difficulty, mode, roundCount, timed, onFinish, onExit }: PlayHandlers) {
   const { t, locale } = useT();
 
   const starts = useMemo(
     () => poolForDifficulty(difficulty).filter((c) => neighborsOf(c).length > 0),
     [difficulty]
   );
+  const targetCountries = roundCount === 0 ? 20 : roundCount;
 
   const [current, setCurrent] = useState<Country>(() => pickOne(starts));
   const [found, setFound] = useState<Set<string>>(new Set());
   const [visited, setVisited] = useState<Set<string>>(() => new Set());
+  const [completed, setCompleted] = useState(0);
   const [input, setInput] = useState("");
   const [flashWrong, setFlashWrong] = useState(false);
   const [wrongChip, setWrongChip] = useState<string | null>(null);
@@ -39,16 +41,16 @@ export function BorderChainGame({ difficulty, mode, onFinish, onExit }: PlayHand
 
   const [score, setScore] = useState(0);
   const [streak, setStreak] = useState(0);
-  const [bestStreak, setBestStreak] = useState(0);
-  const [correct, setCorrect] = useState(0);
-  const [attempts, setAttempts] = useState(0);
 
   const startRef = useRef(Date.now());
   const finishedRef = useRef(false);
+  const scoreRef = useRef(0);
+  const correctRef = useRef(0);
+  const attemptsRef = useRef(0);
+  const bestRef = useRef(0);
 
   const neighbors = useMemo(() => neighborsOf(current), [current]);
 
-  // For choice mode: neighbours mixed with regional distractors.
   const options = useMemo(() => {
     if (mode !== "choice") return [];
     const nIds = new Set(neighbors.map((n) => n.cca3));
@@ -66,35 +68,41 @@ export function BorderChainGame({ difficulty, mode, onFinish, onExit }: PlayHand
     return shuffle([...neighbors, ...distractors]);
   }, [mode, current, neighbors]);
 
-  // Countdown
   useEffect(() => {
+    if (!timed) return;
     const id = setInterval(() => {
       const left = GAME_MS - (Date.now() - startRef.current);
       if (left <= 0) {
         clearInterval(id);
-        finish(0);
+        finish();
       } else {
         setTimeLeft(left);
       }
     }, 100);
     return () => clearInterval(id);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [timed]);
 
-  function finish(extra: number) {
+  function finish() {
     if (finishedRef.current) return;
     finishedRef.current = true;
     onFinish({
-      score: score + extra,
-      correct,
-      total: Math.max(attempts, correct),
-      bestStreak,
+      score: scoreRef.current,
+      correct: correctRef.current,
+      total: Math.max(attemptsRef.current, correctRef.current),
+      bestStreak: bestRef.current,
       durationMs: Date.now() - startRef.current,
-      mode,
+      mode: timed ? "timed" : mode,
     });
   }
 
   function chainNext(fromFound: Set<string>) {
+    const nextCompleted = completed + 1;
+    setCompleted(nextCompleted);
+    if (!timed && nextCompleted >= targetCountries) {
+      finish();
+      return;
+    }
     const candidates = neighbors.filter(
       (n) => fromFound.has(n.cca3) && !visited.has(n.cca3) && neighborsOf(n).length > 0
     );
@@ -111,10 +119,12 @@ export function BorderChainGame({ difficulty, mode, onFinish, onExit }: PlayHand
     sound.correct();
     const ns = streak + 1;
     const earned = scoreForAnswer({ correct: true, difficulty, streak });
+    scoreRef.current += earned;
     setScore((s) => s + earned);
+    correctRef.current += 1;
+    attemptsRef.current += 1;
+    bestRef.current = Math.max(bestRef.current, ns);
     setStreak(ns);
-    setBestStreak((b) => Math.max(b, ns));
-    setCorrect((c) => c + 1);
     const newFound = new Set(found).add(hit.cca3);
     setFound(newFound);
     if (newFound.size >= neighbors.length) {
@@ -124,6 +134,7 @@ export function BorderChainGame({ difficulty, mode, onFinish, onExit }: PlayHand
 
   function registerWrong() {
     sound.wrong();
+    attemptsRef.current += 1;
     setStreak(0);
   }
 
@@ -132,7 +143,6 @@ export function BorderChainGame({ difficulty, mode, onFinish, onExit }: PlayHand
     const guess = input.trim();
     if (!guess) return;
     setInput("");
-    setAttempts((a) => a + 1);
     const hit = neighbors.find(
       (n) => !found.has(n.cca3) && matchAnswer(guess, countryAccepted(n)).status === "correct"
     );
@@ -147,7 +157,6 @@ export function BorderChainGame({ difficulty, mode, onFinish, onExit }: PlayHand
 
   function pickChoice(country: Country) {
     if (finishedRef.current || found.has(country.cca3)) return;
-    setAttempts((a) => a + 1);
     const isNeighbor = neighbors.some((n) => n.cca3 === country.cca3);
     if (isNeighbor) {
       markFound(country);
@@ -163,7 +172,11 @@ export function BorderChainGame({ difficulty, mode, onFinish, onExit }: PlayHand
       <GameTopBar title={t("games.border-chain.name")} onExit={onExit}>
         <StreakPill value={streak} />
         <ScorePill value={score} />
-        <TimerPill ms={timeLeft} danger={timeLeft < 10000} />
+        {timed ? (
+          <TimerPill ms={timeLeft} danger={timeLeft < 10000} />
+        ) : (
+          <RoundPill current={completed + 1} total={targetCountries} />
+        )}
       </GameTopBar>
 
       <div className="mx-auto flex w-full max-w-md flex-1 flex-col px-4 py-4">

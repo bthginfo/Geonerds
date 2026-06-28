@@ -8,7 +8,7 @@ export interface CountryFeature {
   geometry: GeoJSON.Geometry;
 }
 
-type Resolution = "50m" | "110m";
+type Resolution = "10m" | "50m" | "110m";
 
 const caches: Partial<Record<Resolution, Promise<CountryFeature[]>>> = {};
 
@@ -20,7 +20,9 @@ export function loadCountries(res: Resolution = "50m"): Promise<CountryFeature[]
         const fc = feature(topo, topo.objects.countries) as unknown as {
           features: CountryFeature[];
         };
-        return fc.features.filter((f) => f.id);
+        // Keep all features (incl. id-less ones like Somaliland) so the map has
+        // no visual gaps; callers that need country matching filter by id.
+        return fc.features;
       });
   }
   return caches[res]!;
@@ -32,6 +34,7 @@ export async function featuresByCcn3(res: Resolution = "50m"): Promise<Map<strin
   // Some numeric codes are shared (e.g. Australia + a tiny territory). Keep the
   // larger geometry so the main country is the one we quiz on.
   for (const f of list) {
+    if (!f.id) continue;
     const id = String(f.id);
     const existing = map.get(id);
     if (!existing || geoArea(f as unknown as GeoJSON.Feature) > geoArea(existing as unknown as GeoJSON.Feature)) {

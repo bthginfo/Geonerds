@@ -10,6 +10,8 @@ import { useT } from "@/i18n/I18nProvider";
 import { Button } from "@/components/ui/button";
 import { Modal } from "@/components/ui/modal";
 import { scoreStore } from "@/lib/leaderboard/local";
+import { apiSubmitScore } from "@/lib/online";
+import { useAuth } from "@/store/auth";
 import { ResultScreen } from "./result-screen";
 import { cn } from "@/lib/utils";
 
@@ -25,6 +27,10 @@ export interface PlayResult {
 export interface PlayHandlers {
   difficulty: Difficulty;
   mode: AnswerMode;
+  /** Number of rounds; 0 means "all available". */
+  roundCount: number;
+  /** Whether the optional countdown timer is enabled. */
+  timed: boolean;
   onFinish: (r: PlayResult) => void;
   onExit: () => void;
 }
@@ -45,6 +51,8 @@ export function GameShell({
   const [phase, setPhase] = useState<Phase>("setup");
   const [difficulty, setDifficulty] = useState<Difficulty>("medium");
   const [mode, setMode] = useState<AnswerMode>(config?.modes?.[0] ?? "choice");
+  const [roundCount, setRoundCount] = useState<number>(config?.countOptions?.[0] ?? 12);
+  const [timed, setTimed] = useState<boolean>(config?.defaultTimed ?? false);
   const [runKey, setRunKey] = useState(0);
   const [result, setResult] = useState<RunResult | null>(null);
   const [isRecord, setIsRecord] = useState(false);
@@ -66,6 +74,10 @@ export function GameShell({
     };
     const prevBest = await scoreStore.bestScore(gameId);
     await scoreStore.saveRun(run);
+    // Submit to the global leaderboard when signed in (fire-and-forget).
+    if (useAuth.getState().user && r.score > 0) {
+      apiSubmitScore(run);
+    }
     setResult(run);
     setIsRecord(r.score > 0 && r.score > prevBest);
     setPhase("result");
@@ -82,6 +94,8 @@ export function GameShell({
         {children({
           difficulty,
           mode,
+          roundCount,
+          timed,
           onFinish: handleFinish,
           onExit: () => setPhase("setup"),
         })}
@@ -166,6 +180,55 @@ export function GameShell({
                 ))}
               </div>
             </div>
+          )}
+
+          {config.countOptions && (
+            <div>
+              <h2 className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                {t("setup.rounds")}
+              </h2>
+              <div className="grid grid-cols-4 gap-2">
+                {config.countOptions.map((n) => (
+                  <button
+                    key={n}
+                    onClick={() => setRoundCount(n)}
+                    className={cn(
+                      "rounded-xl border-2 py-2.5 text-sm font-semibold transition-all",
+                      roundCount === n
+                        ? "border-primary bg-primary/5 text-foreground"
+                        : "border-border bg-card text-muted-foreground hover:bg-muted/40"
+                    )}
+                  >
+                    {n === 0 ? t("setup.all") : n}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {config.supportsTimed && (
+            <button
+              onClick={() => setTimed((v) => !v)}
+              className="flex w-full items-center justify-between rounded-xl border-2 border-border bg-card px-4 py-3 text-left"
+            >
+              <div>
+                <div className="font-semibold">{t("setup.timed")}</div>
+                <div className="text-xs text-muted-foreground">{t("setup.timed.desc")}</div>
+              </div>
+              <span
+                className={cn(
+                  "relative h-7 w-12 shrink-0 rounded-full transition-colors",
+                  timed ? "bg-primary" : "bg-input"
+                )}
+              >
+                <span
+                  className={cn(
+                    "absolute top-0.5 h-6 w-6 rounded-full bg-white shadow transition-transform",
+                    timed ? "translate-x-[1.4rem]" : "translate-x-0.5"
+                  )}
+                />
+              </span>
+            </button>
           )}
         </div>
 

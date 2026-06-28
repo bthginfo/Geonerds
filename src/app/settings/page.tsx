@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useTheme } from "next-themes";
 import { Languages, Palette, Volume2, Database } from "lucide-react";
+import { AccountPanel } from "@/components/account/account-panel";
 import { useT } from "@/i18n/I18nProvider";
 import { useSettings } from "@/store/settings";
 import { Button } from "@/components/ui/button";
@@ -40,6 +41,13 @@ export default function SettingsPage() {
   return (
     <div className="mx-auto w-full max-w-xl px-4 py-8 pb-24">
       <h1 className="mb-6 text-2xl font-bold">{t("settings.title")}</h1>
+
+      <h2 className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+        {t("account.title")}
+      </h2>
+      <div className="mb-6">
+        <AccountPanel />
+      </div>
 
       <Section icon={<Languages className="h-5 w-5" />} title={t("settings.language")}>
         <Segmented

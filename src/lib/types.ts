@@ -16,6 +16,8 @@ export interface Country {
   gdp: number | null;
   landlocked: boolean;
   borders: string[];
+  languages: string[];
+  currencies: string[];
   independent: boolean;
   unMember: boolean;
   difficulty: 1 | 2 | 3 | 4;
@@ -25,6 +27,7 @@ export type GameId =
   | "flags"
   | "capitals"
   | "outline"
+  | "trivia"
   | "higher-lower"
   | "map-click"
   | "draw"

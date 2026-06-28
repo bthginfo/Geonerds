@@ -6,6 +6,7 @@ import {
   MapPin,
   Pencil,
   Spline,
+  Lightbulb,
   type LucideIcon,
 } from "lucide-react";
 import type { AnswerMode, GameId } from "@/lib/types";
@@ -17,6 +18,12 @@ export interface GameConfig {
   gradient: string;
   supportsDifficulty: boolean;
   modes?: AnswerMode[];
+  /** Round-count options; 0 means "all". */
+  countOptions?: number[];
+  /** Whether an optional countdown timer can be enabled. */
+  supportsTimed?: boolean;
+  /** Default state of the timed toggle. */
+  defaultTimed?: boolean;
 }
 
 export const GAMES: GameConfig[] = [
@@ -26,6 +33,8 @@ export const GAMES: GameConfig[] = [
     gradient: "from-sky-500 to-indigo-500",
     supportsDifficulty: true,
     modes: ["choice", "type"],
+    countOptions: [10, 25, 50, 0],
+    supportsTimed: true,
   },
   {
     id: "capitals",
@@ -33,6 +42,8 @@ export const GAMES: GameConfig[] = [
     gradient: "from-amber-500 to-orange-500",
     supportsDifficulty: true,
     modes: ["choice", "type"],
+    countOptions: [10, 25, 50, 0],
+    supportsTimed: true,
   },
   {
     id: "outline",
@@ -40,6 +51,17 @@ export const GAMES: GameConfig[] = [
     gradient: "from-violet-500 to-fuchsia-500",
     supportsDifficulty: true,
     modes: ["choice", "type"],
+    countOptions: [10, 25, 50, 0],
+    supportsTimed: true,
+  },
+  {
+    id: "trivia",
+    icon: Lightbulb,
+    gradient: "from-yellow-500 to-amber-500",
+    supportsDifficulty: true,
+    modes: ["choice", "type"],
+    countOptions: [10, 25, 50, 0],
+    supportsTimed: true,
   },
   {
     id: "higher-lower",
@@ -52,12 +74,15 @@ export const GAMES: GameConfig[] = [
     icon: MapPin,
     gradient: "from-rose-500 to-red-500",
     supportsDifficulty: true,
+    countOptions: [10, 25, 50, 0],
+    supportsTimed: true,
   },
   {
     id: "draw",
     icon: Pencil,
     gradient: "from-cyan-500 to-blue-500",
     supportsDifficulty: true,
+    countOptions: [5, 10, 20, 0],
   },
   {
     id: "border-chain",
@@ -65,6 +90,9 @@ export const GAMES: GameConfig[] = [
     gradient: "from-lime-500 to-green-600",
     supportsDifficulty: true,
     modes: ["choice", "type"],
+    countOptions: [5, 10, 20, 0],
+    supportsTimed: true,
+    defaultTimed: true,
   },
 ];
 

@@ -6,15 +6,16 @@ import { QuizGame, type QuizRound } from "@/games/quiz-core";
 import { FlagImage } from "@/components/flag-image";
 import { poolForDifficulty, withCapital, countryName } from "@/data/countries";
 import { capitalAccepted, capitalLabel } from "@/games/aliases";
-import { makeChoices, pickQuestions, ROUNDS_PER_GAME } from "@/games/round-utils";
+import { makeChoices, pickQuestions } from "@/games/round-utils";
 import { useT } from "@/i18n/I18nProvider";
 
-export function CapitalsGame({ difficulty, mode, onFinish, onExit }: PlayHandlers) {
+export function CapitalsGame({ difficulty, mode, roundCount, timed, onFinish, onExit }: PlayHandlers) {
   const { locale } = useT();
 
   const rounds = useMemo<QuizRound[]>(() => {
     const pool = withCapital(poolForDifficulty(difficulty));
-    const questions = pickQuestions(pool, ROUNDS_PER_GAME);
+    const count = roundCount === 0 ? pool.length : roundCount;
+    const questions = pickQuestions(pool, count);
     return questions.map((answer) => {
       const choices = makeChoices(answer, pool, difficulty);
       return {
@@ -29,10 +30,11 @@ export function CapitalsGame({ difficulty, mode, onFinish, onExit }: PlayHandler
         correctId: answer.cca3,
         accepted: capitalAccepted(answer),
         answerLabel: capitalLabel(answer, locale),
+        factCountry: answer,
       };
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [difficulty]);
+  }, [difficulty, roundCount]);
 
   return (
     <QuizGame
@@ -40,6 +42,7 @@ export function CapitalsGame({ difficulty, mode, onFinish, onExit }: PlayHandler
       rounds={rounds}
       mode={mode}
       difficulty={difficulty}
+      timed={timed}
       onFinish={onFinish}
       onExit={onExit}
       typePlaceholderKey="type.placeholderCapital"

@@ -7,16 +7,16 @@ import { QuizGame, type QuizRound } from "@/games/quiz-core";
 import { CountrySilhouette } from "@/components/map/country-silhouette";
 import { poolForDifficulty, countryName } from "@/data/countries";
 import { countryAccepted } from "@/games/aliases";
-import { makeChoices, pickQuestions, ROUNDS_PER_GAME } from "@/games/round-utils";
+import { makeChoices, pickQuestions } from "@/games/round-utils";
 import { featuresByCcn3, type CountryFeature } from "@/lib/geo";
 import { useT } from "@/i18n/I18nProvider";
 
-export function OutlineGame({ difficulty, mode, onFinish, onExit }: PlayHandlers) {
+export function OutlineGame({ difficulty, mode, roundCount, timed, onFinish, onExit }: PlayHandlers) {
   const { t, locale } = useT();
   const [features, setFeatures] = useState<Map<string, CountryFeature> | null>(null);
 
   useEffect(() => {
-    featuresByCcn3("50m").then(setFeatures);
+    featuresByCcn3("10m").then(setFeatures);
   }, []);
 
   const rounds = useMemo<QuizRound[]>(() => {
@@ -24,14 +24,15 @@ export function OutlineGame({ difficulty, mode, onFinish, onExit }: PlayHandlers
     const pool = poolForDifficulty(difficulty, { requireGeometry: true }).filter(
       (c) => c.ccn3 && features.has(String(c.ccn3))
     );
-    const questions = pickQuestions(pool, ROUNDS_PER_GAME);
+    const count = roundCount === 0 ? pool.length : roundCount;
+    const questions = pickQuestions(pool, count);
     return questions.map((answer) => {
       const choices = makeChoices(answer, pool, difficulty);
       const feat = features.get(String(answer.ccn3))!;
       return {
         key: answer.cca3,
         prompt: (
-          <div className="h-56 w-56 sm:h-64 sm:w-64">
+          <div className="h-64 w-72 max-w-full sm:h-72 sm:w-80">
             <CountrySilhouette feature={feat} fillClassName="fill-primary" />
           </div>
         ),
@@ -39,10 +40,11 @@ export function OutlineGame({ difficulty, mode, onFinish, onExit }: PlayHandlers
         correctId: answer.cca3,
         accepted: countryAccepted(answer),
         answerLabel: countryName(answer, locale),
+        factCountry: answer,
       };
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [features, difficulty]);
+  }, [features, difficulty, roundCount]);
 
   if (!features || rounds.length === 0) {
     return (
@@ -59,6 +61,7 @@ export function OutlineGame({ difficulty, mode, onFinish, onExit }: PlayHandlers
       rounds={rounds}
       mode={mode}
       difficulty={difficulty}
+      timed={timed}
       onFinish={onFinish}
       onExit={onExit}
     />
