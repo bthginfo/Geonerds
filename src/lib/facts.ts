@@ -1,6 +1,7 @@
 import type { Country, Locale } from "./types";
 import { getCountryByCca3 } from "@/data/countries";
 import { COUNTRY_FACTS } from "./country-facts";
+import { simplifyCurrency } from "./currency";
 import { formatNumber, pickOne, shuffle } from "./utils";
 
 const REGION_DE: Record<string, string> = {
@@ -95,7 +96,8 @@ function languagePhrase(c: Country, locale: Locale): string | null {
 
 function currencyPhrase(c: Country, locale: Locale): string | null {
   if (!c.currencies.length) return null;
-  const cur = c.currencies[0];
+  // Base unit only, so the country adjective never gives the answer away.
+  const cur = simplifyCurrency(c.currencies[0]);
   return locale === "de" ? `Die Währung ist der ${cur}.` : `Its currency is the ${cur}.`;
 }
 
