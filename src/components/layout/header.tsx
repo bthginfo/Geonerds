@@ -11,6 +11,7 @@ import { cn } from "@/lib/utils";
 const NAV = [
   { href: "/", key: "nav.home" },
   { href: "/leaderboard", key: "nav.leaderboard" },
+  { href: "/badges", key: "nav.badges" },
   { href: "/how-to", key: "nav.howto" },
 ] as const;
 

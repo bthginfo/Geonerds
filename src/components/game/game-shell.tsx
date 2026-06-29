@@ -12,6 +12,7 @@ import { Modal } from "@/components/ui/modal";
 import { scoreStore } from "@/lib/leaderboard/local";
 import { apiSubmitScore } from "@/lib/online";
 import { useAuth } from "@/store/auth";
+import { earnedIds } from "@/lib/badges";
 import { ResultScreen } from "./result-screen";
 import { cn } from "@/lib/utils";
 
@@ -59,6 +60,7 @@ export function GameShell({
   const [runKey, setRunKey] = useState(0);
   const [result, setResult] = useState<RunResult | null>(null);
   const [isRecord, setIsRecord] = useState(false);
+  const [newBadges, setNewBadges] = useState<string[]>([]);
   const [howOpen, setHowOpen] = useState(false);
 
   if (!config) return null;
@@ -76,13 +78,17 @@ export function GameShell({
       createdAt: Date.now(),
     };
     const prevBest = await scoreStore.bestScore(gameId);
+    const before = earnedIds(await scoreStore.allRuns());
     await scoreStore.saveRun(run);
+    const after = earnedIds(await scoreStore.allRuns());
+    const unlocked = [...after].filter((id) => !before.has(id));
     // Submit to the global leaderboard when signed in (fire-and-forget).
     if (useAuth.getState().user && r.score > 0) {
       apiSubmitScore(run);
     }
     setResult(run);
     setIsRecord(r.score > 0 && r.score > prevBest);
+    setNewBadges(unlocked);
     setPhase("result");
   }
 
@@ -108,7 +114,14 @@ export function GameShell({
   }
 
   if (phase === "result" && result) {
-    return <ResultScreen result={result} isRecord={isRecord} onReplay={startPlaying} />;
+    return (
+      <ResultScreen
+        result={result}
+        isRecord={isRecord}
+        newBadges={newBadges}
+        onReplay={startPlaying}
+      />
+    );
   }
 
   const Icon = config.icon;

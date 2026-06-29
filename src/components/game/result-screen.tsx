@@ -9,15 +9,18 @@ import { useT } from "@/i18n/I18nProvider";
 import { Button } from "@/components/ui/button";
 import { sound } from "@/lib/sound";
 import { accuracy } from "@/lib/scoring";
+import { BADGES, badgeName } from "@/lib/badges";
 import { formatNumber, formatTime } from "@/lib/utils";
 
 export function ResultScreen({
   result,
   isRecord,
+  newBadges = [],
   onReplay,
 }: {
   result: RunResult;
   isRecord: boolean;
+  newBadges?: string[];
   onReplay: () => void;
 }) {
   const { t, locale } = useT();
@@ -25,12 +28,14 @@ export function ResultScreen({
 
   useEffect(() => {
     sound.finish();
-    if (isRecord) {
+    if (isRecord || newBadges.length > 0) {
       import("canvas-confetti").then(({ default: confetti }) => {
         confetti({ particleCount: 120, spread: 75, origin: { y: 0.35 } });
       });
     }
-  }, [isRecord]);
+  }, [isRecord, newBadges.length]);
+
+  const unlocked = BADGES.filter((b) => newBadges.includes(b.id));
 
   async function share() {
     const text = t("result.shareText", {
@@ -83,6 +88,35 @@ export function ResultScreen({
         <p className="mt-4 text-sm text-muted-foreground">
           {t("result.summary", { correct: result.correct, total: result.total })}
         </p>
+
+        {unlocked.length > 0 && (
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.2 }}
+            className="mt-5 rounded-2xl border border-warning/40 bg-warning/10 p-3"
+          >
+            <div className="mb-2 text-xs font-bold uppercase tracking-wide text-warning">
+              {unlocked.length === 1
+                ? t("badges.unlocked")
+                : t("badges.unlockedN", { n: unlocked.length })}
+            </div>
+            <div className="flex flex-wrap justify-center gap-2">
+              {unlocked.map((b) => {
+                const Icon = b.icon;
+                return (
+                  <span
+                    key={b.id}
+                    className="inline-flex items-center gap-1.5 rounded-full bg-card px-2.5 py-1 text-xs font-semibold shadow-sm"
+                  >
+                    <Icon className="h-3.5 w-3.5 text-warning" />
+                    {badgeName(b, locale)}
+                  </span>
+                );
+              })}
+            </div>
+          </motion.div>
+        )}
 
         <div className="mt-6 flex flex-col gap-2">
           <Button size="lg" onClick={onReplay} className="gap-2">

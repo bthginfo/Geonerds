@@ -6,7 +6,7 @@ import { Check, X, ArrowRight, CornerDownLeft, Lightbulb } from "lucide-react";
 import type { AnswerMode, Country, Difficulty, GameId } from "@/lib/types";
 import type { PlayResult } from "@/components/game/game-shell";
 import { useT } from "@/i18n/I18nProvider";
-import { GameTopBar, ScorePill, StreakPill, RoundPill, TimerPill, ProgressBar } from "@/components/game/hud";
+import { GameTopBar, ScorePill, StreakPill, RoundPill, TimerPill, LivesPill, ProgressBar } from "@/components/game/hud";
 import { Button } from "@/components/ui/button";
 import { scoreForAnswer } from "@/lib/scoring";
 import { matchAnswer } from "@/lib/fuzzy";
@@ -15,7 +15,7 @@ import { sound } from "@/lib/sound";
 import { cn } from "@/lib/utils";
 
 const TIME_LIMIT_MS = 10000;
-const PER_ROUND_BUDGET_MS = 8000;
+const MAX_LIVES = 3;
 
 export interface QuizOption {
   id: string;
@@ -65,16 +65,19 @@ export function QuizGame({
   const [hint, setHint] = useState<string | null>(null);
   const [gain, setGain] = useState<number | null>(null);
   const [fact, setFact] = useState<string | null>(null);
+  const [lives, setLives] = useState(MAX_LIVES);
+  const [timedOut, setTimedOut] = useState(false);
 
   const total = rounds.length;
-  const budget = total * PER_ROUND_BUDGET_MS;
-  const [timeLeft, setTimeLeft] = useState(budget);
+  const [timeLeft, setTimeLeft] = useState(TIME_LIMIT_MS);
 
   const startRef = useRef(Date.now());
   const qStartRef = useRef(Date.now());
   const scoreRef = useRef(0);
   const correctRef = useRef(0);
   const bestRef = useRef(0);
+  const livesRef = useRef(MAX_LIVES);
+  const gameOverRef = useRef(false);
   const finishedRef = useRef(false);
 
   const round = rounds[idx];
@@ -93,28 +96,38 @@ export function QuizGame({
     });
   }
 
-  // Optional overall countdown.
+  // Per-question countdown (timed mode only). Running out of time costs a life.
   useEffect(() => {
-    if (!timed) return;
+    if (!timed || answered || gameOverRef.current) return;
+    qStartRef.current = Date.now();
+    setTimeLeft(TIME_LIMIT_MS);
     const id = setInterval(() => {
-      const left = budget - (Date.now() - startRef.current);
+      const left = TIME_LIMIT_MS - (Date.now() - qStartRef.current);
       if (left <= 0) {
         clearInterval(id);
         setTimeLeft(0);
-        doFinish();
+        commit(false, true);
       } else {
         setTimeLeft(left);
       }
-    }, 200);
+    }, 100);
     return () => clearInterval(id);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [timed]);
+  }, [timed, idx, answered]);
 
-  function commit(correct: boolean) {
+  function loseLife() {
+    livesRef.current = Math.max(0, livesRef.current - 1);
+    setLives(livesRef.current);
+    if (livesRef.current <= 0) gameOverRef.current = true;
+  }
+
+  function commit(correct: boolean, didTimeOut = false) {
+    if (answered) return;
     const timeMs = Date.now() - qStartRef.current;
     const earned = scoreForAnswer({ correct, difficulty, timed, timeMs, timeLimitMs: TIME_LIMIT_MS });
     setAnswered(true);
     setLastCorrect(correct);
+    setTimedOut(didTimeOut);
     scoreRef.current = Math.max(0, scoreRef.current + earned);
     setScore((s) => Math.max(0, s + earned));
     setGain(earned);
@@ -130,11 +143,12 @@ export function QuizGame({
     } else {
       sound.wrong();
       setStreak(0);
+      loseLife();
     }
   }
 
   function next() {
-    if (idx + 1 >= total) {
+    if (gameOverRef.current || idx + 1 >= total) {
       doFinish();
       return;
     }
@@ -145,6 +159,7 @@ export function QuizGame({
     setHint(null);
     setGain(null);
     setFact(null);
+    setTimedOut(false);
     qStartRef.current = Date.now();
   }
 
@@ -171,8 +186,9 @@ export function QuizGame({
     <div className="flex flex-1 flex-col">
       <GameTopBar title={t(`games.${gameId}.name`)} onExit={onExit}>
         <StreakPill value={streak} />
+        <LivesPill lives={lives} max={MAX_LIVES} />
         <ScorePill value={score} />
-        {timed ? <TimerPill ms={timeLeft} danger={timeLeft < 10000} /> : <RoundPill current={idx + 1} total={total} />}
+        {timed ? <TimerPill ms={timeLeft} danger={timeLeft < 4000} /> : <RoundPill current={idx + 1} total={total} />}
       </GameTopBar>
       <div className="px-3 pt-2">
         <div className="mx-auto max-w-3xl">
@@ -278,16 +294,18 @@ export function QuizGame({
                         ) : (
                           <span className="flex flex-col text-danger">
                             <span className="flex items-center gap-1">
-                              <X className="h-5 w-5" /> {t("common.wrong")}
+                              <X className="h-5 w-5" /> {timedOut ? t("common.timeUp") : t("common.wrong")}
                             </span>
                             <span className="text-xs font-normal text-muted-foreground">
-                              {t("common.theAnswerWas", { answer: round.answerLabel })}
+                              {gameOverRef.current
+                                ? t("common.gameOver")
+                                : t("common.theAnswerWas", { answer: round.answerLabel })}
                             </span>
                           </span>
                         )}
                       </div>
                       <Button onClick={next} className="gap-1.5">
-                        {idx + 1 >= total ? t("common.continue") : t("common.next")}
+                        {gameOverRef.current || idx + 1 >= total ? t("common.continue") : t("common.next")}
                         <ArrowRight className="h-4 w-4" />
                       </Button>
                     </div>
