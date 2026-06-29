@@ -59,6 +59,7 @@ export function PinGame({ difficulty, roundCount, timed, onFinish, onExit }: Pla
   const startRef = useRef(Date.now());
   const scoreRef = useRef(0);
   const correctRef = useRef(0);
+  const answeredRef = useRef(0);
   const bestRef = useRef(0);
   const finishedRef = useRef(false);
 
@@ -71,7 +72,7 @@ export function PinGame({ difficulty, roundCount, timed, onFinish, onExit }: Pla
     onFinish({
       score: scoreRef.current,
       correct: correctRef.current,
-      total,
+      total: answeredRef.current > 0 ? answeredRef.current : total,
       bestStreak: bestRef.current,
       durationMs: Date.now() - startRef.current,
       mode: "pin",
@@ -97,6 +98,7 @@ export function PinGame({ difficulty, roundCount, timed, onFinish, onExit }: Pla
   function confirm() {
     if (revealed || !pin || !targetLngLat) return;
     const dist = haversineKm(pin, targetLngLat);
+    answeredRef.current += 1;
     setDistKm(dist);
     setRevealed(true);
     const earned = Math.round(

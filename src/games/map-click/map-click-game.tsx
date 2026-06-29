@@ -48,6 +48,7 @@ export function MapClickGame({ difficulty, roundCount, timed, variant, onFinish,
   const lockRef = useRef(false);
   const scoreRef = useRef(0);
   const correctRef = useRef(0);
+  const answeredRef = useRef(0);
   const bestRef = useRef(0);
   const finishedRef = useRef(false);
 
@@ -91,7 +92,7 @@ export function MapClickGame({ difficulty, roundCount, timed, variant, onFinish,
     onFinish({
       score: scoreRef.current,
       correct: correctRef.current,
-      total: targets.length,
+      total: answeredRef.current > 0 ? answeredRef.current : targets.length,
       bestStreak: bestRef.current,
       durationMs: Date.now() - startRef.current,
       mode: "map",
@@ -111,6 +112,7 @@ export function MapClickGame({ difficulty, roundCount, timed, variant, onFinish,
   }
 
   function reveal(ccn3: string, ok: boolean, delay: number) {
+    answeredRef.current += 1;
     setFlash({ ccn3, ok });
     setFound((f) => new Set(f).add(ccn3));
     setTimeout(() => {

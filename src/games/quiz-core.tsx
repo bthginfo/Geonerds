@@ -87,10 +87,13 @@ export function QuizGame({
   function doFinish() {
     if (finishedRef.current) return;
     finishedRef.current = true;
+    // Denominator = questions actually answered (a game over via lives ends the
+    // run early, so reporting the full planned count would be misleading).
+    const answered = marksRef.current.length;
     onFinish({
       score: scoreRef.current,
       correct: correctRef.current,
-      total,
+      total: answered > 0 ? answered : total,
       bestStreak: bestRef.current,
       durationMs: Date.now() - startRef.current,
       mode,

@@ -43,6 +43,7 @@ export function MountainsGame({ difficulty, mode, roundCount, timed, onFinish, o
   const qStartRef = useRef(Date.now());
   const scoreRef = useRef(0);
   const correctRef = useRef(0);
+  const answeredRef = useRef(0);
   const bestRef = useRef(0);
   const livesRef = useRef(MAX_LIVES);
   const gameOverRef = useRef(false);
@@ -87,6 +88,7 @@ export function MountainsGame({ difficulty, mode, roundCount, timed, onFinish, o
 
   function commit(correct: boolean) {
     if (answered) return;
+    answeredRef.current += 1;
     const timeMs = Date.now() - qStartRef.current;
     const earned = scoreForAnswer({ correct, difficulty, timed, timeMs, timeLimitMs: TIME_LIMIT_MS });
     setAnswered(true);
@@ -128,7 +130,7 @@ export function MountainsGame({ difficulty, mode, roundCount, timed, onFinish, o
     onFinish({
       score: scoreRef.current,
       correct: correctRef.current,
-      total,
+      total: answeredRef.current > 0 ? answeredRef.current : total,
       bestStreak: bestRef.current,
       durationMs: Date.now() - startRef.current,
       mode,

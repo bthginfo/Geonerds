@@ -11,7 +11,7 @@ import { ServiceWorkerRegister } from "@/components/sw-register";
 const geistSans = Geist({ variable: "--font-sans", subsets: ["latin"] });
 const geistMono = Geist_Mono({ variable: "--font-mono", subsets: ["latin"] });
 
-const SITE_URL = "https://geonerds-nine.vercel.app";
+const SITE_URL = "https://geo-nerds.com";
 const TITLE = "GeoNerds — Geography Games & Quizzes";
 const DESCRIPTION =
   "Free geography quizzes and games: guess flags, capitals, country shapes, rivers and more. Play fast, beautiful geography trivia in English & German on desktop and mobile.";

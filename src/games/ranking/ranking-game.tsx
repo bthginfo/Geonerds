@@ -81,6 +81,7 @@ export function RankingGame({ difficulty, roundCount, timed, onFinish, onExit }:
   const startRef = useRef(Date.now());
   const scoreRef = useRef(0);
   const correctRef = useRef(0);
+  const answeredRef = useRef(0);
   const bestRef = useRef(0);
   const finishedRef = useRef(false);
 
@@ -92,7 +93,7 @@ export function RankingGame({ difficulty, roundCount, timed, onFinish, onExit }:
     onFinish({
       score: scoreRef.current,
       correct: correctRef.current,
-      total,
+      total: answeredRef.current > 0 ? answeredRef.current : total,
       bestStreak: bestRef.current,
       durationMs: Date.now() - startRef.current,
       mode: "rank",
@@ -118,6 +119,7 @@ export function RankingGame({ difficulty, roundCount, timed, onFinish, onExit }:
   function submit() {
     if (answered) return;
     setAnswered(true);
+    answeredRef.current += 1;
     let correctSpots = 0;
     arrangement.forEach((c, i) => {
       if (c.cca3 === round.sorted[i].cca3) correctSpots++;

@@ -2,7 +2,7 @@
 
 > GeoNerds is a free, ad-free collection of geography quizzes and games available in English and German. Play on desktop or mobile — no account required (optional sign-in adds a global leaderboard).
 
-Site: https://geonerds-nine.vercel.app
+Site: https://geo-nerds.com
 
 ## What you can play
 GeoNerds offers many bite-sized geography games, each with easy/medium/hard difficulty, optional timer, 3 lives, scoring and achievements:
