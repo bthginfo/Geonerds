@@ -21,17 +21,22 @@ export function FlagImage({ code, alt = "", className, rounded = true }: FlagIma
   return (
     <div
       className={cn(
-        "relative flex items-center justify-center overflow-hidden bg-muted ring-1 ring-black/10",
+        "relative flex items-center justify-center overflow-hidden ring-1 ring-black/10",
+        // Square/pennant flags hug their real ratio, so no muted bars show.
+        square ? "bg-transparent" : "bg-muted",
         rounded && "rounded-lg",
         className
       )}
+      // Inline aspect-ratio overrides any aspect-[4/3] the caller passed, so the
+      // wrapper matches the flag and there's no empty border around it.
+      style={square ? { aspectRatio: "1 / 1" } : undefined}
     >
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img
         src={src}
         alt={alt}
         draggable={false}
-        className={cn("h-full w-full", square ? "object-contain p-0.5" : "object-cover")}
+        className={cn("h-full w-full", square ? "object-contain" : "object-cover")}
       />
     </div>
   );
