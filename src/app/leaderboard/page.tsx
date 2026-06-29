@@ -178,7 +178,9 @@ function GlobalBoard({
             <div className="text-[11px] font-semibold uppercase tracking-wide text-warning">
               {period === "month" ? t("leaderboard.championMonth") : t("leaderboard.championAll")}
             </div>
-            <div className="truncate text-lg font-bold leading-tight">{champion.name}</div>
+            <Link href={`/u/${encodeURIComponent(champion.name)}`} className="block truncate text-lg font-bold leading-tight hover:underline">
+              {champion.name}
+            </Link>
           </div>
           <span className="shrink-0 text-lg font-extrabold tabular-nums">{formatNumber(champion.score, locale)}</span>
         </div>
@@ -201,6 +203,7 @@ function GlobalBoard({
               rank={i + 1}
               last={i === scores.length - 1}
               title={s.name}
+              href={`/u/${encodeURIComponent(s.name)}`}
               sub={
                 (showGame ? t(`games.${s.game_id}.name`) + " · " : "") +
                 (s.difficulty ? t(`difficulty.${s.difficulty}`) + " · " : "") +
@@ -221,13 +224,22 @@ function Row({
   title,
   sub,
   score,
+  href,
 }: {
   rank: number;
   last: boolean;
   title: string;
   sub: string;
   score: string;
+  href?: string;
 }) {
+  const titleNode = href ? (
+    <Link href={href} className="block truncate font-medium hover:underline">
+      {title}
+    </Link>
+  ) : (
+    <div className="truncate font-medium">{title}</div>
+  );
   return (
     <div className={cn("flex items-center gap-3 px-4 py-3", !last && "border-b border-border/60")}>
       <span
@@ -241,7 +253,7 @@ function Row({
         {rank}
       </span>
       <div className="min-w-0 flex-1">
-        <div className="truncate font-medium">{title}</div>
+        {titleNode}
         <div className="text-xs text-muted-foreground">{sub}</div>
       </div>
       <span className="font-bold tabular-nums">{score}</span>

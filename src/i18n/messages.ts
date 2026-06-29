@@ -44,6 +44,8 @@ export const messages: Record<Locale, Dict> = {
     "profile.dailyStreak": "Daily streak",
     "profile.viewAll": "View all",
     "profile.signInCta": "Sign in to save your progress online.",
+    "profile.bestPerGame": "Best score per game",
+    "profile.notFound": "No public profile found for {name}.",
 
     "common.play": "Play",
     "common.start": "Start",
@@ -263,7 +265,7 @@ export const messages: Record<Locale, Dict> = {
     "howto.pin": "A place is named. Tap where you think it is on the map. The closer your pin, the more points — scored by distance in kilometres. Pinch or scroll to zoom in for accuracy.",
     "howto.route": "You get a start and a destination country — only those two are shown. Name (or pick) a country that borders where you are and lies on the way; each correct step appears on the map until you arrive.",
     "howto.waters": "A river or lake is highlighted on the map. Choose or type which one it is.",
-    "howto.neighbors": "You see a country's neighbours — the countries it borders. Work out which country sits in the middle and name it (choice or typing).",
+    "howto.neighbors": "Clues about a mystery country are revealed one at a time — continent, coastline, language, currency, neighbours and more. Guess who it is (choice or typing); the fewer clues you reveal, the more points you score.",
     "howto.trace": "A river is named and the map zooms to its region. Draw its course with your finger or mouse; you're scored on how closely your line follows the real river.",
     "howto.origin": "An animal, dish or symbol is shown. Pick or type the country it's most associated with.",
     "howto.millionaire": "Answer geography questions that get harder and more obscure each round, with four options each. Three wrong answers and the game is over — how far can you climb?",
@@ -346,6 +348,7 @@ export const messages: Record<Locale, Dict> = {
     "account.err.invalid_credentials": "Wrong name or passcode.",
     "account.err.invalid_input": "Please check your name and passcode.",
     "account.err.not_configured": "Online accounts aren't available yet.",
+    "account.err.rate_limited": "Too many attempts. Please wait a few minutes and try again.",
     "account.err.generic": "Something went wrong. Please try again.",
 
     "settings.title": "Settings",
@@ -426,6 +429,8 @@ export const messages: Record<Locale, Dict> = {
     "profile.dailyStreak": "Tagesstreak",
     "profile.viewAll": "Alle ansehen",
     "profile.signInCta": "Melde dich an, um deinen Fortschritt online zu sichern.",
+    "profile.bestPerGame": "Bestwert pro Spiel",
+    "profile.notFound": "Kein öffentliches Profil für {name} gefunden.",
 
     "common.play": "Spielen",
     "common.start": "Start",
@@ -645,7 +650,7 @@ export const messages: Record<Locale, Dict> = {
     "howto.pin": "Ein Ort wird genannt. Tippe auf der Karte, wo er liegt. Je näher dein Pin, desto mehr Punkte – bewertet nach Entfernung in Kilometern. Zoome für mehr Genauigkeit hinein.",
     "howto.route": "Du bekommst ein Start- und ein Ziel-Land – nur diese beiden sind sichtbar. Nenne (oder wähle) ein Land, das an dein aktuelles grenzt und auf dem Weg liegt; jeder richtige Schritt erscheint auf der Karte, bis du ankommst.",
     "howto.waters": "Ein Fluss oder See ist auf der Karte markiert. Wähle oder tippe, welcher es ist.",
-    "howto.neighbors": "Du siehst die Nachbarländer eines Landes – die, an die es grenzt. Finde heraus, welches Land in der Mitte liegt, und nenne es (Auswahl oder Eingabe).",
+    "howto.neighbors": "Hinweise zu einem gesuchten Land werden nach und nach aufgedeckt – Kontinent, Küste, Sprache, Währung, Nachbarn und mehr. Errate es (Auswahl oder Eingabe); je weniger Hinweise du aufdeckst, desto mehr Punkte gibt es.",
     "howto.trace": "Ein Fluss wird genannt und die Karte zoomt auf seine Region. Zeichne seinen Verlauf mit Finger oder Maus; bewertet wird, wie genau deine Linie dem echten Fluss folgt.",
     "howto.origin": "Ein Tier, Gericht oder Symbol wird gezeigt. Wähle oder tippe das Land, mit dem es am stärksten verbunden ist.",
     "howto.millionaire": "Beantworte Geografie-Fragen, die jede Runde schwerer und obskurer werden – jeweils vier Optionen. Drei falsche Antworten und das Spiel ist vorbei. Wie weit kommst du?",
@@ -728,6 +733,7 @@ export const messages: Record<Locale, Dict> = {
     "account.err.invalid_credentials": "Falscher Name oder Passcode.",
     "account.err.invalid_input": "Bitte Name und Passcode prüfen.",
     "account.err.not_configured": "Online-Konten sind noch nicht verfügbar.",
+    "account.err.rate_limited": "Zu viele Versuche. Bitte warte ein paar Minuten und versuche es erneut.",
     "account.err.generic": "Etwas ist schiefgelaufen. Bitte erneut versuchen.",
 
     "settings.title": "Einstellungen",

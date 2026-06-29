@@ -29,6 +29,7 @@ export function AuthForm({ onDone }: { onDone?: () => void }) {
         "invalid_credentials",
         "invalid_input",
         "not_configured",
+        "rate_limited",
       ];
       setError(t(`account.err.${known.includes(err) ? err : "generic"}`));
       return;

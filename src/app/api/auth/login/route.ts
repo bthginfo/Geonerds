@@ -2,9 +2,17 @@ import { NextResponse } from "next/server";
 import { getDb, isDbConfigured } from "@/lib/db";
 import { verifyPasscode, setSessionCookie } from "@/lib/auth";
 import { validateName, validatePasscode } from "@/lib/validate";
+import { rateLimit, clientIp } from "@/lib/ratelimit";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
+
+function tooMany(retryAfter: number) {
+  return NextResponse.json(
+    { error: "rate_limited", retryAfter },
+    { status: 429, headers: { "Retry-After": String(retryAfter) } }
+  );
+}
 
 export async function POST(req: Request) {
   if (!isDbConfigured) {
@@ -22,6 +30,13 @@ export async function POST(req: Request) {
   if (!name || !passcode) {
     return NextResponse.json({ error: "invalid_input" }, { status: 400 });
   }
+
+  // Throttle: per-IP (broad) and per-account (targeted brute force).
+  const ip = clientIp(req);
+  const ipLimit = await rateLimit(`login:ip:${ip}`, 20, 600);
+  if (!ipLimit.ok) return tooMany(ipLimit.retryAfter);
+  const acctLimit = await rateLimit(`login:acct:${name.toLowerCase()}`, 8, 600);
+  if (!acctLimit.ok) return tooMany(acctLimit.retryAfter);
 
   const sql = await getDb();
   const rows = await sql`

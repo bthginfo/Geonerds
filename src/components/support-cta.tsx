@@ -4,7 +4,7 @@ import { Coffee } from "lucide-react";
 import { useT } from "@/i18n/I18nProvider";
 import { cn } from "@/lib/utils";
 
-const PAYPAL_URL = "https://www.paypal.me/JuliusIngelheim";
+const PAYPAL_URL = "https://paypal.me/JuliusIngelheim";
 
 /** Inline pill link — used after finishing a level. */
 export function SupportLink({ className }: { className?: string }) {

@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { getDb, isDbConfigured } from "@/lib/db";
 import { hashPasscode, newId, setSessionCookie } from "@/lib/auth";
 import { validateName, validatePasscode } from "@/lib/validate";
+import { rateLimit, clientIp } from "@/lib/ratelimit";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -21,6 +22,15 @@ export async function POST(req: Request) {
   const passcode = validatePasscode(body.passcode);
   if (!name || !passcode) {
     return NextResponse.json({ error: "invalid_input" }, { status: 400 });
+  }
+
+  // Throttle account creation per IP to prevent mass signups.
+  const limit = await rateLimit(`signup:ip:${clientIp(req)}`, 10, 3600);
+  if (!limit.ok) {
+    return NextResponse.json(
+      { error: "rate_limited", retryAfter: limit.retryAfter },
+      { status: 429, headers: { "Retry-After": String(limit.retryAfter) } }
+    );
   }
 
   const sql = await getDb();

@@ -5,7 +5,7 @@ import { usePathname } from "next/navigation";
 import { Coffee } from "lucide-react";
 import { useT } from "@/i18n/I18nProvider";
 
-const PAYPAL_URL = "https://www.paypal.me/JuliusIngelheim";
+const PAYPAL_URL = "https://paypal.me/JuliusIngelheim";
 
 export function Footer() {
   const { t } = useT();

@@ -2,7 +2,6 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Globe2 } from "lucide-react";
 import { useT } from "@/i18n/I18nProvider";
 import { ThemeToggle } from "./theme-toggle";
 import { LangToggle } from "./lang-toggle";
@@ -27,9 +26,8 @@ export function Header() {
     <header className="sticky top-0 z-40 border-b border-border/60 bg-background/80 backdrop-blur-md">
       <div className="mx-auto flex h-16 w-full max-w-5xl items-center justify-between px-4">
         <Link href="/" className="flex items-center gap-2 font-bold tracking-tight">
-          <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-sky-500 to-indigo-600 text-white shadow-sm">
-            <Globe2 className="h-5 w-5" />
-          </span>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/logo.svg" alt="" width={36} height={36} className="h-9 w-9 rounded-xl shadow-sm" />
           <span className="text-lg">{t("app.name")}</span>
         </Link>
 

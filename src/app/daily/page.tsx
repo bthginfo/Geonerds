@@ -40,17 +40,9 @@ export default function DailyPage() {
   useEffect(() => setMounted(true), []);
 
   const [playing, setPlaying] = useState(false);
-  const [tick, setTick] = useState(0);
 
   const today = dateKey();
   const todayResult = results[today];
-
-  // Live countdown to the next challenge.
-  useEffect(() => {
-    if (!todayResult) return;
-    const id = setInterval(() => setTick((x) => x + 1), 1000);
-    return () => clearInterval(id);
-  }, [todayResult]);
 
   const rounds = useMemo(() => generateDailyRounds(today, locale), [today, locale]);
   const streak = useMemo(() => streakFromDates(Object.keys(results)), [results]);
@@ -93,14 +85,7 @@ export default function DailyPage() {
       <GameTopBar title={t("daily.title")} onExit={() => router.push("/")} />
       <div className="mx-auto w-full max-w-md flex-1 px-4 py-8">
         {todayResult ? (
-          <ResultView
-            result={todayResult}
-            streak={streak}
-            untilTomorrow={countdown(msUntilTomorrow())}
-            locale={locale}
-            t={t}
-            key={tick}
-          />
+          <ResultView result={todayResult} streak={streak} locale={locale} t={t} />
         ) : (
           <motion.div
             initial={{ opacity: 0, y: 12 }}
@@ -129,16 +114,28 @@ export default function DailyPage() {
   );
 }
 
+function Countdown({ label }: { label: string }) {
+  const [left, setLeft] = useState(() => countdown(msUntilTomorrow()));
+  useEffect(() => {
+    const id = setInterval(() => setLeft(countdown(msUntilTomorrow())), 1000);
+    return () => clearInterval(id);
+  }, []);
+  return (
+    <div className="mt-5 rounded-xl bg-muted/60 p-3 text-sm">
+      <div className="text-muted-foreground">{label}</div>
+      <div className="mt-0.5 font-bold tabular-nums">{left}</div>
+    </div>
+  );
+}
+
 function ResultView({
   result,
   streak,
-  untilTomorrow,
   locale,
   t,
 }: {
   result: { score: number; correct: number; total: number; marks: boolean[] };
   streak: number;
-  untilTomorrow: string;
   locale: string;
   t: (k: string, v?: Record<string, string | number>) => string;
 }) {
@@ -195,10 +192,7 @@ function ResultView({
         {t("result.summary", { correct: result.correct, total: result.total })}
       </p>
 
-      <div className="mt-5 rounded-xl bg-muted/60 p-3 text-sm">
-        <div className="text-muted-foreground">{t("daily.comeBack")}</div>
-        <div className="mt-0.5 font-bold tabular-nums">{untilTomorrow}</div>
-      </div>
+      <Countdown label={t("daily.comeBack")} />
 
       <div className="mt-5 flex flex-col gap-2">
         <Button onClick={share} className="gap-2">

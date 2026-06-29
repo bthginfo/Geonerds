@@ -54,6 +54,13 @@ async function ensureSchema(sql: ReturnType<typeof postgres>) {
   `;
   await sql`CREATE INDEX IF NOT EXISTS gn_scores_game_score_idx ON gn_scores (game_id, score DESC)`;
   await sql`CREATE INDEX IF NOT EXISTS gn_scores_score_idx ON gn_scores (score DESC)`;
+  await sql`
+    CREATE TABLE IF NOT EXISTS gn_rate_limit (
+      bucket text PRIMARY KEY,
+      count integer NOT NULL,
+      reset_at timestamptz NOT NULL
+    )
+  `;
 }
 
 /** Returns the SQL client, lazily creating the schema once. */

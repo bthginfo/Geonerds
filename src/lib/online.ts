@@ -62,6 +62,25 @@ export async function apiSubmitScore(run: RunResult): Promise<boolean> {
   }
 }
 
+export interface PublicProfile {
+  name: string;
+  totalScore: number;
+  totalRuns: number;
+  bestStreak: number;
+  games: { game_id: string; best: number; runs: number }[];
+}
+
+export async function apiUserProfile(
+  name: string
+): Promise<{ configured: boolean; found: boolean; profile?: PublicProfile }> {
+  try {
+    const res = await fetch(`/api/users/${encodeURIComponent(name)}`, { cache: "no-store" });
+    return await res.json();
+  } catch {
+    return { configured: false, found: false };
+  }
+}
+
 export async function apiTopScores(
   game?: string,
   period: "all" | "month" = "all"

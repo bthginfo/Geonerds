@@ -12,6 +12,13 @@ function opts(items: { id: string; label: string }[], rng: () => number) {
   return shuffleWith(items, rng);
 }
 
+function Q({ children }: { children: React.ReactNode }) {
+  return <div className="text-center text-base font-semibold">{children}</div>;
+}
+function qt(locale: Locale, en: string, de: string) {
+  return locale === "de" ? de : en;
+}
+
 const builders: Builder[] = [
   // Flag → country
   (a, pool, rng, locale) => {
@@ -20,6 +27,7 @@ const builders: Builder[] = [
       key: `flag-${a.cca3}`,
       prompt: (
         <div className="flex flex-col items-center gap-3">
+          <Q>{qt(locale, "Which country's flag is this?", "Welches Land hat diese Flagge?")}</Q>
           <FlagImage code={a.flag} alt="flag" className="aspect-[4/3] w-28 shadow-md" />
         </div>
       ),
@@ -39,6 +47,7 @@ const builders: Builder[] = [
       key: `cap-${a.cca3}`,
       prompt: (
         <div className="flex flex-col items-center gap-3">
+          <Q>{qt(locale, "What is the capital of…", "Was ist die Hauptstadt von…")}</Q>
           <FlagImage code={a.flag} alt="flag" className="aspect-[4/3] w-24 shadow-md" />
           <div className="text-xl font-bold">{countryName(a, locale)}</div>
         </div>
@@ -71,6 +80,7 @@ const builders: Builder[] = [
       key: `cur-${a.cca3}`,
       prompt: (
         <div className="flex flex-col items-center gap-3">
+          <Q>{qt(locale, "Which currency does it use?", "Welche Währung nutzt es?")}</Q>
           <FlagImage code={a.flag} alt="flag" className="aspect-[4/3] w-24 shadow-md" />
           <div className="text-xl font-bold">{countryName(a, locale)}</div>
         </div>

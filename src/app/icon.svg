@@ -1,16 +1,55 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
   <defs>
-    <linearGradient id="g" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0" stop-color="#0ea5e9"/>
-      <stop offset="1" stop-color="#6366f1"/>
-    </linearGradient>
+    <radialGradient id="ocean" cx="42%" cy="38%" r="70%">
+      <stop offset="0%" stop-color="#3a8ad6"/>
+      <stop offset="100%" stop-color="#1f5fa8"/>
+    </radialGradient>
+    <clipPath id="globe"><circle cx="256" cy="256" r="226"/></clipPath>
   </defs>
-  <rect width="512" height="512" rx="112" fill="url(#g)"/>
-  <g fill="none" stroke="#ffffff" stroke-width="22" stroke-linecap="round">
-    <circle cx="256" cy="256" r="150"/>
-    <ellipse cx="256" cy="256" rx="62" ry="150"/>
-    <line x1="106" y1="256" x2="406" y2="256"/>
-    <path d="M140 180 H372" />
-    <path d="M140 332 H372" />
+
+  <!-- globe -->
+  <circle cx="256" cy="256" r="226" fill="url(#ocean)" stroke="#16487f" stroke-width="14"/>
+
+  <g clip-path="url(#globe)">
+    <!-- grid -->
+    <g fill="none" stroke="#bcd6f2" stroke-opacity="0.45" stroke-width="3">
+      <ellipse cx="256" cy="256" rx="226" ry="78"/>
+      <ellipse cx="256" cy="256" rx="226" ry="150"/>
+      <ellipse cx="256" cy="256" rx="78" ry="226"/>
+      <ellipse cx="256" cy="256" rx="150" ry="226"/>
+      <line x1="30" y1="256" x2="482" y2="256"/>
+      <line x1="256" y1="30" x2="256" y2="482"/>
+    </g>
+    <!-- continents (abstract) -->
+    <g fill="#54ad46" stroke="#3f8f36" stroke-width="3">
+      <path d="M120 150 q40 -30 80 -10 q20 30 -5 55 q-30 25 -70 10 q-25 -25 -5 -55 z"/>
+      <path d="M210 230 q35 -10 55 20 q10 45 -25 70 q-30 20 -55 -10 q-15 -45 25 -80 z"/>
+      <path d="M330 140 q45 -10 60 25 q5 35 -30 50 q-40 10 -55 -20 q-10 -40 25 -55 z"/>
+      <path d="M345 280 q30 0 38 30 q2 30 -28 38 q-30 5 -38 -25 q-5 -35 28 -43 z"/>
+      <path d="M150 330 q25 -8 40 15 q8 28 -18 40 q-28 8 -38 -18 q-6 -28 16 -37 z"/>
+    </g>
+  </g>
+
+  <!-- compass N + arrow -->
+  <g fill="#16487f">
+    <path d="M256 372 l16 26 h-32 z"/>
+    <text x="256" y="430" font-family="Arial, sans-serif" font-size="46" font-weight="700" text-anchor="middle">N</text>
+  </g>
+
+  <!-- sunglasses -->
+  <g fill="#111418">
+    <!-- bridge -->
+    <rect x="236" y="212" width="40" height="20" rx="8"/>
+    <!-- temples -->
+    <path d="M86 206 q-20 4 -22 22 l16 4 q4 -12 18 -14 z"/>
+    <path d="M426 206 q20 4 22 22 l-16 4 q-4 -12 -18 -14 z"/>
+    <!-- lenses -->
+    <path d="M96 200 h150 q14 0 14 16 q0 60 -52 76 q-58 14 -96 -22 q-30 -30 -30 -54 q0 -12 14 -12 z"/>
+    <path d="M266 200 h150 q14 0 14 12 q0 24 -30 54 q-38 36 -96 22 q-52 -16 -52 -76 q0 -16 14 -16 z"/>
+  </g>
+  <!-- lens glints -->
+  <g fill="#ffffff" opacity="0.25">
+    <ellipse cx="150" cy="232" rx="34" ry="18" transform="rotate(-18 150 232)"/>
+    <ellipse cx="330" cy="232" rx="34" ry="18" transform="rotate(-18 330 232)"/>
   </g>
 </svg>
