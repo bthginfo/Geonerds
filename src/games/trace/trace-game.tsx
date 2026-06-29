@@ -5,6 +5,7 @@ import { geoMercator, geoPath } from "d3-geo";
 import { Loader2, Eraser, Check, ArrowRight } from "lucide-react";
 import type { PlayHandlers } from "@/components/game/game-shell";
 import { GameTopBar, ScorePill, StreakPill, RoundPill } from "@/components/game/hud";
+import { Compass } from "@/components/map/compass";
 import { Button } from "@/components/ui/button";
 import { loadCountries, type CountryFeature } from "@/lib/geo";
 import { loadWaters, waterLabel, type Water } from "@/lib/waters";
@@ -158,7 +159,7 @@ export function TraceGame({ difficulty, roundCount, onFinish, onExit }: PlayHand
     const dist = chamfer(downsample(pointsRef.current, 120), downsample(targetPx, 120));
     const overlap = Math.max(0, 1 - dist / (0.16 * W));
     const pct = Math.round(overlap * 100);
-    const earned = scoreForDrawing(overlap, difficulty, streak);
+    const earned = scoreForDrawing(overlap, difficulty);
     setMatchPct(pct);
     setScore((s) => s + earned);
     if (overlap >= 0.5) {
@@ -233,6 +234,7 @@ export function TraceGame({ difficulty, roundCount, onFinish, onExit }: PlayHand
             onPointerMove={onMove}
             onPointerUp={onUp}
           />
+          <Compass />
           {revealed && (
             <div className="pointer-events-none absolute right-3 top-3 rounded-full bg-foreground px-3 py-1 text-sm font-bold text-background">
               {t("draw.match", { percent: matchPct })}

@@ -71,14 +71,14 @@ export default function SettingsPage() {
           aria-checked={sound}
           onClick={() => setSound(!sound)}
           className={cn(
-            "relative h-7 w-12 rounded-full transition-colors",
+            "inline-flex h-7 w-12 shrink-0 items-center rounded-full px-0.5 transition-colors",
             sound ? "bg-primary" : "bg-input"
           )}
         >
           <span
             className={cn(
-              "absolute top-0.5 h-6 w-6 rounded-full bg-white shadow transition-transform",
-              sound ? "translate-x-[1.4rem]" : "translate-x-0.5"
+              "inline-block h-6 w-6 rounded-full bg-white shadow transition-transform duration-200",
+              sound ? "translate-x-5" : "translate-x-0"
             )}
           />
         </button>

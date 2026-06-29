@@ -14,6 +14,8 @@ import {
   Waves,
   Fingerprint,
   PenLine,
+  Sparkles,
+  GraduationCap,
   type LucideIcon,
 } from "lucide-react";
 import type { AnswerMode, GameId } from "@/lib/types";
@@ -164,6 +166,21 @@ export const GAMES: GameConfig[] = [
     gradient: "from-sky-500 to-cyan-600",
     supportsDifficulty: true,
     countOptions: [5, 10, 0],
+  },
+  {
+    id: "origin",
+    icon: Sparkles,
+    gradient: "from-pink-500 to-rose-600",
+    supportsDifficulty: true,
+    modes: ["choice", "type"],
+    countOptions: [10, 25, 0],
+    supportsTimed: true,
+  },
+  {
+    id: "millionaire",
+    icon: GraduationCap,
+    gradient: "from-amber-500 to-yellow-600",
+    supportsDifficulty: false,
   },
 ];
 

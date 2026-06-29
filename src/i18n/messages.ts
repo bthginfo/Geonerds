@@ -110,6 +110,25 @@ export const messages: Record<Locale, Dict> = {
     "games.neighbors.short": "Name the country from its neighbours.",
     "games.trace.name": "Trace the River",
     "games.trace.short": "Draw a river's course on the map.",
+    "games.origin.name": "Where's That From?",
+    "games.origin.short": "Match animals, food & symbols to their country.",
+    "games.millionaire.name": "Who Wants to Be a Geo-Nerd?",
+    "games.millionaire.short": "Climbing-difficulty quiz — 3 wrong and you're out.",
+
+    "origin.category.animal": "Animal",
+    "origin.category.food": "Dish",
+    "origin.category.symbol": "Symbol",
+
+    "gn.question": "Question {n}",
+    "gn.q.capital": "What is the capital of {c}?",
+    "gn.q.countryByCapital": "{cap} is the capital of which country?",
+    "gn.q.continent": "On which continent is {c}?",
+    "gn.q.currency": "Which currency does {c} use?",
+    "gn.q.language": "Which is an official language of {c}?",
+    "gn.q.largestArea": "Which of these is the largest by area?",
+    "gn.q.largestPop": "Which of these has the most people?",
+    "gn.q.neighbor": "Which country borders {c}?",
+    "gn.q.landlocked": "Which of these is landlocked?",
 
     "neighbors.prompt": "Which country borders all of these?",
 
@@ -154,6 +173,8 @@ export const messages: Record<Locale, Dict> = {
     "howto.waters": "A river or lake is highlighted on the map. Choose or type which one it is.",
     "howto.neighbors": "You see a country's neighbours — the countries it borders. Work out which country sits in the middle and name it (choice or typing).",
     "howto.trace": "A river is named and the map zooms to its region. Draw its course with your finger or mouse; you're scored on how closely your line follows the real river.",
+    "howto.origin": "An animal, dish or symbol is shown. Pick or type the country it's most associated with.",
+    "howto.millionaire": "Answer geography questions that get harder and more obscure each round, with four options each. Three wrong answers and the game is over — how far can you climb?",
 
     "hl.metric.population": "Population",
     "hl.metric.area": "Area",
@@ -351,6 +372,25 @@ export const messages: Record<Locale, Dict> = {
     "games.neighbors.short": "Errate das Land an seinen Nachbarn.",
     "games.trace.name": "Fluss nachzeichnen",
     "games.trace.short": "Zeichne den Verlauf eines Flusses auf der Karte.",
+    "games.origin.name": "Woher kommt das?",
+    "games.origin.short": "Ordne Tiere, Speisen & Symbole dem Land zu.",
+    "games.millionaire.name": "Wer wird Geo-Nerd?",
+    "games.millionaire.short": "Quiz mit steigender Schwierigkeit – 3 Fehler und du bist raus.",
+
+    "origin.category.animal": "Tier",
+    "origin.category.food": "Gericht",
+    "origin.category.symbol": "Symbol",
+
+    "gn.question": "Frage {n}",
+    "gn.q.capital": "Was ist die Hauptstadt von {c}?",
+    "gn.q.countryByCapital": "{cap} ist die Hauptstadt welches Landes?",
+    "gn.q.continent": "Auf welchem Kontinent liegt {c}?",
+    "gn.q.currency": "Welche Währung nutzt {c}?",
+    "gn.q.language": "Welche Sprache ist in {c} Amtssprache?",
+    "gn.q.largestArea": "Welches dieser Länder ist flächenmäßig am größten?",
+    "gn.q.largestPop": "Welches dieser Länder hat die meisten Einwohner?",
+    "gn.q.neighbor": "Welches Land grenzt an {c}?",
+    "gn.q.landlocked": "Welches dieser Länder ist ein Binnenstaat?",
 
     "neighbors.prompt": "Welches Land grenzt an all diese?",
 
@@ -395,6 +435,8 @@ export const messages: Record<Locale, Dict> = {
     "howto.waters": "Ein Fluss oder See ist auf der Karte markiert. Wähle oder tippe, welcher es ist.",
     "howto.neighbors": "Du siehst die Nachbarländer eines Landes – die, an die es grenzt. Finde heraus, welches Land in der Mitte liegt, und nenne es (Auswahl oder Eingabe).",
     "howto.trace": "Ein Fluss wird genannt und die Karte zoomt auf seine Region. Zeichne seinen Verlauf mit Finger oder Maus; bewertet wird, wie genau deine Linie dem echten Fluss folgt.",
+    "howto.origin": "Ein Tier, Gericht oder Symbol wird gezeigt. Wähle oder tippe das Land, mit dem es am stärksten verbunden ist.",
+    "howto.millionaire": "Beantworte Geografie-Fragen, die jede Runde schwerer und obskurer werden – jeweils vier Optionen. Drei falsche Antworten und das Spiel ist vorbei. Wie weit kommst du?",
 
     "hl.metric.population": "Einwohner",
     "hl.metric.area": "Fläche",

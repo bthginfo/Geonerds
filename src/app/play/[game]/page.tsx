@@ -22,6 +22,8 @@ import { RouteGame } from "@/games/route/route-game";
 import { WatersGame } from "@/games/waters/waters-game";
 import { NeighborsGame } from "@/games/neighbors/neighbors-game";
 import { TraceGame } from "@/games/trace/trace-game";
+import { OriginGame } from "@/games/origin/origin-game";
+import { GeoNerdGame } from "@/games/geonerd/geonerd-game";
 
 const COMPONENTS: Record<GameId, (h: PlayHandlers) => React.ReactNode> = {
   flags: (h) => <FlagGame {...h} />,
@@ -39,6 +41,8 @@ const COMPONENTS: Record<GameId, (h: PlayHandlers) => React.ReactNode> = {
   waters: (h) => <WatersGame {...h} />,
   neighbors: (h) => <NeighborsGame {...h} />,
   trace: (h) => <TraceGame {...h} />,
+  origin: (h) => <OriginGame {...h} />,
+  millionaire: (h) => <GeoNerdGame {...h} />,
 };
 
 export default function PlayPage() {

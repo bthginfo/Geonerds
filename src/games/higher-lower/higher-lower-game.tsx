@@ -97,7 +97,7 @@ export function HigherLowerGame({ onFinish, onExit }: PlayHandlers) {
 
     if (isCorrect) {
       sound.correct();
-      const earned = scoreForAnswer({ correct: true, difficulty: "medium", streak });
+      const earned = scoreForAnswer({ correct: true, difficulty: "medium" });
       setScore((s) => s + earned);
       setCorrect((c) => c + 1);
       setStreak((s) => {
@@ -115,7 +115,7 @@ export function HigherLowerGame({ onFinish, onExit }: PlayHandlers) {
       const livesLeft = lives - (isCorrect ? 0 : 1);
       if (livesLeft <= 0) {
         onFinish({
-          score: score + (isCorrect ? scoreForAnswer({ correct: true, difficulty: "medium", streak }) : 0),
+          score: score + (isCorrect ? scoreForAnswer({ correct: true, difficulty: "medium" }) : 0),
           correct: correct + (isCorrect ? 1 : 0),
           total: total + 1,
           bestStreak: Math.max(bestStreak, isCorrect ? streak + 1 : bestStreak),

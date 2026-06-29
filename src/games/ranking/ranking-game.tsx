@@ -9,7 +9,7 @@ import { poolForDifficulty, countryName } from "@/data/countries";
 import { FlagImage } from "@/components/flag-image";
 import { GameTopBar, ScorePill, StreakPill, RoundPill, TimerPill } from "@/components/game/hud";
 import { Button } from "@/components/ui/button";
-import { BASE_POINTS, DIFFICULTY_MULTIPLIER, streakMultiplier } from "@/lib/scoring";
+import { BASE_POINTS, DIFFICULTY_MULTIPLIER } from "@/lib/scoring";
 import { sound } from "@/lib/sound";
 import { sample, shuffle, pickOne, formatNumber, cn } from "@/lib/utils";
 import { useT } from "@/i18n/I18nProvider";
@@ -123,7 +123,7 @@ export function RankingGame({ difficulty, roundCount, timed, onFinish, onExit }:
     });
     const perfect = correctSpots === round.items.length;
     const earned = Math.round(
-      (correctSpots / round.items.length) * BASE_POINTS * DIFFICULTY_MULTIPLIER[difficulty] * streakMultiplier(streak)
+      (correctSpots / round.items.length) * BASE_POINTS * DIFFICULTY_MULTIPLIER[difficulty]
     );
     scoreRef.current += earned;
     setScore((s) => s + earned);

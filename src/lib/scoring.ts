@@ -8,53 +8,49 @@ export const DIFFICULTY_MULTIPLIER: Record<Difficulty, number> = {
 
 export const BASE_POINTS = 100;
 export const MAX_SPEED_BONUS = 100;
-/** Streak multiplier caps at 2x (reached at a streak of 10). */
-export function streakMultiplier(streak: number): number {
-  return 1 + Math.min(Math.max(streak, 0), 10) * 0.1;
-}
+export const WRONG_PENALTY = 50;
 
 export interface AnswerScoreInput {
   correct: boolean;
   difficulty: Difficulty;
-  /** Streak BEFORE this answer (0 for the first). */
-  streak: number;
-  /** Time taken to answer, in ms. */
+  /** Only when timed: faster answers earn up to MAX_SPEED_BONUS. */
+  timed?: boolean;
   timeMs?: number;
-  /** Time budget for a full-speed bonus, in ms. */
   timeLimitMs?: number;
 }
 
-/** Points awarded for a single answer in the quiz-style games. */
+/**
+ * Points delta for a single answer: a fixed amount per correct answer
+ * (× difficulty), plus a speed bonus only in timed mode; a flat penalty when
+ * wrong. No hidden time decay in untimed mode.
+ */
 export function scoreForAnswer({
   correct,
   difficulty,
-  streak,
+  timed = false,
   timeMs = 0,
   timeLimitMs = 0,
 }: AnswerScoreInput): number {
-  if (!correct) return 0;
+  if (!correct) return -WRONG_PENALTY;
   let speedBonus = 0;
-  if (timeLimitMs > 0) {
+  if (timed && timeLimitMs > 0) {
     const ratio = Math.max(0, (timeLimitMs - timeMs) / timeLimitMs);
     speedBonus = Math.round(MAX_SPEED_BONUS * ratio);
   }
-  const raw = (BASE_POINTS + speedBonus) * DIFFICULTY_MULTIPLIER[difficulty] * streakMultiplier(streak);
-  return Math.round(raw);
+  return Math.round((BASE_POINTS + speedBonus) * DIFFICULTY_MULTIPLIER[difficulty]);
 }
 
-export const MAX_DRAW_POINTS = 250;
-
-/** Points for the Draw-the-Outline game based on shape overlap (0..1). */
-export function scoreForDrawing(overlap: number, difficulty: Difficulty, streak = 0): number {
+/** Points for the Draw / Trace games based on shape overlap (0..1). */
+export function scoreForDrawing(overlap: number, difficulty: Difficulty): number {
   const clamped = Math.min(1, Math.max(0, overlap));
-  return Math.round(clamped * MAX_DRAW_POINTS * DIFFICULTY_MULTIPLIER[difficulty] * streakMultiplier(streak));
+  return Math.round(clamped * 250 * DIFFICULTY_MULTIPLIER[difficulty]);
 }
 
-/** Potential points for a Trivia answer given clues revealed (1..4). */
+/** Points for a Trivia answer given clues revealed (1..4): fewer = more. */
 export const TRIVIA_REVEAL_FACTOR = [1, 0.7, 0.45, 0.25];
-export function scoreForTrivia(revealed: number, difficulty: Difficulty, streak: number): number {
+export function scoreForTrivia(revealed: number, difficulty: Difficulty): number {
   const factor = TRIVIA_REVEAL_FACTOR[Math.min(Math.max(revealed, 1), 4) - 1];
-  return Math.round(BASE_POINTS * factor * DIFFICULTY_MULTIPLIER[difficulty] * streakMultiplier(streak));
+  return Math.round(BASE_POINTS * factor * DIFFICULTY_MULTIPLIER[difficulty]);
 }
 
 export function accuracy(correct: number, total: number): number {

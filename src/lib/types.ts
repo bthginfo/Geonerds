@@ -38,7 +38,9 @@ export type GameId =
   | "route"
   | "waters"
   | "neighbors"
-  | "trace";
+  | "trace"
+  | "origin"
+  | "millionaire";
 
 export type Difficulty = "easy" | "medium" | "hard";
 

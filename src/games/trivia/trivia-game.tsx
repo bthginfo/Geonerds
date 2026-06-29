@@ -103,7 +103,7 @@ export function TriviaGame({ difficulty, mode, roundCount, timed, onFinish, onEx
     setLastCorrect(correct);
     if (correct) {
       sound.correct();
-      const earned = scoreForTrivia(revealed, difficulty, streak);
+      const earned = scoreForTrivia(revealed, difficulty);
       scoreRef.current += earned;
       setScore((s) => s + earned);
       correctRef.current += 1;
@@ -161,7 +161,7 @@ export function TriviaGame({ difficulty, mode, roundCount, timed, onFinish, onEx
           <span>{t("trivia.clues", { n: Math.min(revealed, maxClues), max: maxClues })}</span>
           {!answered && (
             <span className="rounded-full bg-primary/10 px-2 py-0.5 font-semibold text-primary">
-              {t("trivia.worth", { pts: scoreForTrivia(revealed, difficulty, streak) })}
+              {t("trivia.worth", { pts: scoreForTrivia(revealed, difficulty) })}
             </span>
           )}
         </div>

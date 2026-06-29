@@ -112,14 +112,14 @@ export function QuizGame({
 
   function commit(correct: boolean) {
     const timeMs = Date.now() - qStartRef.current;
-    const earned = scoreForAnswer({ correct, difficulty, streak, timeMs, timeLimitMs: TIME_LIMIT_MS });
+    const earned = scoreForAnswer({ correct, difficulty, timed, timeMs, timeLimitMs: TIME_LIMIT_MS });
     setAnswered(true);
     setLastCorrect(correct);
+    scoreRef.current = Math.max(0, scoreRef.current + earned);
+    setScore((s) => Math.max(0, s + earned));
+    setGain(earned);
     if (correct) {
       sound.correct();
-      scoreRef.current += earned;
-      setScore((s) => s + earned);
-      setGain(earned);
       correctRef.current += 1;
       setStreak((s) => {
         const ns = s + 1;
@@ -193,14 +193,17 @@ export function QuizGame({
             <div className="relative flex flex-1 items-center justify-center py-4">
               {answered && round.revealPrompt ? round.revealPrompt : round.prompt}
               <AnimatePresence>
-                {gain != null && (
+                {gain != null && gain !== 0 && (
                   <motion.div
                     initial={{ opacity: 0, y: 0, scale: 0.8 }}
                     animate={{ opacity: 1, y: -28, scale: 1 }}
                     exit={{ opacity: 0 }}
-                    className="pointer-events-none absolute right-2 top-2 rounded-full bg-success px-2.5 py-1 text-sm font-bold text-white"
+                    className={cn(
+                      "pointer-events-none absolute right-2 top-2 rounded-full px-2.5 py-1 text-sm font-bold text-white",
+                      gain > 0 ? "bg-success" : "bg-danger"
+                    )}
                   >
-                    +{gain}
+                    {gain > 0 ? `+${gain}` : gain}
                   </motion.div>
                 )}
               </AnimatePresence>

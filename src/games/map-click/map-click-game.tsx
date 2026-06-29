@@ -7,6 +7,7 @@ import type { PlayHandlers } from "@/components/game/game-shell";
 import { WorldMap, type MapDot } from "@/components/map/world-map";
 import { FlagImage } from "@/components/flag-image";
 import { GameTopBar, ScorePill, StreakPill, RoundPill, TimerPill } from "@/components/game/hud";
+import { Compass } from "@/components/map/compass";
 import { COUNTRIES, poolForDifficulty, countryName } from "@/data/countries";
 import { pickQuestions } from "@/games/round-utils";
 import { featuresByCcn3 } from "@/lib/geo";
@@ -131,7 +132,7 @@ export function MapClickGame({ difficulty, roundCount, timed, onFinish, onExit }
       lockRef.current = true;
       sound.correct();
       const timeMs = Date.now() - qStartRef.current;
-      const earned = scoreForAnswer({ correct: true, difficulty, streak, timeMs, timeLimitMs: TIME_PER_TARGET_MS });
+      const earned = scoreForAnswer({ correct: true, difficulty, timed, timeMs, timeLimitMs: TIME_PER_TARGET_MS });
       scoreRef.current += earned;
       setScore((s) => s + earned);
       correctRef.current += 1;
@@ -180,7 +181,7 @@ export function MapClickGame({ difficulty, roundCount, timed, onFinish, onExit }
             {t("mapclick.found", { count: found.size, total: targets.length })} ·{" "}
             {t("mapclick.triesLeft", { n: MAX_WRONG - wrongCount })}
           </div>
-          <div className="truncate text-xl font-bold">
+          <div className="text-lg font-bold leading-snug">
             {t("mapclick.prompt", { country: countryName(target, locale) })}
           </div>
         </div>
@@ -209,6 +210,7 @@ export function MapClickGame({ difficulty, roundCount, timed, onFinish, onExit }
           dots={DOTS}
           resetSignal={resetSignal}
         />
+        <Compass />
       </div>
     </div>
   );

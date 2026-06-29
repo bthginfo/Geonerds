@@ -118,7 +118,7 @@ export function BorderChainGame({ difficulty, mode, roundCount, timed, onFinish,
   function markFound(hit: Country) {
     sound.correct();
     const ns = streak + 1;
-    const earned = scoreForAnswer({ correct: true, difficulty, streak });
+    const earned = scoreForAnswer({ correct: true, difficulty });
     scoreRef.current += earned;
     setScore((s) => s + earned);
     correctRef.current += 1;

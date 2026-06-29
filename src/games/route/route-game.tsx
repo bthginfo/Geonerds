@@ -8,12 +8,13 @@ import type { PlayHandlers } from "@/components/game/game-shell";
 import { WorldMap } from "@/components/map/world-map";
 import { FlagImage } from "@/components/flag-image";
 import { GameTopBar, ScorePill, StreakPill, RoundPill } from "@/components/game/hud";
+import { Compass } from "@/components/map/compass";
 import { Button } from "@/components/ui/button";
 import { COUNTRIES, poolForDifficulty, countryName, getCountryByCcn3 } from "@/data/countries";
 import { countryAccepted } from "@/games/aliases";
 import { pickRoutePair, ccn3Neighbors, distancesFrom } from "./graph";
 import { matchAnswer } from "@/lib/fuzzy";
-import { DIFFICULTY_MULTIPLIER, streakMultiplier } from "@/lib/scoring";
+import { DIFFICULTY_MULTIPLIER } from "@/lib/scoring";
 import { sound } from "@/lib/sound";
 import { sample, shuffle, cn } from "@/lib/utils";
 import { useT } from "@/i18n/I18nProvider";
@@ -103,7 +104,7 @@ export function RouteGame({ difficulty, mode, roundCount, onFinish, onExit }: Pl
     sound.correct();
     attemptsRef.current += 1;
     correctRef.current += 1;
-    const earned = Math.round(STEP_POINTS * DIFFICULTY_MULTIPLIER[difficulty] * streakMultiplier(streak));
+    const earned = Math.round(STEP_POINTS * DIFFICULTY_MULTIPLIER[difficulty]);
     scoreRef.current += earned;
     setScore((s) => s + earned);
     const ns = streak + 1;
@@ -208,6 +209,7 @@ export function RouteGame({ difficulty, mode, roundCount, onFinish, onExit }: Pl
           getFill={getFill}
           visibleSet={visibleSet}
         />
+        <Compass />
       </div>
 
       <div className="mx-auto w-full max-w-md px-4 py-3">

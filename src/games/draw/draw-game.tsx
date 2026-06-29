@@ -173,7 +173,7 @@ export function DrawGame({ difficulty, roundCount, onFinish, onExit }: PlayHandl
     if (revealed || pointsRef.current.length < 3) return;
     const overlap = shapeOverlap(targetRing, pointsRef.current);
     const pct = Math.round(overlap * 100);
-    const earned = scoreForDrawing(overlap, difficulty, streak);
+    const earned = scoreForDrawing(overlap, difficulty);
     setMatchPct(pct);
     setScore((s) => s + earned);
     const good = overlap >= 0.5;
