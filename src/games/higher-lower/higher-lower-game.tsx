@@ -14,7 +14,8 @@ import { sound } from "@/lib/sound";
 import { useT } from "@/i18n/I18nProvider";
 import { pickOne, formatNumber, cn } from "@/lib/utils";
 
-type Metric = "population" | "area" | "density" | "gdp";
+type Metric = "population" | "area" | "density" | "gdp" | "neighbors";
+const METRICS: Metric[] = ["population", "area", "density", "gdp", "neighbors"];
 const MAX_LIVES = 3;
 
 function metricValue(c: Country, m: Metric): number {
@@ -27,6 +28,8 @@ function metricValue(c: Country, m: Metric): number {
       return c.area > 0 ? c.population / c.area : 0;
     case "gdp":
       return c.gdp ?? 0;
+    case "neighbors":
+      return c.borders.length;
   }
 }
 
@@ -34,6 +37,7 @@ function metricPool(m: Metric): Country[] {
   return COUNTRIES.filter((c) => {
     if (m === "gdp") return (c.gdp ?? 0) > 0;
     if (m === "density") return c.area > 0 && c.population > 0;
+    if (m === "neighbors") return c.borders.length > 0;
     return metricValue(c, m) > 0;
   });
 }
@@ -53,6 +57,8 @@ function formatMetric(value: number, m: Metric, locale: string): string {
   return formatNumber(value, locale);
 }
 
+// Neighbours have small integer values, so cap how often it's chosen to avoid ties.
+
 interface Pair {
   a: Country;
   b: Country;
@@ -60,7 +66,7 @@ interface Pair {
 }
 
 function nextPair(prev?: Country): Pair {
-  const metric = pickOne<Metric>(["population", "area", "density", "gdp"]);
+  const metric = pickOne<Metric>(METRICS);
   const pool = metricPool(metric);
   const a = prev && pool.includes(prev) ? prev : pickOne(pool);
   let b = pickOne(pool);

@@ -46,6 +46,47 @@ export const PEAKS: Peak[] = [
   { en: "Mount Damavand", de: "Demawend", lat: 35.955, lng: 52.109, kind: "volcano", tier: 3, aliases: ["Damavand", "Demawend"] },
   { en: "Mount Whitney", de: "Mount Whitney", lat: 36.578, lng: -118.292, kind: "mountain", tier: 3 },
   { en: "Mount Sinai", de: "Sinai", lat: 28.539, lng: 33.973, kind: "mountain", tier: 3, aliases: ["Sinai"] },
+  // ── Europe ──
+  { en: "Jungfrau", de: "Jungfrau", lat: 46.537, lng: 7.962, kind: "mountain", tier: 3 },
+  { en: "Großglockner", de: "Großglockner", lat: 47.074, lng: 12.694, kind: "mountain", tier: 3, aliases: ["Grossglockner"] },
+  { en: "Triglav", de: "Triglav", lat: 46.378, lng: 13.837, kind: "mountain", tier: 3 },
+  { en: "Mulhacén", de: "Mulhacén", lat: 37.053, lng: -3.311, kind: "mountain", tier: 3, aliases: ["Mulhacen"] },
+  { en: "Snowdon", de: "Snowdon", lat: 53.068, lng: -4.076, kind: "mountain", tier: 3, aliases: ["Yr Wyddfa"] },
+  { en: "Galdhøpiggen", de: "Galdhøpiggen", lat: 61.636, lng: 8.313, kind: "mountain", tier: 3, aliases: ["Galdhopiggen"] },
+  { en: "Kebnekaise", de: "Kebnekaise", lat: 67.901, lng: 18.53, kind: "mountain", tier: 3 },
+  { en: "Hekla", de: "Hekla", lat: 63.992, lng: -19.665, kind: "volcano", tier: 3 },
+  // ── North & Central America ──
+  { en: "Mauna Kea", de: "Mauna Kea", lat: 19.821, lng: -155.468, kind: "volcano", tier: 2 },
+  { en: "Mount Shasta", de: "Mount Shasta", lat: 41.409, lng: -122.195, kind: "volcano", tier: 3 },
+  { en: "Mount Hood", de: "Mount Hood", lat: 45.374, lng: -121.696, kind: "volcano", tier: 3 },
+  { en: "Grand Teton", de: "Grand Teton", lat: 43.741, lng: -110.802, kind: "mountain", tier: 3 },
+  { en: "Mount Logan", de: "Mount Logan", lat: 60.567, lng: -140.405, kind: "mountain", tier: 3 },
+  { en: "Iztaccíhuatl", de: "Iztaccíhuatl", lat: 19.179, lng: -98.642, kind: "volcano", tier: 3, aliases: ["Iztaccihuatl"] },
+  { en: "Tajumulco", de: "Tajumulco", lat: 15.043, lng: -91.903, kind: "volcano", tier: 3 },
+  { en: "Arenal", de: "Arenal", lat: 10.463, lng: -84.703, kind: "volcano", tier: 3, aliases: ["Volcán Arenal"] },
+  // ── South America ──
+  { en: "Ojos del Salado", de: "Ojos del Salado", lat: -27.109, lng: -68.541, kind: "volcano", tier: 3 },
+  { en: "Huascarán", de: "Huascarán", lat: -9.121, lng: -77.604, kind: "mountain", tier: 3, aliases: ["Huascaran"] },
+  { en: "Nevado del Ruiz", de: "Nevado del Ruiz", lat: 4.892, lng: -75.324, kind: "volcano", tier: 3 },
+  { en: "Villarrica", de: "Villarrica", lat: -39.42, lng: -71.93, kind: "volcano", tier: 3 },
+  { en: "Mount Roraima", de: "Roraima", lat: 5.143, lng: -60.762, kind: "mountain", tier: 3, aliases: ["Roraima"] },
+  // ── Africa ──
+  { en: "Mount Meru", de: "Mount Meru", lat: -3.247, lng: 36.751, kind: "volcano", tier: 3 },
+  { en: "Nyiragongo", de: "Nyiragongo", lat: -1.52, lng: 29.25, kind: "volcano", tier: 3 },
+  { en: "Ras Dashen", de: "Ras Daschän", lat: 13.235, lng: 38.367, kind: "mountain", tier: 3, aliases: ["Ras Dejen"] },
+  { en: "Toubkal", de: "Toubkal", lat: 31.06, lng: -7.915, kind: "mountain", tier: 3, aliases: ["Jbel Toubkal"] },
+  { en: "Mount Cameroon", de: "Kamerunberg", lat: 4.203, lng: 9.17, kind: "volcano", tier: 3 },
+  // ── Asia & Oceania ──
+  { en: "Mount Kinabalu", de: "Kinabalu", lat: 6.075, lng: 116.558, kind: "mountain", tier: 3 },
+  { en: "Mount Pinatubo", de: "Pinatubo", lat: 15.143, lng: 120.349, kind: "volcano", tier: 3 },
+  { en: "Mayon", de: "Mayon", lat: 13.257, lng: 123.685, kind: "volcano", tier: 3, aliases: ["Mount Mayon"] },
+  { en: "Mount Bromo", de: "Bromo", lat: -7.942, lng: 112.953, kind: "volcano", tier: 3 },
+  { en: "Mount Merapi", de: "Merapi", lat: -7.54, lng: 110.446, kind: "volcano", tier: 3 },
+  { en: "Mount Agung", de: "Agung", lat: -8.343, lng: 115.508, kind: "volcano", tier: 3 },
+  { en: "Mount Paektu", de: "Paektusan", lat: 41.993, lng: 128.077, kind: "volcano", tier: 3, aliases: ["Baekdu", "Changbaishan"] },
+  { en: "Mount Aso", de: "Aso", lat: 32.884, lng: 131.104, kind: "volcano", tier: 3 },
+  { en: "Puncak Jaya", de: "Puncak Jaya", lat: -4.078, lng: 137.158, kind: "mountain", tier: 3, aliases: ["Carstensz Pyramid", "Carstensz-Pyramide"] },
+  { en: "Mount Wilhelm", de: "Mount Wilhelm", lat: -5.795, lng: 145.029, kind: "mountain", tier: 3 },
 ];
 
 export const PEAK_MAX_TIER: Record<"easy" | "medium" | "hard", number> = {

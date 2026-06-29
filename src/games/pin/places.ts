@@ -61,4 +61,22 @@ export const PLACES: Place[] = [
   { en: "Galápagos Islands", de: "Galápagos-Inseln", lat: -0.95, lng: -90.97 },
   { en: "North Pole", de: "Nordpol", lat: 89.9, lng: 0 },
   { en: "South Pole", de: "Südpol", lat: -89.9, lng: 0 },
+  // More cities
+  { en: "Dubai", de: "Dubai", lat: 25.2, lng: 55.27 },
+  { en: "Singapore", de: "Singapur", lat: 1.35, lng: 103.82 },
+  { en: "Istanbul", de: "Istanbul", lat: 41.01, lng: 28.98 },
+  { en: "Buenos Aires", de: "Buenos Aires", lat: -34.6, lng: -58.38 },
+  { en: "Nairobi", de: "Nairobi", lat: -1.29, lng: 36.82 },
+  { en: "Reykjavík", de: "Reykjavík", lat: 64.15, lng: -21.94 },
+  { en: "Honolulu", de: "Honolulu", lat: 21.31, lng: -157.86 },
+  { en: "Vladivostok", de: "Wladiwostok", lat: 43.12, lng: 131.89 },
+  // More landmarks & natural wonders
+  { en: "Mount Everest", de: "Mount Everest", lat: 27.99, lng: 86.93 },
+  { en: "Niagara Falls", de: "Niagarafälle", lat: 43.08, lng: -79.07 },
+  { en: "Victoria Falls", de: "Victoriafälle", lat: -17.92, lng: 25.86 },
+  { en: "Uluru (Ayers Rock)", de: "Uluru (Ayers Rock)", lat: -25.34, lng: 131.04 },
+  { en: "Easter Island", de: "Osterinsel", lat: -27.11, lng: -109.35 },
+  { en: "Mecca", de: "Mekka", lat: 21.42, lng: 39.83 },
+  { en: "Timbuktu", de: "Timbuktu", lat: 16.77, lng: -3.01 },
+  { en: "Panama Canal", de: "Panamakanal", lat: 9.08, lng: -79.68 },
 ];

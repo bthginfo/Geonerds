@@ -117,6 +117,18 @@ export const ITEMS: OriginItem[] = [
   { en: "K-Pop", de: "K-Pop", emoji: "🎧", cca3: "KOR", category: "music", tier: 1 },
   { en: "Yodeling", de: "Jodeln", emoji: "🎙️", cca3: "CHE", category: "music", tier: 3 },
   { en: "Steelpan", de: "Steeldrum", emoji: "🛢️", cca3: "TTO", category: "music", tier: 3 },
+
+  // ── Extra batch ──
+  { en: "Hamburger", de: "Hamburger", emoji: "🍔", cca3: "USA", category: "food", tier: 2 },
+  { en: "Maple Syrup", de: "Ahornsirup", emoji: "🥞", cca3: "CAN", category: "food", tier: 2 },
+  { en: "Vegemite", de: "Vegemite", emoji: "🥪", cca3: "AUS", category: "food", tier: 3 },
+  { en: "Sombrero", de: "Sombrero", emoji: "👒", cca3: "MEX", category: "symbol", tier: 2 },
+  { en: "Boomerang", de: "Bumerang", emoji: "🪃", cca3: "AUS", category: "symbol", tier: 2 },
+  { en: "Gondola", de: "Gondel", emoji: "🛶", cca3: "ITA", category: "symbol", tier: 3 },
+  { en: "Clogs", de: "Holzschuhe", emoji: "🥿", cca3: "NLD", category: "symbol", tier: 3 },
+  { en: "Yoga", de: "Yoga", emoji: "🧘", cca3: "IND", category: "invention", tier: 2 },
+  { en: "Karate", de: "Karate", emoji: "🥋", cca3: "JPN", category: "sport", tier: 2 },
+  { en: "Rugby (Haka)", de: "Rugby (Haka)", emoji: "🏉", cca3: "NZL", category: "sport", tier: 2 },
 ];
 
 /** Item difficulty tiers permitted at each game difficulty. */

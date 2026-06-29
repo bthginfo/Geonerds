@@ -14,13 +14,14 @@ import { sound } from "@/lib/sound";
 import { sample, shuffle, pickOne, formatNumber, cn } from "@/lib/utils";
 import { useT } from "@/i18n/I18nProvider";
 
-type Metric = "population" | "area" | "gdp" | "density";
+type Metric = "population" | "area" | "gdp" | "density" | "neighbors";
 const PER_ROUND_BUDGET_MS = 16000;
 
 function mval(c: Country, m: Metric): number {
   if (m === "population") return c.population;
   if (m === "area") return c.area;
   if (m === "gdp") return c.gdp ?? 0;
+  if (m === "neighbors") return c.borders.length;
   return c.area > 0 ? c.population / c.area : 0;
 }
 
@@ -48,7 +49,7 @@ export function RankingGame({ difficulty, roundCount, timed, onFinish, onExit }:
     const count = roundCount === 0 ? 25 : roundCount;
     const out: RankRound[] = [];
     for (let i = 0; i < count; i++) {
-      const metric = pickOne<Metric>(["population", "area", "gdp", "density"]);
+      const metric = pickOne<Metric>(["population", "area", "gdp", "density", "neighbors"]);
       const pool = base.filter((c) => (metric === "gdp" ? (c.gdp ?? 0) > 0 : mval(c, metric) > 0));
       const picked: Country[] = [];
       const seen = new Set<number>();

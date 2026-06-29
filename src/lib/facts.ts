@@ -1,5 +1,6 @@
 import type { Country, Locale } from "./types";
 import { getCountryByCca3 } from "@/data/countries";
+import { COUNTRY_FACTS } from "./country-facts";
 import { formatNumber, pickOne, shuffle } from "./utils";
 
 const REGION_DE: Record<string, string> = {
@@ -244,6 +245,11 @@ export function triviaClues(c: Country, locale: Locale): string[] {
 
 /** A single interesting fact for display after a correct answer (may include capital). */
 export function randomFact(c: Country, locale: Locale): string {
+  // Prefer a hand-curated "cool" fact most of the time when one exists.
+  const curated = COUNTRY_FACTS[c.cca3];
+  if (curated && curated.length && Math.random() < 0.75) {
+    return pickOne(curated)[locale];
+  }
   const pool = [
     foodPhrase(c, locale),
     capitalPhrase(c, locale),
