@@ -11,7 +11,7 @@ import { simplifyCurrency } from "@/lib/currency";
 import { findScript, loadScriptFonts } from "./scripts";
 import { useT } from "@/i18n/I18nProvider";
 
-export function LanguagesGame({ difficulty, roundCount, timed, onFinish, onExit }: PlayHandlers) {
+export function LanguagesGame({ difficulty, roundCount, timed, practice, onFinish, onExit }: PlayHandlers) {
   const { t, locale } = useT();
 
   useEffect(() => {
@@ -105,6 +105,7 @@ export function LanguagesGame({ difficulty, roundCount, timed, onFinish, onExit 
       mode="choice"
       difficulty={difficulty}
       timed={timed}
+      practice={practice}
       onFinish={onFinish}
       onExit={onExit}
     />

@@ -29,7 +29,7 @@ const DOTS: MapDot[] = COUNTRIES.filter(
 ).map((c) => ({ ccn3: String(c.ccn3), lat: c.latlng![0], lng: c.latlng![1], flag: c.flag }));
 const DOT_SET = new Set(DOTS.map((d) => d.ccn3));
 
-export function MapClickGame({ difficulty, roundCount, timed, variant, onFinish, onExit }: PlayHandlers) {
+export function MapClickGame({ difficulty, roundCount, timed, variant, practice, onFinish, onExit }: PlayHandlers) {
   const { t, locale } = useT();
   const [ready, setReady] = useState(false);
   const [targets, setTargets] = useState<Country[]>([]);
@@ -147,12 +147,14 @@ export function MapClickGame({ difficulty, roundCount, timed, variant, onFinish,
       sound.wrong();
       setStreak(0);
       wrongRef.current = true;
+      setFlash({ ccn3, ok: false });
+      setTimeout(() => setFlash((cur) => (cur?.ccn3 === ccn3 ? null : cur)), 450);
+      // Practice: no penalty, unlimited tries, keep trying until you find it.
+      if (practice) return;
       scoreRef.current = Math.max(0, scoreRef.current - WRONG_PENALTY);
       setScore((s) => Math.max(0, s - WRONG_PENALTY));
       const nextWrong = wrongCount + 1;
       setWrongCount(nextWrong);
-      setFlash({ ccn3, ok: false });
-      setTimeout(() => setFlash((cur) => (cur?.ccn3 === ccn3 ? null : cur)), 450);
       if (nextWrong >= MAX_WRONG) {
         lockRef.current = true;
         setTimeout(() => reveal(String(target.ccn3), false, 750), 250);
@@ -172,8 +174,8 @@ export function MapClickGame({ difficulty, roundCount, timed, variant, onFinish,
   return (
     <div className="flex flex-1 flex-col">
       <GameTopBar title={t("games.map-click.name")} onExit={onExit}>
-        <StreakPill value={streak} />
-        <ScorePill value={score} />
+        {!practice && <StreakPill value={streak} />}
+        {!practice && <ScorePill value={score} />}
         {timed ? <TimerPill ms={timeLeft} danger={timeLeft < 10000} /> : <RoundPill current={idx + 1} total={targets.length} />}
       </GameTopBar>
 
@@ -181,8 +183,8 @@ export function MapClickGame({ difficulty, roundCount, timed, variant, onFinish,
         <FlagImage code={target.flag} alt="" hideText className="aspect-[4/3] w-12 shadow" />
         <div className="min-w-0">
           <div className="text-xs uppercase tracking-wide text-muted-foreground">
-            {t("mapclick.found", { count: found.size, total: targets.length })} ·{" "}
-            {t("mapclick.triesLeft", { n: MAX_WRONG - wrongCount })}
+            {t("mapclick.found", { count: found.size, total: targets.length })}
+            {!practice && <> · {t("mapclick.triesLeft", { n: MAX_WRONG - wrongCount })}</>}
           </div>
           <div className="text-lg font-bold leading-snug">
             {t("mapclick.prompt", { country: countryName(target, locale) })}

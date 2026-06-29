@@ -12,7 +12,7 @@ import { sample, shuffle } from "@/lib/utils";
 import { useT } from "@/i18n/I18nProvider";
 import type { Country } from "@/lib/types";
 
-export function FlagGame({ difficulty, mode, roundCount, timed, variant, onFinish, onExit }: PlayHandlers) {
+export function FlagGame({ difficulty, mode, roundCount, timed, variant, practice, onFinish, onExit }: PlayHandlers) {
   const { locale } = useT();
 
   const rounds = useMemo<QuizRound[]>(() => {
@@ -64,6 +64,7 @@ export function FlagGame({ difficulty, mode, roundCount, timed, variant, onFinis
       mode={mode}
       difficulty={difficulty}
       timed={timed}
+      practice={practice}
       onFinish={onFinish}
       onExit={onExit}
       typePlaceholderKey="type.placeholder"

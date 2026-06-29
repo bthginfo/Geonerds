@@ -11,7 +11,7 @@ import { makeChoices, pickQuestions } from "@/games/round-utils";
 import { featuresByCcn3, type CountryFeature } from "@/lib/geo";
 import { useT } from "@/i18n/I18nProvider";
 
-export function OutlineGame({ difficulty, mode, roundCount, timed, onFinish, onExit }: PlayHandlers) {
+export function OutlineGame({ difficulty, mode, roundCount, timed, practice, onFinish, onExit }: PlayHandlers) {
   const { t, locale } = useT();
   const [features, setFeatures] = useState<Map<string, CountryFeature> | null>(null);
 
@@ -62,6 +62,7 @@ export function OutlineGame({ difficulty, mode, roundCount, timed, onFinish, onE
       mode={mode}
       difficulty={difficulty}
       timed={timed}
+      practice={practice}
       onFinish={onFinish}
       onExit={onExit}
     />

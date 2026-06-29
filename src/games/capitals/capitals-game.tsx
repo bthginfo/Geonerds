@@ -19,7 +19,7 @@ function cityAccepted(c: CityEntry): string[] {
   return [c.en, c.de].filter(Boolean) as string[];
 }
 
-export function CapitalsGame({ difficulty, mode, variant, roundCount, timed, onFinish, onExit }: PlayHandlers) {
+export function CapitalsGame({ difficulty, mode, variant, roundCount, timed, practice, onFinish, onExit }: PlayHandlers) {
   const { t, locale } = useT();
   const cityMode = variant === "cities";
 
@@ -90,6 +90,7 @@ export function CapitalsGame({ difficulty, mode, variant, roundCount, timed, onF
       mode={mode}
       difficulty={difficulty}
       timed={timed}
+      practice={practice}
       onFinish={onFinish}
       onExit={onExit}
       typePlaceholderKey={cityMode ? "type.placeholderCity" : "type.placeholderCapital"}

@@ -36,6 +36,8 @@ export interface PlayHandlers {
   timed: boolean;
   /** Game-specific variant id (e.g. flag scope); "" if none. */
   variant: string;
+  /** Practice/learn mode: no points, no lives, run through everything; nothing is saved. */
+  practice: boolean;
   onFinish: (r: PlayResult) => void;
   onExit: () => void;
 }
@@ -58,6 +60,7 @@ export function GameShell({
   const [mode, setMode] = useState<AnswerMode>(config?.modes?.[0] ?? "choice");
   const [roundCount, setRoundCount] = useState<number>(config?.countOptions?.[0] ?? 12);
   const [timed, setTimed] = useState<boolean>(config?.defaultTimed ?? false);
+  const [practice, setPractice] = useState<boolean>(false);
   const [variant, setVariant] = useState<string>(config?.variants?.default ?? "");
   const [runKey, setRunKey] = useState(0);
   const [result, setResult] = useState<RunResult | null>(null);
@@ -68,6 +71,11 @@ export function GameShell({
   if (!config) return null;
 
   async function handleFinish(r: PlayResult) {
+    // Practice runs never count: no XP, no badges, no leaderboard, no records.
+    if (practice) {
+      setPhase("setup");
+      return;
+    }
     const run: RunResult = {
       gameId,
       difficulty,
@@ -105,9 +113,11 @@ export function GameShell({
         {children({
           difficulty,
           mode,
-          roundCount,
-          timed,
+          // Practice always runs through the whole set, untimed.
+          roundCount: practice ? 0 : roundCount,
+          timed: practice ? false : timed,
           variant,
+          practice,
           onFinish: handleFinish,
           onExit: () => setPhase("setup"),
         })}
@@ -232,7 +242,33 @@ export function GameShell({
             </div>
           )}
 
-          {config.countOptions && (
+          <button
+            onClick={() => setPractice((v) => !v)}
+            className={cn(
+              "flex w-full items-center justify-between rounded-xl border-2 px-4 py-3 text-left transition-colors",
+              practice ? "border-primary bg-primary/5" : "border-border bg-card"
+            )}
+          >
+            <div>
+              <div className="font-semibold">{t("setup.practice")}</div>
+              <div className="text-xs text-muted-foreground">{t("setup.practice.desc")}</div>
+            </div>
+            <span
+              className={cn(
+                "inline-flex h-7 w-12 shrink-0 items-center rounded-full px-0.5 transition-colors",
+                practice ? "bg-primary" : "bg-input"
+              )}
+            >
+              <span
+                className={cn(
+                  "inline-block h-6 w-6 rounded-full bg-white shadow transition-transform duration-200",
+                  practice ? "translate-x-5" : "translate-x-0"
+                )}
+              />
+            </span>
+          </button>
+
+          {config.countOptions && !practice && (
             <div>
               <h2 className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
                 {t("setup.rounds")}
@@ -256,7 +292,7 @@ export function GameShell({
             </div>
           )}
 
-          {config.supportsTimed && (
+          {config.supportsTimed && !practice && (
             <button
               onClick={() => setTimed((v) => !v)}
               className="flex w-full items-center justify-between rounded-xl border-2 border-border bg-card px-4 py-3 text-left"

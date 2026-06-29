@@ -41,6 +41,7 @@ export function QuizGame({
   mode,
   difficulty,
   timed = false,
+  practice = false,
   onFinish,
   onExit,
   typePlaceholderKey = "type.placeholder",
@@ -50,6 +51,7 @@ export function QuizGame({
   mode: AnswerMode;
   difficulty: Difficulty;
   timed?: boolean;
+  practice?: boolean;
   onFinish: (r: PlayResult) => void;
   onExit: () => void;
   typePlaceholderKey?: string;
@@ -121,6 +123,7 @@ export function QuizGame({
   }, [timed, idx, answered]);
 
   function loseLife() {
+    if (practice) return; // practice: never run out of lives
     livesRef.current = Math.max(0, livesRef.current - 1);
     setLives(livesRef.current);
     if (livesRef.current <= 0) gameOverRef.current = true;
@@ -191,9 +194,9 @@ export function QuizGame({
   return (
     <div className="flex flex-1 flex-col">
       <GameTopBar title={t(`games.${gameId}.name`)} onExit={onExit}>
-        <StreakPill value={streak} />
-        <LivesPill lives={lives} max={MAX_LIVES} />
-        <ScorePill value={score} />
+        {!practice && <StreakPill value={streak} />}
+        {!practice && <LivesPill lives={lives} max={MAX_LIVES} />}
+        {!practice && <ScorePill value={score} />}
         {timed ? <TimerPill ms={timeLeft} danger={timeLeft < 4000} /> : <RoundPill current={idx + 1} total={total} />}
       </GameTopBar>
       <div className="px-3 pt-2">

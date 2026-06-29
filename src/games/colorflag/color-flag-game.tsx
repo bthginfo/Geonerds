@@ -81,7 +81,7 @@ function poolFor(difficulty: Difficulty): ColorFlag[] {
   return COLOR_FLAGS.filter((f) => f.colors.length >= min && f.colors.length <= max);
 }
 
-export function ColorFlagGame({ difficulty, variant, roundCount, onFinish, onExit }: PlayHandlers) {
+export function ColorFlagGame({ difficulty, variant, roundCount, practice, onFinish, onExit }: PlayHandlers) {
   const { t, locale } = useT();
   const pro = variant === "pro";
 
@@ -202,11 +202,13 @@ export function ColorFlagGame({ difficulty, variant, roundCount, onFinish, onExi
       setStreak(0);
       setFlashWrong(true);
       setTimeout(() => setFlashWrong(false), 400);
-      scoreRef.current = Math.max(0, scoreRef.current - WRONG_PENALTY);
-      setScore((s) => Math.max(0, s - WRONG_PENALTY));
-      livesRef.current = Math.max(0, livesRef.current - 1);
-      setLives(livesRef.current);
-      if (livesRef.current <= 0) gameOverRef.current = true;
+      if (!practice) {
+        scoreRef.current = Math.max(0, scoreRef.current - WRONG_PENALTY);
+        setScore((s) => Math.max(0, s - WRONG_PENALTY));
+        livesRef.current = Math.max(0, livesRef.current - 1);
+        setLives(livesRef.current);
+        if (livesRef.current <= 0) gameOverRef.current = true;
+      }
     }
     setTimeout(() => {
       if (gameOverRef.current) doFinish();
@@ -241,9 +243,9 @@ export function ColorFlagGame({ difficulty, variant, roundCount, onFinish, onExi
   return (
     <div className="flex flex-1 flex-col">
       <GameTopBar title={t("games.colorflag.name")} onExit={onExit}>
-        <StreakPill value={streak} />
-        {!pro && <LivesPill lives={lives} max={MAX_LIVES} />}
-        <ScorePill value={score} />
+        {!practice && <StreakPill value={streak} />}
+        {!pro && !practice && <LivesPill lives={lives} max={MAX_LIVES} />}
+        {!practice && <ScorePill value={score} />}
         <RoundPill current={idx + 1} total={total} />
       </GameTopBar>
 

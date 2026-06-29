@@ -9,7 +9,7 @@ import { sample, shuffle } from "@/lib/utils";
 import { ITEMS, ITEM_MAX_TIER } from "./items";
 import { useT } from "@/i18n/I18nProvider";
 
-export function OriginGame({ difficulty, mode, roundCount, timed, onFinish, onExit }: PlayHandlers) {
+export function OriginGame({ difficulty, mode, roundCount, timed, practice, onFinish, onExit }: PlayHandlers) {
   const { t, locale } = useT();
 
   // Drop any trailing "(…)" hint (e.g. "Dragon (Bhutan)") so it never gives the answer away.
@@ -51,6 +51,6 @@ export function OriginGame({ difficulty, mode, roundCount, timed, onFinish, onEx
   }, [roundCount, locale, difficulty]);
 
   return (
-    <QuizGame gameId="origin" rounds={rounds} mode={mode} difficulty={difficulty} timed={timed} onFinish={onFinish} onExit={onExit} />
+    <QuizGame gameId="origin" rounds={rounds} mode={mode} difficulty={difficulty} timed={timed} practice={practice} onFinish={onFinish} onExit={onExit} />
   );
 }

@@ -9,7 +9,7 @@ import { loadWaters, waterLabel, type Water } from "@/lib/waters";
 import { sample, shuffle } from "@/lib/utils";
 import { useT } from "@/i18n/I18nProvider";
 
-export function WatersGame({ difficulty, mode, roundCount, timed, onFinish, onExit }: PlayHandlers) {
+export function WatersGame({ difficulty, mode, roundCount, timed, practice, onFinish, onExit }: PlayHandlers) {
   const { t, locale } = useT();
   const [waters, setWaters] = useState<Water[] | null>(null);
 
@@ -54,6 +54,6 @@ export function WatersGame({ difficulty, mode, roundCount, timed, onFinish, onEx
   }
 
   return (
-    <QuizGame gameId="waters" rounds={rounds} mode={mode} difficulty={difficulty} timed={timed} onFinish={onFinish} onExit={onExit} />
+    <QuizGame gameId="waters" rounds={rounds} mode={mode} difficulty={difficulty} timed={timed} practice={practice} onFinish={onFinish} onExit={onExit} />
   );
 }

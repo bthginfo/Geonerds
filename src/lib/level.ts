@@ -1,8 +1,14 @@
 import type { Locale } from "./types";
 
-/** XP needed to *reach* a given level (level 1 starts at 0). */
+/**
+ * XP (= total score) needed to *reach* a given level. A steep, ever-growing
+ * curve so the first few levels come quickly (a good first session gets you to
+ * ~L4–5) but high levels are a real long-term grind worth chasing.
+ *   L2≈250  L3≈700  L5≈2.3k  L10≈14k  L20≈90k  L30≈250k  L40≈520k  L50≈900k
+ */
 function xpForLevel(level: number): number {
-  return 50 * level * (level - 1); // L1=0, L2=100, L3=300, L4=600, L5=1000, …
+  if (level <= 1) return 0;
+  return Math.round(140 * Math.pow(level - 1, 2.35) / 10) * 10;
 }
 
 export interface LevelInfo {
@@ -19,14 +25,15 @@ export interface LevelInfo {
 const RANKS: { min: number; en: string; de: string }[] = [
   { min: 1, en: "Rookie", de: "Neuling" },
   { min: 3, en: "Wanderer", de: "Wanderer" },
-  { min: 5, en: "Explorer", de: "Entdecker" },
-  { min: 8, en: "Navigator", de: "Navigator" },
-  { min: 12, en: "Cartographer", de: "Kartograf" },
-  { min: 16, en: "Geographer", de: "Geograf" },
-  { min: 20, en: "Globetrotter", de: "Weltenbummler" },
-  { min: 25, en: "Living Atlas", de: "Wandelnder Atlas" },
-  { min: 30, en: "Geo Master", de: "Geo-Meister" },
+  { min: 6, en: "Explorer", de: "Entdecker" },
+  { min: 10, en: "Navigator", de: "Navigator" },
+  { min: 14, en: "Cartographer", de: "Kartograf" },
+  { min: 18, en: "Geographer", de: "Geograf" },
+  { min: 22, en: "Globetrotter", de: "Weltenbummler" },
+  { min: 27, en: "Living Atlas", de: "Wandelnder Atlas" },
+  { min: 33, en: "Geo Master", de: "Geo-Meister" },
   { min: 40, en: "Geo Legend", de: "Geo-Legende" },
+  { min: 50, en: "Geo Mythic", de: "Geo-Mythos" },
 ];
 
 export function rankForLevel(level: number): { en: string; de: string } {

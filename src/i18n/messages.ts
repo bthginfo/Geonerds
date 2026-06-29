@@ -103,6 +103,8 @@ export const messages: Record<Locale, Dict> = {
     "scope.Oceania": "Oceania",
     "setup.timed": "Timed mode",
     "setup.timed.desc": "Race against the clock for a speed bonus",
+    "setup.practice": "Practice mode",
+    "setup.practice.desc": "Run through everything to learn — no points, no lives, nothing saved",
 
     "fact.learned": "Did you know?",
 
@@ -500,6 +502,8 @@ export const messages: Record<Locale, Dict> = {
     "scope.Oceania": "Ozeanien",
     "setup.timed": "Zeitmodus",
     "setup.timed.desc": "Gegen die Uhr spielen für einen Tempo-Bonus",
+    "setup.practice": "Lernmodus",
+    "setup.practice.desc": "Alles am Stück durchgehen zum Lernen – keine Punkte, keine Leben, nichts wird gespeichert",
 
     "fact.learned": "Schon gewusst?",
 
