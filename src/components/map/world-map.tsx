@@ -10,6 +10,26 @@ import { loadCountries, type CountryFeature } from "@/lib/geo";
 const W = 980;
 const H = 500;
 
+/** The biggest landmass of a feature — avoids far-flung territories skewing
+ *  a country's centroid / bounds (e.g. French Guiana, Alaska). */
+function largestGeom(f: GeoJSON.Feature): GeoJSON.Feature | GeoJSON.Geometry {
+  const geom = f.geometry;
+  if (geom && geom.type === "MultiPolygon") {
+    let best: GeoJSON.Polygon | null = null;
+    let bestArea = -1;
+    for (const coordinates of geom.coordinates) {
+      const poly: GeoJSON.Polygon = { type: "Polygon", coordinates };
+      const a = geoArea(poly);
+      if (a > bestArea) {
+        bestArea = a;
+        best = poly;
+      }
+    }
+    return best ?? f;
+  }
+  return f;
+}
+
 // Map id-less Natural Earth features onto the country they belong to.
 const NAME_TO_CCN3: Record<string, string> = {
   Somaliland: "706", // Somalia
@@ -41,6 +61,7 @@ export function WorldMap({
   dots = [],
   getFill,
   visibleSet,
+  fitToCcn3,
   resetSignal = 0,
 }: {
   onPick: (ccn3: string) => void;
@@ -53,6 +74,8 @@ export function WorldMap({
   getFill?: (ccn3: string) => string | undefined;
   /** If set, only these countries are drawn (others hidden). */
   visibleSet?: Set<string>;
+  /** If set, the map auto-zooms to fit these countries (e.g. route endpoints). */
+  fitToCcn3?: string[];
   resetSignal?: number;
 }) {
   const [features, setFeatures] = useState<CountryFeature[] | null>(null);
@@ -85,7 +108,10 @@ export function WorldMap({
       .map((f, i) => {
         const name = f.properties?.name ?? "";
         const ccn3 = f.id ? String(f.id) : NAME_TO_CCN3[name] ?? null;
-        const c = path.centroid(f as unknown as GeoJSON.Feature);
+        // Place the marker on the LARGEST landmass, not the averaged centroid of
+        // all parts — otherwise far-flung territories (e.g. French Guiana) drag
+        // the flag out into the ocean / onto a neighbour.
+        const c = path.centroid(largestGeom(f as unknown as GeoJSON.Feature));
         return {
           key: `${f.id ?? name}-${i}`,
           ccn3,
@@ -149,6 +175,34 @@ export function WorldMap({
     if (resetSignal === 0 || !svgRef.current || !zoomRef.current) return;
     select(svgRef.current).call(zoomRef.current.transform, zoomIdentity);
   }, [resetSignal]);
+
+  // Auto-zoom to fit a set of countries (e.g. the two endpoints of a route).
+  const fitKey = fitToCcn3?.join(",") ?? "";
+  useEffect(() => {
+    if (!fitToCcn3 || fitToCcn3.length === 0) return;
+    if (!features || !projection || !svgRef.current || !zoomRef.current) return;
+    const path = geoPath(projection);
+    const want = new Set(fitToCcn3);
+    let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity;
+    for (const f of features) {
+      const name = f.properties?.name ?? "";
+      const ccn3 = f.id ? String(f.id) : NAME_TO_CCN3[name] ?? null;
+      if (!ccn3 || !want.has(ccn3)) continue;
+      const b = path.bounds(largestGeom(f as unknown as GeoJSON.Feature));
+      x0 = Math.min(x0, b[0][0]); y0 = Math.min(y0, b[0][1]);
+      x1 = Math.max(x1, b[1][0]); y1 = Math.max(y1, b[1][1]);
+    }
+    if (!isFinite(x0)) return;
+    const bw = Math.max(1, x1 - x0);
+    const bh = Math.max(1, y1 - y0);
+    const k = Math.max(1, Math.min(40, 0.82 * Math.min(W / bw, H / bh)));
+    const cx = (x0 + x1) / 2;
+    const cy = (y0 + y1) / 2;
+    const tx = W / 2 - k * cx;
+    const ty = H / 2 - k * cy;
+    select(svgRef.current).call(zoomRef.current.transform, zoomIdentity.translate(tx, ty).scale(k));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [fitKey, features, projection]);
 
   function zoomBy(factor: number) {
     if (!svgRef.current || !zoomRef.current) return;

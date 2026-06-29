@@ -35,7 +35,8 @@ export function RouteGame({ difficulty, mode, roundCount, onFinish, onExit }: Pl
 
   const rounds = useMemo<RouteRound[]>(() => {
     const pool = poolForDifficulty(difficulty);
-    const [min, max] = difficulty === "easy" ? [2, 3] : difficulty === "hard" ? [3, 6] : [2, 4];
+    // Longer routes on the harder tiers so it isn't only quick 2-step hops.
+    const [min, max] = difficulty === "easy" ? [2, 4] : difficulty === "hard" ? [5, 9] : [3, 6];
     const count = roundCount === 0 ? 10 : roundCount;
     const out: RouteRound[] = [];
     let guard = 0;
@@ -208,6 +209,7 @@ export function RouteGame({ difficulty, mode, roundCount, onFinish, onExit }: Pl
           flagByCcn3={NO_FLAG}
           getFill={getFill}
           visibleSet={visibleSet}
+          fitToCcn3={[String(round.a.ccn3), String(round.b.ccn3)]}
         />
         <Compass />
       </div>

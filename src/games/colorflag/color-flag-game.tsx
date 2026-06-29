@@ -23,11 +23,11 @@ interface ColorFlag {
 
 const COLOR_FLAGS = colorFlagsData as ColorFlag[];
 
-// Greys for the "unpainted" canvas. Future areas are pale; the area you are
-// currently colouring is a darker, clearly-distinguishable grey so you can see
-// which shapes belong to it — without giving away the real colour.
-const GREY_FUTURE = "#e2e8f0";
-const GREY_CURRENT = "#94a3b8";
+// Each not-yet-coloured area gets its OWN grey shade from this ramp, so adjacent
+// areas (e.g. the three bands of a tricolour) never blend into one grey blob.
+// The area you are currently colouring is shown in a pulsing slate (--flag-hl).
+const GREY_RAMP = ["#cbd5e1", "#9aa7bb", "#e7ecf2", "#b4bdcb", "#8a98ad", "#d2d9e2", "#7e8ca1"];
+const GREY_CURRENT = "var(--flag-hl)";
 const MAX_LIVES = 3;
 const WRONG_PENALTY = 25;
 
@@ -130,7 +130,7 @@ export function ColorFlagGame({ difficulty, variant, roundCount, onFinish, onExi
       const committed = fills[g] ?? null;
       if (committed) s[`--c${g}`] = committed;
       else if (g === groupIdx && !answered) s[`--c${g}`] = GREY_CURRENT;
-      else s[`--c${g}`] = GREY_FUTURE;
+      else s[`--c${g}`] = GREY_RAMP[g % GREY_RAMP.length];
     }
     return s as CSSProperties;
   }, [groups, fills, groupIdx, answered]);
@@ -255,7 +255,7 @@ export function ColorFlagGame({ difficulty, variant, roundCount, onFinish, onExi
 
         <div
           className={cn(
-            "mt-4 w-full max-w-xs overflow-hidden rounded-lg border-2 border-border shadow [&_svg]:h-auto [&_svg]:w-full",
+            "flag-canvas mt-4 w-full max-w-xs overflow-hidden rounded-lg border-2 border-border shadow [&_svg]:h-auto [&_svg]:w-full",
             flashWrong && "animate-shake"
           )}
           style={styleVars}

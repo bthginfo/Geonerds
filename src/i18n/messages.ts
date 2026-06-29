@@ -210,6 +210,12 @@ export const messages: Record<Locale, Dict> = {
     "gn.q.largestPop": "Which of these has the most people?",
     "gn.q.neighbor": "Which country borders {c}?",
     "gn.q.landlocked": "Which of these is landlocked?",
+    "gn.q.smallestArea": "Which of these is the smallest by area?",
+    "gn.q.smallestPop": "Which of these has the fewest people?",
+    "gn.q.mostNeighbours": "Which of these borders the most countries?",
+    "gn.q.island": "Which of these is an island nation (no land borders)?",
+    "gn.q.southern": "Which of these lies in the southern hemisphere?",
+    "gn.q.borderCount": "How many countries does {c} border?",
 
     "neighbors.prompt": "Which country borders all of these?",
     "neighbors.promptClues": "Which country am I?",
@@ -230,6 +236,8 @@ export const messages: Record<Locale, Dict> = {
     "trace.instruction": "Draw the river's course on the map",
 
     "ranking.prompt": "Drag into order — highest first",
+    "ranking.promptDesc": "Drag into order — highest first",
+    "ranking.promptAsc": "Drag into order — lowest first",
     "ranking.by": "by {metric}",
     "ranking.correctSpots": "{n} of {total} in the right spot",
     "ranking.submit": "Submit order",
@@ -599,6 +607,12 @@ export const messages: Record<Locale, Dict> = {
     "gn.q.largestPop": "Welches dieser Länder hat die meisten Einwohner?",
     "gn.q.neighbor": "Welches Land grenzt an {c}?",
     "gn.q.landlocked": "Welches dieser Länder ist ein Binnenstaat?",
+    "gn.q.smallestArea": "Welches dieser Länder ist flächenmäßig am kleinsten?",
+    "gn.q.smallestPop": "Welches dieser Länder hat die wenigsten Einwohner?",
+    "gn.q.mostNeighbours": "Welches dieser Länder hat die meisten Nachbarn?",
+    "gn.q.island": "Welches davon ist ein Inselstaat (ohne Landgrenzen)?",
+    "gn.q.southern": "Welches dieser Länder liegt auf der Südhalbkugel?",
+    "gn.q.borderCount": "An wie viele Länder grenzt {c}?",
 
     "neighbors.prompt": "Welches Land grenzt an all diese?",
     "neighbors.promptClues": "Welches Land bin ich?",
@@ -619,6 +633,8 @@ export const messages: Record<Locale, Dict> = {
     "trace.instruction": "Zeichne den Flussverlauf auf der Karte",
 
     "ranking.prompt": "Ziehe in die richtige Reihenfolge – höchster zuerst",
+    "ranking.promptDesc": "Ziehe in die richtige Reihenfolge – höchster zuerst",
+    "ranking.promptAsc": "Ziehe in die richtige Reihenfolge – niedrigster zuerst",
     "ranking.by": "nach {metric}",
     "ranking.correctSpots": "{n} von {total} richtig platziert",
     "ranking.submit": "Reihenfolge einreichen",

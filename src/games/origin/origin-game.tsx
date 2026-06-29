@@ -12,6 +12,9 @@ import { useT } from "@/i18n/I18nProvider";
 export function OriginGame({ difficulty, mode, roundCount, timed, onFinish, onExit }: PlayHandlers) {
   const { t, locale } = useT();
 
+  // Drop any trailing "(…)" hint (e.g. "Dragon (Bhutan)") so it never gives the answer away.
+  const cleanLabel = (s: string) => s.replace(/\s*\([^)]*\)\s*$/, "").trim();
+
   const rounds = useMemo<QuizRound[]>(() => {
     const maxTier = ITEM_MAX_TIER[difficulty];
     const usable = ITEMS.filter((it) => it.tier <= maxTier && getCountryByCca3(it.cca3));
@@ -31,7 +34,7 @@ export function OriginGame({ difficulty, mode, roundCount, timed, onFinish, onEx
         prompt: (
           <div className="flex flex-col items-center gap-3 text-center">
             <span className="text-7xl leading-none">{item.emoji}</span>
-            <span className="text-xl font-bold">{locale === "de" ? item.de : item.en}</span>
+            <span className="text-xl font-bold">{cleanLabel(locale === "de" ? item.de : item.en)}</span>
             <span className="rounded-full bg-muted px-2.5 py-0.5 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
               {t(`origin.category.${item.category}`)}
             </span>

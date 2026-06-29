@@ -37,7 +37,8 @@ function fmt(v: number, m: Metric, locale: string): string {
 interface RankRound {
   metric: Metric;
   items: Country[];
-  sorted: Country[]; // highest → lowest
+  sorted: Country[]; // ordered to match `dir` (top of the list first)
+  dir: "desc" | "asc";
 }
 
 export function RankingGame({ difficulty, roundCount, timed, onFinish, onExit }: PlayHandlers) {
@@ -62,8 +63,12 @@ export function RankingGame({ difficulty, roundCount, timed, onFinish, onExit }:
         if (picked.length === n) break;
       }
       if (picked.length < n) continue;
-      const sorted = [...picked].sort((a, b) => mval(b, metric) - mval(a, metric));
-      out.push({ metric, items: shuffle(picked), sorted });
+      // Mix it up: sometimes rank from the top, sometimes from the bottom.
+      const dir: "desc" | "asc" = Math.random() < 0.5 ? "desc" : "asc";
+      const sorted = [...picked].sort((a, b) =>
+        dir === "desc" ? mval(b, metric) - mval(a, metric) : mval(a, metric) - mval(b, metric)
+      );
+      out.push({ metric, items: shuffle(picked), sorted, dir });
     }
     return out;
   }, [difficulty, roundCount, n]);
@@ -165,7 +170,7 @@ export function RankingGame({ difficulty, roundCount, timed, onFinish, onExit }:
 
       <div className="mx-auto flex w-full max-w-md flex-1 flex-col px-4 py-4">
         <div className="text-center">
-          <div className="text-lg font-bold">{t("ranking.prompt")}</div>
+          <div className="text-lg font-bold">{t(round.dir === "asc" ? "ranking.promptAsc" : "ranking.promptDesc")}</div>
           <div className="text-sm text-muted-foreground">{t("ranking.by", { metric: t(`hl.metric.${round.metric}`) })}</div>
         </div>
 

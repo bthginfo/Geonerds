@@ -44,6 +44,15 @@ export const SCRIPT_SAMPLES: Record<string, ScriptSample> = {
   Kazakh: { text: "Қазақша", font: "" },
   Kyrgyz: { text: "Кыргызча", font: "" },
   Tajik: { text: "Тоҷикӣ", font: "" },
+  Belarusian: { text: "Беларуская", font: "" },
+  Dari: { text: "دری", font: "Noto Sans Arabic" },
+  Sorani: { text: "کوردیی ناوەندی", font: "Noto Sans Arabic" },
+  // Latin-script autonyms with distinctive diacritics — still a fun "what language?" cue.
+  Vietnamese: { text: "Tiếng Việt", font: "" },
+  Turkish: { text: "Türkçe", font: "" },
+  Azerbaijani: { text: "Azərbaycan dili", font: "" },
+  Uzbek: { text: "Oʻzbek tili", font: "" },
+  Turkmen: { text: "Türkmençe", font: "" },
 };
 
 /** First language of a country that has a script sample. */

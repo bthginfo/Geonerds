@@ -159,7 +159,6 @@ export const ITEMS: OriginItem[] = [
   { en: "Caipirinha", de: "Caipirinha", emoji: "🍹", cca3: "BRA", category: "drink", tier: 3 },
   { en: "Pisco", de: "Pisco", emoji: "🥃", cca3: "PER", category: "drink", tier: 3 },
   // Sport
-  { en: "Cricket", de: "Cricket", emoji: "🏏", cca3: "IND", category: "sport", tier: 2 },
   { en: "Baseball", de: "Baseball", emoji: "⚾", cca3: "USA", category: "sport", tier: 1 },
   { en: "Skiing", de: "Skifahren", emoji: "⛷️", cca3: "AUT", category: "sport", tier: 3 },
   { en: "Judo", de: "Judo", emoji: "🥋", cca3: "JPN", category: "sport", tier: 2 },
@@ -167,6 +166,53 @@ export const ITEMS: OriginItem[] = [
   { en: "Tango", de: "Tango", emoji: "💃", cca3: "ARG", category: "music", tier: 2 },
   { en: "Fado", de: "Fado", emoji: "🎶", cca3: "PRT", category: "music", tier: 3 },
   { en: "Bouzouki", de: "Bouzouki", emoji: "🪕", cca3: "GRC", category: "music", tier: 3 },
+
+  // ── Batch 4: trickier / more obscure ───────────────────────
+  // Animals
+  { en: "Markhor", de: "Markhor", emoji: "🐐", cca3: "PAK", category: "animal", tier: 3 },
+  { en: "Snow Leopard", de: "Schneeleopard", emoji: "🐆", cca3: "KGZ", category: "animal", tier: 3 },
+  { en: "Lemur", de: "Lemur", emoji: "🐒", cca3: "MDG", category: "animal", tier: 3 },
+  { en: "Okapi", de: "Okapi", emoji: "🦓", cca3: "COD", category: "animal", tier: 3 },
+  { en: "Cheetah", de: "Gepard", emoji: "🐆", cca3: "NAM", category: "animal", tier: 3 },
+  { en: "Toucan", de: "Tukan", emoji: "🦜", cca3: "BLZ", category: "animal", tier: 3 },
+  { en: "Saiga Antelope", de: "Saiga-Antilope", emoji: "🦌", cca3: "KAZ", category: "animal", tier: 3 },
+  { en: "Andean Condor", de: "Andenkondor", emoji: "🦅", cca3: "BOL", category: "animal", tier: 3 },
+  // Foods
+  { en: "Khachapuri", de: "Chatschapuri", emoji: "🫓", cca3: "GEO", category: "food", tier: 3 },
+  { en: "Injera", de: "Injera", emoji: "🥞", cca3: "ETH", category: "food", tier: 3 },
+  { en: "Cachupa", de: "Cachupa", emoji: "🍲", cca3: "CPV", category: "food", tier: 3 },
+  { en: "Mansaf", de: "Mansaf", emoji: "🍛", cca3: "JOR", category: "food", tier: 3 },
+  { en: "Plov", de: "Plov", emoji: "🍚", cca3: "UZB", category: "food", tier: 3 },
+  { en: "Cevapi", de: "Ćevapi", emoji: "🌭", cca3: "BIH", category: "food", tier: 3 },
+  { en: "Bobotie", de: "Bobotie", emoji: "🥘", cca3: "ZAF", category: "food", tier: 3 },
+  { en: "Khinkali", de: "Chinkali", emoji: "🥟", cca3: "GEO", category: "food", tier: 3 },
+  { en: "Lutefisk", de: "Lutefisk", emoji: "🐟", cca3: "NOR", category: "food", tier: 3 },
+  // Symbols / landmarks
+  { en: "Petra", de: "Petra", emoji: "🏛️", cca3: "JOR", category: "symbol", tier: 2 },
+  { en: "Angkor Wat", de: "Angkor Wat", emoji: "🛕", cca3: "KHM", category: "symbol", tier: 2 },
+  { en: "Stave Church", de: "Stabkirche", emoji: "⛪", cca3: "NOR", category: "symbol", tier: 3 },
+  { en: "Tulou", de: "Tulou", emoji: "🏯", cca3: "CHN", category: "symbol", tier: 3 },
+  { en: "Chimney Cones", de: "Feenkamine", emoji: "🪨", cca3: "TUR", category: "symbol", tier: 3 },
+  { en: "Nuraghe", de: "Nuraghe", emoji: "🗼", cca3: "ITA", category: "symbol", tier: 3 },
+  { en: "Tango Bandoneon", de: "Bandoneon", emoji: "🪗", cca3: "URY", category: "symbol", tier: 3 },
+  // Drinks
+  { en: "Singani", de: "Singani", emoji: "🥃", cca3: "BOL", category: "drink", tier: 3 },
+  { en: "Palinka", de: "Pálinka", emoji: "🥃", cca3: "HUN", category: "drink", tier: 3 },
+  { en: "Raki", de: "Raki", emoji: "🥂", cca3: "TUR", category: "drink", tier: 3 },
+  { en: "Soju", de: "Soju", emoji: "🍶", cca3: "KOR", category: "drink", tier: 2 },
+  { en: "Aquavit", de: "Aquavit", emoji: "🥃", cca3: "SWE", category: "drink", tier: 3 },
+  // Sports / culture
+  { en: "Kabaddi", de: "Kabaddi", emoji: "🤼", cca3: "BGD", category: "sport", tier: 3 },
+  { en: "Sepak Takraw", de: "Sepak Takraw", emoji: "🏐", cca3: "MYS", category: "sport", tier: 3 },
+  { en: "Buzkashi", de: "Buzkashi", emoji: "🐎", cca3: "AFG", category: "sport", tier: 3 },
+  { en: "Pelota", de: "Pelota", emoji: "🤾", cca3: "ESP", category: "sport", tier: 3 },
+  { en: "Wushu", de: "Wushu", emoji: "🥋", cca3: "CHN", category: "sport", tier: 3 },
+  // Inventions / music
+  { en: "Tabla", de: "Tabla", emoji: "🥁", cca3: "IND", category: "music", tier: 3 },
+  { en: "Highlife", de: "Highlife", emoji: "🎺", cca3: "GHA", category: "music", tier: 3 },
+  { en: "Rai Music", de: "Raï", emoji: "🎶", cca3: "DZA", category: "music", tier: 3 },
+  { en: "Mbira", de: "Mbira", emoji: "🎵", cca3: "ZWE", category: "music", tier: 3 },
+  { en: "Morin Khuur", de: "Pferdekopfgeige", emoji: "🎻", cca3: "MNG", category: "music", tier: 3 },
 ];
 
 /** Item difficulty tiers permitted at each game difficulty. */

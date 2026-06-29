@@ -106,6 +106,20 @@ body {
 }
 .animate-shake { animation: shake 0.4s ease-in-out; }
 
+/* Color the Flag: the area currently being coloured pulses via an animated
+   custom property. Falls back to the static initial-value where @property
+   isn't supported. */
+@property --flag-hl {
+  syntax: "<color>";
+  inherits: true;
+  initial-value: #64748b;
+}
+@keyframes flagHlPulse {
+  0%, 100% { --flag-hl: #5b6b85; }
+  50% { --flag-hl: #aab6c8; }
+}
+.flag-canvas { animation: flagHlPulse 1.3s ease-in-out infinite; }
+
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,

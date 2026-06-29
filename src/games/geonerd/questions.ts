@@ -118,14 +118,79 @@ const builders: Record<string, Builder> = {
     );
     return { text: translate(locale, "gn.q.landlocked"), options, correctIndex };
   },
+  smallestArea(pool, locale) {
+    const four = sample(pool.filter((c) => c.area > 0), 4);
+    if (four.length < 4) return null;
+    const correct = four.reduce((a, b) => (b.area < a.area ? b : a));
+    if (four.filter((c) => c.area === correct.area).length > 1) return null;
+    const { options, correctIndex } = build(four.map((c) => countryName(c, locale)), countryName(correct, locale));
+    return { text: translate(locale, "gn.q.smallestArea"), options, correctIndex };
+  },
+  smallestPop(pool, locale) {
+    const four = sample(pool.filter((c) => c.population > 0), 4);
+    if (four.length < 4) return null;
+    const correct = four.reduce((a, b) => (b.population < a.population ? b : a));
+    if (four.filter((c) => c.population === correct.population).length > 1) return null;
+    const { options, correctIndex } = build(four.map((c) => countryName(c, locale)), countryName(correct, locale));
+    return { text: translate(locale, "gn.q.smallestPop"), options, correctIndex };
+  },
+  mostNeighbours(pool, locale) {
+    const four = sample(pool.filter((c) => c.borders.length > 0), 4);
+    if (four.length < 4) return null;
+    const correct = four.reduce((a, b) => (b.borders.length > a.borders.length ? b : a));
+    if (four.filter((c) => c.borders.length === correct.borders.length).length > 1) return null;
+    const { options, correctIndex } = build(four.map((c) => countryName(c, locale)), countryName(correct, locale));
+    return { text: translate(locale, "gn.q.mostNeighbours"), options, correctIndex };
+  },
+  island(pool, locale) {
+    const islands = pool.filter((c) => c.borders.length === 0 && !c.landlocked);
+    const mainland = pool.filter((c) => c.borders.length > 0);
+    if (!islands.length || mainland.length < 3) return null;
+    const correct = pickOne(islands);
+    const distract = sample(mainland, 3);
+    const { options, correctIndex } = build(
+      [correct, ...distract].map((c) => countryName(c, locale)),
+      countryName(correct, locale)
+    );
+    return { text: translate(locale, "gn.q.island"), options, correctIndex };
+  },
+  southern(pool, locale) {
+    const south = pool.filter((c) => c.latlng && c.latlng[0] < 0);
+    const north = pool.filter((c) => c.latlng && c.latlng[0] > 0);
+    if (!south.length || north.length < 3) return null;
+    const correct = pickOne(south);
+    const distract = sample(north, 3);
+    const { options, correctIndex } = build(
+      [correct, ...distract].map((c) => countryName(c, locale)),
+      countryName(correct, locale)
+    );
+    return { text: translate(locale, "gn.q.southern"), options, correctIndex };
+  },
+  borderCount(pool, locale) {
+    const c = pickOne(pool.filter((x) => x.borders.length >= 1));
+    if (!c) return null;
+    const real = c.borders.length;
+    const opts = new Set<number>([real]);
+    let guard = 0;
+    while (opts.size < 4 && guard++ < 40) {
+      const d = real + pickOne([-3, -2, -1, 1, 2, 3, 4]);
+      if (d >= 0) opts.add(d);
+    }
+    if (opts.size < 4) return null;
+    const correct = String(real);
+    const { options, correctIndex } = build([...opts].map(String), correct);
+    return { text: translate(locale, "gn.q.borderCount", { c: countryName(c, locale) }), options, correctIndex };
+  },
 };
 
 function allowedBuilders(round: number): string[] {
-  if (round < 3) return ["capital", "continent", "largestArea"];
-  if (round < 6) return ["capital", "continent", "currency", "countryByCapital", "largestArea", "largestPop"];
-  if (round < 10) return ["capital", "countryByCapital", "currency", "language", "largestArea", "largestPop", "neighbor", "landlocked"];
+  if (round < 3) return ["capital", "continent", "largestArea", "smallestArea"];
+  if (round < 6)
+    return ["capital", "continent", "currency", "countryByCapital", "largestArea", "largestPop", "smallestArea", "smallestPop", "island"];
+  if (round < 10)
+    return ["capital", "countryByCapital", "currency", "language", "largestArea", "largestPop", "smallestArea", "smallestPop", "neighbor", "landlocked", "island", "southern", "mostNeighbours", "borderCount"];
   // Late game leans on the trickier builders.
-  return ["countryByCapital", "currency", "language", "neighbor", "landlocked", "capital"];
+  return ["countryByCapital", "currency", "language", "neighbor", "landlocked", "capital", "smallestPop", "southern", "mostNeighbours", "borderCount"];
 }
 
 export function generateQuestion(round: number, locale: Locale): GnQuestion {
