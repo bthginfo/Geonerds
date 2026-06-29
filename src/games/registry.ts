@@ -16,6 +16,8 @@ import {
   PenLine,
   Sparkles,
   GraduationCap,
+  ListChecks,
+  Mountain,
   type LucideIcon,
 } from "lucide-react";
 import type { AnswerMode, GameId } from "@/lib/types";
@@ -60,6 +62,11 @@ export const GAMES: GameConfig[] = [
     modes: ["choice", "type"],
     countOptions: [10, 25, 50, 0],
     supportsTimed: true,
+    variants: {
+      labelKey: "capitals.scopeLabel",
+      default: "capitals",
+      options: ["capitals", "cities"],
+    },
   },
   {
     id: "outline",
@@ -171,6 +178,22 @@ export const GAMES: GameConfig[] = [
     id: "origin",
     icon: Sparkles,
     gradient: "from-pink-500 to-rose-600",
+    supportsDifficulty: true,
+    modes: ["choice", "type"],
+    countOptions: [10, 25, 0],
+    supportsTimed: true,
+  },
+  {
+    id: "nameall",
+    icon: ListChecks,
+    gradient: "from-teal-500 to-cyan-600",
+    supportsDifficulty: true,
+    countOptions: [3, 5, 8],
+  },
+  {
+    id: "mountains",
+    icon: Mountain,
+    gradient: "from-stone-500 to-amber-700",
     supportsDifficulty: true,
     modes: ["choice", "type"],
     countOptions: [10, 25, 0],

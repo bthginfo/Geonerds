@@ -40,6 +40,8 @@ export type GameId =
   | "neighbors"
   | "trace"
   | "origin"
+  | "nameall"
+  | "mountains"
   | "millionaire";
 
 export type Difficulty = "easy" | "medium" | "hard";

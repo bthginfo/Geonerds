@@ -2,6 +2,7 @@ import type { Country, Locale } from "@/lib/types";
 import { COUNTRIES, countryName } from "@/data/countries";
 import { capitalLabel } from "@/games/aliases";
 import { translate } from "@/i18n/messages";
+import { simplifyCurrency } from "@/lib/currency";
 import { sample, shuffle, pickOne } from "@/lib/utils";
 
 export interface GnQuestion {
@@ -53,13 +54,18 @@ const builders: Record<string, Builder> = {
     const withCur = pool.filter((c) => c.currencies.length);
     if (withCur.length < 4) return null;
     const c = pickOne(withCur);
-    const correct = c.currencies[0];
-    const distract = sample(
-      withCur.filter((x) => !x.currencies.includes(correct)),
-      3
-    ).map((x) => x.currencies[0]);
-    if (distract.length < 3 || distract.includes(correct)) return null;
-    const { options, correctIndex } = build([correct, ...distract], correct);
+    // Use the base unit so the country adjective never gives the answer away.
+    const correct = simplifyCurrency(c.currencies[0]);
+    const distract = Array.from(
+      new Set(
+        withCur
+          .filter((x) => x.cca3 !== c.cca3)
+          .map((x) => simplifyCurrency(x.currencies[0]))
+          .filter((u) => u !== correct)
+      )
+    );
+    if (distract.length < 3) return null;
+    const { options, correctIndex } = build([correct, ...sample(distract, 3)], correct);
     return { text: translate(locale, "gn.q.currency", { c: countryName(c, locale) }), options, correctIndex };
   },
   language(pool, locale) {
@@ -117,15 +123,21 @@ const builders: Record<string, Builder> = {
 function allowedBuilders(round: number): string[] {
   if (round < 3) return ["capital", "continent", "largestArea"];
   if (round < 6) return ["capital", "continent", "currency", "countryByCapital", "largestArea", "largestPop"];
-  return ["capital", "countryByCapital", "currency", "language", "largestArea", "largestPop", "neighbor", "landlocked"];
+  if (round < 10) return ["capital", "countryByCapital", "currency", "language", "largestArea", "largestPop", "neighbor", "landlocked"];
+  // Late game leans on the trickier builders.
+  return ["countryByCapital", "currency", "language", "neighbor", "landlocked", "capital"];
 }
 
 export function generateQuestion(round: number, locale: Locale): GnQuestion {
+  // The more questions you clear, the harder and more obscure the countries get.
   const maxTier = Math.min(4, 1 + Math.floor(round / 2));
-  const pool = COUNTRIES.filter((c) => c.difficulty <= maxTier);
+  // From the mid-game on, also drop the easiest countries so it stays challenging.
+  const minTier = round >= 12 ? 3 : round >= 8 ? 2 : 1;
+  let pool = COUNTRIES.filter((c) => c.difficulty <= maxTier && c.difficulty >= minTier);
+  if (pool.length < 8) pool = COUNTRIES.filter((c) => c.difficulty <= maxTier);
   const points = 100 + round * 50;
   const names = allowedBuilders(round);
-  for (let i = 0; i < 25; i++) {
+  for (let i = 0; i < 30; i++) {
     const q = builders[pickOne(names)](pool, locale);
     if (q) return { ...q, points };
   }

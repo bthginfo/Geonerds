@@ -23,6 +23,8 @@ import { WatersGame } from "@/games/waters/waters-game";
 import { NeighborsGame } from "@/games/neighbors/neighbors-game";
 import { TraceGame } from "@/games/trace/trace-game";
 import { OriginGame } from "@/games/origin/origin-game";
+import { NameAllGame } from "@/games/nameall/name-all-game";
+import { MountainsGame } from "@/games/mountains/mountains-game";
 import { GeoNerdGame } from "@/games/geonerd/geonerd-game";
 
 const COMPONENTS: Record<GameId, (h: PlayHandlers) => React.ReactNode> = {
@@ -42,6 +44,8 @@ const COMPONENTS: Record<GameId, (h: PlayHandlers) => React.ReactNode> = {
   neighbors: (h) => <NeighborsGame {...h} />,
   trace: (h) => <TraceGame {...h} />,
   origin: (h) => <OriginGame {...h} />,
+  nameall: (h) => <NameAllGame {...h} />,
+  mountains: (h) => <MountainsGame {...h} />,
   millionaire: (h) => <GeoNerdGame {...h} />,
 };
 

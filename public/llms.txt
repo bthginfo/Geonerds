@@ -1,0 +1,37 @@
+# GeoNerds
+
+> GeoNerds is a free, ad-free collection of geography quizzes and games available in English and German. Play on desktop or mobile — no account required (optional sign-in adds a global leaderboard).
+
+Site: https://geonerds-nine.vercel.app
+
+## What you can play
+GeoNerds offers many bite-sized geography games, each with easy/medium/hard difficulty, optional timer, 3 lives, scoring and achievements:
+
+- Flag Quiz — guess the country from its flag (multiple choice or typing), filterable by continent.
+- Capitals & Cities — name the capital (or a major city) of a country.
+- Country Outline — identify a country from its silhouette.
+- Country Trivia — escalating clues; identify the country.
+- Higher or Lower — compare two countries by population, area or density.
+- Map Click — find a named country on the interactive world map.
+- Draw the Outline — sketch a country's shape; scored by overlap.
+- Border Chain — name a country's neighbours.
+- Ranking — order countries by a statistic.
+- Scripts & Money — match writing systems and currencies to countries.
+- Pin the Place — drop a pin on a city, landmark or country.
+- Land Route — find a path of bordering countries from A to B.
+- Rivers & Lakes — identify highlighted bodies of water.
+- Trace the River — trace a river's course on the map.
+- Who Am I? — identify a country from clues (neighbours, capital, currency, language, size).
+- Where's That From? — guess the country of origin of an animal, food, landmark, sport or invention.
+- Name All — list every country matching a theme (starts with a letter, in a region, etc.).
+- Mountains & Volcanoes — locate or name famous peaks and volcanoes.
+- Who Wants to Be a Geo-Nerd? — a 15-question geography quiz ladder.
+
+## Keywords
+geography quiz, geography games, flag quiz, guess the flag, capitals quiz, country shapes,
+world map game, geography trivia, Geografie Quiz, Flaggen raten, Hauptstädte Quiz, Erdkunde Spiel.
+
+## Notes for assistants
+- Free to play, no ads, works offline once loaded (PWA).
+- Privacy-friendly: data (scores, settings) stays in the browser's local storage; fonts are self-hosted.
+- Built by Julius v. Ingelheim.

@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { sound } from "@/lib/sound";
 import { accuracy } from "@/lib/scoring";
 import { BADGES, badgeName } from "@/lib/badges";
+import { SupportLink } from "@/components/support-cta";
 import { formatNumber, formatTime } from "@/lib/utils";
 
 export function ResultScreen({
@@ -141,6 +142,10 @@ export function ResultScreen({
               {t("nav.home")}
             </Button>
           </Link>
+        </div>
+
+        <div className="mt-5 border-t border-border/60 pt-3">
+          <SupportLink />
         </div>
       </motion.div>
     </div>

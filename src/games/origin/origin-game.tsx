@@ -6,18 +6,25 @@ import { QuizGame, type QuizRound } from "@/games/quiz-core";
 import { COUNTRIES, getCountryByCca3, countryName } from "@/data/countries";
 import { countryAccepted } from "@/games/aliases";
 import { sample, shuffle } from "@/lib/utils";
-import { ITEMS } from "./items";
+import { ITEMS, ITEM_MAX_TIER } from "./items";
 import { useT } from "@/i18n/I18nProvider";
 
 export function OriginGame({ difficulty, mode, roundCount, timed, onFinish, onExit }: PlayHandlers) {
   const { t, locale } = useT();
 
   const rounds = useMemo<QuizRound[]>(() => {
-    const usable = ITEMS.filter((it) => getCountryByCca3(it.cca3));
+    const maxTier = ITEM_MAX_TIER[difficulty];
+    const usable = ITEMS.filter((it) => it.tier <= maxTier && getCountryByCca3(it.cca3));
     const count = roundCount === 0 ? usable.length : roundCount;
     return sample(usable, Math.min(count, usable.length)).map((item) => {
       const answer = getCountryByCca3(item.cca3)!;
-      const distractors = sample(COUNTRIES.filter((c) => c.cca3 !== answer.cca3), 3);
+      // On hard, draw plausible distractors from the same region.
+      const samePool = COUNTRIES.filter((c) => c.cca3 !== answer.cca3 && c.region === answer.region);
+      const distractorPool =
+        difficulty === "hard" && samePool.length >= 3
+          ? samePool
+          : COUNTRIES.filter((c) => c.cca3 !== answer.cca3);
+      const distractors = sample(distractorPool, 3);
       const options = shuffle([answer, ...distractors]).map((c) => ({ id: c.cca3, label: countryName(c, locale) }));
       return {
         key: `${item.category}-${item.en}`,
@@ -38,7 +45,7 @@ export function OriginGame({ difficulty, mode, roundCount, timed, onFinish, onEx
       };
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [roundCount, locale]);
+  }, [roundCount, locale, difficulty]);
 
   return (
     <QuizGame gameId="origin" rounds={rounds} mode={mode} difficulty={difficulty} timed={timed} onFinish={onFinish} onExit={onExit} />
