@@ -165,6 +165,40 @@ export const BADGES: Badge[] = [
   { id: "mountains25", icon: Mountain, name: { en: "Mountaineer", de: "Bergsteiger" }, desc: { en: "Identify 25 peaks", de: "25 Gipfel erkennen" }, earned: (s) => g(s, "mountains") >= 25 },
   { id: "nerd10", icon: GraduationCap, name: { en: "Geo-Nerd", de: "Geo-Nerd" }, desc: { en: "Reach question 10 in the quiz", de: "Frage 10 im Quiz erreichen" }, earned: (s) => (s.maxTotalByGame["millionaire"] ?? 0) >= 10 },
   { id: "nerd20", icon: Brain, name: { en: "Geo Genius", de: "Geo-Genie" }, desc: { en: "Reach question 20 in the quiz", de: "Frage 20 im Quiz erreichen" }, earned: (s) => (s.maxTotalByGame["millionaire"] ?? 0) >= 20 },
+
+  // ── Higher tiers ────────────────────────────────────────
+  // Volume
+  { id: "runs500", icon: Repeat, name: { en: "Veteran", de: "Veteran" }, desc: { en: "Play 500 games", de: "Spiele 500 Runden" }, earned: (s) => s.totalRuns >= 500 },
+  { id: "runs1000", icon: Crown, name: { en: "Geo Immortal", de: "Geo-Unsterblich" }, desc: { en: "Play 1,000 games", de: "Spiele 1.000 Runden" }, earned: (s) => s.totalRuns >= 1000 },
+  // Total score
+  { id: "score250k", icon: Gem, name: { en: "Quarter Million", de: "Viertelmillion" }, desc: { en: "Earn 250,000 total points", de: "Sammle 250.000 Punkte" }, earned: (s) => s.totalScore >= 250000 },
+  { id: "score500k", icon: Diamond, name: { en: "Half a Million", de: "Halbe Million" }, desc: { en: "Earn 500,000 total points", de: "Sammle 500.000 Punkte" }, earned: (s) => s.totalScore >= 500000 },
+  { id: "score1m", icon: Crown, name: { en: "Millionaire", de: "Millionär" }, desc: { en: "Earn 1,000,000 total points", de: "Sammle 1.000.000 Punkte" }, earned: (s) => s.totalScore >= 1000000 },
+  { id: "score2m", icon: Sparkles, name: { en: "Multi-Millionaire", de: "Multimillionär" }, desc: { en: "Earn 2,000,000 total points", de: "Sammle 2.000.000 Punkte" }, earned: (s) => s.totalScore >= 2000000 },
+  { id: "score5m", icon: Rocket, name: { en: "Point Tycoon", de: "Punkte-Tycoon" }, desc: { en: "Earn 5,000,000 total points", de: "Sammle 5.000.000 Punkte" }, earned: (s) => s.totalScore >= 5000000 },
+  // Single run
+  { id: "run7500", icon: Zap, name: { en: "Big Spender", de: "Großverdiener" }, desc: { en: "Score 7,500 in one game", de: "7.500 Punkte in einer Runde" }, earned: (s) => s.maxScoreRun >= 7500 },
+  { id: "run10k", icon: TrendingUp, name: { en: "Five Figures", de: "Fünfstellig" }, desc: { en: "Score 10,000 in one game", de: "10.000 Punkte in einer Runde" }, earned: (s) => s.maxScoreRun >= 10000 },
+  { id: "run15k", icon: Rocket, name: { en: "Stratosphere", de: "Stratosphäre" }, desc: { en: "Score 15,000 in one game", de: "15.000 Punkte in einer Runde" }, earned: (s) => s.maxScoreRun >= 15000 },
+  // Streaks
+  { id: "streak50b", icon: Flame, name: { en: "Blazing", de: "Lodernd" }, desc: { en: "Reach a streak of 40", de: "Erreiche eine Serie von 40" }, earned: (s) => s.bestStreak >= 40 },
+  { id: "streak75", icon: Flame, name: { en: "Supernova", de: "Supernova" }, desc: { en: "Reach a streak of 75", de: "Erreiche eine Serie von 75" }, earned: (s) => s.bestStreak >= 75 },
+  { id: "streak100", icon: Flame, name: { en: "Centa-Streak", de: "Hunderter-Serie" }, desc: { en: "Reach a streak of 100", de: "Erreiche eine Serie von 100" }, earned: (s) => s.bestStreak >= 100 },
+  // Perfection
+  { id: "perfect25b", icon: Target, name: { en: "Machine", de: "Maschine" }, desc: { en: "Get 50 perfect rounds", de: "50 perfekte Runden" }, earned: (s) => s.perfectRounds >= 50 },
+  { id: "perfect100", icon: Award, name: { en: "Immaculate", de: "Unbefleckt" }, desc: { en: "Get 100 perfect rounds", de: "100 perfekte Runden" }, earned: (s) => s.perfectRounds >= 100 },
+  // Habit
+  { id: "days30", icon: CalendarDays, name: { en: "Devotee", de: "Stammspieler" }, desc: { en: "Play on 30 different days", de: "An 30 verschiedenen Tagen spielen" }, earned: (s) => s.distinctDays >= 30 },
+  { id: "days100", icon: CalendarDays, name: { en: "Centurion", de: "Hundert-Tage-Held" }, desc: { en: "Play on 100 different days", de: "An 100 verschiedenen Tagen spielen" }, earned: (s) => s.distinctDays >= 100 },
+  // Hard mode mastery
+  { id: "hard25", icon: Swords, name: { en: "Hard Veteran", de: "Hart-Veteran" }, desc: { en: "Finish 25 runs on hard", de: "25 Runden auf Schwer" }, earned: (s) => s.hardRuns >= 25 },
+  { id: "typist50", icon: Keyboard, name: { en: "Touch Typist", de: "Zehnfinger-Profi" }, desc: { en: "Finish 50 rounds typing", de: "50 Runden im Tippmodus" }, earned: (s) => s.typeRuns >= 50 },
+  // Deep per-game mastery
+  { id: "flags500", icon: Flag, name: { en: "Flag Deity", de: "Flaggen-Gottheit" }, desc: { en: "500 correct flags", de: "500 Flaggen richtig" }, earned: (s) => g(s, "flags") >= 500 },
+  { id: "capitals300", icon: Landmark, name: { en: "Metropolitan", de: "Metropolen-Meister" }, desc: { en: "300 correct capitals & cities", de: "300 Haupt-/Städte richtig" }, earned: (s) => g(s, "capitals") >= 300 },
+  { id: "map500", icon: MapPin, name: { en: "World Master", de: "Welt-Meister" }, desc: { en: "Find 500 countries on the map", de: "500 Länder auf der Karte finden" }, earned: (s) => g(s, "map-click") >= 500 },
+  { id: "trivia100", icon: Lightbulb, name: { en: "Walking Atlas", de: "Wandelndes Lexikon" }, desc: { en: "100 correct trivia", de: "100 Trivia richtig" }, earned: (s) => g(s, "trivia") >= 100 },
+  { id: "nerd30", icon: Brain, name: { en: "Geo Grandmaster", de: "Geo-Großmeister" }, desc: { en: "Reach question 30 in the quiz", de: "Frage 30 im Quiz erreichen" }, earned: (s) => (s.maxTotalByGame["millionaire"] ?? 0) >= 30 },
 ];
 
 export function earnedIds(runs: ScoreEntry[]): Set<string> {
