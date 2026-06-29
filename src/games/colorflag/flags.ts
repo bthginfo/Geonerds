@@ -72,6 +72,17 @@ export const COLOR_FLAGS: ColorFlag[] = [
   { cca3: "DNK", en: "Denmark", de: "Dänemark", layout: { kind: "cross", field: "red", cross: "white" } },
   { cca3: "FIN", en: "Finland", de: "Finnland", layout: { kind: "cross", field: "white", cross: "blue" } },
   { cca3: "SWE", en: "Sweden", de: "Schweden", layout: { kind: "cross", field: "blue", cross: "yellow" } },
+
+  // ── More tricolours & bicolours ──
+  { cca3: "LUX", en: "Luxembourg", de: "Luxemburg", layout: { kind: "hbars", colors: ["red", "white", "lightblue"] } },
+  { cca3: "ARM", en: "Armenia", de: "Armenien", layout: { kind: "hbars", colors: ["red", "blue", "orange"] } },
+  { cca3: "BOL", en: "Bolivia", de: "Bolivien", layout: { kind: "hbars", colors: ["red", "yellow", "green"] } },
+  { cca3: "ECU", en: "Ecuador", de: "Ecuador", layout: { kind: "hbars", colors: ["yellow", "blue", "red"] } },
+  { cca3: "TCD", en: "Chad", de: "Tschad", layout: { kind: "vbars", colors: ["blue", "yellow", "red"] } },
+  { cca3: "SMR", en: "San Marino", de: "San Marino", layout: { kind: "hbars", colors: ["white", "lightblue"] } },
+  { cca3: "MUS", en: "Mauritius", de: "Mauritius", layout: { kind: "hbars", colors: ["red", "blue", "yellow", "green"] } },
+  { cca3: "CRI", en: "Costa Rica", de: "Costa Rica", layout: { kind: "hbars", colors: ["blue", "white", "red", "white", "blue"] } },
+  { cca3: "GMB", en: "Gambia", de: "Gambia", layout: { kind: "hbars", colors: ["red", "white", "blue", "white", "green"] } },
 ];
 
 export interface Region {

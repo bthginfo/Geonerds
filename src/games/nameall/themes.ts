@@ -8,7 +8,7 @@ export interface Theme {
   targets: string[]; // cca3 codes that match
 }
 
-const HUB_COUNTRIES = ["DEU", "BRA", "CHN", "RUS", "FRA", "TUR", "ZAF", "SAU", "THA", "POL"];
+const HUB_COUNTRIES = ["DEU", "BRA", "CHN", "RUS", "FRA", "TUR", "ZAF", "SAU", "THA", "POL", "IND", "IRN", "COD", "AUT", "ARG", "HUN"];
 
 const LANGUAGES: { lang: string; en: string; de: string }[] = [
   { lang: "Portuguese", en: "Portuguese", de: "Portugiesisch" },
@@ -17,6 +17,10 @@ const LANGUAGES: { lang: string; en: string; de: string }[] = [
   { lang: "Dutch", en: "Dutch", de: "Niederländisch" },
   { lang: "Russian", en: "Russian", de: "Russisch" },
   { lang: "Italian", en: "Italian", de: "Italienisch" },
+  { lang: "Turkish", en: "Turkish", de: "Türkisch" },
+  { lang: "Persian", en: "Persian", de: "Persisch" },
+  { lang: "Swahili", en: "Swahili", de: "Suaheli" },
+  { lang: "Malay", en: "Malay", de: "Malaiisch" },
 ];
 
 function t(locale: Locale, en: string, de: string): string {
@@ -92,6 +96,19 @@ export function generateThemes(difficulty: Difficulty, locale: Locale, count: nu
   if (big.length >= minTargets) candidates.push({ id: "largest", title: t(locale, "The 10 largest countries by area", "Die 10 größten Länder nach Fläche"), targets: big });
   const populous = ranked((c) => c.population, 10);
   if (populous.length >= minTargets) candidates.push({ id: "populous", title: t(locale, "The 10 most populous countries", "Die 10 bevölkerungsreichsten Länder"), targets: populous });
+
+  // Name-pattern & attribute themes.
+  const stans = pool.filter((c) => /stan$/i.test(countryName(c, "en"))).map((c) => c.cca3);
+  add("stans", t(locale, "Countries ending in “-stan”", "Länder, die auf „-stan“ enden"), stans);
+
+  const euro = pool.filter((c) => c.currencies.includes("Euro")).map((c) => c.cca3);
+  add("euro", t(locale, "Countries that use the Euro", "Länder, die den Euro nutzen"), euro);
+
+  const over100m = pool.filter((c) => c.population >= 100_000_000).map((c) => c.cca3);
+  add("over100m", t(locale, "Countries with over 100 million people", "Länder mit über 100 Mio. Einwohnern"), over100m);
+
+  const micro = pool.filter((c) => c.area > 0 && c.area < 1000).map((c) => c.cca3);
+  add("micro", t(locale, "Microstates (under 1,000 km²)", "Zwergstaaten (unter 1.000 km²)"), micro);
 
   // Harder knowledge themes — well suited to choice mode too (you must *know* them).
   if (difficulty !== "easy") {

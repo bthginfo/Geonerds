@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { motion } from "framer-motion";
-import { ArrowLeft, Play, HelpCircle } from "lucide-react";
+import { ArrowLeft, Play, HelpCircle, Info } from "lucide-react";
 import type { AnswerMode, Difficulty, GameId, RunResult } from "@/lib/types";
 import { getGame } from "@/games/registry";
 import { useT } from "@/i18n/I18nProvider";
@@ -161,6 +161,13 @@ export function GameShell({
             {t("nav.howto")}
           </button>
         </motion.div>
+
+        {config.setupNoteKey && (
+          <div className="mt-5 flex items-start gap-2 rounded-xl border border-primary/30 bg-primary/5 p-3 text-xs leading-relaxed text-muted-foreground">
+            <Info className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
+            <span>{t(config.setupNoteKey)}</span>
+          </div>
+        )}
 
         <div className="mt-8 space-y-5">
           {config.variants && (

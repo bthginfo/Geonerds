@@ -172,7 +172,10 @@ export function WorldMap({
   const strokeW = 0.9 / t.k;
   const markerW = 30 / t.k;
   const markerH = (markerW * 3) / 4;
-  const dotR = 4 / t.k;
+  // Dots grow on screen as you zoom in so they stay easy to tap on mobile.
+  const dotScreenR = Math.min(16, 5 + (t.k - 1) * 0.8);
+  const dotR = dotScreenR / t.k;
+  const dotHitR = (dotScreenR + 9) / t.k;
 
   return (
     <>
@@ -215,21 +218,24 @@ export function WorldMap({
             if (!p) return null;
             const isFlash = flashCcn3 === d.ccn3;
             return (
-              <circle
-                key={`dot-${d.ccn3}`}
-                data-ccn3={d.ccn3}
-                cx={p[0]}
-                cy={p[1]}
-                r={dotR}
-                className={
-                  isFlash
-                    ? flashOk
-                      ? "fill-success stroke-white"
-                      : "fill-danger stroke-white"
-                    : "fill-rose-500/80 stroke-white hover:fill-primary"
-                }
-                style={{ strokeWidth: 0.6 / t.k }}
-              />
+              <g key={`dot-${d.ccn3}`}>
+                {/* Invisible, larger tap target for fat fingers on mobile. */}
+                <circle data-ccn3={d.ccn3} cx={p[0]} cy={p[1]} r={dotHitR} className="fill-transparent" />
+                <circle
+                  data-ccn3={d.ccn3}
+                  cx={p[0]}
+                  cy={p[1]}
+                  r={dotR}
+                  className={
+                    isFlash
+                      ? flashOk
+                        ? "fill-success stroke-white"
+                        : "fill-danger stroke-white"
+                      : "fill-rose-500/90 stroke-white hover:fill-primary"
+                  }
+                  style={{ strokeWidth: 1 / t.k }}
+                />
+              </g>
             );
           })}
 

@@ -290,6 +290,7 @@ export const messages: Record<Locale, Dict> = {
     "type.almost": "Almost — did you mean {guess}?",
 
     "mapclick.prompt": "Find: {country}",
+    "mapclick.dotsNote": "Tiny countries (like Monaco or the Maldives) are too small to tap, so they appear as red dots. Zoom in to make a dot bigger, then tap it.",
     "mapclick.found": "Found {count} of {total}",
     "mapclick.reset": "Reset view",
     "mapclick.skip": "Skip",
@@ -678,6 +679,7 @@ export const messages: Record<Locale, Dict> = {
     "type.almost": "Fast – meintest du {guess}?",
 
     "mapclick.prompt": "Finde: {country}",
+    "mapclick.dotsNote": "Winzige Länder (wie Monaco oder die Malediven) sind zu klein zum Antippen und erscheinen daher als rote Punkte. Zoome hinein, damit ein Punkt größer wird, und tippe ihn dann an.",
     "mapclick.found": "{count} von {total} gefunden",
     "mapclick.reset": "Ansicht zurücksetzen",
     "mapclick.skip": "Überspringen",

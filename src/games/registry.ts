@@ -38,6 +38,8 @@ export interface GameConfig {
   defaultTimed?: boolean;
   /** Optional game-specific variant selector (e.g. flag scope). */
   variants?: { labelKey: string; default: string; options: string[] };
+  /** Optional short note shown on the setup screen (i18n key). */
+  setupNoteKey?: string;
 }
 
 export const GAMES: GameConfig[] = [
@@ -100,6 +102,7 @@ export const GAMES: GameConfig[] = [
     supportsDifficulty: true,
     countOptions: [10, 25, 50, 0],
     supportsTimed: true,
+    setupNoteKey: "mapclick.dotsNote",
     variants: {
       labelKey: "scope.region",
       default: "world",
