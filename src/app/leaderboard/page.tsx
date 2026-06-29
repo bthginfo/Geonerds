@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import { Trophy, Loader2, Globe2, Smartphone } from "lucide-react";
+import { Trophy, Loader2, Globe2, Smartphone, Crown, CalendarDays } from "lucide-react";
 import { GAMES } from "@/games/registry";
 import { useT } from "@/i18n/I18nProvider";
 import { useAllRuns } from "@/hooks/use-scores";
@@ -14,12 +14,14 @@ import { formatNumber, formatTime, cn } from "@/lib/utils";
 import type { GameId } from "@/lib/types";
 
 type Scope = "device" | "global";
+type Period = "all" | "month";
 
 export default function LeaderboardPage() {
   const { t, locale } = useT();
   const { runs, refresh } = useAllRuns();
   const user = useAuth((s) => s.user);
   const [scope, setScope] = useState<Scope>("global");
+  const [period, setPeriod] = useState<Period>("all");
   const [filter, setFilter] = useState<GameId | "all">("all");
 
   const [online, setOnline] = useState<{ configured: boolean; scores: OnlineScore[] } | null>(null);
@@ -28,11 +30,11 @@ export default function LeaderboardPage() {
   useEffect(() => {
     if (scope !== "global") return;
     setLoadingOnline(true);
-    apiTopScores(filter).then((res) => {
+    apiTopScores(filter, period).then((res) => {
       setOnline(res);
       setLoadingOnline(false);
     });
-  }, [scope, filter]);
+  }, [scope, filter, period]);
 
   const deviceRanked = useMemo(() => {
     const list = (runs ?? []).filter((r) => filter === "all" || r.gameId === filter);
@@ -62,6 +64,18 @@ export default function LeaderboardPage() {
         </ScopeButton>
       </div>
 
+      {/* Period toggle (global only) */}
+      {scope === "global" && (
+        <div className="mb-4 ml-2 inline-flex rounded-xl border border-border bg-card p-0.5 sm:ml-3">
+          <ScopeButton active={period === "all"} onClick={() => setPeriod("all")} icon={<Trophy className="h-4 w-4" />}>
+            {t("leaderboard.overall")}
+          </ScopeButton>
+          <ScopeButton active={period === "month"} onClick={() => setPeriod("month")} icon={<CalendarDays className="h-4 w-4" />}>
+            {t("leaderboard.month")}
+          </ScopeButton>
+        </div>
+      )}
+
       {/* Game filter */}
       <div className="mb-4 flex flex-wrap gap-1.5">
         <Chip active={filter === "all"} onClick={() => setFilter("all")}>
@@ -80,6 +94,7 @@ export default function LeaderboardPage() {
           loading={loadingOnline}
           showGame={filter === "all"}
           signedIn={!!user}
+          period={period}
           locale={locale}
           t={t}
         />
@@ -119,6 +134,7 @@ function GlobalBoard({
   loading,
   showGame,
   signedIn,
+  period,
   locale,
   t,
 }: {
@@ -126,6 +142,7 @@ function GlobalBoard({
   loading: boolean;
   showGame: boolean;
   signedIn: boolean;
+  period: "all" | "month";
   locale: string;
   t: (k: string, v?: Record<string, string | number>) => string;
 }) {
@@ -142,8 +159,23 @@ function GlobalBoard({
   }
 
   const scores = data?.scores ?? [];
+  const champion = scores[0];
   return (
     <>
+      {champion && (
+        <div className="mb-3 flex items-center gap-3 rounded-2xl border border-warning/40 bg-gradient-to-br from-warning/15 to-amber-500/10 p-3">
+          <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-amber-400 to-orange-500 text-white shadow">
+            <Crown className="h-6 w-6" />
+          </span>
+          <div className="min-w-0 flex-1">
+            <div className="text-[11px] font-semibold uppercase tracking-wide text-warning">
+              {period === "month" ? t("leaderboard.championMonth") : t("leaderboard.championAll")}
+            </div>
+            <div className="truncate text-lg font-bold leading-tight">{champion.name}</div>
+          </div>
+          <span className="shrink-0 text-lg font-extrabold tabular-nums">{formatNumber(champion.score, locale)}</span>
+        </div>
+      )}
       {!signedIn && (
         <div className="mb-3 flex items-center justify-between gap-3 rounded-xl border border-primary/40 bg-primary/5 p-3">
           <span className="text-sm">{t("leaderboard.signInCta")}</span>

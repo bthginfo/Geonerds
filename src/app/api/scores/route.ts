@@ -9,10 +9,23 @@ const GAME_IDS = new Set([
   "flags",
   "capitals",
   "outline",
+  "trivia",
   "higher-lower",
   "map-click",
   "draw",
   "border-chain",
+  "ranking",
+  "languages",
+  "pin",
+  "route",
+  "waters",
+  "neighbors",
+  "trace",
+  "origin",
+  "nameall",
+  "mountains",
+  "millionaire",
+  "daily",
 ]);
 const DIFFICULTIES = new Set(["easy", "medium", "hard"]);
 
@@ -28,8 +41,12 @@ export async function GET(req: Request) {
   }
   const url = new URL(req.url);
   const game = url.searchParams.get("game");
+  const period = url.searchParams.get("period"); // "month" | "all" (default)
   const limit = int(url.searchParams.get("limit") ?? 50, 1, 100);
   const sql = await getDb();
+
+  // Restrict to the current calendar month when requested.
+  const monthFilter = period === "month";
 
   let scores;
   if (game && GAME_IDS.has(game)) {
@@ -40,6 +57,7 @@ export async function GET(req: Request) {
         SELECT DISTINCT ON (user_id) *
         FROM gn_scores
         WHERE game_id = ${game}
+        ${monthFilter ? sql`AND created_at >= date_trunc('month', now())` : sql``}
         ORDER BY user_id, score DESC, duration_ms ASC
       ) best
       ORDER BY score DESC, duration_ms ASC
@@ -49,6 +67,7 @@ export async function GET(req: Request) {
     scores = await sql`
       SELECT name, game_id, difficulty, mode, score, correct, total, best_streak, duration_ms, created_at
       FROM gn_scores
+      ${monthFilter ? sql`WHERE created_at >= date_trunc('month', now())` : sql``}
       ORDER BY score DESC, duration_ms ASC
       LIMIT ${limit}
     `;

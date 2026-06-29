@@ -37,15 +37,18 @@ export function generateThemes(difficulty: Difficulty, locale: Locale, count: nu
     if (t.length >= minTargets && t.length <= maxTargets) candidates.push({ id, title, targets: t });
   };
 
-  // Starts-with-letter (localized name).
-  const byLetter = new Map<string, string[]>();
-  for (const c of pool) {
-    const L = countryName(c, locale).charAt(0).toUpperCase();
-    if (!/[A-ZÄÖÜ]/.test(L)) continue;
-    byLetter.set(L, [...(byLetter.get(L) ?? []), c.cca3]);
-  }
-  for (const [L, codes] of byLetter) {
-    add(`letter-${L}`, t(locale, `Countries starting with “${L}”`, `Länder mit „${L}“`), codes);
+  // Starts-with-letter only makes sense when you have to *recall* names (typing).
+  // In click/choice mode you'd just read the first letter off the chips, so skip it.
+  if (difficulty === "hard") {
+    const byLetter = new Map<string, string[]>();
+    for (const c of pool) {
+      const L = countryName(c, locale).charAt(0).toUpperCase();
+      if (!/[A-ZÄÖÜ]/.test(L)) continue;
+      byLetter.set(L, [...(byLetter.get(L) ?? []), c.cca3]);
+    }
+    for (const [L, codes] of byLetter) {
+      add(`letter-${L}`, t(locale, `Countries starting with “${L}”`, `Länder mit „${L}“`), codes);
+    }
   }
 
   // Subregions.
@@ -89,6 +92,25 @@ export function generateThemes(difficulty: Difficulty, locale: Locale, count: nu
   if (big.length >= minTargets) candidates.push({ id: "largest", title: t(locale, "The 10 largest countries by area", "Die 10 größten Länder nach Fläche"), targets: big });
   const populous = ranked((c) => c.population, 10);
   if (populous.length >= minTargets) candidates.push({ id: "populous", title: t(locale, "The 10 most populous countries", "Die 10 bevölkerungsreichsten Länder"), targets: populous });
+
+  // Harder knowledge themes — well suited to choice mode too (you must *know* them).
+  if (difficulty !== "easy") {
+    const smallest = [...COUNTRIES]
+      .filter((c) => c.unMember && c.area > 0)
+      .sort((a, b) => a.area - b.area)
+      .slice(0, 10)
+      .map((c) => c.cca3);
+    if (smallest.length >= minTargets)
+      candidates.push({ id: "smallest", title: t(locale, "The 10 smallest countries by area", "Die 10 kleinsten Länder nach Fläche"), targets: smallest });
+
+    // Island / no-land-border nations.
+    const islands = pool.filter((c) => c.borders.length === 0 && !c.landlocked).map((c) => c.cca3);
+    add("islands", t(locale, "Countries with no land borders", "Länder ohne Landgrenze"), islands);
+
+    // Most neighbours.
+    const mostNb = pool.filter((c) => c.borders.length >= 6).map((c) => c.cca3);
+    add("manyNeighbours", t(locale, "Countries with 6+ neighbours", "Länder mit 6+ Nachbarn"), mostNb);
+  }
 
   // Unique by target signature, then sample.
   const seen = new Set<string>();

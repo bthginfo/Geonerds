@@ -234,6 +234,80 @@ export const COUNTRY_FACTS: Record<string, Fact[]> = {
   LUX: [
     { en: "Luxembourg made all public transport free nationwide in 2020.", de: "Luxemburg machte 2020 als erstes Land den ÖPNV landesweit kostenlos." },
   ],
+
+  // ── Europe ──
+  BEL: [
+    { en: "Belgium produces over 220,000 tonnes of chocolate a year.", de: "Belgien produziert über 220.000 Tonnen Schokolade pro Jahr." },
+    { en: "It once went 589 days without a federal government.", de: "Es war einmal 589 Tage ohne föderale Regierung." },
+  ],
+  DNK: [
+    { en: "Denmark's flag is the oldest continuously used national flag.", de: "Dänemarks Flagge ist die älteste durchgehend genutzte Nationalflagge." },
+    { en: "The Danish concept of 'hygge' is about cosy contentment.", de: "Das dänische Konzept „Hygge“ steht für gemütliche Zufriedenheit." },
+  ],
+  HUN: [
+    { en: "Hungary invented the Rubik's Cube.", de: "Ungarn erfand den Zauberwürfel (Rubik's Cube)." },
+    { en: "Budapest sits on over 100 thermal springs.", de: "Budapest liegt auf über 100 Thermalquellen." },
+  ],
+  ROU: [{ en: "Romania is home to Europe's heaviest building, its Palace of Parliament.", de: "In Rumänien steht Europas schwerstes Gebäude, der Parlamentspalast." }],
+  UKR: [{ en: "Ukraine is the largest country located entirely within Europe.", de: "Die Ukraine ist das größte vollständig in Europa liegende Land." }],
+  HRV: [{ en: "The necktie originated in Croatia — 'cravat' comes from 'Croat'.", de: "Die Krawatte stammt aus Kroatien – „Cravate“ kommt von „Kroate“." }],
+  SRB: [{ en: "Serbia's Belgrade is one of Europe's oldest continuously inhabited cities.", de: "Serbiens Belgrad ist eine der am längsten durchgehend bewohnten Städte Europas." }],
+  BGR: [{ en: "Bulgaria is the world's leading producer of rose oil for perfume.", de: "Bulgarien ist der weltweit führende Produzent von Rosenöl für Parfüm." }],
+  SVK: [{ en: "Slovakia has more castles and chateaux per capita than any country.", de: "Die Slowakei hat pro Kopf mehr Burgen und Schlösser als jedes andere Land." }],
+  SVN: [{ en: "Slovenia is over half covered by forest.", de: "Slowenien ist zu mehr als der Hälfte von Wald bedeckt." }],
+  LTU: [{ en: "Lithuania has a 'Hill of Crosses' with over 100,000 crosses.", de: "Litauen hat einen „Berg der Kreuze“ mit über 100.000 Kreuzen." }],
+  LVA: [{ en: "Latvia is one of the greenest, most forested countries in Europe.", de: "Lettland ist eines der grünsten, waldreichsten Länder Europas." }],
+  EST: [{ en: "Estonia was the first country to allow online voting nationally.", de: "Estland war das erste Land mit landesweiter Online-Wahl." }],
+  BLR: [{ en: "Belarus is home to one of Europe's last primeval forests.", de: "In Belarus liegt einer der letzten Urwälder Europas." }],
+  MLT: [{ en: "Malta's capital Valletta is one of the smallest in the world.", de: "Maltas Hauptstadt Valletta ist eine der kleinsten der Welt." }],
+  CYP: [{ en: "Cyprus's Aphrodite legend says the goddess rose from its shores.", de: "Laut der Aphrodite-Legende entstieg die Göttin den Küsten Zyperns." }],
+  ALB: [{ en: "Albanians nod for 'no' and shake their head for 'yes'.", de: "Albaner nicken für „Nein“ und schütteln den Kopf für „Ja“." }],
+  AND: [{ en: "Andorra has no airport and no army.", de: "Andorra hat weder Flughafen noch Armee." }],
+  LIE: [{ en: "Liechtenstein is one of the world's two doubly landlocked countries.", de: "Liechtenstein ist eines der zwei doppelt eingeschlossenen Binnenländer der Welt." }],
+
+  // ── Asia ──
+  PAK: [{ en: "Pakistan is home to K2, the world's second-highest mountain.", de: "In Pakistan liegt der K2, der zweithöchste Berg der Welt." }],
+  BGD: [{ en: "Bangladesh has the world's largest river delta.", de: "Bangladesch hat das größte Flussdelta der Welt." }],
+  LKA: [{ en: "Sri Lanka was the first country to elect a female prime minister (1960).", de: "Sri Lanka wählte 1960 als erstes Land eine Premierministerin." }],
+  MMR: [{ en: "Myanmar switched to driving on the right overnight in 1970.", de: "Myanmar wechselte 1970 über Nacht zum Rechtsverkehr." }],
+  KHM: [{ en: "Cambodia's Angkor Wat is the largest religious monument on Earth.", de: "Kambodschas Angkor Wat ist das größte religiöse Bauwerk der Erde." }],
+  MYS: [{ en: "Malaysia's Petronas Towers were the world's tallest until 2004.", de: "Malaysias Petronas Towers waren bis 2004 die höchsten Gebäude der Welt." }],
+  PHL: [{ en: "The Philippines is made up of more than 7,600 islands.", de: "Die Philippinen bestehen aus mehr als 7.600 Inseln." }],
+  PRK: [{ en: "North Korea uses its own calendar counting from Kim Il-sung's birth.", de: "Nordkorea nutzt einen eigenen Kalender ab Kim Il-sungs Geburtsjahr." }],
+  IRN: [{ en: "Iran (Persia) was home to one of the world's first empires.", de: "Iran (Persien) beheimatete eines der ersten Großreiche der Welt." }],
+  IRQ: [{ en: "Iraq covers ancient Mesopotamia, the 'cradle of civilisation'.", de: "Der Irak umfasst das antike Mesopotamien, die „Wiege der Zivilisation“." }],
+  JOR: [{ en: "Jordan's Petra was carved into rose-red cliffs over 2,000 years ago.", de: "Jordaniens Petra wurde vor über 2.000 Jahren in rosarote Felsen gehauen." }],
+  LBN: [{ en: "Lebanon's Byblos is among the oldest continuously inhabited cities.", de: "Libanons Byblos zählt zu den am längsten bewohnten Städten der Welt." }],
+  QAT: [{ en: "Qatar is one of the world's richest countries per capita.", de: "Katar ist pro Kopf eines der reichsten Länder der Welt." }],
+  UZB: [{ en: "Uzbekistan's Samarkand was a key stop on the Silk Road.", de: "Usbekistans Samarkand war ein zentraler Halt der Seidenstraße." }],
+  GEO: [{ en: "Georgia is one of the oldest wine-producing regions, ~8,000 years.", de: "Georgien ist eine der ältesten Weinregionen, rund 8.000 Jahre." }],
+  ARM: [{ en: "Armenia was the first country to adopt Christianity as state religion.", de: "Armenien machte als erstes Land das Christentum zur Staatsreligion." }],
+
+  // ── Africa ──
+  DZA: [{ en: "Algeria is the largest country in Africa.", de: "Algerien ist das größte Land Afrikas." }],
+  TUN: [{ en: "Tunisia's Sahara stood in for Tatooine in Star Wars.", de: "Tunesiens Sahara diente in Star Wars als Tatooine." }],
+  GHA: [{ en: "Ghana was the first sub-Saharan country to gain independence (1957).", de: "Ghana war das erste Land südlich der Sahara, das unabhängig wurde (1957)." }],
+  SEN: [{ en: "Senegal's Lake Retba is naturally pink from algae.", de: "Senegals Lac Rose ist durch Algen natürlich rosa." }],
+  TZA: [{ en: "Tanzania has both Africa's highest peak and its largest lake share.", de: "Tansania hat Afrikas höchsten Gipfel und großen Anteil am größten See." }],
+  MDG: [{ en: "About 90% of Madagascar's wildlife exists nowhere else.", de: "Rund 90 % der Tierwelt Madagaskars gibt es nirgendwo sonst." }],
+  ZWE: [{ en: "Zimbabwe shares the mighty Victoria Falls with Zambia.", de: "Simbabwe teilt sich die gewaltigen Victoriafälle mit Sambia." }],
+  BWA: [{ en: "Botswana holds one of the world's largest elephant populations.", de: "Botswana beherbergt eine der größten Elefantenpopulationen der Welt." }],
+  NAM: [{ en: "Namibia has the oldest desert on Earth, the Namib.", de: "Namibia hat die älteste Wüste der Erde, die Namib." }],
+  COD: [{ en: "The DR Congo holds most of the world's second-largest rainforest.", de: "Die DR Kongo umfasst den Großteil des zweitgrößten Regenwaldes der Welt." }],
+  CMR: [{ en: "Cameroon is nicknamed 'Africa in miniature' for its variety.", de: "Kamerun gilt wegen seiner Vielfalt als „Afrika im Kleinen“." }],
+
+  // ── Americas ──
+  VEN: [{ en: "Venezuela has the world's highest waterfall, Angel Falls.", de: "Venezuela hat den höchsten Wasserfall der Welt, den Salto Ángel." }],
+  ECU: [{ en: "Ecuador is named after the Equator, which runs through it.", de: "Ecuador ist nach dem Äquator benannt, der durch das Land verläuft." }],
+  URY: [{ en: "Uruguay was the first nation to host and win the football World Cup (1930).", de: "Uruguay war Gastgeber und Sieger der ersten Fußball-WM (1930)." }],
+  PRY: [{ en: "Paraguay's Itaipú dam is among the world's biggest power plants.", de: "Paraguays Itaipú-Staudamm zählt zu den größten Kraftwerken der Welt." }],
+  PAN: [{ en: "The Panama Canal links the Atlantic and Pacific oceans.", de: "Der Panamakanal verbindet Atlantik und Pazifik." }],
+  GTM: [{ en: "Guatemala was the heartland of the ancient Maya civilisation.", de: "Guatemala war das Kernland der antiken Maya-Zivilisation." }],
+  DOM: [{ en: "The Dominican Republic shares its island with Haiti.", de: "Die Dominikanische Republik teilt sich ihre Insel mit Haiti." }],
+
+  // ── Oceania ──
+  FJI: [{ en: "Fiji is made up of more than 330 islands.", de: "Fidschi besteht aus mehr als 330 Inseln." }],
+  PNG: [{ en: "Papua New Guinea has over 800 languages — the most of any country.", de: "Papua-Neuguinea hat über 800 Sprachen – die meisten aller Länder." }],
 };
 
 export function hasFacts(cca3: string): boolean {

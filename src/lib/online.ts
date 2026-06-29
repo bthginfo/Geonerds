@@ -62,10 +62,16 @@ export async function apiSubmitScore(run: RunResult): Promise<boolean> {
   }
 }
 
-export async function apiTopScores(game?: string): Promise<{ configured: boolean; scores: OnlineScore[] }> {
+export async function apiTopScores(
+  game?: string,
+  period: "all" | "month" = "all"
+): Promise<{ configured: boolean; scores: OnlineScore[] }> {
   try {
-    const url = game && game !== "all" ? `/api/scores?game=${encodeURIComponent(game)}` : "/api/scores";
-    const res = await fetch(url, { cache: "no-store" });
+    const params = new URLSearchParams();
+    if (game && game !== "all") params.set("game", game);
+    if (period === "month") params.set("period", "month");
+    const qs = params.toString();
+    const res = await fetch(`/api/scores${qs ? `?${qs}` : ""}`, { cache: "no-store" });
     return await res.json();
   } catch {
     return { configured: false, scores: [] };
