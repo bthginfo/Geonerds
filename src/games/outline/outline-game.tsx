@@ -16,7 +16,18 @@ export function OutlineGame({ difficulty, mode, roundCount, timed, practice, onF
   const [features, setFeatures] = useState<Map<string, CountryFeature> | null>(null);
 
   useEffect(() => {
-    featuresByCcn3("10m").then(setFeatures);
+    // Some bundled 10m geometries are degenerate (e.g. Australia is a 5-point
+    // box); patch them from a small override file before building rounds.
+    Promise.all([
+      featuresByCcn3("10m"),
+      fetch("/geo/outline-overrides.json").then((r) => r.json()).catch(() => ({})),
+    ]).then(([feats, overrides]: [Map<string, CountryFeature>, Record<string, GeoJSON.Geometry>]) => {
+      for (const [ccn3, geometry] of Object.entries(overrides)) {
+        const f = feats.get(ccn3);
+        if (f) feats.set(ccn3, { ...f, geometry } as CountryFeature);
+      }
+      setFeatures(feats);
+    });
   }, []);
 
   const rounds = useMemo<QuizRound[]>(() => {
