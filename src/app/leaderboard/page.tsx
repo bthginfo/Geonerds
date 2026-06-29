@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import { Trophy, Loader2, Globe2, Smartphone, Crown, CalendarDays } from "lucide-react";
+import { Trophy, Loader2, Globe2, Smartphone, Crown, CalendarDays, Gamepad2, ChevronDown } from "lucide-react";
 import { GAMES } from "@/games/registry";
 import { useT } from "@/i18n/I18nProvider";
 import { useAllRuns } from "@/hooks/use-scores";
@@ -77,15 +77,22 @@ export default function LeaderboardPage() {
       )}
 
       {/* Game filter */}
-      <div className="mb-4 flex flex-wrap gap-1.5">
-        <Chip active={filter === "all"} onClick={() => setFilter("all")}>
-          {t("leaderboard.all")}
-        </Chip>
-        {GAMES.map((g) => (
-          <Chip key={g.id} active={filter === g.id} onClick={() => setFilter(g.id)}>
-            {t(`games.${g.id}.name`)}
-          </Chip>
-        ))}
+      <div className="relative mb-4">
+        <Gamepad2 className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+        <select
+          value={filter}
+          onChange={(e) => setFilter(e.target.value as GameId | "all")}
+          aria-label={t("leaderboard.all")}
+          className="w-full appearance-none rounded-xl border border-border bg-card py-2.5 pl-9 pr-9 text-sm font-semibold text-foreground outline-none transition-colors hover:border-primary/50 focus:border-primary"
+        >
+          <option value="all">{t("leaderboard.all")}</option>
+          {GAMES.map((g) => (
+            <option key={g.id} value={g.id}>
+              {t(`games.${g.id}.name`)}
+            </option>
+          ))}
+        </select>
+        <ChevronDown className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
       </div>
 
       {scope === "global" ? (
@@ -275,26 +282,3 @@ function ScopeButton({
   );
 }
 
-function Chip({
-  active,
-  onClick,
-  children,
-}: {
-  active: boolean;
-  onClick: () => void;
-  children: React.ReactNode;
-}) {
-  return (
-    <button
-      onClick={onClick}
-      className={cn(
-        "rounded-full border px-3 py-1.5 text-xs font-medium transition-colors",
-        active
-          ? "border-primary bg-primary text-primary-foreground"
-          : "border-border bg-card text-muted-foreground hover:text-foreground"
-      )}
-    >
-      {children}
-    </button>
-  );
-}
