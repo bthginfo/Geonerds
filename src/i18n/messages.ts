@@ -106,6 +106,15 @@ export const messages: Record<Locale, Dict> = {
     "games.route.short": "Travel country to country by land.",
     "games.waters.name": "Rivers & Lakes",
     "games.waters.short": "Identify the highlighted river or lake.",
+    "games.neighbors.name": "Who Am I?",
+    "games.neighbors.short": "Name the country from its neighbours.",
+    "games.trace.name": "Trace the River",
+    "games.trace.short": "Draw a river's course on the map.",
+
+    "neighbors.prompt": "Which country borders all of these?",
+
+    "trace.prompt": "Trace: {river}",
+    "trace.instruction": "Draw the river's course on the map",
 
     "ranking.prompt": "Drag into order — highest first",
     "ranking.by": "by {metric}",
@@ -143,6 +152,8 @@ export const messages: Record<Locale, Dict> = {
     "howto.pin": "A place is named. Tap where you think it is on the map. The closer your pin, the more points — scored by distance in kilometres. Pinch or scroll to zoom in for accuracy.",
     "howto.route": "You get a start and a destination country — only those two are shown. Name (or pick) a country that borders where you are and lies on the way; each correct step appears on the map until you arrive.",
     "howto.waters": "A river or lake is highlighted on the map. Choose or type which one it is.",
+    "howto.neighbors": "You see a country's neighbours — the countries it borders. Work out which country sits in the middle and name it (choice or typing).",
+    "howto.trace": "A river is named and the map zooms to its region. Draw its course with your finger or mouse; you're scored on how closely your line follows the real river.",
 
     "hl.metric.population": "Population",
     "hl.metric.area": "Area",
@@ -336,6 +347,15 @@ export const messages: Record<Locale, Dict> = {
     "games.route.short": "Reise von Land zu Land über Landgrenzen.",
     "games.waters.name": "Flüsse & Seen",
     "games.waters.short": "Erkenne den markierten Fluss oder See.",
+    "games.neighbors.name": "Wer bin ich?",
+    "games.neighbors.short": "Errate das Land an seinen Nachbarn.",
+    "games.trace.name": "Fluss nachzeichnen",
+    "games.trace.short": "Zeichne den Verlauf eines Flusses auf der Karte.",
+
+    "neighbors.prompt": "Welches Land grenzt an all diese?",
+
+    "trace.prompt": "Zeichne: {river}",
+    "trace.instruction": "Zeichne den Flussverlauf auf der Karte",
 
     "ranking.prompt": "Ziehe in die richtige Reihenfolge – höchster zuerst",
     "ranking.by": "nach {metric}",
@@ -373,6 +393,8 @@ export const messages: Record<Locale, Dict> = {
     "howto.pin": "Ein Ort wird genannt. Tippe auf der Karte, wo er liegt. Je näher dein Pin, desto mehr Punkte – bewertet nach Entfernung in Kilometern. Zoome für mehr Genauigkeit hinein.",
     "howto.route": "Du bekommst ein Start- und ein Ziel-Land – nur diese beiden sind sichtbar. Nenne (oder wähle) ein Land, das an dein aktuelles grenzt und auf dem Weg liegt; jeder richtige Schritt erscheint auf der Karte, bis du ankommst.",
     "howto.waters": "Ein Fluss oder See ist auf der Karte markiert. Wähle oder tippe, welcher es ist.",
+    "howto.neighbors": "Du siehst die Nachbarländer eines Landes – die, an die es grenzt. Finde heraus, welches Land in der Mitte liegt, und nenne es (Auswahl oder Eingabe).",
+    "howto.trace": "Ein Fluss wird genannt und die Karte zoomt auf seine Region. Zeichne seinen Verlauf mit Finger oder Maus; bewertet wird, wie genau deine Linie dem echten Fluss folgt.",
 
     "hl.metric.population": "Einwohner",
     "hl.metric.area": "Fläche",

@@ -36,7 +36,9 @@ export type GameId =
   | "languages"
   | "pin"
   | "route"
-  | "waters";
+  | "waters"
+  | "neighbors"
+  | "trace";
 
 export type Difficulty = "easy" | "medium" | "hard";
 

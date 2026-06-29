@@ -12,6 +12,8 @@ import {
   Crosshair,
   Route,
   Waves,
+  Fingerprint,
+  PenLine,
   type LucideIcon,
 } from "lucide-react";
 import type { AnswerMode, GameId } from "@/lib/types";
@@ -146,6 +148,22 @@ export const GAMES: GameConfig[] = [
     modes: ["choice", "type"],
     countOptions: [10, 25, 0],
     supportsTimed: true,
+  },
+  {
+    id: "neighbors",
+    icon: Fingerprint,
+    gradient: "from-indigo-500 to-violet-600",
+    supportsDifficulty: true,
+    modes: ["choice", "type"],
+    countOptions: [10, 25, 50, 0],
+    supportsTimed: true,
+  },
+  {
+    id: "trace",
+    icon: PenLine,
+    gradient: "from-sky-500 to-cyan-600",
+    supportsDifficulty: true,
+    countOptions: [5, 10, 0],
   },
 ];
 
