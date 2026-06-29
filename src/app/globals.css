@@ -120,6 +120,15 @@ body {
 }
 .flag-canvas { animation: flagHlPulse 1.3s ease-in-out infinite; }
 
+/* Outline every filled region so adjacent areas are always distinguishable,
+   even when their grey shades are similar (e.g. Latvia's stripe on its field).
+   Stroke-painted line shapes (fill="none", e.g. US stripes) are left alone. */
+.flag-canvas svg :where(path, rect, circle, ellipse, polygon, polyline):not([fill="none"]) {
+  stroke: rgba(15, 23, 42, 0.55);
+  stroke-width: 0.6px;
+  vector-effect: non-scaling-stroke;
+}
+
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,
