@@ -11,13 +11,20 @@ function xpForLevel(level: number): number {
   return Math.round(140 * Math.pow(level - 1, 2.35) / 10) * 10;
 }
 
+/** Highest normal level; beyond this you earn prestige stars. */
+export const MAX_LEVEL = 50;
+/** XP needed for each prestige star once you've maxed out. */
+export const PRESTIGE_STEP = 300000;
+
 export interface LevelInfo {
   level: number;
-  /** XP earned within the current level. */
+  /** Prestige stars earned past the max level (0 until you reach it). */
+  prestige: number;
+  /** XP earned within the current level (or toward the next prestige star). */
   intoLevel: number;
-  /** XP span of the current level. */
+  /** XP span of the current level (or a prestige step). */
   levelSpan: number;
-  /** 0..1 progress to the next level. */
+  /** 0..1 progress to the next level / prestige star. */
   progress: number;
   rank: { en: string; de: string };
 }
@@ -45,17 +52,34 @@ export function rankForLevel(level: number): { en: string; de: string } {
 export function levelFromXp(xp: number): LevelInfo {
   const x = Math.max(0, xp);
   let level = 1;
-  while (xpForLevel(level + 1) <= x) level += 1;
-  const base = xpForLevel(level);
-  const next = xpForLevel(level + 1);
-  const levelSpan = next - base;
-  const intoLevel = x - base;
+  while (level < MAX_LEVEL && xpForLevel(level + 1) <= x) level += 1;
+
+  if (level < MAX_LEVEL) {
+    const base = xpForLevel(level);
+    const next = xpForLevel(level + 1);
+    const levelSpan = next - base;
+    const intoLevel = x - base;
+    return {
+      level,
+      prestige: 0,
+      intoLevel,
+      levelSpan,
+      progress: levelSpan > 0 ? intoLevel / levelSpan : 0,
+      rank: rankForLevel(level),
+    };
+  }
+
+  // Maxed out: every PRESTIGE_STEP of further XP earns a prestige star.
+  const over = Math.max(0, x - xpForLevel(MAX_LEVEL));
+  const prestige = Math.floor(over / PRESTIGE_STEP);
+  const intoLevel = over - prestige * PRESTIGE_STEP;
   return {
-    level,
+    level: MAX_LEVEL,
+    prestige,
     intoLevel,
-    levelSpan,
-    progress: levelSpan > 0 ? intoLevel / levelSpan : 0,
-    rank: rankForLevel(level),
+    levelSpan: PRESTIGE_STEP,
+    progress: intoLevel / PRESTIGE_STEP,
+    rank: rankForLevel(MAX_LEVEL),
   };
 }
 

@@ -49,7 +49,14 @@ export default function ProfilePage() {
         </span>
         <div className="min-w-0 flex-1">
           <div className="truncate text-lg font-bold">{user?.name ?? t("profile.guest")}</div>
-          <div className="text-sm text-muted-foreground">{rankName(level.rank, locale)}</div>
+          <div className="flex items-center gap-2 text-sm text-muted-foreground">
+            <span>{rankName(level.rank, locale)}</span>
+            {level.prestige > 0 && (
+              <span className="inline-flex items-center gap-0.5 rounded-full bg-amber-500/15 px-2 py-0.5 text-xs font-bold text-amber-600 dark:text-amber-400">
+                ✦ {t("profile.prestige", { n: level.prestige })}
+              </span>
+            )}
+          </div>
           <div className="mt-2 h-2 overflow-hidden rounded-full bg-muted">
             <div
               className="h-full rounded-full bg-gradient-to-r from-sky-500 to-indigo-600"

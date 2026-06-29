@@ -1,9 +1,9 @@
-import type { Country, Locale } from "@/lib/types";
+import type { Country, Difficulty, Locale } from "@/lib/types";
 import { FlagImage } from "@/components/flag-image";
 import { poolForDifficulty, withCapital, countryName } from "@/data/countries";
 import { capitalLabel, capitalAccepted, countryAccepted } from "@/games/aliases";
 import { simplifyCurrency } from "@/lib/currency";
-import { DAILY_COUNT, mulberry32, seedFromKey, sampleWith, shuffleWith } from "@/lib/daily";
+import { DAILY_COUNT, WEEKLY_COUNT, mulberry32, seedFromKey, sampleWith, shuffleWith } from "@/lib/daily";
 import type { QuizRound } from "@/games/quiz-core";
 
 type Builder = (answer: Country, pool: Country[], rng: () => number, locale: Locale) => QuizRound | null;
@@ -113,19 +113,34 @@ function popPrompt(locale: Locale) {
   return locale === "de" ? "Welches Land hat mehr Einwohner?" : "Which country has more people?";
 }
 
-/** Build the deterministic set of rounds for a given day. */
-export function generateDailyRounds(key: string, locale: Locale): QuizRound[] {
+/** Build a deterministic set of challenge rounds. */
+function generateChallengeRounds(
+  key: string,
+  locale: Locale,
+  count: number,
+  difficulty: Difficulty
+): QuizRound[] {
   const rng = mulberry32(seedFromKey(key));
-  const pool = withCapital(poolForDifficulty("medium"));
-  const answers = sampleWith(pool, DAILY_COUNT * 2, rng);
+  const pool = withCapital(poolForDifficulty(difficulty));
+  const answers = sampleWith(pool, count * 3, rng);
   const rounds: QuizRound[] = [];
   let bi = 0;
   for (const a of answers) {
-    if (rounds.length >= DAILY_COUNT) break;
+    if (rounds.length >= count) break;
     const builder = builders[bi % builders.length];
     bi += 1;
     const r = builder(a, pool, rng, locale);
     if (r) rounds.push(r);
   }
   return rounds;
+}
+
+/** The day's 8-round mixed challenge (medium difficulty). */
+export function generateDailyRounds(key: string, locale: Locale): QuizRound[] {
+  return generateChallengeRounds(key, locale, DAILY_COUNT, "medium");
+}
+
+/** The week's longer, harder 20-round challenge. */
+export function generateWeeklyRounds(key: string, locale: Locale): QuizRound[] {
+  return generateChallengeRounds(`week-${key}`, locale, WEEKLY_COUNT, "hard");
 }

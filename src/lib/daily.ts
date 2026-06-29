@@ -1,9 +1,32 @@
-/** Deterministic helpers for the Daily Challenge. */
+/** Deterministic helpers for the Daily & Weekly Challenges. */
 
 export const DAILY_COUNT = 8;
+/** The Weekly Challenge is longer and harder than the daily. */
+export const WEEKLY_COUNT = 20;
 
 export function dateKey(d: Date = new Date()): string {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+}
+
+/** ISO-week key, e.g. "2026-W27" — stable for the whole week, resets Monday. */
+export function weekKey(d: Date = new Date()): string {
+  const date = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
+  // ISO week: Thursday determines the year/week number.
+  const day = (date.getUTCDay() + 6) % 7; // Mon=0 … Sun=6
+  date.setUTCDate(date.getUTCDate() - day + 3);
+  const firstThursday = new Date(Date.UTC(date.getUTCFullYear(), 0, 4));
+  const week =
+    1 + Math.round(((date.getTime() - firstThursday.getTime()) / 86400000 - 3 + ((firstThursday.getUTCDay() + 6) % 7)) / 7);
+  return `${date.getUTCFullYear()}-W${String(week).padStart(2, "0")}`;
+}
+
+/** Milliseconds until next local Monday 00:00. */
+export function msUntilNextWeek(now: Date = new Date()): number {
+  const next = new Date(now);
+  const daysToMonday = ((8 - next.getDay()) % 7) || 7; // Sun=0 → 1, Mon=1 → 7
+  next.setDate(next.getDate() + daysToMonday);
+  next.setHours(0, 0, 0, 0);
+  return next.getTime() - now.getTime();
 }
 
 /** Seedable PRNG. */

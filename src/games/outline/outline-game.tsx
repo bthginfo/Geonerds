@@ -21,8 +21,12 @@ export function OutlineGame({ difficulty, mode, roundCount, timed, practice, onF
 
   const rounds = useMemo<QuizRound[]>(() => {
     if (!features) return [];
+    // Micro-states have no recognisable silhouette — their coarse geometry just
+    // blows up into a featureless blob — so keep the outline quiz to countries
+    // with a meaningful shape.
+    const MIN_AREA_KM2 = 2500;
     const pool = poolForDifficulty(difficulty, { requireGeometry: true }).filter(
-      (c) => c.ccn3 && features.has(String(c.ccn3))
+      (c) => c.ccn3 && features.has(String(c.ccn3)) && c.area >= MIN_AREA_KM2
     );
     const count = roundCount === 0 ? pool.length : roundCount;
     const questions = pickQuestions(pool, count);
