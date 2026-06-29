@@ -9,8 +9,10 @@ export const messages: Record<Locale, Dict> = {
 
     "nav.home": "Home",
     "nav.games": "Games",
+    "nav.daily": "Daily",
     "nav.leaderboard": "Leaderboard",
     "nav.badges": "Badges",
+    "nav.profile": "Profile",
     "nav.howto": "How to play",
     "nav.settings": "Settings",
 
@@ -21,6 +23,27 @@ export const messages: Record<Locale, Dict> = {
     "badges.unlocked": "Badge unlocked!",
     "badges.unlockedN": "{n} badges unlocked!",
     "badges.empty": "Play a few games to start earning badges.",
+
+    "games.daily.name": "Daily Challenge",
+
+    "daily.title": "Daily Challenge",
+    "daily.subtitle": "{n} mixed questions — the same for everyone today.",
+    "daily.play": "Play today's challenge",
+    "daily.done": "Today's challenge done",
+    "daily.doneShort": "Done for today",
+    "daily.cardCta": "A fresh mix every day",
+    "daily.comeBack": "Next challenge in",
+    "daily.streak": "{n}-day streak",
+    "daily.share": "Share result",
+
+    "profile.title": "Profile",
+    "profile.guest": "Guest",
+    "profile.xpToNext": "{n} XP to next level",
+    "profile.favorite": "Favourite game",
+    "profile.badges": "Badges",
+    "profile.dailyStreak": "Daily streak",
+    "profile.viewAll": "View all",
+    "profile.signInCta": "Sign in to save your progress online.",
 
     "common.play": "Play",
     "common.start": "Start",
@@ -322,8 +345,9 @@ export const messages: Record<Locale, Dict> = {
     "support.short": "Buy me a coffee",
 
     "consent.title": "Cookies & privacy",
-    "consent.text": "GeoNerds stores your settings, scores and login only on your device (local storage). Fonts are self-hosted — no requests to Google. We don't use tracking or advertising cookies.",
-    "consent.accept": "Got it",
+    "consent.text": "GeoNerds stores your settings, scores and login on your device (local storage). Fonts are self-hosted and we use no tracking or advertising cookies. Choose whether optional cookies may be used in the future.",
+    "consent.accept": "Accept all",
+    "consent.necessary": "Only necessary",
     "consent.more": "Learn more",
 
     "legal.privacy.title": "Privacy Policy",
@@ -337,8 +361,10 @@ export const messages: Record<Locale, Dict> = {
 
     "nav.home": "Start",
     "nav.games": "Spiele",
+    "nav.daily": "Täglich",
     "nav.leaderboard": "Bestenliste",
     "nav.badges": "Abzeichen",
+    "nav.profile": "Profil",
     "nav.howto": "Anleitung",
     "nav.settings": "Einstellungen",
 
@@ -349,6 +375,27 @@ export const messages: Record<Locale, Dict> = {
     "badges.unlocked": "Abzeichen freigeschaltet!",
     "badges.unlockedN": "{n} Abzeichen freigeschaltet!",
     "badges.empty": "Spiele ein paar Runden, um Abzeichen zu verdienen.",
+
+    "games.daily.name": "Tägliche Challenge",
+
+    "daily.title": "Tägliche Challenge",
+    "daily.subtitle": "{n} gemischte Fragen – heute für alle gleich.",
+    "daily.play": "Heutige Challenge spielen",
+    "daily.done": "Heutige Challenge geschafft",
+    "daily.doneShort": "Heute erledigt",
+    "daily.cardCta": "Jeden Tag ein frischer Mix",
+    "daily.comeBack": "Nächste Challenge in",
+    "daily.streak": "{n} Tage in Folge",
+    "daily.share": "Ergebnis teilen",
+
+    "profile.title": "Profil",
+    "profile.guest": "Gast",
+    "profile.xpToNext": "{n} XP bis zum nächsten Level",
+    "profile.favorite": "Lieblingsspiel",
+    "profile.badges": "Abzeichen",
+    "profile.dailyStreak": "Tagesstreak",
+    "profile.viewAll": "Alle ansehen",
+    "profile.signInCta": "Melde dich an, um deinen Fortschritt online zu sichern.",
 
     "common.play": "Spielen",
     "common.start": "Start",
@@ -650,8 +697,9 @@ export const messages: Record<Locale, Dict> = {
     "support.short": "Kaffee spendieren",
 
     "consent.title": "Cookies & Datenschutz",
-    "consent.text": "GeoNerds speichert deine Einstellungen, Punkte und Anmeldung nur auf deinem Gerät (lokaler Speicher). Schriften werden selbst gehostet – keine Anfragen an Google. Wir nutzen keine Tracking- oder Werbe-Cookies.",
-    "consent.accept": "Verstanden",
+    "consent.text": "GeoNerds speichert deine Einstellungen, Punkte und Anmeldung auf deinem Gerät (lokaler Speicher). Schriften werden selbst gehostet, wir nutzen keine Tracking- oder Werbe-Cookies. Wähle, ob künftig optionale Cookies genutzt werden dürfen.",
+    "consent.accept": "Alle akzeptieren",
+    "consent.necessary": "Nur notwendige",
     "consent.more": "Mehr erfahren",
 
     "legal.privacy.title": "Datenschutzerklärung",

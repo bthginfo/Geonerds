@@ -5,7 +5,7 @@ const SITE_URL = "https://geonerds-nine.vercel.app";
 
 export default function sitemap(): MetadataRoute.Sitemap {
   const now = new Date();
-  const staticRoutes = ["", "/leaderboard", "/badges", "/how-to", "/settings", "/privacy", "/impressum"].map(
+  const staticRoutes = ["", "/daily", "/profile", "/leaderboard", "/badges", "/how-to", "/settings", "/privacy", "/impressum"].map(
     (path) => ({
       url: `${SITE_URL}${path}`,
       lastModified: now,

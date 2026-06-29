@@ -10,13 +10,13 @@ import { Button } from "@/components/ui/button";
 
 export function CookieBanner() {
   const { t } = useT();
-  const acknowledged = useConsent((s) => s.acknowledged);
-  const acknowledge = useConsent((s) => s.acknowledge);
+  const choice = useConsent((s) => s.choice);
+  const setChoice = useConsent((s) => s.setChoice);
   // Avoid hydration mismatch: only render after mount (persist is client-only).
   const [mounted, setMounted] = useState(false);
   useEffect(() => setMounted(true), []);
 
-  if (!mounted || acknowledged) return null;
+  if (!mounted || choice !== null) return null;
 
   return (
     <AnimatePresence>
@@ -41,9 +41,12 @@ export function CookieBanner() {
               </Link>
             </p>
           </div>
-          <Button onClick={acknowledge} className="shrink-0 sm:self-center">
-            {t("consent.accept")}
-          </Button>
+          <div className="flex shrink-0 gap-2 sm:self-center">
+            <Button variant="outline" onClick={() => setChoice("necessary")}>
+              {t("consent.necessary")}
+            </Button>
+            <Button onClick={() => setChoice("accepted")}>{t("consent.accept")}</Button>
+          </div>
         </div>
       </motion.div>
     </AnimatePresence>

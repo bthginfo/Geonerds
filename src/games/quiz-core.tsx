@@ -79,6 +79,7 @@ export function QuizGame({
   const livesRef = useRef(MAX_LIVES);
   const gameOverRef = useRef(false);
   const finishedRef = useRef(false);
+  const marksRef = useRef<boolean[]>([]);
 
   const round = rounds[idx];
   const inputRef = useRef<HTMLInputElement>(null);
@@ -93,6 +94,7 @@ export function QuizGame({
       bestStreak: bestRef.current,
       durationMs: Date.now() - startRef.current,
       mode,
+      marks: marksRef.current,
     });
   }
 
@@ -128,6 +130,7 @@ export function QuizGame({
     setAnswered(true);
     setLastCorrect(correct);
     setTimedOut(didTimeOut);
+    marksRef.current.push(correct);
     scoreRef.current = Math.max(0, scoreRef.current + earned);
     setScore((s) => Math.max(0, s + earned));
     setGain(earned);

@@ -26,6 +26,9 @@ export function Footer() {
           <Link href="/impressum" className="transition-colors hover:text-foreground">
             {t("footer.imprint")}
           </Link>
+          <Link href="/how-to" className="transition-colors hover:text-foreground">
+            {t("nav.howto")}
+          </Link>
           <a
             href={PAYPAL_URL}
             target="_blank"

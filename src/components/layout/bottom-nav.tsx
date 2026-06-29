@@ -2,15 +2,16 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Home, Trophy, Award, BookOpen, Settings } from "lucide-react";
+import { Home, Flame, Trophy, Award, User, Settings } from "lucide-react";
 import { useT } from "@/i18n/I18nProvider";
 import { cn } from "@/lib/utils";
 
 const ITEMS = [
   { href: "/", key: "nav.home", icon: Home },
+  { href: "/daily", key: "nav.daily", icon: Flame },
   { href: "/leaderboard", key: "nav.leaderboard", icon: Trophy },
   { href: "/badges", key: "nav.badges", icon: Award },
-  { href: "/how-to", key: "nav.howto", icon: BookOpen },
+  { href: "/profile", key: "nav.profile", icon: User },
   { href: "/settings", key: "nav.settings", icon: Settings },
 ] as const;
 

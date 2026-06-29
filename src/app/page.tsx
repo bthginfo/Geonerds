@@ -5,6 +5,7 @@ import { motion } from "framer-motion";
 import { Sparkles, Gamepad2 } from "lucide-react";
 import { GAMES } from "@/games/registry";
 import { GameCard } from "@/components/game-card";
+import { DailyCard } from "@/components/daily-card";
 import { SupportCard } from "@/components/support-cta";
 import { Button } from "@/components/ui/button";
 import { useT } from "@/i18n/I18nProvider";
@@ -53,6 +54,8 @@ export default function Home() {
             <StatTile label={t("home.totalPoints")} value={formatNumber(totalPoints, locale)} />
           </div>
         )}
+
+        <DailyCard />
       </section>
 
       <section id="games" className="mx-auto w-full max-w-5xl scroll-mt-20 px-4 pb-24 pt-4">

@@ -23,6 +23,8 @@ export interface PlayResult {
   bestStreak: number;
   durationMs: number;
   mode?: string;
+  /** Optional per-question correctness (used by the Daily Challenge share grid). */
+  marks?: boolean[];
 }
 
 export interface PlayHandlers {
