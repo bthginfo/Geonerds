@@ -43,7 +43,8 @@ export async function GET(req: Request) {
   const url = new URL(req.url);
   const game = url.searchParams.get("game");
   const period = url.searchParams.get("period"); // "month" | "all" (default)
-  const limit = int(url.searchParams.get("limit") ?? 50, 1, 100);
+  const limit = int(url.searchParams.get("limit") ?? 100, 1, 100);
+  const offset = int(url.searchParams.get("offset") ?? 0, 0, 100000);
   const sql = await getDb();
 
   // Restrict to the current calendar month when requested.
@@ -62,7 +63,7 @@ export async function GET(req: Request) {
         ORDER BY user_id, score DESC, duration_ms ASC
       ) best
       ORDER BY score DESC, duration_ms ASC
-      LIMIT ${limit}
+      LIMIT ${limit} OFFSET ${offset}
     `;
   } else {
     scores = await sql`
@@ -70,7 +71,7 @@ export async function GET(req: Request) {
       FROM gn_scores
       ${monthFilter ? sql`WHERE created_at >= date_trunc('month', now())` : sql``}
       ORDER BY score DESC, duration_ms ASC
-      LIMIT ${limit}
+      LIMIT ${limit} OFFSET ${offset}
     `;
   }
 

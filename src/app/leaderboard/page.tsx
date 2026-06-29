@@ -23,18 +23,22 @@ export default function LeaderboardPage() {
   const [scope, setScope] = useState<Scope>("global");
   const [period, setPeriod] = useState<Period>("all");
   const [filter, setFilter] = useState<GameId | "all">("all");
+  const [page, setPage] = useState(0);
 
   const [online, setOnline] = useState<{ configured: boolean; scores: OnlineScore[] } | null>(null);
   const [loadingOnline, setLoadingOnline] = useState(false);
 
+  // Reset to the first page whenever the filters change.
+  useEffect(() => setPage(0), [scope, filter, period]);
+
   useEffect(() => {
     if (scope !== "global") return;
     setLoadingOnline(true);
-    apiTopScores(filter, period).then((res) => {
+    apiTopScores(filter, period, page).then((res) => {
       setOnline(res);
       setLoadingOnline(false);
     });
-  }, [scope, filter, period]);
+  }, [scope, filter, period, page]);
 
   const deviceRanked = useMemo(() => {
     const list = (runs ?? []).filter((r) => filter === "all" || r.gameId === filter);
@@ -102,6 +106,8 @@ export default function LeaderboardPage() {
           showGame={filter === "all"}
           signedIn={!!user}
           period={period}
+          page={page}
+          onPage={setPage}
           locale={locale}
           t={t}
         />
@@ -142,6 +148,8 @@ function GlobalBoard({
   showGame,
   signedIn,
   period,
+  page,
+  onPage,
   locale,
   t,
 }: {
@@ -150,6 +158,8 @@ function GlobalBoard({
   showGame: boolean;
   signedIn: boolean;
   period: "all" | "month";
+  page: number;
+  onPage: (p: number) => void;
   locale: string;
   t: (k: string, v?: Record<string, string | number>) => string;
 }) {
@@ -166,7 +176,7 @@ function GlobalBoard({
   }
 
   const scores = data?.scores ?? [];
-  const champion = scores[0];
+  const champion = page === 0 ? scores[0] : undefined;
   return (
     <>
       {champion && (
@@ -196,23 +206,36 @@ function GlobalBoard({
       {scores.length === 0 ? (
         <Empty>{t("leaderboard.globalEmpty")}</Empty>
       ) : (
-        <div className="overflow-hidden rounded-2xl border border-border bg-card">
-          {scores.map((s, i) => (
-            <Row
-              key={`${s.name}-${s.game_id}-${i}`}
-              rank={i + 1}
-              last={i === scores.length - 1}
-              title={s.name}
-              href={`/u/${encodeURIComponent(s.name)}`}
-              sub={
-                (showGame ? t(`games.${s.game_id}.name`) + " · " : "") +
-                (s.difficulty ? t(`difficulty.${s.difficulty}`) + " · " : "") +
-                formatTime(s.duration_ms ?? 0)
-              }
-              score={formatNumber(s.score, locale)}
-            />
-          ))}
-        </div>
+        <>
+          <div className="overflow-hidden rounded-2xl border border-border bg-card">
+            {scores.map((s, i) => (
+              <Row
+                key={`${s.name}-${s.game_id}-${i}`}
+                rank={page * 100 + i + 1}
+                last={i === scores.length - 1}
+                title={s.name}
+                href={`/u/${encodeURIComponent(s.name)}`}
+                sub={
+                  (showGame ? t(`games.${s.game_id}.name`) + " · " : "") +
+                  (s.difficulty ? t(`difficulty.${s.difficulty}`) + " · " : "") +
+                  formatTime(s.duration_ms ?? 0)
+                }
+                score={formatNumber(s.score, locale)}
+              />
+            ))}
+          </div>
+          {(page > 0 || scores.length === 100) && (
+            <div className="mt-4 flex items-center justify-between">
+              <Button variant="outline" size="sm" disabled={page === 0} onClick={() => onPage(page - 1)}>
+                {t("leaderboard.prev")}
+              </Button>
+              <span className="text-xs text-muted-foreground">{t("leaderboard.page", { n: page + 1 })}</span>
+              <Button variant="outline" size="sm" disabled={scores.length < 100} onClick={() => onPage(page + 1)}>
+                {t("leaderboard.next")}
+              </Button>
+            </div>
+          )}
+        </>
       )}
     </>
   );

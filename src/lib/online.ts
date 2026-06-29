@@ -83,14 +83,16 @@ export async function apiUserProfile(
 
 export async function apiTopScores(
   game?: string,
-  period: "all" | "month" = "all"
+  period: "all" | "month" = "all",
+  page = 0
 ): Promise<{ configured: boolean; scores: OnlineScore[] }> {
   try {
     const params = new URLSearchParams();
     if (game && game !== "all") params.set("game", game);
     if (period === "month") params.set("period", "month");
-    const qs = params.toString();
-    const res = await fetch(`/api/scores${qs ? `?${qs}` : ""}`, { cache: "no-store" });
+    params.set("limit", "100");
+    if (page > 0) params.set("offset", String(page * 100));
+    const res = await fetch(`/api/scores?${params.toString()}`, { cache: "no-store" });
     return await res.json();
   } catch {
     return { configured: false, scores: [] };

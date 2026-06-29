@@ -111,7 +111,7 @@ export const GAMES: GameConfig[] = [
     icon: Pencil,
     gradient: "from-cyan-500 to-blue-500",
     supportsDifficulty: true,
-    countOptions: [5, 10, 20, 0],
+    countOptions: [10, 25, 50, 0],
   },
   {
     id: "border-chain",
@@ -119,7 +119,7 @@ export const GAMES: GameConfig[] = [
     gradient: "from-lime-500 to-green-600",
     supportsDifficulty: true,
     modes: ["choice", "type"],
-    countOptions: [5, 10, 20, 0],
+    countOptions: [10, 25, 50, 0],
     supportsTimed: true,
     defaultTimed: true,
   },
@@ -128,7 +128,7 @@ export const GAMES: GameConfig[] = [
     icon: ListOrdered,
     gradient: "from-teal-500 to-emerald-600",
     supportsDifficulty: true,
-    countOptions: [8, 12, 20, 0],
+    countOptions: [10, 25, 50, 0],
     supportsTimed: true,
   },
   {
@@ -144,7 +144,7 @@ export const GAMES: GameConfig[] = [
     icon: Crosshair,
     gradient: "from-orange-500 to-red-500",
     supportsDifficulty: true,
-    countOptions: [10, 15, 20, 0],
+    countOptions: [10, 25, 50, 0],
     supportsTimed: true,
   },
   {
@@ -153,7 +153,7 @@ export const GAMES: GameConfig[] = [
     gradient: "from-green-500 to-lime-600",
     supportsDifficulty: true,
     modes: ["choice", "type"],
-    countOptions: [5, 10, 0],
+    countOptions: [10, 25, 50, 0],
   },
   {
     id: "waters",
@@ -161,7 +161,7 @@ export const GAMES: GameConfig[] = [
     gradient: "from-cyan-500 to-sky-600",
     supportsDifficulty: true,
     modes: ["choice", "type"],
-    countOptions: [10, 25, 0],
+    countOptions: [10, 25, 50, 0],
     supportsTimed: true,
   },
   {
@@ -178,7 +178,7 @@ export const GAMES: GameConfig[] = [
     icon: PenLine,
     gradient: "from-sky-500 to-cyan-600",
     supportsDifficulty: true,
-    countOptions: [5, 10, 0],
+    countOptions: [10, 25, 50, 0],
   },
   {
     id: "origin",
@@ -186,7 +186,7 @@ export const GAMES: GameConfig[] = [
     gradient: "from-pink-500 to-rose-600",
     supportsDifficulty: true,
     modes: ["choice", "type"],
-    countOptions: [10, 25, 0],
+    countOptions: [10, 25, 50, 0],
     supportsTimed: true,
   },
   {
@@ -194,7 +194,7 @@ export const GAMES: GameConfig[] = [
     icon: ListChecks,
     gradient: "from-teal-500 to-cyan-600",
     supportsDifficulty: true,
-    countOptions: [3, 5, 8],
+    countOptions: [10, 25, 50, 0],
   },
   {
     id: "mountains",
@@ -202,7 +202,7 @@ export const GAMES: GameConfig[] = [
     gradient: "from-stone-500 to-amber-700",
     supportsDifficulty: true,
     modes: ["choice", "type"],
-    countOptions: [10, 25, 0],
+    countOptions: [10, 25, 50, 0],
     supportsTimed: true,
   },
   {
@@ -210,7 +210,7 @@ export const GAMES: GameConfig[] = [
     icon: Paintbrush,
     gradient: "from-pink-500 to-violet-600",
     supportsDifficulty: true,
-    countOptions: [10, 20, 0],
+    countOptions: [10, 25, 50, 0],
     variants: {
       labelKey: "colorflag.modeLabel",
       default: "swatch",
