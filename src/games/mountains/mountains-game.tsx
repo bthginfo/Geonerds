@@ -167,7 +167,7 @@ export function MountainsGame({ difficulty, mode, roundCount, timed, onFinish, o
       </div>
 
       <div className="relative min-h-0 flex-1 overflow-hidden bg-sky-50 dark:bg-slate-900/40">
-        <PinMap onPin={() => {}} target={peakLngLat} locked resetSignal={0} />
+        <PinMap onPin={() => {}} target={peakLngLat} locked resetSignal={0} focus={peakLngLat} focusZoom={5} />
         <Compass />
       </div>
 

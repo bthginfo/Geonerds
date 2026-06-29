@@ -29,7 +29,7 @@ const DOTS: MapDot[] = COUNTRIES.filter(
 ).map((c) => ({ ccn3: String(c.ccn3), lat: c.latlng![0], lng: c.latlng![1], flag: c.flag }));
 const DOT_SET = new Set(DOTS.map((d) => d.ccn3));
 
-export function MapClickGame({ difficulty, roundCount, timed, onFinish, onExit }: PlayHandlers) {
+export function MapClickGame({ difficulty, roundCount, timed, variant, onFinish, onExit }: PlayHandlers) {
   const { t, locale } = useT();
   const [ready, setReady] = useState(false);
   const [targets, setTargets] = useState<Country[]>([]);
@@ -53,7 +53,8 @@ export function MapClickGame({ difficulty, roundCount, timed, onFinish, onExit }
 
   useEffect(() => {
     featuresByCcn3("50m").then((feats) => {
-      const pool = poolForDifficulty(difficulty).filter(
+      const base = !variant || variant === "world" ? poolForDifficulty(difficulty) : COUNTRIES.filter((c) => c.region === variant);
+      const pool = base.filter(
         (c) => c.ccn3 && (feats.has(String(c.ccn3)) || DOT_SET.has(String(c.ccn3)))
       );
       const count = roundCount === 0 ? pool.length : roundCount;
@@ -62,7 +63,7 @@ export function MapClickGame({ difficulty, roundCount, timed, onFinish, onExit }
       setTimeLeft(picked.length * TIME_PER_TARGET_MS);
       setReady(true);
     });
-  }, [difficulty, roundCount]);
+  }, [difficulty, roundCount, variant]);
 
   const target = targets[idx];
 

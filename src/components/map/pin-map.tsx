@@ -18,12 +18,17 @@ export function PinMap({
   target,
   locked = false,
   resetSignal = 0,
+  focus = null,
+  focusZoom = 5,
 }: {
   onPin: (lng: number, lat: number) => void;
   userPin?: LngLat | null;
   target?: LngLat | null;
   locked?: boolean;
   resetSignal?: number;
+  /** When set, the map centres/zooms on this point (e.g. to show a peak's region). */
+  focus?: LngLat | null;
+  focusZoom?: number;
 }) {
   const [features, setFeatures] = useState<CountryFeature[] | null>(null);
   const [t, setT] = useState({ k: 1, x: 0, y: 0 });
@@ -74,6 +79,18 @@ export function PinMap({
     if (resetSignal === 0 || !svgRef.current || !zoomRef.current) return;
     select(svgRef.current).call(zoomRef.current.transform, zoomIdentity);
   }, [resetSignal]);
+
+  // Centre/zoom on a focus point (e.g. a peak's region) when its coordinates change.
+  useEffect(() => {
+    if (!focus || !projection || !svgRef.current || !zoomRef.current) return;
+    const p = projection(focus);
+    if (!p) return;
+    const k = focusZoom;
+    const tx = W / 2 - k * p[0];
+    const ty = H / 2 - k * p[1];
+    select(svgRef.current).call(zoomRef.current.transform, zoomIdentity.translate(tx, ty).scale(k));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [focus?.[0], focus?.[1], focusZoom, projection]);
 
   function zoomBy(factor: number) {
     if (!svgRef.current || !zoomRef.current) return;

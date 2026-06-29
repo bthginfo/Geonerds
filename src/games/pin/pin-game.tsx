@@ -155,6 +155,8 @@ export function PinGame({ difficulty, roundCount, timed, onFinish, onExit }: Pla
           target={revealed ? targetLngLat : null}
           locked={revealed}
           resetSignal={resetSignal}
+          focus={revealed ? targetLngLat : null}
+          focusZoom={3}
         />
         <Compass />
       </div>

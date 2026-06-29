@@ -4,10 +4,13 @@ import { useMemo } from "react";
 import type { PlayHandlers } from "@/components/game/game-shell";
 import { QuizGame, type QuizRound } from "@/games/quiz-core";
 import { FlagImage } from "@/components/flag-image";
-import { COUNTRIES, poolForDifficulty, countryName } from "@/data/countries";
+import { COUNTRIES, poolForDifficulty, countryName, getCountryByCca3 } from "@/data/countries";
 import { countryAccepted } from "@/games/aliases";
 import { makeChoices, pickQuestions } from "@/games/round-utils";
+import { confusableFlags } from "./confusable";
+import { sample, shuffle } from "@/lib/utils";
 import { useT } from "@/i18n/I18nProvider";
+import type { Country } from "@/lib/types";
 
 export function FlagGame({ difficulty, mode, roundCount, timed, variant, onFinish, onExit }: PlayHandlers) {
   const { locale } = useT();
@@ -19,9 +22,25 @@ export function FlagGame({ difficulty, mode, roundCount, timed, variant, onFinis
         ? poolForDifficulty(difficulty)
         : COUNTRIES.filter((c) => c.region === variant);
     const count = roundCount === 0 ? pool.length : roundCount;
+    const poolCodes = new Set(pool.map((c) => c.cca3));
     const questions = pickQuestions(pool, count);
     return questions.map((answer) => {
-      const choices = makeChoices(answer, pool, difficulty);
+      let choices: Country[];
+      if (difficulty === "hard") {
+        // Lead with look-alike flags, then fill from the same region.
+        const lookalikes = confusableFlags(answer.cca3)
+          .filter((code) => poolCodes.has(code))
+          .map((code) => getCountryByCca3(code)!)
+          .filter(Boolean);
+        const picked = sample(lookalikes, Math.min(2, lookalikes.length));
+        const rest = makeChoices(answer, pool, difficulty).filter(
+          (c) => c.cca3 !== answer.cca3 && !picked.some((p) => p.cca3 === c.cca3)
+        );
+        const distract = [...picked, ...rest].slice(0, 3);
+        choices = shuffle([answer, ...distract]);
+      } else {
+        choices = makeChoices(answer, pool, difficulty);
+      }
       return {
         key: answer.cca3,
         prompt: (

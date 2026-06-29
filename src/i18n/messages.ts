@@ -88,6 +88,7 @@ export const messages: Record<Locale, Dict> = {
     "setup.rounds": "Rounds",
     "setup.all": "All",
     "scope.label": "Flags",
+    "scope.region": "Region",
     "scope.capitals": "Capitals",
     "scope.cities": "Cities",
     "scope.world": "World",
@@ -175,6 +176,8 @@ export const messages: Record<Locale, Dict> = {
     "origin.category.music": "Music",
 
     "gn.question": "Question {n}",
+    "gn.fifty": "50:50",
+    "gn.skip": "Skip",
     "gn.q.capital": "What is the capital of {c}?",
     "gn.q.countryByCapital": "{cap} is the capital of which country?",
     "gn.q.continent": "On which continent is {c}?",
@@ -445,6 +448,7 @@ export const messages: Record<Locale, Dict> = {
     "setup.rounds": "Runden",
     "setup.all": "Alle",
     "scope.label": "Flaggen",
+    "scope.region": "Region",
     "scope.capitals": "Hauptstädte",
     "scope.cities": "Städte",
     "scope.world": "Welt",
@@ -532,6 +536,8 @@ export const messages: Record<Locale, Dict> = {
     "origin.category.music": "Musik",
 
     "gn.question": "Frage {n}",
+    "gn.fifty": "50:50",
+    "gn.skip": "Überspringen",
     "gn.q.capital": "Was ist die Hauptstadt von {c}?",
     "gn.q.countryByCapital": "{cap} ist die Hauptstadt welches Landes?",
     "gn.q.continent": "Auf welchem Kontinent liegt {c}?",

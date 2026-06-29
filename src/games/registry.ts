@@ -99,6 +99,11 @@ export const GAMES: GameConfig[] = [
     supportsDifficulty: true,
     countOptions: [10, 25, 50, 0],
     supportsTimed: true,
+    variants: {
+      labelKey: "scope.region",
+      default: "world",
+      options: ["world", "Africa", "Americas", "Asia", "Europe", "Oceania"],
+    },
   },
   {
     id: "draw",
