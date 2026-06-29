@@ -271,7 +271,7 @@ export const messages: Record<Locale, Dict> = {
     "howto.millionaire": "Answer geography questions that get harder and more obscure each round, with four options each. Three wrong answers and the game is over — how far can you climb?",
     "howto.nameall": "Each round shows a theme, like “Countries in South America” or “The 10 largest countries”. Name every country that fits — on easy and medium you tap them from a list, on hard you type them all. Reveal the rest whenever you're stuck.",
     "howto.mountains": "A pin marks a famous mountain or volcano on the world map. Choose or type its name. Difficulty adds more obscure peaks.",
-    "howto.colorflag": "A blank flag is shown. In Swatch mode pick the correct colour for each highlighted area from four options (you have three lives). In Pro mode, match the exact shade with a colour picker — the closer you get, the more points. Only flags without crests or emblems are used, so every area is a real colour field.",
+    "howto.colorflag": "A blank flag is shown. In Swatch mode pick the correct colour for each highlighted area from four options (you have three lives). In Pro mode, match the exact shade with a colour picker — the closer you get, the more points. Stripes, crosses and simple symbols (like stars) are all fillable areas; flags with intricate crests are left out.",
 
     "hl.metric.population": "Population",
     "hl.metric.area": "Area",
@@ -660,7 +660,7 @@ export const messages: Record<Locale, Dict> = {
     "howto.millionaire": "Beantworte Geografie-Fragen, die jede Runde schwerer und obskurer werden – jeweils vier Optionen. Drei falsche Antworten und das Spiel ist vorbei. Wie weit kommst du?",
     "howto.nameall": "Jede Runde zeigt ein Thema, z. B. „Länder in Südamerika“ oder „Die 10 größten Länder“. Nenne jedes passende Land – auf Leicht und Mittel tippst du sie aus einer Liste an, auf Schwer gibst du sie alle ein. Den Rest kannst du jederzeit aufdecken.",
     "howto.mountains": "Eine Markierung zeigt einen berühmten Berg oder Vulkan auf der Weltkarte. Wähle oder tippe seinen Namen. Höhere Schwierigkeit bringt obskurere Gipfel.",
-    "howto.colorflag": "Eine leere Flagge wird gezeigt. Im Auswahl-Modus wählst du für jede markierte Fläche die richtige Farbe aus vier Optionen (du hast drei Leben). Im Pro-Modus triffst du den exakten Farbton mit einem Farbwähler – je näher, desto mehr Punkte. Es werden nur Flaggen ohne Wappen oder Symbole verwendet, sodass jede Fläche eine echte Farbfläche ist.",
+    "howto.colorflag": "Eine leere Flagge wird gezeigt. Im Auswahl-Modus wählst du für jede markierte Fläche die richtige Farbe aus vier Optionen (du hast drei Leben). Im Pro-Modus triffst du den exakten Farbton mit einem Farbwähler – je näher, desto mehr Punkte. Streifen, Kreuze und einfache Symbole (wie Sterne) sind alle einfärbbare Flächen; Flaggen mit aufwändigen Wappen werden ausgelassen.",
 
     "hl.metric.population": "Einwohner",
     "hl.metric.area": "Fläche",

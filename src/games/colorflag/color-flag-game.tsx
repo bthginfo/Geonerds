@@ -204,21 +204,19 @@ export function ColorFlagGame({ difficulty, variant, roundCount, onFinish, onExi
         >
           <svg viewBox={`0 0 ${vb.W} ${vb.H}`} className="h-full w-full">
             {regions.map((reg, ri) =>
-              reg.rects.map((rc, j) => {
+              reg.shapes.map((sh, j) => {
                 const filled = fills[ri] ?? null;
                 const isCurrent = ri === regionIdx && !answered;
-                return (
-                  <rect
-                    key={`${ri}-${j}`}
-                    x={rc.x}
-                    y={rc.y}
-                    width={rc.w}
-                    height={rc.h}
-                    fill={filled ?? GREY}
-                    stroke={isCurrent ? "#111827" : "rgba(0,0,0,0.12)"}
-                    strokeWidth={isCurrent ? 1 : 0.3}
-                    className={isCurrent ? "animate-pulse" : ""}
-                  />
+                const common = {
+                  fill: filled ?? GREY,
+                  stroke: isCurrent ? "#111827" : "rgba(0,0,0,0.12)",
+                  strokeWidth: isCurrent ? 1 : 0.3,
+                  className: isCurrent ? "animate-pulse" : "",
+                };
+                return sh.t === "rect" ? (
+                  <rect key={`${ri}-${j}`} x={sh.x} y={sh.y} width={sh.w} height={sh.h} {...common} />
+                ) : (
+                  <path key={`${ri}-${j}`} d={sh.d} {...common} />
                 );
               })
             )}
