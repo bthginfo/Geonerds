@@ -5,7 +5,7 @@ const SITE_URL = "https://geo-nerds.com";
 
 export default function sitemap(): MetadataRoute.Sitemap {
   const now = new Date();
-  const staticRoutes = ["", "/daily", "/profile", "/leaderboard", "/badges", "/how-to", "/settings", "/privacy", "/impressum"].map(
+  const staticRoutes = ["", "/daily", "/weekly", "/profile", "/leaderboard", "/badges", "/how-to", "/settings", "/privacy", "/impressum"].map(
     (path) => ({
       url: `${SITE_URL}${path}`,
       lastModified: now,
