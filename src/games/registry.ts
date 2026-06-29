@@ -18,6 +18,7 @@ import {
   GraduationCap,
   ListChecks,
   Mountain,
+  Paintbrush,
   type LucideIcon,
 } from "lucide-react";
 import type { AnswerMode, GameId } from "@/lib/types";
@@ -203,6 +204,18 @@ export const GAMES: GameConfig[] = [
     modes: ["choice", "type"],
     countOptions: [10, 25, 0],
     supportsTimed: true,
+  },
+  {
+    id: "colorflag",
+    icon: Paintbrush,
+    gradient: "from-pink-500 to-violet-600",
+    supportsDifficulty: true,
+    countOptions: [10, 20, 0],
+    variants: {
+      labelKey: "colorflag.modeLabel",
+      default: "swatch",
+      options: ["swatch", "pro"],
+    },
   },
   {
     id: "millionaire",

@@ -24,6 +24,7 @@ const GAME_IDS = new Set([
   "origin",
   "nameall",
   "mountains",
+  "colorflag",
   "millionaire",
   "daily",
 ]);
