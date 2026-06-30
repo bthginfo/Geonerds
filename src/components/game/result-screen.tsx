@@ -3,13 +3,15 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { motion } from "framer-motion";
-import { RotateCcw, Home, Share2, Trophy, Check } from "lucide-react";
+import { RotateCcw, Home, Share2, Trophy, Check, Sparkles, ArrowUpCircle } from "lucide-react";
 import type { RunResult } from "@/lib/types";
 import { useT } from "@/i18n/I18nProvider";
 import { Button } from "@/components/ui/button";
 import { sound } from "@/lib/sound";
 import { accuracy } from "@/lib/scoring";
 import { BADGES, badgeName } from "@/lib/badges";
+import { FlagImage } from "@/components/flag-image";
+import { getCountryByCca3, countryName } from "@/data/countries";
 import { SupportLink } from "@/components/support-cta";
 import { formatNumber, formatTime } from "@/lib/utils";
 
@@ -17,24 +19,30 @@ export function ResultScreen({
   result,
   isRecord,
   newBadges = [],
+  newCountries = { discovered: [], unlocked: [] },
+  levelUp = null,
   onReplay,
 }: {
   result: RunResult;
   isRecord: boolean;
   newBadges?: string[];
+  newCountries?: { discovered: string[]; unlocked: string[] };
+  levelUp?: number | null;
   onReplay: () => void;
 }) {
   const { t, locale } = useT();
   const [copied, setCopied] = useState(false);
 
+  const collectCount = newCountries.discovered.length + newCountries.unlocked.length;
+
   useEffect(() => {
     sound.finish();
-    if (isRecord || newBadges.length > 0) {
+    if (isRecord || newBadges.length > 0 || levelUp || collectCount > 0) {
       import("canvas-confetti").then(({ default: confetti }) => {
         confetti({ particleCount: 120, spread: 75, origin: { y: 0.35 } });
       });
     }
-  }, [isRecord, newBadges.length]);
+  }, [isRecord, newBadges.length, levelUp, collectCount]);
 
   const unlocked = BADGES.filter((b) => newBadges.includes(b.id));
 
@@ -79,7 +87,19 @@ export function ResultScreen({
         <div className="mt-2 text-5xl font-extrabold tabular-nums">
           {formatNumber(result.score, locale)}
         </div>
-        <div className="text-xs text-muted-foreground">{t("common.points")}</div>
+        <div className="text-xs text-muted-foreground">{t("result.xpEarned")}</div>
+
+        {levelUp != null && (
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ delay: 0.15 }}
+            className="mx-auto mt-3 inline-flex items-center gap-1.5 rounded-full bg-primary/15 px-3 py-1 text-sm font-bold text-primary"
+          >
+            <ArrowUpCircle className="h-4 w-4" />
+            {t("result.levelUp", { n: levelUp })}
+          </motion.div>
+        )}
 
         <div className="mt-6 grid grid-cols-3 gap-2">
           <Stat label={t("common.accuracy")} value={`${acc}%`} />
@@ -116,6 +136,41 @@ export function ResultScreen({
                 );
               })}
             </div>
+          </motion.div>
+        )}
+
+        {collectCount > 0 && (
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.25 }}
+            className="mt-4 rounded-2xl border border-amber-500/40 bg-amber-500/10 p-3"
+          >
+            <div className="mb-2 flex items-center justify-center gap-1.5 text-xs font-bold uppercase tracking-wide text-amber-600 dark:text-amber-400">
+              <Sparkles className="h-3.5 w-3.5" />
+              {newCountries.unlocked.length > 0
+                ? t("result.countriesUnlocked", { n: collectCount })
+                : t("result.countriesProgress", { n: collectCount })}
+            </div>
+            <div className="flex flex-wrap justify-center gap-2">
+              {[...newCountries.unlocked, ...newCountries.discovered.filter((c) => !newCountries.unlocked.includes(c))]
+                .slice(0, 12)
+                .map((cca3) => {
+                  const c = getCountryByCca3(cca3);
+                  if (!c) return null;
+                  const full = newCountries.unlocked.includes(cca3);
+                  return (
+                    <span key={cca3} className="inline-flex items-center gap-1.5 rounded-full bg-card px-2 py-1 text-xs font-semibold shadow-sm">
+                      <FlagImage code={c.flag} alt="" className="aspect-[4/3] w-4" rounded={false} />
+                      {countryName(c, locale)}
+                      {full && <Check className="h-3 w-3 text-success" />}
+                    </span>
+                  );
+                })}
+            </div>
+            <Link href="/collection" className="mt-2 block text-center text-xs font-medium text-primary hover:underline">
+              {t("collection.title")} →
+            </Link>
           </motion.div>
         )}
 

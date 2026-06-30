@@ -344,6 +344,10 @@ export const messages: Record<Locale, Dict> = {
     "result.shareText": "I scored {score} points in {game} on GeoNerds!",
     "result.summary": "You got {correct} of {total} right.",
     "result.viewLeaderboard": "View leaderboard",
+    "result.xpEarned": "XP earned",
+    "result.levelUp": "Level {n}!",
+    "result.countriesUnlocked": "{n} countries unlocked!",
+    "result.countriesProgress": "{n} countries progressed",
 
     "leaderboard.title": "Leaderboard",
     "leaderboard.subtitle": "Your best runs, stored on this device.",
@@ -764,6 +768,10 @@ export const messages: Record<Locale, Dict> = {
     "result.shareText": "Ich habe {score} Punkte in {game} auf GeoNerds erreicht!",
     "result.summary": "Du hattest {correct} von {total} richtig.",
     "result.viewLeaderboard": "Bestenliste ansehen",
+    "result.xpEarned": "XP verdient",
+    "result.levelUp": "Level {n}!",
+    "result.countriesUnlocked": "{n} Länder freigeschaltet!",
+    "result.countriesProgress": "{n} Länder Fortschritt",
 
     "leaderboard.title": "Bestenliste",
     "leaderboard.subtitle": "Deine besten Runden, auf diesem Gerät gespeichert.",
