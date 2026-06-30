@@ -52,6 +52,24 @@ function largestPolygonFeature(geometry: GeoJSON.Geometry): GeoJSON.Feature {
   return { type: "Feature", properties: {}, geometry };
 }
 
+/**
+ * A country is drawable only if its main outline projects to a real 2-D shape.
+ * Micro-states such as Vatican City collapse to a line (or a point) in the 10m
+ * dataset, which renders as a meaningless stroke and can never be matched.
+ */
+function isDrawable(feat: CountryFeature): boolean {
+  const mainland = largestPolygonFeature(feat.geometry);
+  const projection = geoMercator().fitExtent([[12, 12], [R - 12, R - 12]], mainland);
+  const ring = largestRing(feat.geometry, (c) => projection(c) ?? null);
+  if (ring.length < 4) return false;
+  let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+  for (const [x, y] of ring) {
+    minX = Math.min(minX, x); minY = Math.min(minY, y);
+    maxX = Math.max(maxX, x); maxY = Math.max(maxY, y);
+  }
+  return maxX - minX > 1 && maxY - minY > 1;
+}
+
 export function DrawGame({ difficulty, roundCount, onFinish, onExit }: PlayHandlers) {
   const { t, locale } = useT();
   const [features, setFeatures] = useState<Map<string, CountryFeature> | null>(null);
@@ -73,7 +91,7 @@ export function DrawGame({ difficulty, roundCount, onFinish, onExit }: PlayHandl
   useEffect(() => {
     featuresByCcn3("10m").then((feats) => {
       const pool = poolForDifficulty(difficulty, { requireGeometry: true }).filter(
-        (c) => c.ccn3 && feats.has(String(c.ccn3))
+        (c) => c.ccn3 && feats.has(String(c.ccn3)) && isDrawable(feats.get(String(c.ccn3))!)
       );
       setFeatures(feats);
       const count = roundCount === 0 ? pool.length : roundCount;
