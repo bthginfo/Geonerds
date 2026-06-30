@@ -30,7 +30,7 @@ export default function ProfilePage() {
     return { collected, total: pool.length };
   }, [dexHits]);
 
-  const stats = useMemo(() => computeStats(runs ?? []), [runs]);
+  const stats = useMemo(() => computeStats(runs ?? [], dexHits), [runs, dexHits]);
   const level = useMemo(() => levelFromXp(stats.totalScore), [stats.totalScore]);
   const earned = useMemo(() => BADGES.filter((b) => b.earned(stats)), [stats]);
   const dailyStreak = useMemo(() => streakFromDates(Object.keys(dailyResults)), [dailyResults]);

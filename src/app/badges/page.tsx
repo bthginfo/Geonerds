@@ -4,14 +4,16 @@ import { useMemo } from "react";
 import { Award, Lock } from "lucide-react";
 import { useT } from "@/i18n/I18nProvider";
 import { useAllRuns } from "@/hooks/use-scores";
+import { useDex } from "@/store/dex";
 import { BADGES, computeStats, badgeName, badgeDesc } from "@/lib/badges";
 import { cn } from "@/lib/utils";
 
 export default function BadgesPage() {
   const { t, locale } = useT();
   const { runs } = useAllRuns();
+  const dexHits = useDex((s) => s.hits);
 
-  const stats = useMemo(() => computeStats(runs ?? []), [runs]);
+  const stats = useMemo(() => computeStats(runs ?? [], dexHits), [runs, dexHits]);
   const earnedCount = useMemo(() => BADGES.filter((b) => b.earned(stats)).length, [stats]);
 
   return (

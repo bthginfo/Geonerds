@@ -1,7 +1,7 @@
 import type { Country, Locale } from "./types";
 import { COUNTRY_FACTS } from "./country-facts";
 import { simplifyCurrency } from "./currency";
-import { getCountryByCca3, countryName } from "@/data/countries";
+import { COUNTRIES, getCountryByCca3, countryName } from "@/data/countries";
 import { formatNumber } from "./utils";
 
 export const PER_GAME_CAP = 5;
@@ -33,6 +33,94 @@ const REGION: Record<string, { en: string; de: string }> = {
   Oceania: { en: "Oceania", de: "Ozeanien" },
   Antarctic: { en: "Antarctic", de: "Antarktis" },
 };
+
+/** The continents shown in the Geo-Dex, in display order. */
+export const CONTINENTS = ["Europe", "Asia", "Africa", "Americas", "Oceania"] as const;
+export type Continent = (typeof CONTINENTS)[number];
+
+export function continentName(region: string, locale: Locale): string {
+  return (REGION[region] ?? { en: region, de: region })[locale];
+}
+
+/** Countries that count toward the Geo-Dex (UN members + independent states). */
+export const DEX_POOL: Country[] = COUNTRIES.filter((c) => c.unMember || c.independent);
+
+const CONTINENT_BLURB: Record<string, { en: string; de: string }> = {
+  Europe: {
+    en: "The second-smallest continent by area, yet home to dozens of countries packed tightly together — a patchwork of languages, currencies and centuries-old borders.",
+    de: "Der nach Fläche zweitkleinste Kontinent – und doch Heimat von Dutzenden eng beieinanderliegenden Ländern: ein Flickenteppich aus Sprachen, Währungen und jahrhundertealten Grenzen.",
+  },
+  Asia: {
+    en: "The largest and most populous continent, stretching from the Arabian Peninsula to the Pacific and holding well over half of all people on Earth.",
+    de: "Der größte und bevölkerungsreichste Kontinent – von der Arabischen Halbinsel bis zum Pazifik – und Heimat von weit mehr als der Hälfte aller Menschen.",
+  },
+  Africa: {
+    en: "The second-largest continent and the cradle of humankind, with more countries than any other and an astonishing range of climates and cultures.",
+    de: "Der zweitgrößte Kontinent und die Wiege der Menschheit – mit mehr Ländern als jeder andere und einer erstaunlichen Vielfalt an Klimazonen und Kulturen.",
+  },
+  Americas: {
+    en: "Two linked continents running almost pole to pole, from Arctic tundra through tropical rainforest to Patagonian ice.",
+    de: "Zwei verbundene Kontinente, die fast von Pol zu Pol reichen – von arktischer Tundra über tropischen Regenwald bis zum Eis Patagoniens.",
+  },
+  Oceania: {
+    en: "A vast scattering of islands across the Pacific, with most of its land — and people — concentrated in Australia.",
+    de: "Eine weite Streuung von Inseln über den Pazifik, deren Land – und Bevölkerung – sich größtenteils in Australien konzentriert.",
+  },
+};
+
+export function continentBlurb(region: string, locale: Locale): string | null {
+  const b = CONTINENT_BLURB[region];
+  return b ? b[locale] : null;
+}
+
+export interface ContinentProgress {
+  region: string;
+  total: number;
+  unlocked: number;
+  discovered: number;
+  facts: DexFact[];
+}
+
+/** Static, always-visible facts about a continent (computed from the dataset). */
+export function continentFacts(region: string, locale: Locale): DexFact[] {
+  const L = (en: string, de: string) => (locale === "de" ? de : en);
+  const list = DEX_POOL.filter((c) => c.region === region);
+  if (!list.length) return [];
+  const out: DexFact[] = [];
+  out.push({ label: L("Countries", "Länder"), value: formatNumber(list.length, locale) });
+
+  const totalArea = list.reduce((s, c) => s + (c.area || 0), 0);
+  if (totalArea > 0) out.push({ label: L("Total area", "Gesamtfläche"), value: `${formatNumber(totalArea, locale)} km²` });
+
+  const totalPop = list.reduce((s, c) => s + (c.population || 0), 0);
+  if (totalPop > 0) out.push({ label: L("Population", "Einwohner"), value: formatNumber(totalPop, locale) });
+
+  const biggest = list.reduce((a, b) => (b.area > a.area ? b : a));
+  if (biggest.area > 0) out.push({ label: L("Largest country", "Größtes Land"), value: countryName(biggest, locale) });
+
+  const smallest = list.filter((c) => c.area > 0).reduce((a, b) => (b.area < a.area ? b : a), list[0]);
+  if (smallest && smallest.area > 0) out.push({ label: L("Smallest country", "Kleinstes Land"), value: countryName(smallest, locale) });
+
+  const populous = list.reduce((a, b) => (b.population > a.population ? b : a));
+  if (populous.population > 0) out.push({ label: L("Most populous", "Bevölkerungsreichstes"), value: countryName(populous, locale) });
+
+  return out;
+}
+
+/** Per-continent unlock progress for the current Geo-Dex state. */
+export function continentProgress(hits: Record<string, Record<string, number>>, locale: Locale): ContinentProgress[] {
+  return CONTINENTS.map((region) => {
+    const list = DEX_POOL.filter((c) => c.region === region);
+    let unlocked = 0;
+    let discovered = 0;
+    for (const c of list) {
+      const st = dexStateOf(hits[c.cca3]);
+      if (st === "unlocked") unlocked++;
+      else if (st === "discovered") discovered++;
+    }
+    return { region, total: list.length, unlocked, discovered, facts: continentFacts(region, locale) };
+  });
+}
 
 export interface DexFact {
   label: string;

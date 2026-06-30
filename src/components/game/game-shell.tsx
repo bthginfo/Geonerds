@@ -114,9 +114,9 @@ export function GameShell({
     const prevBest = await scoreStore.bestScore(gameId);
     const allBefore = await scoreStore.allRuns();
     const totalBefore = allBefore.reduce((s, x) => s + x.score, 0);
-    const before = earnedIds(allBefore);
+    const before = earnedIds(allBefore, dexBefore);
     await scoreStore.saveRun(run);
-    const after = earnedIds(await scoreStore.allRuns());
+    const after = earnedIds(await scoreStore.allRuns(), dexAfter);
     const unlocked = [...after].filter((id) => !before.has(id));
     const lvlBefore = levelFromXp(totalBefore).level;
     const lvlAfter = levelFromXp(totalBefore + run.score).level;

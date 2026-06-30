@@ -3,12 +3,22 @@
 import { useMemo, useState } from "react";
 import Link from "next/link";
 import { motion } from "framer-motion";
-import { ArrowLeft, Check, Lock, Sparkles, Lightbulb, X } from "lucide-react";
+import { ArrowLeft, Check, Lock, Sparkles, Lightbulb, X, Globe2 } from "lucide-react";
 import { useT } from "@/i18n/I18nProvider";
 import { useDex } from "@/store/dex";
 import { COUNTRIES, countryName } from "@/data/countries";
 import { FlagImage } from "@/components/flag-image";
-import { dexScore, dexStateOf, dexGameCount, dexFacts, dexCoolFacts, UNLOCK_TOTAL } from "@/lib/dex";
+import {
+  dexScore,
+  dexStateOf,
+  dexGameCount,
+  dexFacts,
+  dexCoolFacts,
+  UNLOCK_TOTAL,
+  continentProgress,
+  continentName,
+  continentBlurb,
+} from "@/lib/dex";
 import type { Country } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
@@ -18,6 +28,7 @@ export default function CollectionPage() {
   const { t, locale } = useT();
   const hits = useDex((s) => s.hits);
   const [selected, setSelected] = useState<Country | null>(null);
+  const [view, setView] = useState<"countries" | "continents">("countries");
 
   const sorted = useMemo(() => {
     return [...POOL]
@@ -36,6 +47,8 @@ export default function CollectionPage() {
     }
     return { unlocked, discovered, total: POOL.length };
   }, [hits]);
+
+  const continents = useMemo(() => continentProgress(hits, locale), [hits, locale]);
 
   return (
     <div className="mx-auto w-full max-w-3xl px-4 py-8 pb-24">
@@ -70,6 +83,82 @@ export default function CollectionPage() {
         </div>
       </div>
 
+      {/* View toggle */}
+      <div className="mt-5 grid grid-cols-2 gap-1 rounded-2xl bg-muted p-1 text-sm font-semibold">
+        <button
+          onClick={() => setView("countries")}
+          className={cn(
+            "flex items-center justify-center gap-1.5 rounded-xl py-2 transition",
+            view === "countries" ? "bg-card shadow-sm" : "text-muted-foreground"
+          )}
+        >
+          <Sparkles className="h-4 w-4" />
+          {t("collection.tabCountries")}
+        </button>
+        <button
+          onClick={() => setView("continents")}
+          className={cn(
+            "flex items-center justify-center gap-1.5 rounded-xl py-2 transition",
+            view === "continents" ? "bg-card shadow-sm" : "text-muted-foreground"
+          )}
+        >
+          <Globe2 className="h-4 w-4" />
+          {t("collection.tabContinents")}
+        </button>
+      </div>
+
+      {view === "continents" ? (
+        <div className="mt-4 space-y-3">
+          <p className="text-sm text-muted-foreground">{t("collection.continentsSubtitle")}</p>
+          {continents.map((cp) => {
+            const complete = cp.total > 0 && cp.unlocked >= cp.total;
+            const pct = cp.total > 0 ? (cp.unlocked / cp.total) * 100 : 0;
+            const discPct = cp.total > 0 ? (cp.discovered / cp.total) * 100 : 0;
+            return (
+              <motion.div
+                key={cp.region}
+                initial={{ opacity: 0, y: 8 }}
+                animate={{ opacity: 1, y: 0 }}
+                className={cn(
+                  "rounded-2xl border p-4 shadow-sm",
+                  complete ? "border-success/50 bg-success/5" : "border-border bg-card"
+                )}
+              >
+                <div className="flex items-center justify-between gap-2">
+                  <h2 className="text-base font-bold">{continentName(cp.region, locale)}</h2>
+                  <span className="text-xs font-semibold text-muted-foreground">
+                    {complete
+                      ? t("collection.regionComplete")
+                      : t("collection.regionUnlocked", { unlocked: cp.unlocked, total: cp.total })}
+                  </span>
+                </div>
+
+                {/* progress bar with discovered + unlocked layers */}
+                <div className="relative mt-2 h-2.5 overflow-hidden rounded-full bg-muted">
+                  <div className="absolute inset-y-0 left-0 rounded-full bg-primary/30" style={{ width: `${discPct}%` }} />
+                  <div className="absolute inset-y-0 left-0 rounded-full bg-gradient-to-r from-amber-500 to-orange-600" style={{ width: `${pct}%` }} />
+                </div>
+                <div className="mt-1 text-[11px] text-muted-foreground">
+                  {t("collection.regionDiscovered", { discovered: cp.discovered, total: cp.total })}
+                </div>
+
+                {continentBlurb(cp.region, locale) && (
+                  <p className="mt-3 text-sm text-muted-foreground">{continentBlurb(cp.region, locale)}</p>
+                )}
+
+                <div className="mt-3 grid grid-cols-2 gap-1.5">
+                  {cp.facts.map((f) => (
+                    <div key={f.label} className="rounded-lg bg-muted/40 px-3 py-2 text-sm">
+                      <div className="text-[11px] text-muted-foreground">{f.label}</div>
+                      <div className="font-semibold leading-tight">{f.value}</div>
+                    </div>
+                  ))}
+                </div>
+              </motion.div>
+            );
+          })}
+        </div>
+      ) : (
       <div className="mt-5 grid grid-cols-3 gap-2.5 sm:grid-cols-4">
         {sorted.map((c) => {
           const score = dexScore(hits[c.cca3]);
@@ -118,6 +207,7 @@ export default function CollectionPage() {
           );
         })}
       </div>
+      )}
 
       {selected && <DetailModal country={selected} score={dexScore(hits[selected.cca3])} games={dexGameCount(hits[selected.cca3])} onClose={() => setSelected(null)} locale={locale} t={t} />}
     </div>

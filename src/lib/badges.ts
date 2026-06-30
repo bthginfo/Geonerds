@@ -7,6 +7,7 @@ import {
 } from "lucide-react";
 import type { GameId, Locale } from "./types";
 import type { ScoreEntry } from "./leaderboard/types";
+import { CONTINENTS, DEX_POOL, dexStateOf } from "./dex";
 
 export interface Stats {
   totalRuns: number;
@@ -24,9 +25,18 @@ export interface Stats {
   correctByGame: Record<string, number>;
   bestStreakByGame: Record<string, number>;
   maxTotalByGame: Record<string, number>;
+  // Geo-Dex collection
+  dexDiscovered: number; // discovered or unlocked
+  dexUnlocked: number; // fully unlocked
+  dexTotal: number;
+  dexUnlockedRegions: string[]; // continents fully unlocked
+  dexDiscoveredRegions: string[]; // continents fully discovered (every country at least discovered)
 }
 
-export function computeStats(runs: ScoreEntry[]): Stats {
+export function computeStats(
+  runs: ScoreEntry[],
+  dexHits: Record<string, Record<string, number>> = {}
+): Stats {
   const correctByGame: Record<string, number> = {};
   const bestStreakByGame: Record<string, number> = {};
   const maxTotalByGame: Record<string, number> = {};
@@ -63,6 +73,29 @@ export function computeStats(runs: ScoreEntry[]): Stats {
     }
   }
 
+  // ── Geo-Dex collection ──────────────────────────────────
+  let dexDiscovered = 0;
+  let dexUnlocked = 0;
+  for (const c of DEX_POOL) {
+    const st = dexStateOf(dexHits[c.cca3]);
+    if (st === "unlocked") {
+      dexUnlocked++;
+      dexDiscovered++;
+    } else if (st === "discovered") {
+      dexDiscovered++;
+    }
+  }
+  const dexUnlockedRegions: string[] = [];
+  const dexDiscoveredRegions: string[] = [];
+  for (const region of CONTINENTS) {
+    const list = DEX_POOL.filter((c) => c.region === region);
+    if (!list.length) continue;
+    const allUnlocked = list.every((c) => dexStateOf(dexHits[c.cca3]) === "unlocked");
+    const allDiscovered = list.every((c) => dexStateOf(dexHits[c.cca3]) !== "locked");
+    if (allUnlocked) dexUnlockedRegions.push(region);
+    if (allDiscovered) dexDiscoveredRegions.push(region);
+  }
+
   return {
     totalRuns: runs.length,
     totalScore,
@@ -79,6 +112,11 @@ export function computeStats(runs: ScoreEntry[]): Stats {
     correctByGame,
     bestStreakByGame,
     maxTotalByGame,
+    dexDiscovered,
+    dexUnlocked,
+    dexTotal: DEX_POOL.length,
+    dexUnlockedRegions,
+    dexDiscoveredRegions,
   };
 }
 
@@ -199,10 +237,32 @@ export const BADGES: Badge[] = [
   { id: "map500", icon: MapPin, name: { en: "World Master", de: "Welt-Meister" }, desc: { en: "Find 500 countries on the map", de: "500 Länder auf der Karte finden" }, earned: (s) => g(s, "map-click") >= 500 },
   { id: "trivia100", icon: Lightbulb, name: { en: "Walking Atlas", de: "Wandelndes Lexikon" }, desc: { en: "100 correct trivia", de: "100 Trivia richtig" }, earned: (s) => g(s, "trivia") >= 100 },
   { id: "nerd30", icon: Brain, name: { en: "Geo Grandmaster", de: "Geo-Großmeister" }, desc: { en: "Reach question 30 in the quiz", de: "Frage 30 im Quiz erreichen" }, earned: (s) => (s.maxTotalByGame["millionaire"] ?? 0) >= 30 },
+
+  // ── Geo-Dex collection ──────────────────────────────────
+  { id: "dexFirst", icon: Sparkles, name: { en: "First Find", de: "Erster Fund" }, desc: { en: "Discover your first country", de: "Entdecke dein erstes Land" }, earned: (s) => s.dexDiscovered >= 1 },
+  { id: "dexComplete1", icon: Gem, name: { en: "Collector", de: "Sammler" }, desc: { en: "Fully unlock a country", de: "Ein Land komplett freispielen" }, earned: (s) => s.dexUnlocked >= 1 },
+  { id: "dex25", icon: Compass, name: { en: "Pathmaker", de: "Wegbereiter" }, desc: { en: "Discover 25 countries", de: "Entdecke 25 Länder" }, earned: (s) => s.dexDiscovered >= 25 },
+  { id: "dex50", icon: Globe2, name: { en: "Globe Collector", de: "Globussammler" }, desc: { en: "Discover 50 countries", de: "Entdecke 50 Länder" }, earned: (s) => s.dexDiscovered >= 50 },
+  { id: "dex100", icon: Globe2, name: { en: "World Curator", de: "Weltkurator" }, desc: { en: "Discover 100 countries", de: "Entdecke 100 Länder" }, earned: (s) => s.dexDiscovered >= 100 },
+  { id: "dexAll", icon: Crown, name: { en: "Whole Wide World", de: "Die ganze Welt" }, desc: { en: "Discover every country", de: "Entdecke jedes Land" }, earned: (s) => s.dexTotal > 0 && s.dexDiscovered >= s.dexTotal },
+  { id: "dexUnlock25", icon: Gem, name: { en: "Curator", de: "Kurator" }, desc: { en: "Fully unlock 25 countries", de: "25 Länder komplett freispielen" }, earned: (s) => s.dexUnlocked >= 25 },
+  { id: "dexUnlock100", icon: Diamond, name: { en: "Master Collector", de: "Meistersammler" }, desc: { en: "Fully unlock 100 countries", de: "100 Länder komplett freispielen" }, earned: (s) => s.dexUnlocked >= 100 },
+  { id: "dexUnlockAll", icon: Crown, name: { en: "Living Atlas", de: "Lebendes Lexikon" }, desc: { en: "Fully unlock every country", de: "Jedes Land komplett freispielen" }, earned: (s) => s.dexTotal > 0 && s.dexUnlocked >= s.dexTotal },
+  // Per-continent (discover all + master all)
+  { id: "regionEurope", icon: Flag, name: { en: "Europe Explored", de: "Europa erkundet" }, desc: { en: "Discover all of Europe", de: "Ganz Europa entdecken" }, earned: (s) => s.dexDiscoveredRegions.includes("Europe") },
+  { id: "regionAsia", icon: Flag, name: { en: "Asia Explored", de: "Asien erkundet" }, desc: { en: "Discover all of Asia", de: "Ganz Asien entdecken" }, earned: (s) => s.dexDiscoveredRegions.includes("Asia") },
+  { id: "regionAfrica", icon: Flag, name: { en: "Africa Explored", de: "Afrika erkundet" }, desc: { en: "Discover all of Africa", de: "Ganz Afrika entdecken" }, earned: (s) => s.dexDiscoveredRegions.includes("Africa") },
+  { id: "regionAmericas", icon: Flag, name: { en: "Americas Explored", de: "Amerika erkundet" }, desc: { en: "Discover all of the Americas", de: "Ganz Amerika entdecken" }, earned: (s) => s.dexDiscoveredRegions.includes("Americas") },
+  { id: "regionOceania", icon: Flag, name: { en: "Oceania Explored", de: "Ozeanien erkundet" }, desc: { en: "Discover all of Oceania", de: "Ganz Ozeanien entdecken" }, earned: (s) => s.dexDiscoveredRegions.includes("Oceania") },
+  { id: "regionMaster1", icon: Medal, name: { en: "Continent Master", de: "Kontinent-Meister" }, desc: { en: "Fully unlock a whole continent", de: "Einen ganzen Kontinent freispielen" }, earned: (s) => s.dexUnlockedRegions.length >= 1 },
+  { id: "regionMasterAll", icon: Crown, name: { en: "Five Continents", de: "Fünf Kontinente" }, desc: { en: "Fully unlock every continent", de: "Jeden Kontinent freispielen" }, earned: (s) => s.dexUnlockedRegions.length >= CONTINENTS.length },
 ];
 
-export function earnedIds(runs: ScoreEntry[]): Set<string> {
-  const stats = computeStats(runs);
+export function earnedIds(
+  runs: ScoreEntry[],
+  dexHits: Record<string, Record<string, number>> = {}
+): Set<string> {
+  const stats = computeStats(runs, dexHits);
   return new Set(BADGES.filter((b) => b.earned(stats)).map((b) => b.id));
 }
 
