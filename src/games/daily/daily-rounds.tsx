@@ -3,6 +3,7 @@ import { FlagImage } from "@/components/flag-image";
 import { poolForDifficulty, withCapital, countryName, getCountryByCca3 } from "@/data/countries";
 import { capitalLabel, capitalAccepted, countryAccepted } from "@/games/aliases";
 import { simplifyCurrency } from "@/lib/currency";
+import { FACT_QUESTIONS } from "@/lib/fact-questions";
 import { DAILY_COUNT, WEEKLY_COUNT, mulberry32, seedFromKey, sampleWith, shuffleWith } from "@/lib/daily";
 import type { QuizRound } from "@/games/quiz-core";
 
@@ -235,6 +236,26 @@ const builders: Builder[] = [
       accepted: [countryName(bigger, locale)],
       answerLabel: countryName(bigger, locale),
       factCountry: bigger,
+    };
+  },
+  // Curated "did you know" fact question (ignores `a`, picks from the library).
+  (a, pool, rng, locale) => {
+    const poolSet = new Set(pool.map((c) => c.cca3));
+    const cand = FACT_QUESTIONS.filter((fq) => poolSet.has(fq.cca3) && getCountryByCca3(fq.cca3));
+    if (!cand.length) return null;
+    const fq = sampleWith(cand, 1, rng)[0];
+    const ans = getCountryByCca3(fq.cca3);
+    if (!ans) return null;
+    const distract = sampleWith(pool.filter((c) => c.cca3 !== ans.cca3), 3, rng);
+    if (distract.length < 3) return null;
+    return {
+      key: `fact-${fq.cca3}-${fq.q.en.length}`,
+      prompt: <div className="text-center text-base font-semibold">{qt(locale, fq.q.en, fq.q.de)}</div>,
+      options: opts([ans, ...distract].map((c) => ({ id: c.cca3, label: countryName(c, locale) })), rng),
+      correctId: ans.cca3,
+      accepted: countryAccepted(ans),
+      answerLabel: countryName(ans, locale),
+      factCountry: ans,
     };
   },
 ];

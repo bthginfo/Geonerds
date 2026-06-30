@@ -1,8 +1,9 @@
 import type { Country, Locale } from "@/lib/types";
-import { COUNTRIES, countryName } from "@/data/countries";
+import { COUNTRIES, countryName, getCountryByCca3 } from "@/data/countries";
 import { capitalLabel } from "@/games/aliases";
 import { translate } from "@/i18n/messages";
 import { simplifyCurrency } from "@/lib/currency";
+import { FACT_QUESTIONS } from "@/lib/fact-questions";
 import { sample, shuffle, pickOne } from "@/lib/utils";
 
 export interface GnQuestion {
@@ -183,16 +184,29 @@ const builders: Record<string, Builder> = {
     const { options, correctIndex } = build([...opts].map(String), correct);
     return { text: translate(locale, "gn.q.borderCount", { c: countryName(c, locale) }), options, correctIndex, factCca3: c.cca3 };
   },
+  // Curated "did you know" fact question — the answer is a country.
+  factTrivia(pool, locale) {
+    const poolSet = new Set(pool.map((c) => c.cca3));
+    const candidates = FACT_QUESTIONS.filter((fq) => poolSet.has(fq.cca3) && getCountryByCca3(fq.cca3));
+    if (!candidates.length) return null;
+    const fq = pickOne(candidates);
+    const answer = getCountryByCca3(fq.cca3)!;
+    const distract = sample(pool.filter((c) => c.cca3 !== answer.cca3), 3);
+    if (distract.length < 3) return null;
+    const correct = countryName(answer, locale);
+    const { options, correctIndex } = build([correct, ...distract.map((c) => countryName(c, locale))], correct);
+    return { text: locale === "de" ? fq.q.de : fq.q.en, options, correctIndex, factCca3: answer.cca3 };
+  },
 };
 
 function allowedBuilders(round: number): string[] {
-  if (round < 3) return ["capital", "continent", "largestArea", "smallestArea"];
+  if (round < 3) return ["capital", "continent", "largestArea", "smallestArea", "factTrivia"];
   if (round < 6)
-    return ["capital", "continent", "currency", "countryByCapital", "largestArea", "largestPop", "smallestArea", "smallestPop", "island"];
+    return ["capital", "continent", "currency", "countryByCapital", "largestArea", "largestPop", "smallestArea", "smallestPop", "island", "factTrivia"];
   if (round < 10)
-    return ["capital", "countryByCapital", "currency", "language", "largestArea", "largestPop", "smallestArea", "smallestPop", "neighbor", "landlocked", "island", "southern", "mostNeighbours", "borderCount"];
+    return ["capital", "countryByCapital", "currency", "language", "largestArea", "largestPop", "smallestArea", "smallestPop", "neighbor", "landlocked", "island", "southern", "mostNeighbours", "borderCount", "factTrivia"];
   // Late game leans on the trickier builders.
-  return ["countryByCapital", "currency", "language", "neighbor", "landlocked", "capital", "smallestPop", "southern", "mostNeighbours", "borderCount"];
+  return ["countryByCapital", "currency", "language", "neighbor", "landlocked", "capital", "smallestPop", "southern", "mostNeighbours", "borderCount", "factTrivia"];
 }
 
 export function generateQuestion(round: number, locale: Locale): GnQuestion {
