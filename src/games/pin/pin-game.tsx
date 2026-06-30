@@ -2,10 +2,12 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { motion } from "framer-motion";
-import { Crosshair, ArrowRight, RotateCcw } from "lucide-react";
+import { Crosshair, ArrowRight, RotateCcw, Loader2 } from "lucide-react";
+import { geoContains } from "d3-geo";
 import type { Country } from "@/lib/types";
 import type { PlayHandlers } from "@/components/game/game-shell";
 import { PinMap } from "@/components/map/pin-map";
+import { featuresByCcn3, type CountryFeature } from "@/lib/geo";
 import { GameTopBar, ScorePill, StreakPill, RoundPill, TimerPill } from "@/components/game/hud";
 import { Compass } from "@/components/map/compass";
 import { Button } from "@/components/ui/button";
@@ -20,29 +22,57 @@ const PER_ROUND_BUDGET_MS = 15000;
 const MAX_DIST = 5000; // km at which points reach zero
 const GOOD_DIST = 800; // km that counts toward a streak
 
+interface Capital {
+  code: string;
+  en: string;
+  lat: number;
+  lng: number;
+}
+
 interface PinTarget {
   label: string;
   lng: number;
   lat: number;
+  /** For country targets — clicking anywhere inside this country counts as 0 km. */
+  ccn3?: string | null;
 }
 
 export function PinGame({ difficulty, roundCount, timed, onFinish, onExit }: PlayHandlers) {
   const { t, locale } = useT();
+  const [features, setFeatures] = useState<Map<string, CountryFeature> | null>(null);
+  const [capitals, setCapitals] = useState<Capital[] | null>(null);
+
+  useEffect(() => {
+    featuresByCcn3("50m").then(setFeatures);
+    fetch("/geo/capitals.json")
+      .then((r) => r.json())
+      .then(setCapitals)
+      .catch(() => setCapitals([]));
+  }, []);
 
   const targets = useMemo<PinTarget[]>(() => {
-    const countryPool: PinTarget[] = poolForDifficulty(difficulty)
-      .filter((c): c is Country & { latlng: [number, number] } => !!c.latlng)
-      .map((c) => ({ label: countryName(c, locale), lng: c.latlng[1], lat: c.latlng[0] }));
+    if (!features || !capitals) return [];
+    const pool = poolForDifficulty(difficulty);
+    const poolCca3 = new Set(pool.map((c) => c.cca3));
+
+    const countryPool: PinTarget[] = pool
+      .filter((c): c is Country & { latlng: [number, number] } => !!c.latlng && !!c.ccn3 && features.has(String(c.ccn3)))
+      .map((c) => ({ label: countryName(c, locale), lng: c.latlng[1], lat: c.latlng[0], ccn3: String(c.ccn3) }));
+    const capitalPool: PinTarget[] = capitals
+      .filter((cap) => poolCca3.has(cap.code))
+      .map((cap) => ({ label: cap.en, lng: cap.lng, lat: cap.lat }));
     const placePool: PinTarget[] = PLACES.map((p) => ({ label: locale === "de" ? p.de : p.en, lng: p.lng, lat: p.lat }));
 
-    const fullCount = countryPool.length + placePool.length;
+    const fullCount = countryPool.length + capitalPool.length + placePool.length;
     const count = roundCount === 0 ? fullCount : roundCount;
-    // Roughly 45% cities/landmarks, the rest countries.
-    const placeCount = Math.min(placePool.length, Math.round(count * 0.45));
+    // Blend ~40% countries, ~30% capitals, ~30% cities/landmarks.
+    const capCount = Math.min(capitalPool.length, Math.round(count * 0.3));
+    const placeCount = Math.min(placePool.length, Math.round(count * 0.3));
+    const caps = sample(capitalPool, capCount);
     const places = sample(placePool, placeCount);
-    const countries = sample(countryPool, count - places.length);
-    return shuffle([...places, ...countries]);
-  }, [difficulty, roundCount, locale]);
+    const countries = sample(countryPool, Math.max(0, count - caps.length - places.length));
+    return shuffle([...countries, ...caps, ...places]);
+  }, [difficulty, roundCount, locale, features, capitals]);
 
   const total = targets.length;
   const budget = total * PER_ROUND_BUDGET_MS;
@@ -93,11 +123,24 @@ export function PinGame({ difficulty, roundCount, timed, onFinish, onExit }: Pla
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [timed]);
 
+  if (!features || !capitals) {
+    return (
+      <div className="flex flex-1 items-center justify-center text-muted-foreground">
+        <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+        {t("common.loading")}
+      </div>
+    );
+  }
   if (!target || !targetLngLat) return null;
 
   function confirm() {
     if (revealed || !pin || !targetLngLat) return;
-    const dist = haversineKm(pin, targetLngLat);
+    let dist = haversineKm(pin, targetLngLat);
+    // Country targets: a pin anywhere on the country's landmass is a perfect hit.
+    if (target.ccn3 && features) {
+      const feat = features.get(target.ccn3);
+      if (feat && geoContains(feat as unknown as GeoJSON.Feature, pin)) dist = 0;
+    }
     answeredRef.current += 1;
     setDistKm(dist);
     setRevealed(true);
