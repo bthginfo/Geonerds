@@ -5,6 +5,7 @@ export const COUNTRIES = raw as unknown as Country[];
 
 const byCca3Map = new Map(COUNTRIES.map((c) => [c.cca3, c]));
 const byCcn3Map = new Map(COUNTRIES.filter((c) => c.ccn3).map((c) => [String(c.ccn3), c]));
+const byCca2Map = new Map(COUNTRIES.map((c) => [c.cca2.toLowerCase(), c]));
 
 export function getCountryByCca3(cca3: string): Country | undefined {
   return byCca3Map.get(cca3);
@@ -12,6 +13,10 @@ export function getCountryByCca3(cca3: string): Country | undefined {
 
 export function getCountryByCcn3(ccn3: string | number): Country | undefined {
   return byCcn3Map.get(String(ccn3));
+}
+
+export function getCountryByCca2(cca2: string): Country | undefined {
+  return byCca2Map.get(cca2.toLowerCase());
 }
 
 export function countryName(c: Country, locale: Locale): string {

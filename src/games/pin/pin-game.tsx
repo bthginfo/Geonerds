@@ -35,6 +35,8 @@ interface PinTarget {
   lat: number;
   /** For country targets — clicking anywhere inside this country counts as 0 km. */
   ccn3?: string | null;
+  /** Country this target belongs to (country & capital targets) — feeds the collection. */
+  cca3?: string;
 }
 
 export function PinGame({ difficulty, roundCount, timed, onFinish, onExit }: PlayHandlers) {
@@ -57,10 +59,10 @@ export function PinGame({ difficulty, roundCount, timed, onFinish, onExit }: Pla
 
     const countryPool: PinTarget[] = pool
       .filter((c): c is Country & { latlng: [number, number] } => !!c.latlng && !!c.ccn3 && features.has(String(c.ccn3)))
-      .map((c) => ({ label: countryName(c, locale), lng: c.latlng[1], lat: c.latlng[0], ccn3: String(c.ccn3) }));
+      .map((c) => ({ label: countryName(c, locale), lng: c.latlng[1], lat: c.latlng[0], ccn3: String(c.ccn3), cca3: c.cca3 }));
     const capitalPool: PinTarget[] = capitals
       .filter((cap) => poolCca3.has(cap.code))
-      .map((cap) => ({ label: cap.en, lng: cap.lng, lat: cap.lat }));
+      .map((cap) => ({ label: cap.en, lng: cap.lng, lat: cap.lat, cca3: cap.code }));
     const placePool: PinTarget[] = PLACES.map((p) => ({ label: locale === "de" ? p.de : p.en, lng: p.lng, lat: p.lat }));
 
     const fullCount = countryPool.length + capitalPool.length + placePool.length;
@@ -92,6 +94,7 @@ export function PinGame({ difficulty, roundCount, timed, onFinish, onExit }: Pla
   const answeredRef = useRef(0);
   const bestRef = useRef(0);
   const finishedRef = useRef(false);
+  const hitsRef = useRef<string[]>([]);
 
   const target = targets[idx];
   const targetLngLat = target ? ([target.lng, target.lat] as [number, number]) : null;
@@ -106,6 +109,7 @@ export function PinGame({ difficulty, roundCount, timed, onFinish, onExit }: Pla
       bestStreak: bestRef.current,
       durationMs: Date.now() - startRef.current,
       mode: "pin",
+      countryHits: hitsRef.current,
     });
   }
 
@@ -151,6 +155,7 @@ export function PinGame({ difficulty, roundCount, timed, onFinish, onExit }: Pla
     setScore((s) => s + earned);
     if (dist <= GOOD_DIST) {
       sound.correct();
+      if (target.cca3) hitsRef.current.push(target.cca3);
       correctRef.current += 1;
       const ns = streak + 1;
       bestRef.current = Math.max(bestRef.current, ns);

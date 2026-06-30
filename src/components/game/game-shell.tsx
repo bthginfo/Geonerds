@@ -12,6 +12,7 @@ import { Modal } from "@/components/ui/modal";
 import { scoreStore } from "@/lib/leaderboard/local";
 import { apiSubmitScore } from "@/lib/online";
 import { useAuth } from "@/store/auth";
+import { useDex } from "@/store/dex";
 import { earnedIds } from "@/lib/badges";
 import { ResultScreen } from "./result-screen";
 import { cn } from "@/lib/utils";
@@ -25,6 +26,8 @@ export interface PlayResult {
   mode?: string;
   /** Optional per-question correctness (used by the Daily Challenge share grid). */
   marks?: boolean[];
+  /** cca3 codes of countries answered correctly this run (feeds the collection). */
+  countryHits?: string[];
 }
 
 export interface PlayHandlers {
@@ -87,6 +90,9 @@ export function GameShell({
       durationMs: r.durationMs,
       createdAt: Date.now(),
     };
+    // Feed the country collection (Geo-Dex).
+    if (r.countryHits?.length) useDex.getState().record(gameId, r.countryHits);
+
     const prevBest = await scoreStore.bestScore(gameId);
     const before = earnedIds(await scoreStore.allRuns());
     await scoreStore.saveRun(run);

@@ -34,6 +34,7 @@ export function GeoNerdGame({ onFinish, onExit }: PlayHandlers) {
   const startRef = useRef(Date.now());
   const bestRef = useRef(0);
   const lockRef = useRef(false);
+  const hitsRef = useRef<string[]>([]);
 
   function goNext(nr: number) {
     setRound(nr);
@@ -68,6 +69,7 @@ export function GeoNerdGame({ onFinish, onExit }: PlayHandlers) {
     const isCorrect = idx === q.correctIndex;
     if (isCorrect) {
       sound.correct();
+      if (q.factCca3) hitsRef.current.push(q.factCca3);
       setScore((s) => s + q.points);
       setCorrect((c) => c + 1);
       setStreak((s) => {
@@ -97,6 +99,7 @@ export function GeoNerdGame({ onFinish, onExit }: PlayHandlers) {
         bestStreak: bestRef.current,
         durationMs: Date.now() - startRef.current,
         mode: "survival",
+        countryHits: hitsRef.current,
       });
       return;
     }

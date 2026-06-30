@@ -82,6 +82,7 @@ export function QuizGame({
   const gameOverRef = useRef(false);
   const finishedRef = useRef(false);
   const marksRef = useRef<boolean[]>([]);
+  const hitsRef = useRef<string[]>([]);
 
   const round = rounds[idx];
   const inputRef = useRef<HTMLInputElement>(null);
@@ -100,6 +101,7 @@ export function QuizGame({
       durationMs: Date.now() - startRef.current,
       mode,
       marks: marksRef.current,
+      countryHits: hitsRef.current,
     });
   }
 
@@ -137,6 +139,11 @@ export function QuizGame({
     setLastCorrect(correct);
     setTimedOut(didTimeOut);
     marksRef.current.push(correct);
+    if (correct) {
+      // Record the country for the collection (factCountry, or correctId when it's a cca3).
+      const cca3 = round.factCountry?.cca3 ?? (/^[A-Z]{3}$/.test(round.correctId) ? round.correctId : undefined);
+      if (cca3) hitsRef.current.push(cca3);
+    }
     scoreRef.current = Math.max(0, scoreRef.current + earned);
     setScore((s) => Math.max(0, s + earned));
     setGain(earned);

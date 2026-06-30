@@ -47,6 +47,7 @@ export function NameAllGame({ difficulty, mode, roundCount, timed, practice, onF
   const totalTargetsRef = useRef(themes.reduce((s, th) => s + th.targets.length, 0));
   const bestRef = useRef(0);
   const finishedRef = useRef(false);
+  const hitsRef = useRef<string[]>([]);
 
   useEffect(() => {
     if (!timed) return;
@@ -98,6 +99,7 @@ export function NameAllGame({ difficulty, mode, roundCount, timed, practice, onF
   function addFound(cca3: string) {
     sound.correct();
     award();
+    hitsRef.current.push(cca3);
     setFound((f) => new Set(f).add(cca3));
   }
 
@@ -140,6 +142,7 @@ export function NameAllGame({ difficulty, mode, roundCount, timed, practice, onF
       bestStreak: bestRef.current,
       durationMs: Date.now() - startRef.current,
       mode: clickMode ? "choice" : "type",
+      countryHits: hitsRef.current,
     });
   }
 

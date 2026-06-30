@@ -65,6 +65,7 @@ export function TriviaGame({ difficulty, mode, roundCount, timed, onFinish, onEx
   const correctRef = useRef(0);
   const bestRef = useRef(0);
   const finishedRef = useRef(false);
+  const hitsRef = useRef<string[]>([]);
 
   const round = rounds[idx];
   const maxClues = round ? Math.min(MAX_CLUES, round.clues.length) : MAX_CLUES;
@@ -79,6 +80,7 @@ export function TriviaGame({ difficulty, mode, roundCount, timed, onFinish, onEx
       bestStreak: bestRef.current,
       durationMs: Date.now() - startRef.current,
       mode,
+      countryHits: hitsRef.current,
     });
   }
 
@@ -103,6 +105,7 @@ export function TriviaGame({ difficulty, mode, roundCount, timed, onFinish, onEx
     setLastCorrect(correct);
     if (correct) {
       sound.correct();
+      hitsRef.current.push(round.answer.cca3);
       const earned = scoreForTrivia(revealed, difficulty);
       scoreRef.current += earned;
       setScore((s) => s + earned);

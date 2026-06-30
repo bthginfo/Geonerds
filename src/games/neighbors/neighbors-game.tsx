@@ -115,6 +115,7 @@ export function NeighborsGame({ difficulty, mode, roundCount, timed, onFinish, o
   const correctRef = useRef(0);
   const bestRef = useRef(0);
   const finishedRef = useRef(false);
+  const hitsRef = useRef<string[]>([]);
 
   const round = rounds[idx];
   const maxClues = round ? round.clues.length : 0;
@@ -129,6 +130,7 @@ export function NeighborsGame({ difficulty, mode, roundCount, timed, onFinish, o
       bestStreak: bestRef.current,
       durationMs: Date.now() - startRef.current,
       mode,
+      countryHits: hitsRef.current,
     });
   }
 
@@ -137,6 +139,7 @@ export function NeighborsGame({ difficulty, mode, roundCount, timed, onFinish, o
     setLastCorrect(correct);
     if (correct) {
       sound.correct();
+      hitsRef.current.push(round.answer.cca3);
       const earned = scoreForTrivia(revealed, difficulty);
       scoreRef.current += earned;
       setScore((s) => s + earned);

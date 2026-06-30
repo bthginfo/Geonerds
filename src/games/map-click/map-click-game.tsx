@@ -51,6 +51,7 @@ export function MapClickGame({ difficulty, roundCount, timed, variant, practice,
   const answeredRef = useRef(0);
   const bestRef = useRef(0);
   const finishedRef = useRef(false);
+  const hitsRef = useRef<string[]>([]);
 
   useEffect(() => {
     featuresByCcn3("50m").then((feats) => {
@@ -96,6 +97,7 @@ export function MapClickGame({ difficulty, roundCount, timed, variant, practice,
       bestStreak: bestRef.current,
       durationMs: Date.now() - startRef.current,
       mode: "map",
+      countryHits: hitsRef.current,
     });
   }
 
@@ -134,6 +136,7 @@ export function MapClickGame({ difficulty, roundCount, timed, variant, practice,
     if (ccn3 === String(target.ccn3)) {
       lockRef.current = true;
       sound.correct();
+      if (target.cca3) hitsRef.current.push(target.cca3);
       const timeMs = Date.now() - qStartRef.current;
       const earned = scoreForAnswer({ correct: true, difficulty, timed, timeMs, timeLimitMs: TIME_PER_TARGET_MS });
       scoreRef.current += earned;

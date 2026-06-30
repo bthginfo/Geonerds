@@ -10,6 +10,7 @@ import colorFlagsData from "@/data/color-flags.json";
 import { DIFFICULTY_MULTIPLIER } from "@/lib/scoring";
 import { sound } from "@/lib/sound";
 import { sample, shuffle, cn } from "@/lib/utils";
+import { getCountryByCca2 } from "@/data/countries";
 import { useT } from "@/i18n/I18nProvider";
 import type { Difficulty, Locale } from "@/lib/types";
 
@@ -116,6 +117,7 @@ export function ColorFlagGame({ difficulty, variant, roundCount, timed, practice
   const livesRef = useRef(MAX_LIVES);
   const gameOverRef = useRef(false);
   const finishedRef = useRef(false);
+  const hitsRef = useRef<string[]>([]);
 
   useEffect(() => {
     if (!timed) return;
@@ -166,6 +168,7 @@ export function ColorFlagGame({ difficulty, variant, roundCount, timed, practice
       bestStreak: bestRef.current,
       durationMs: Date.now() - startRef.current,
       mode: pro ? "pro" : "swatch",
+      countryHits: hitsRef.current,
     });
   }
 
@@ -178,6 +181,9 @@ export function ColorFlagGame({ difficulty, variant, roundCount, timed, practice
   }
 
   function nextFlag() {
+    // The flag just finished — credit its country to the collection.
+    const finished = getCountryByCca2(flag.code);
+    if (finished) hitsRef.current.push(finished.cca3);
     if (gameOverRef.current || idx + 1 >= total) {
       doFinish();
       return;

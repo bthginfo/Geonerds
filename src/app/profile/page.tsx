@@ -2,12 +2,15 @@
 
 import { useMemo } from "react";
 import Link from "next/link";
-import { Flame, Award, ChevronRight, Gamepad2 } from "lucide-react";
+import { Flame, Award, ChevronRight, Gamepad2, Sparkles } from "lucide-react";
 import { useT } from "@/i18n/I18nProvider";
 import { useAllRuns } from "@/hooks/use-scores";
 import { useAuth } from "@/store/auth";
 import { useDaily } from "@/store/daily";
 import { BADGES, computeStats, badgeName } from "@/lib/badges";
+import { useDex } from "@/store/dex";
+import { dexStateOf } from "@/lib/dex";
+import { COUNTRIES } from "@/data/countries";
 import { levelFromXp, rankName } from "@/lib/level";
 import { streakFromDates } from "@/lib/daily";
 import { getGame } from "@/games/registry";
@@ -18,6 +21,14 @@ export default function ProfilePage() {
   const { runs } = useAllRuns();
   const user = useAuth((s) => s.user);
   const dailyResults = useDaily((s) => s.results);
+
+  const dexHits = useDex((s) => s.hits);
+  const dexCollected = useMemo(() => {
+    const pool = COUNTRIES.filter((c) => c.unMember || c.independent);
+    let collected = 0;
+    for (const c of pool) if (dexStateOf(dexHits[c.cca3]) !== "locked") collected++;
+    return { collected, total: pool.length };
+  }, [dexHits]);
 
   const stats = useMemo(() => computeStats(runs ?? []), [runs]);
   const level = useMemo(() => levelFromXp(stats.totalScore), [stats.totalScore]);
@@ -78,6 +89,23 @@ export default function ProfilePage() {
         <Tile label={t("profile.dailyStreak")} value={`${dailyStreak} 🔥`} />
         <Tile label={t("profile.badges")} value={`${earned.length}/${BADGES.length}`} />
       </div>
+
+      {/* Country collection */}
+      <Link
+        href="/collection"
+        className="mt-4 flex items-center gap-3 rounded-2xl border border-amber-500/25 bg-gradient-to-br from-amber-500/10 to-orange-500/10 p-4 transition-colors hover:border-amber-500/50"
+      >
+        <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-amber-500 to-orange-600 text-white shadow">
+          <Sparkles className="h-5 w-5" />
+        </span>
+        <div className="min-w-0 flex-1">
+          <div className="text-xs uppercase tracking-wide text-muted-foreground">{t("collection.title")}</div>
+          <div className="font-semibold">
+            {dexCollected.collected} / {dexCollected.total}
+          </div>
+        </div>
+        <ChevronRight className="h-5 w-5 text-muted-foreground" />
+      </Link>
 
       {/* Favorite game */}
       {favGame && (
