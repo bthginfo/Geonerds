@@ -42,8 +42,14 @@ export function continentName(region: string, locale: Locale): string {
   return (REGION[region] ?? { en: region, de: region })[locale];
 }
 
-/** Countries that count toward the Geo-Dex (UN members + independent states). */
-export const DEX_POOL: Country[] = COUNTRIES.filter((c) => c.unMember || c.independent);
+/**
+ * Countries that count toward the Geo-Dex. This must match the set the games
+ * can actually present, otherwise a country could be unlocked in a game yet
+ * never appear in the collection. The dataset is already curated to the
+ * playable universe (UN members plus de-facto states like Taiwan & Palestine),
+ * so the Geo-Dex uses all of it.
+ */
+export const DEX_POOL: Country[] = [...COUNTRIES];
 
 const CONTINENT_BLURB: Record<string, { en: string; de: string }> = {
   Europe: {

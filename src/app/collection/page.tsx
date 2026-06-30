@@ -6,7 +6,7 @@ import { motion } from "framer-motion";
 import { ArrowLeft, Check, Lock, Sparkles, Lightbulb, X, Globe2 } from "lucide-react";
 import { useT } from "@/i18n/I18nProvider";
 import { useDex } from "@/store/dex";
-import { COUNTRIES, countryName } from "@/data/countries";
+import { countryName } from "@/data/countries";
 import { FlagImage } from "@/components/flag-image";
 import {
   dexScore,
@@ -18,11 +18,12 @@ import {
   continentProgress,
   continentName,
   continentBlurb,
+  DEX_POOL,
 } from "@/lib/dex";
 import type { Country } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
-const POOL = COUNTRIES.filter((c) => c.unMember || c.independent);
+const POOL = DEX_POOL;
 
 export default function CollectionPage() {
   const { t, locale } = useT();

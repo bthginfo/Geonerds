@@ -9,8 +9,7 @@ import { useAuth } from "@/store/auth";
 import { useDaily } from "@/store/daily";
 import { BADGES, computeStats, badgeName } from "@/lib/badges";
 import { useDex } from "@/store/dex";
-import { dexStateOf } from "@/lib/dex";
-import { COUNTRIES } from "@/data/countries";
+import { dexStateOf, DEX_POOL } from "@/lib/dex";
 import { levelFromXp, rankName } from "@/lib/level";
 import { streakFromDates } from "@/lib/daily";
 import { getGame } from "@/games/registry";
@@ -24,7 +23,7 @@ export default function ProfilePage() {
 
   const dexHits = useDex((s) => s.hits);
   const dexCollected = useMemo(() => {
-    const pool = COUNTRIES.filter((c) => c.unMember || c.independent);
+    const pool = DEX_POOL;
     let collected = 0;
     for (const c of pool) if (dexStateOf(dexHits[c.cca3]) !== "locked") collected++;
     return { collected, total: pool.length };
