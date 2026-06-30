@@ -1,10 +1,10 @@
 "use client";
 
-import { useMemo, useRef, useState, type CSSProperties } from "react";
+import { useEffect, useMemo, useRef, useState, type CSSProperties } from "react";
 import { motion } from "framer-motion";
 import { ArrowRight } from "lucide-react";
 import type { PlayHandlers } from "@/components/game/game-shell";
-import { GameTopBar, ScorePill, StreakPill, RoundPill, LivesPill } from "@/components/game/hud";
+import { GameTopBar, ScorePill, StreakPill, RoundPill, LivesPill, TimerPill } from "@/components/game/hud";
 import { Button } from "@/components/ui/button";
 import colorFlagsData from "@/data/color-flags.json";
 import { DIFFICULTY_MULTIPLIER } from "@/lib/scoring";
@@ -81,7 +81,9 @@ function poolFor(difficulty: Difficulty): ColorFlag[] {
   return COLOR_FLAGS.filter((f) => f.colors.length >= min && f.colors.length <= max);
 }
 
-export function ColorFlagGame({ difficulty, variant, roundCount, practice, onFinish, onExit }: PlayHandlers) {
+const PER_FLAG_MS = 18000;
+
+export function ColorFlagGame({ difficulty, variant, roundCount, timed, practice, onFinish, onExit }: PlayHandlers) {
   const { t, locale } = useT();
   const pro = variant === "pro";
 
@@ -92,6 +94,8 @@ export function ColorFlagGame({ difficulty, variant, roundCount, practice, onFin
   }, [roundCount, difficulty]);
 
   const total = flags.length;
+  const budget = total * PER_FLAG_MS;
+  const [timeLeft, setTimeLeft] = useState(budget);
   const [idx, setIdx] = useState(0);
   const [groupIdx, setGroupIdx] = useState(0);
   // Committed colour per group (real hex once answered, else null).
@@ -112,6 +116,21 @@ export function ColorFlagGame({ difficulty, variant, roundCount, practice, onFin
   const livesRef = useRef(MAX_LIVES);
   const gameOverRef = useRef(false);
   const finishedRef = useRef(false);
+
+  useEffect(() => {
+    if (!timed) return;
+    const id = setInterval(() => {
+      const left = budget - (Date.now() - startRef.current);
+      if (left <= 0) {
+        clearInterval(id);
+        setTimeLeft(0);
+        gameOverRef.current = true;
+        doFinish();
+      } else setTimeLeft(left);
+    }, 200);
+    return () => clearInterval(id);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [timed]);
 
   const flag = flags[idx];
   const groups = flag ? flag.colors.length : 0;
@@ -246,7 +265,7 @@ export function ColorFlagGame({ difficulty, variant, roundCount, practice, onFin
         {!practice && <StreakPill value={streak} />}
         {!pro && !practice && <LivesPill lives={lives} max={MAX_LIVES} />}
         {!practice && <ScorePill value={score} />}
-        <RoundPill current={idx + 1} total={total} />
+        {timed && !practice ? <TimerPill ms={timeLeft} danger={timeLeft < 12000} /> : <RoundPill current={idx + 1} total={total} />}
       </GameTopBar>
 
       <div className="mx-auto flex w-full max-w-md flex-1 flex-col items-center px-4 py-5">

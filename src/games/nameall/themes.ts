@@ -27,8 +27,10 @@ function t(locale: Locale, en: string, de: string): string {
   return locale === "de" ? de : en;
 }
 
-/** Build a pool of themes whose answer set size fits the difficulty, then sample `count`. */
-export function generateThemes(difficulty: Difficulty, locale: Locale, count: number): Theme[] {
+/** Build a pool of themes whose answer set size fits the difficulty, then sample `count`.
+ *  `mode` matters: country-name letter themes are trivial in choice mode (you just
+ *  read the first letter off the chips), so they're typing-only. */
+export function generateThemes(difficulty: Difficulty, locale: Locale, count: number, mode: "choice" | "type" = "choice"): Theme[] {
   const pool = poolForDifficulty(difficulty);
   const poolSet = new Set(pool.map((c) => c.cca3));
   const maxTargets = difficulty === "hard" ? 16 : difficulty === "medium" ? 12 : 9;
@@ -43,7 +45,7 @@ export function generateThemes(difficulty: Difficulty, locale: Locale, count: nu
 
   // Starts-with-letter only makes sense when you have to *recall* names (typing).
   // In click/choice mode you'd just read the first letter off the chips, so skip it.
-  if (difficulty === "hard") {
+  if (mode === "type") {
     const byLetter = new Map<string, string[]>();
     for (const c of pool) {
       const L = countryName(c, locale).charAt(0).toUpperCase();
@@ -52,6 +54,21 @@ export function generateThemes(difficulty: Difficulty, locale: Locale, count: nu
     }
     for (const [L, codes] of byLetter) {
       add(`letter-${L}`, t(locale, `Countries starting with “${L}”`, `Länder mit „${L}“`), codes);
+    }
+  }
+
+  // Capital starting with a letter — works in BOTH modes (the capital isn't shown
+  // on the chips, so you must actually know it).
+  {
+    const byCapLetter = new Map<string, string[]>();
+    for (const c of pool) {
+      if (!c.capital) continue;
+      const L = c.capital.charAt(0).toUpperCase();
+      if (!/[A-ZÄÖÜ]/.test(L)) continue;
+      byCapLetter.set(L, [...(byCapLetter.get(L) ?? []), c.cca3]);
+    }
+    for (const [L, codes] of byCapLetter) {
+      add(`capletter-${L}`, t(locale, `Countries whose capital starts with “${L}”`, `Länder, deren Hauptstadt mit „${L}“ beginnt`), codes);
     }
   }
 
@@ -96,6 +113,12 @@ export function generateThemes(difficulty: Difficulty, locale: Locale, count: nu
   if (big.length >= minTargets) candidates.push({ id: "largest", title: t(locale, "The 10 largest countries by area", "Die 10 größten Länder nach Fläche"), targets: big });
   const populous = ranked((c) => c.population, 10);
   if (populous.length >= minTargets) candidates.push({ id: "populous", title: t(locale, "The 10 most populous countries", "Die 10 bevölkerungsreichsten Länder"), targets: populous });
+  const richest = ranked((c) => c.gdp ?? 0, 10);
+  if (richest.length >= minTargets) candidates.push({ id: "gdp", title: t(locale, "The 10 largest economies (GDP)", "Die 10 größten Volkswirtschaften (BIP)"), targets: richest });
+  const dense = ranked((c) => (c.area > 0 ? c.population / c.area : 0), 10);
+  if (dense.length >= minTargets) candidates.push({ id: "dense", title: t(locale, "The 10 most densely populated countries", "Die 10 am dichtesten besiedelten Länder"), targets: dense });
+  const mostBorders = ranked((c) => c.borders.length, 10);
+  if (mostBorders.length >= minTargets) candidates.push({ id: "mostborders", title: t(locale, "The 10 countries with the most neighbours", "Die 10 Länder mit den meisten Nachbarn"), targets: mostBorders });
 
   // Name-pattern & attribute themes.
   const stans = pool.filter((c) => /stan$/i.test(countryName(c, "en"))).map((c) => c.cca3);

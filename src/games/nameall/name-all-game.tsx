@@ -1,10 +1,10 @@
 "use client";
 
-import { useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { motion } from "framer-motion";
 import { ArrowRight, CornerDownLeft, Eye, HelpCircle } from "lucide-react";
 import type { PlayHandlers } from "@/components/game/game-shell";
-import { GameTopBar, ScorePill, StreakPill, RoundPill } from "@/components/game/hud";
+import { GameTopBar, ScorePill, StreakPill, RoundPill, TimerPill } from "@/components/game/hud";
 import { FlagImage } from "@/components/flag-image";
 import { Button } from "@/components/ui/button";
 import { poolForDifficulty, getCountryByCca3, countryName } from "@/data/countries";
@@ -18,17 +18,20 @@ import { useT } from "@/i18n/I18nProvider";
 
 const STEP_POINTS = 40;
 const WRONG_PENALTY = 20;
+const PER_THEME_MS = 25000;
 
-export function NameAllGame({ difficulty, roundCount, onFinish, onExit }: PlayHandlers) {
+export function NameAllGame({ difficulty, mode, roundCount, timed, practice, onFinish, onExit }: PlayHandlers) {
   const { t, locale } = useT();
-  const clickMode = difficulty !== "hard";
+  const clickMode = (mode ?? "choice") === "choice";
 
   const themes = useMemo(() => {
     const count = roundCount === 0 ? 8 : roundCount;
-    return generateThemes(difficulty, locale, count);
-  }, [difficulty, roundCount, locale]);
+    return generateThemes(difficulty, locale, count, clickMode ? "choice" : "type");
+  }, [difficulty, roundCount, locale, clickMode]);
 
   const total = themes.length;
+  const budget = total * PER_THEME_MS;
+  const [timeLeft, setTimeLeft] = useState(budget);
   const [idx, setIdx] = useState(0);
   const [found, setFound] = useState<Set<string>>(new Set());
   const [revealed, setRevealed] = useState(false);
@@ -44,6 +47,20 @@ export function NameAllGame({ difficulty, roundCount, onFinish, onExit }: PlayHa
   const totalTargetsRef = useRef(themes.reduce((s, th) => s + th.targets.length, 0));
   const bestRef = useRef(0);
   const finishedRef = useRef(false);
+
+  useEffect(() => {
+    if (!timed) return;
+    const id = setInterval(() => {
+      const left = budget - (Date.now() - startRef.current);
+      if (left <= 0) {
+        clearInterval(id);
+        setTimeLeft(0);
+        doFinish();
+      } else setTimeLeft(left);
+    }, 200);
+    return () => clearInterval(id);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [timed]);
 
   const theme = themes[idx];
   const targetSet = useMemo(() => new Set(theme?.targets ?? []), [theme]);
@@ -142,9 +159,9 @@ export function NameAllGame({ difficulty, roundCount, onFinish, onExit }: PlayHa
   return (
     <div className="flex flex-1 flex-col">
       <GameTopBar title={t("games.nameall.name")} onExit={onExit}>
-        <StreakPill value={streak} />
-        <ScorePill value={score} />
-        <RoundPill current={idx + 1} total={total} />
+        {!practice && <StreakPill value={streak} />}
+        {!practice && <ScorePill value={score} />}
+        {timed ? <TimerPill ms={timeLeft} danger={timeLeft < 10000} /> : <RoundPill current={idx + 1} total={total} />}
       </GameTopBar>
 
       <div className="mx-auto flex w-full max-w-md flex-1 flex-col px-4 py-4">

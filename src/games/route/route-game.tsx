@@ -1,13 +1,13 @@
 "use client";
 
-import { useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { motion } from "framer-motion";
 import { ArrowRight, Check, CornerDownLeft, Lightbulb } from "lucide-react";
 import type { Country } from "@/lib/types";
 import type { PlayHandlers } from "@/components/game/game-shell";
 import { WorldMap } from "@/components/map/world-map";
 import { FlagImage } from "@/components/flag-image";
-import { GameTopBar, ScorePill, StreakPill, RoundPill } from "@/components/game/hud";
+import { GameTopBar, ScorePill, StreakPill, RoundPill, TimerPill } from "@/components/game/hud";
 import { Compass } from "@/components/map/compass";
 import { Button } from "@/components/ui/button";
 import { COUNTRIES, poolForDifficulty, countryName, getCountryByCcn3 } from "@/data/countries";
@@ -30,7 +30,9 @@ interface RouteRound {
   dist: Map<string, number>;
 }
 
-export function RouteGame({ difficulty, mode, roundCount, onFinish, onExit }: PlayHandlers) {
+const PER_ROUTE_MS = 25000;
+
+export function RouteGame({ difficulty, mode, roundCount, timed, onFinish, onExit }: PlayHandlers) {
   const { t, locale } = useT();
 
   const rounds = useMemo<RouteRound[]>(() => {
@@ -50,6 +52,7 @@ export function RouteGame({ difficulty, mode, roundCount, onFinish, onExit }: Pl
   }, [difficulty, roundCount]);
 
   const total = rounds.length;
+  const budget = total * PER_ROUTE_MS;
   const [idx, setIdx] = useState(0);
   const [path, setPath] = useState<string[]>(() => (rounds[0] ? [String(rounds[0].a.ccn3)] : []));
   const [done, setDone] = useState(false);
@@ -58,6 +61,7 @@ export function RouteGame({ difficulty, mode, roundCount, onFinish, onExit }: Pl
   const [shake, setShake] = useState(false);
   const [score, setScore] = useState(0);
   const [streak, setStreak] = useState(0);
+  const [timeLeft, setTimeLeft] = useState(budget);
 
   const startRef = useRef(Date.now());
   const scoreRef = useRef(0);
@@ -65,6 +69,20 @@ export function RouteGame({ difficulty, mode, roundCount, onFinish, onExit }: Pl
   const attemptsRef = useRef(0);
   const bestRef = useRef(0);
   const finishedRef = useRef(false);
+
+  useEffect(() => {
+    if (!timed) return;
+    const id = setInterval(() => {
+      const left = budget - (Date.now() - startRef.current);
+      if (left <= 0) {
+        clearInterval(id);
+        setTimeLeft(0);
+        doFinish();
+      } else setTimeLeft(left);
+    }, 200);
+    return () => clearInterval(id);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [timed]);
 
   const round = rounds[idx];
   const bId = round ? String(round.b.ccn3) : "";
@@ -188,7 +206,7 @@ export function RouteGame({ difficulty, mode, roundCount, onFinish, onExit }: Pl
       <GameTopBar title={t("games.route.name")} onExit={onExit}>
         <StreakPill value={streak} />
         <ScorePill value={score} />
-        <RoundPill current={idx + 1} total={total} />
+        {timed ? <TimerPill ms={timeLeft} danger={timeLeft < 12000} /> : <RoundPill current={idx + 1} total={total} />}
       </GameTopBar>
 
       <div className="mx-auto flex w-full max-w-3xl items-center gap-2 px-4 py-2.5 text-sm">

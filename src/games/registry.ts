@@ -157,6 +157,7 @@ export const GAMES: GameConfig[] = [
     supportsDifficulty: true,
     modes: ["choice", "type"],
     countOptions: [10, 25, 50, 0],
+    supportsTimed: true,
   },
   {
     id: "waters",
@@ -197,7 +198,9 @@ export const GAMES: GameConfig[] = [
     icon: ListChecks,
     gradient: "from-teal-500 to-cyan-600",
     supportsDifficulty: true,
+    modes: ["choice", "type"],
     countOptions: [10, 25, 50, 0],
+    supportsTimed: true,
   },
   {
     id: "mountains",
@@ -214,6 +217,7 @@ export const GAMES: GameConfig[] = [
     gradient: "from-pink-500 to-violet-600",
     supportsDifficulty: true,
     countOptions: [10, 25, 50, 0],
+    supportsTimed: true,
     variants: {
       labelKey: "colorflag.modeLabel",
       default: "swatch",
