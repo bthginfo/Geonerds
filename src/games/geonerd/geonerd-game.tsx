@@ -2,11 +2,15 @@
 
 import { useRef, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { Check, X, Scissors, SkipForward } from "lucide-react";
+import { Check, X, Scissors, SkipForward, ArrowRight, Lightbulb } from "lucide-react";
 import type { PlayHandlers } from "@/components/game/game-shell";
 import { GameTopBar, ScorePill, StreakPill, LivesPill } from "@/components/game/hud";
+import { FlagImage } from "@/components/flag-image";
 import { generateQuestion, type GnQuestion } from "./questions";
+import { getCountryByCca3, countryName } from "@/data/countries";
+import { randomFact } from "@/lib/facts";
 import { sound } from "@/lib/sound";
+import { Button } from "@/components/ui/button";
 import { useT } from "@/i18n/I18nProvider";
 import { cn, sample } from "@/lib/utils";
 
@@ -25,6 +29,7 @@ export function GeoNerdGame({ onFinish, onExit }: PlayHandlers) {
   const [removed, setRemoved] = useState<number[]>([]);
   const [usedFifty, setUsedFifty] = useState(false);
   const [usedSkip, setUsedSkip] = useState(false);
+  const [fact, setFact] = useState<string | null>(null);
 
   const startRef = useRef(Date.now());
   const bestRef = useRef(0);
@@ -36,6 +41,7 @@ export function GeoNerdGame({ onFinish, onExit }: PlayHandlers) {
     setAnswered(false);
     setSelected(null);
     setRemoved([]);
+    setFact(null);
     lockRef.current = false;
   }
 
@@ -60,7 +66,6 @@ export function GeoNerdGame({ onFinish, onExit }: PlayHandlers) {
     setSelected(idx);
     setAnswered(true);
     const isCorrect = idx === q.correctIndex;
-    let livesLeft = lives;
     if (isCorrect) {
       sound.correct();
       setScore((s) => s + q.points);
@@ -73,24 +78,29 @@ export function GeoNerdGame({ onFinish, onExit }: PlayHandlers) {
     } else {
       sound.wrong();
       setStreak(0);
-      livesLeft = lives - 1;
-      setLives(livesLeft);
+      setLives((l) => l - 1);
     }
+    // Show a fun fact about the country in question (if we have one).
+    const fc = q.factCca3 ? getCountryByCca3(q.factCca3) : null;
+    setFact(fc ? randomFact(fc, locale) : null);
+  }
 
-    setTimeout(() => {
-      if (livesLeft <= 0) {
-        onFinish({
-          score: score + (isCorrect ? q.points : 0),
-          correct: correct + (isCorrect ? 1 : 0),
-          total: round + 1,
-          bestStreak: bestRef.current,
-          durationMs: Date.now() - startRef.current,
-          mode: "survival",
-        });
-        return;
-      }
-      goNext(round + 1);
-    }, 1300);
+  const gameOver = answered && lives <= 0;
+  const factCountry = answered && q.factCca3 ? getCountryByCca3(q.factCca3) : null;
+
+  function proceed() {
+    if (gameOver) {
+      onFinish({
+        score,
+        correct,
+        total: round + 1,
+        bestStreak: bestRef.current,
+        durationMs: Date.now() - startRef.current,
+        mode: "survival",
+      });
+      return;
+    }
+    goNext(round + 1);
   }
 
   return (
@@ -150,35 +160,59 @@ export function GeoNerdGame({ onFinish, onExit }: PlayHandlers) {
               })}
             </div>
 
-            {/* Lifelines */}
-            <div className="mt-4 flex justify-center gap-2">
-              <button
-                onClick={useFifty}
-                disabled={usedFifty || answered}
-                className={cn(
-                  "inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-sm font-semibold transition-colors",
-                  usedFifty || answered
-                    ? "border-border bg-muted/40 text-muted-foreground opacity-50"
-                    : "border-primary/40 bg-primary/5 text-foreground hover:bg-primary/10"
+            {/* Lifelines (before answering) */}
+            {!answered && (
+              <div className="mt-4 flex justify-center gap-2">
+                <button
+                  onClick={useFifty}
+                  disabled={usedFifty}
+                  className={cn(
+                    "inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-sm font-semibold transition-colors",
+                    usedFifty
+                      ? "border-border bg-muted/40 text-muted-foreground opacity-50"
+                      : "border-primary/40 bg-primary/5 text-foreground hover:bg-primary/10"
+                  )}
+                >
+                  <Scissors className="h-4 w-4" />
+                  {t("gn.fifty")}
+                </button>
+                <button
+                  onClick={useSkip}
+                  disabled={usedSkip}
+                  className={cn(
+                    "inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-sm font-semibold transition-colors",
+                    usedSkip
+                      ? "border-border bg-muted/40 text-muted-foreground opacity-50"
+                      : "border-primary/40 bg-primary/5 text-foreground hover:bg-primary/10"
+                  )}
+                >
+                  <SkipForward className="h-4 w-4" />
+                  {t("gn.skip")}
+                </button>
+              </div>
+            )}
+
+            {/* Fun fact + continue (after answering) */}
+            {answered && (
+              <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className="mt-4 flex flex-col gap-3">
+                {factCountry && fact && (
+                  <div className="flex items-start gap-3 rounded-xl border border-border bg-muted/40 p-3 text-left">
+                    <FlagImage code={factCountry.flag} alt="" className="aspect-[4/3] w-10 shrink-0 shadow" />
+                    <div className="min-w-0">
+                      <div className="text-sm font-bold">{countryName(factCountry, locale)}</div>
+                      <div className="flex items-start gap-1 text-xs text-muted-foreground">
+                        <Lightbulb className="mt-0.5 h-3.5 w-3.5 shrink-0 text-accent" />
+                        {fact}
+                      </div>
+                    </div>
+                  </div>
                 )}
-              >
-                <Scissors className="h-4 w-4" />
-                {t("gn.fifty")}
-              </button>
-              <button
-                onClick={useSkip}
-                disabled={usedSkip || answered}
-                className={cn(
-                  "inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-sm font-semibold transition-colors",
-                  usedSkip || answered
-                    ? "border-border bg-muted/40 text-muted-foreground opacity-50"
-                    : "border-primary/40 bg-primary/5 text-foreground hover:bg-primary/10"
-                )}
-              >
-                <SkipForward className="h-4 w-4" />
-                {t("gn.skip")}
-              </button>
-            </div>
+                <Button className="w-full gap-1.5" onClick={proceed}>
+                  {gameOver ? t("common.continue") : t("common.next")}
+                  <ArrowRight className="h-4 w-4" />
+                </Button>
+              </motion.div>
+            )}
           </motion.div>
         </AnimatePresence>
       </div>

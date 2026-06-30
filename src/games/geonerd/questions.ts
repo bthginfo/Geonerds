@@ -10,6 +10,8 @@ export interface GnQuestion {
   options: string[];
   correctIndex: number;
   points: number;
+  /** Country this question is about — used to show a fun fact after answering. */
+  factCca3?: string;
 }
 
 const CONTINENTS = ["Africa", "Americas", "Asia", "Europe", "Oceania"];
@@ -30,7 +32,7 @@ const builders: Record<string, Builder> = {
     const correct = capitalLabel(c, locale);
     if (distract.includes(correct)) return null;
     const { options, correctIndex } = build([correct, ...distract], correct);
-    return { text: translate(locale, "gn.q.capital", { c: countryName(c, locale) }), options, correctIndex };
+    return { text: translate(locale, "gn.q.capital", { c: countryName(c, locale) }), options, correctIndex, factCca3: c.cca3 };
   },
   countryByCapital(pool, locale) {
     const withCap = pool.filter((c) => c.capital);
@@ -39,7 +41,7 @@ const builders: Record<string, Builder> = {
     const distract = sample(withCap.filter((x) => x.cca3 !== c.cca3), 3).map((x) => countryName(x, locale));
     const correct = countryName(c, locale);
     const { options, correctIndex } = build([correct, ...distract], correct);
-    return { text: translate(locale, "gn.q.countryByCapital", { cap: capitalLabel(c, locale) }), options, correctIndex };
+    return { text: translate(locale, "gn.q.countryByCapital", { cap: capitalLabel(c, locale) }), options, correctIndex, factCca3: c.cca3 };
   },
   continent(pool, locale) {
     const c = pickOne(pool.filter((x) => CONTINENTS.includes(x.region)));
@@ -48,7 +50,7 @@ const builders: Record<string, Builder> = {
     const opts = [c.region, ...sample(others, 3)].map((r) => translate(locale, `scope.${r}`));
     const correct = translate(locale, `scope.${c.region}`);
     const { options, correctIndex } = build(opts, correct);
-    return { text: translate(locale, "gn.q.continent", { c: countryName(c, locale) }), options, correctIndex };
+    return { text: translate(locale, "gn.q.continent", { c: countryName(c, locale) }), options, correctIndex, factCca3: c.cca3 };
   },
   currency(pool, locale) {
     const withCur = pool.filter((c) => c.currencies.length);
@@ -66,7 +68,7 @@ const builders: Record<string, Builder> = {
     );
     if (distract.length < 3) return null;
     const { options, correctIndex } = build([correct, ...sample(distract, 3)], correct);
-    return { text: translate(locale, "gn.q.currency", { c: countryName(c, locale) }), options, correctIndex };
+    return { text: translate(locale, "gn.q.currency", { c: countryName(c, locale) }), options, correctIndex, factCca3: c.cca3 };
   },
   language(pool, locale) {
     const withLang = pool.filter((c) => c.languages.length);
@@ -79,21 +81,21 @@ const builders: Record<string, Builder> = {
     ).map((x) => x.languages[0]);
     if (distract.length < 3 || distract.includes(correct)) return null;
     const { options, correctIndex } = build([correct, ...distract], correct);
-    return { text: translate(locale, "gn.q.language", { c: countryName(c, locale) }), options, correctIndex };
+    return { text: translate(locale, "gn.q.language", { c: countryName(c, locale) }), options, correctIndex, factCca3: c.cca3 };
   },
   largestArea(pool, locale) {
     const four = sample(pool.filter((c) => c.area > 0), 4);
     if (four.length < 4) return null;
     const correct = four.reduce((a, b) => (b.area > a.area ? b : a));
     const { options, correctIndex } = build(four.map((c) => countryName(c, locale)), countryName(correct, locale));
-    return { text: translate(locale, "gn.q.largestArea"), options, correctIndex };
+    return { text: translate(locale, "gn.q.largestArea"), options, correctIndex, factCca3: correct.cca3 };
   },
   largestPop(pool, locale) {
     const four = sample(pool.filter((c) => c.population > 0), 4);
     if (four.length < 4) return null;
     const correct = four.reduce((a, b) => (b.population > a.population ? b : a));
     const { options, correctIndex } = build(four.map((c) => countryName(c, locale)), countryName(correct, locale));
-    return { text: translate(locale, "gn.q.largestPop"), options, correctIndex };
+    return { text: translate(locale, "gn.q.largestPop"), options, correctIndex, factCca3: correct.cca3 };
   },
   neighbor(pool, locale) {
     const c = pickOne(pool.filter((x) => x.borders.length));
@@ -104,7 +106,7 @@ const builders: Record<string, Builder> = {
     const distract = sample(nonNeighbors, 3).map((x) => countryName(x, locale));
     const correct = countryName(nb, locale);
     const { options, correctIndex } = build([correct, ...distract], correct);
-    return { text: translate(locale, "gn.q.neighbor", { c: countryName(c, locale) }), options, correctIndex };
+    return { text: translate(locale, "gn.q.neighbor", { c: countryName(c, locale) }), options, correctIndex, factCca3: c.cca3 };
   },
   landlocked(pool, locale) {
     const land = pool.filter((c) => c.landlocked);
@@ -116,7 +118,7 @@ const builders: Record<string, Builder> = {
       [correct, ...distract].map((c) => countryName(c, locale)),
       countryName(correct, locale)
     );
-    return { text: translate(locale, "gn.q.landlocked"), options, correctIndex };
+    return { text: translate(locale, "gn.q.landlocked"), options, correctIndex, factCca3: correct.cca3 };
   },
   smallestArea(pool, locale) {
     const four = sample(pool.filter((c) => c.area > 0), 4);
@@ -124,7 +126,7 @@ const builders: Record<string, Builder> = {
     const correct = four.reduce((a, b) => (b.area < a.area ? b : a));
     if (four.filter((c) => c.area === correct.area).length > 1) return null;
     const { options, correctIndex } = build(four.map((c) => countryName(c, locale)), countryName(correct, locale));
-    return { text: translate(locale, "gn.q.smallestArea"), options, correctIndex };
+    return { text: translate(locale, "gn.q.smallestArea"), options, correctIndex, factCca3: correct.cca3 };
   },
   smallestPop(pool, locale) {
     const four = sample(pool.filter((c) => c.population > 0), 4);
@@ -132,7 +134,7 @@ const builders: Record<string, Builder> = {
     const correct = four.reduce((a, b) => (b.population < a.population ? b : a));
     if (four.filter((c) => c.population === correct.population).length > 1) return null;
     const { options, correctIndex } = build(four.map((c) => countryName(c, locale)), countryName(correct, locale));
-    return { text: translate(locale, "gn.q.smallestPop"), options, correctIndex };
+    return { text: translate(locale, "gn.q.smallestPop"), options, correctIndex, factCca3: correct.cca3 };
   },
   mostNeighbours(pool, locale) {
     const four = sample(pool.filter((c) => c.borders.length > 0), 4);
@@ -140,7 +142,7 @@ const builders: Record<string, Builder> = {
     const correct = four.reduce((a, b) => (b.borders.length > a.borders.length ? b : a));
     if (four.filter((c) => c.borders.length === correct.borders.length).length > 1) return null;
     const { options, correctIndex } = build(four.map((c) => countryName(c, locale)), countryName(correct, locale));
-    return { text: translate(locale, "gn.q.mostNeighbours"), options, correctIndex };
+    return { text: translate(locale, "gn.q.mostNeighbours"), options, correctIndex, factCca3: correct.cca3 };
   },
   island(pool, locale) {
     const islands = pool.filter((c) => c.borders.length === 0 && !c.landlocked);
@@ -152,7 +154,7 @@ const builders: Record<string, Builder> = {
       [correct, ...distract].map((c) => countryName(c, locale)),
       countryName(correct, locale)
     );
-    return { text: translate(locale, "gn.q.island"), options, correctIndex };
+    return { text: translate(locale, "gn.q.island"), options, correctIndex, factCca3: correct.cca3 };
   },
   southern(pool, locale) {
     const south = pool.filter((c) => c.latlng && c.latlng[0] < 0);
@@ -164,7 +166,7 @@ const builders: Record<string, Builder> = {
       [correct, ...distract].map((c) => countryName(c, locale)),
       countryName(correct, locale)
     );
-    return { text: translate(locale, "gn.q.southern"), options, correctIndex };
+    return { text: translate(locale, "gn.q.southern"), options, correctIndex, factCca3: correct.cca3 };
   },
   borderCount(pool, locale) {
     const c = pickOne(pool.filter((x) => x.borders.length >= 1));
@@ -179,7 +181,7 @@ const builders: Record<string, Builder> = {
     if (opts.size < 4) return null;
     const correct = String(real);
     const { options, correctIndex } = build([...opts].map(String), correct);
-    return { text: translate(locale, "gn.q.borderCount", { c: countryName(c, locale) }), options, correctIndex };
+    return { text: translate(locale, "gn.q.borderCount", { c: countryName(c, locale) }), options, correctIndex, factCca3: c.cca3 };
   },
 };
 
