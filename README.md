@@ -18,6 +18,20 @@ Deploys cleanly to Vercel.
 | **Find on Map** | Tap the right country on an interactive world map; its flag pins to the map so you can track progress. Pinch/scroll to zoom. |
 | **Draw the Outline** | Draw a country's shape with your finger/mouse — scored by how closely it overlaps the real borders (IoU). |
 | **Border Chain** | Name as many of a country's land neighbours as you can before the clock runs out; it chains into neighbours-of-neighbours. |
+| **Rank It** | Put countries in order by population, area, density, GDP or other geographic metrics. |
+| **Scripts & Money** | Identify countries from writing systems, language samples and currencies. |
+| **Pin the Place** | Place capitals and landmarks on a zoomable world map. |
+| **Land Route** | Build a valid country-to-country route using land borders. |
+| **Rivers & Lakes** | Identify highlighted waterways in geographic context. |
+| **Who Am I?** | Combine neighbour, language, currency and regional clues. |
+| **Trace the River** | Draw the course of a river and compare it with the real path. |
+| **Where's That From?** | Match foods, animals, inventions and traditions to their origin. |
+| **Name All** | List every country that matches a rotating geographic theme. |
+| **Mountains & Volcanoes** | Locate famous peaks and volcanoes on the map. |
+| **Color the Flag** | Reconstruct national flags from their real colour palette. |
+| **Geo-Nerd Millionaire** | Climb through progressively harder geography questions with limited lives. |
+
+Daily and weekly challenges mix these mechanics into seeded runs that are the same for every player.
 
 All games share one scoring engine (base points × difficulty × speed bonus × streak),
 a results screen, and a local leaderboard.
@@ -58,6 +72,9 @@ driving the easy/medium/hard pools. Map geometry is Natural Earth TopoJSON
 
 ## Deploying to Vercel
 
-Standard Next.js app — import the repo into Vercel and deploy, no extra config.
-A database/online leaderboard can be added later via Vercel Postgres behind the
-`ScoreStore` interface.
+Standard Next.js app — import the repo into Vercel and deploy. The app works
+without a database. To enable accounts and the online leaderboard, configure a
+Postgres connection (`DATABASE_URL` or a supported Vercel Postgres variable)
+and a strong `AUTH_SECRET`. The optional admin reset endpoint additionally
+requires `ADMIN_RESET_TOKEN`; send it as a Bearer token in the `Authorization`
+header, never in the URL.
