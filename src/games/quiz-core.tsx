@@ -187,6 +187,7 @@ export function QuizGame({
 
   function submitTyped() {
     if (answered) return;
+    if (!typed.trim()) return;
     const res = matchAnswer(typed, round.accepted);
     if (res.status === "near" && res.suggestion) {
       setHint(t("type.almost", { guess: res.suggestion }));
@@ -271,7 +272,11 @@ export function QuizGame({
                     ref={inputRef}
                     value={typed}
                     onChange={(e) => setTyped(e.target.value)}
-                    onKeyDown={(e) => e.key === "Enter" && (answered ? next() : submitTyped())}
+                    onKeyDown={(e) => {
+                      if (e.key !== "Enter") return;
+                      if (answered) next();
+                      else if (typed.trim()) submitTyped();
+                    }}
                     disabled={answered}
                     autoFocus
                     autoComplete="off"
@@ -282,7 +287,13 @@ export function QuizGame({
                     className="h-12 flex-1 rounded-xl border-2 border-border bg-card px-4 text-base outline-none focus:border-primary disabled:opacity-60"
                   />
                   {!answered && (
-                    <Button size="lg" className="px-4" onClick={submitTyped} aria-label={t("type.submit")}>
+                    <Button
+                      size="lg"
+                      className="px-4"
+                      onClick={submitTyped}
+                      disabled={!typed.trim()}
+                      aria-label={t("type.submit")}
+                    >
                       <CornerDownLeft className="h-5 w-5" />
                     </Button>
                   )}
