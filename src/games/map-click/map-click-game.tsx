@@ -44,7 +44,6 @@ export function MapClickGame({ difficulty, roundCount, timed, variant, practice,
 
   const startRef = useRef(Date.now());
   const qStartRef = useRef(Date.now());
-  const wrongRef = useRef(false);
   const lockRef = useRef(false);
   const scoreRef = useRef(0);
   const correctRef = useRef(0);
@@ -61,6 +60,9 @@ export function MapClickGame({ difficulty, roundCount, timed, variant, practice,
       );
       const count = roundCount === 0 ? pool.length : roundCount;
       const picked = pickQuestions(pool, count);
+      const startedAt = Date.now();
+      startRef.current = startedAt;
+      qStartRef.current = startedAt;
       setTargets(picked);
       setTimeLeft(picked.length * TIME_PER_TARGET_MS);
       setReady(true);
@@ -108,7 +110,6 @@ export function MapClickGame({ difficulty, roundCount, timed, variant, practice,
     }
     setIdx((i) => i + 1);
     setWrongCount(0);
-    wrongRef.current = false;
     qStartRef.current = Date.now();
     lockRef.current = false;
   }
@@ -149,7 +150,6 @@ export function MapClickGame({ difficulty, roundCount, timed, variant, practice,
     } else {
       sound.wrong();
       setStreak(0);
-      wrongRef.current = true;
       setFlash({ ccn3, ok: false });
       setTimeout(() => setFlash((cur) => (cur?.ccn3 === ccn3 ? null : cur)), 450);
       // Practice: no penalty, unlimited tries, keep trying until you find it.
