@@ -1,7 +1,3 @@
-Exit code: 0
-Wall time: 1.2 seconds
-Total output lines: 877
-Output:
 import type { Locale } from "@/lib/types";
 
 type Dict = Record<string, string>;
