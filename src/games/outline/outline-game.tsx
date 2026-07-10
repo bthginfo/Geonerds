@@ -9,6 +9,7 @@ import { poolForDifficulty, countryName } from "@/data/countries";
 import { countryAccepted } from "@/games/aliases";
 import { makeChoices, pickQuestions } from "@/games/round-utils";
 import { featuresByCcn3, type CountryFeature } from "@/lib/geo";
+import { isRecognizableOutline } from "@/lib/geometry";
 import { useT } from "@/i18n/I18nProvider";
 
 export function OutlineGame({ difficulty, mode, roundCount, timed, practice, onFinish, onExit }: PlayHandlers) {
@@ -16,28 +17,17 @@ export function OutlineGame({ difficulty, mode, roundCount, timed, practice, onF
   const [features, setFeatures] = useState<Map<string, CountryFeature> | null>(null);
 
   useEffect(() => {
-    // Some bundled 10m geometries are degenerate (e.g. Australia is a 5-point
-    // box); patch them from a small override file before building rounds.
-    Promise.all([
-      featuresByCcn3("10m"),
-      fetch("/geo/outline-overrides.json").then((r) => r.json()).catch(() => ({})),
-    ]).then(([feats, overrides]: [Map<string, CountryFeature>, Record<string, GeoJSON.Geometry>]) => {
-      for (const [ccn3, geometry] of Object.entries(overrides)) {
-        const f = feats.get(ccn3);
-        if (f) feats.set(ccn3, { ...f, geometry } as CountryFeature);
-      }
-      setFeatures(feats);
-    });
+    featuresByCcn3("10m").then(setFeatures);
   }, []);
 
   const rounds = useMemo<QuizRound[]>(() => {
     if (!features) return [];
-    // Micro-states have no recognisable silhouette — their coarse geometry just
-    // blows up into a featureless blob — so keep the outline quiz to countries
-    // with a meaningful shape.
-    const MIN_AREA_KM2 = 2500;
     const pool = poolForDifficulty(difficulty, { requireGeometry: true }).filter(
-      (c) => c.ccn3 && features.has(String(c.ccn3)) && c.area >= MIN_AREA_KM2
+      (country) => {
+        if (!country.ccn3) return false;
+        const feature = features.get(String(country.ccn3));
+        return feature ? isRecognizableOutline(feature.geometry) : false;
+      }
     );
     const count = roundCount === 0 ? pool.length : roundCount;
     const questions = pickQuestions(pool, count);
@@ -48,7 +38,11 @@ export function OutlineGame({ difficulty, mode, roundCount, timed, practice, onF
         key: answer.cca3,
         prompt: (
           <div className="h-64 w-72 max-w-full sm:h-72 sm:w-80">
-            <CountrySilhouette feature={feat} fillClassName="fill-primary" />
+            <CountrySilhouette
+              feature={feat}
+              fillClassName="fill-primary"
+              label={t("outline.imageAlt")}
+            />
           </div>
         ),
         options: choices.map((c) => ({ id: c.cca3, label: countryName(c, locale) })),
