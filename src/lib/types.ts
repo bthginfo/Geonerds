@@ -44,6 +44,7 @@ export type GameId =
   | "mountains"
   | "colorflag"
   | "millionaire"
+  | "expedition"
   | "jigsaw"
   | "connections";
 

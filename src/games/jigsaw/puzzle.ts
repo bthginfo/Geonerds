@@ -6,7 +6,34 @@ export interface JigsawPuzzle {
   pieces: Country[];
 }
 
-const PIECE_COUNTS: Record<Difficulty, number> = { easy: 5, medium: 7, hard: 9 };
+export interface JigsawPresentation {
+  pieceCount: number;
+  namedPieces: boolean;
+  sequential: boolean;
+  exactSlots: boolean;
+  positionMarkers: boolean;
+  tolerance: number;
+}
+
+export interface JigsawTarget {
+  code: string;
+  cx: number;
+  cy: number;
+  tiny: boolean;
+}
+
+export interface JigsawDropBounds {
+  left: number;
+  right: number;
+  top: number;
+  bottom: number;
+}
+
+export const JIGSAW_PRESENTATION: Record<Difficulty, JigsawPresentation> = {
+  easy: { pieceCount: 6, namedPieces: true, sequential: true, exactSlots: true, positionMarkers: true, tolerance: 110 },
+  medium: { pieceCount: 9, namedPieces: false, sequential: false, exactSlots: false, positionMarkers: true, tolerance: 74 },
+  hard: { pieceCount: 12, namedPieces: false, sequential: false, exactSlots: false, positionMarkers: false, tolerance: 52 },
+};
 
 function shuffleWith<T>(values: readonly T[], rng: () => number): T[] {
   const result = [...values];
@@ -18,7 +45,40 @@ function shuffleWith<T>(values: readonly T[], rng: () => number): T[] {
 }
 
 export function jigsawPieceCount(difficulty: Difficulty) {
-  return PIECE_COUNTS[difficulty];
+  return JIGSAW_PRESENTATION[difficulty].pieceCount;
+}
+
+export function targetTolerance(difficulty: Difficulty, tiny: boolean): number {
+  return JIGSAW_PRESENTATION[difficulty].tolerance * (tiny ? 1.65 : 1);
+}
+
+export function nearestJigsawTarget(
+  point: { x: number; y: number },
+  targets: readonly JigsawTarget[],
+  difficulty: Difficulty
+): JigsawTarget | null {
+  let nearest: JigsawTarget | null = null;
+  let nearestDistance = Number.POSITIVE_INFINITY;
+  for (const target of targets) {
+    const distance = Math.hypot(point.x - target.cx, point.y - target.cy);
+    if (distance <= targetTolerance(difficulty, target.tiny) && distance < nearestDistance) {
+      nearest = target;
+      nearestDistance = distance;
+    }
+  }
+  return nearest;
+}
+
+/** A tray tap is selection only; placement starts after a real drag ending on the board. */
+export function isRealBoardDrop(
+  start: { x: number; y: number },
+  end: { x: number; y: number },
+  board: JigsawDropBounds,
+  minimumDistance = 8
+): boolean {
+  return Math.hypot(end.x - start.x, end.y - start.y) >= minimumDistance
+    && end.x >= board.left && end.x <= board.right
+    && end.y >= board.top && end.y <= board.bottom;
 }
 
 export function selectJigsawPuzzle(
@@ -27,7 +87,7 @@ export function selectJigsawPuzzle(
   difficulty: Difficulty,
   rng: () => number = Math.random
 ): JigsawPuzzle | null {
-  const count = PIECE_COUNTS[difficulty];
+  const count = jigsawPieceCount(difficulty);
   const geometric = countries.filter(
     (country) => country.ccn3 && geometryIds.has(String(country.ccn3)) && country.subregion && country.independent
   );
@@ -39,7 +99,8 @@ export function selectJigsawPuzzle(
   }
   const eligible = [...groups.entries()].filter(([, group]) => group.length >= count);
   if (!eligible.length) return null;
-  const [subregion, context] = eligible[Math.floor(rng() * eligible.length)];
+  const [subregion, group] = eligible[Math.floor(rng() * eligible.length)];
+  const context = [...group].sort((a, b) => a.cca3.localeCompare(b.cca3));
   const tierLimit = difficulty === "easy" ? 2 : difficulty === "medium" ? 3 : 4;
   const preferred = context.filter((country) => country.difficulty <= tierLimit);
   const source = preferred.length >= count ? preferred : context;

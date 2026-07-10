@@ -41,6 +41,8 @@ export interface PlayHandlers {
   timed: boolean;
   /** Game-specific variant id (e.g. flag scope); "" if none. */
   variant: string;
+  /** Optional regional constraint supplied by a parent campaign. */
+  scope?: string;
   /** Practice/learn mode: no points, no lives, run through everything; nothing is saved. */
   practice: boolean;
   onFinish: (r: PlayResult) => void;
@@ -147,6 +149,7 @@ export function GameShell({
           roundCount: practice ? 0 : roundCount,
           timed: practice ? false : timed,
           variant,
+          scope: undefined,
           practice,
           onFinish: handleFinish,
           onExit: () => setPhase("setup"),

@@ -36,6 +36,7 @@ export default function SettingsPage() {
   async function clearData() {
     if (!confirm(t("settings.clearConfirm"))) return;
     await scoreStore.clear();
+    localStorage.removeItem("geonerds-expedition");
     localStorage.removeItem("geonerds-settings");
     location.reload();
   }

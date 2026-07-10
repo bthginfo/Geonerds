@@ -21,6 +21,7 @@ import {
   Paintbrush,
   Puzzle,
   Share2,
+  Map,
   type LucideIcon,
 } from "lucide-react";
 import type { AnswerMode, GameId } from "@/lib/types";
@@ -46,18 +47,6 @@ export interface GameConfig {
 
 export const GAMES: GameConfig[] = [
   {
-    id: "jigsaw",
-    icon: Puzzle,
-    gradient: "from-blue-500 to-emerald-500",
-    supportsDifficulty: true,
-  },
-  {
-    id: "connections",
-    icon: Share2,
-    gradient: "from-indigo-500 to-cyan-500",
-    supportsDifficulty: true,
-  },
-  {
     id: "flags",
     icon: Flag,
     gradient: "from-sky-500 to-indigo-500",
@@ -70,6 +59,25 @@ export const GAMES: GameConfig[] = [
       default: "world",
       options: ["world", "Africa", "Americas", "Asia", "Europe", "Oceania"],
     },
+  },
+  {
+    id: "expedition",
+    icon: Map,
+    gradient: "from-emerald-600 via-teal-500 to-sky-500",
+    supportsDifficulty: false,
+    setupNoteKey: "expedition.setupNote",
+  },
+  {
+    id: "jigsaw",
+    icon: Puzzle,
+    gradient: "from-blue-500 to-emerald-500",
+    supportsDifficulty: true,
+  },
+  {
+    id: "connections",
+    icon: Share2,
+    gradient: "from-indigo-500 to-cyan-500",
+    supportsDifficulty: true,
   },
   {
     id: "capitals",

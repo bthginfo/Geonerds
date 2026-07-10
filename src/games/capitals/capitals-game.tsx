@@ -5,7 +5,7 @@ import type { Locale } from "@/lib/types";
 import type { PlayHandlers } from "@/components/game/game-shell";
 import { QuizGame, type QuizRound } from "@/games/quiz-core";
 import { FlagImage } from "@/components/flag-image";
-import { poolForDifficulty, withCapital, countryName } from "@/data/countries";
+import { COUNTRIES, poolForDifficulty, withCapital, countryName } from "@/data/countries";
 import { capitalAccepted, capitalLabel } from "@/games/aliases";
 import { makeChoices, pickQuestions } from "@/games/round-utils";
 import { CITIES, CITY_COUNTRY_CODES, type CityEntry } from "./cities";
@@ -19,13 +19,14 @@ function cityAccepted(c: CityEntry): string[] {
   return [c.en, c.de].filter(Boolean) as string[];
 }
 
-export function CapitalsGame({ difficulty, mode, variant, roundCount, timed, practice, onFinish, onExit }: PlayHandlers) {
+export function CapitalsGame({ difficulty, mode, variant, scope, roundCount, timed, practice, onFinish, onExit }: PlayHandlers) {
   const { t, locale } = useT();
   const cityMode = variant === "cities";
 
   const rounds = useMemo<QuizRound[]>(() => {
     if (cityMode) {
-      const pool = poolForDifficulty(difficulty).filter((c) => CITY_COUNTRY_CODES.has(c.cca3));
+      const source = scope ? COUNTRIES.filter((c) => c.region === scope) : poolForDifficulty(difficulty);
+      const pool = source.filter((c) => CITY_COUNTRY_CODES.has(c.cca3));
       const count = roundCount === 0 ? pool.length : roundCount;
       const questions = pickQuestions(pool, count);
       // Flat list of (city, country) for distractors.
@@ -60,7 +61,8 @@ export function CapitalsGame({ difficulty, mode, variant, roundCount, timed, pra
       });
     }
 
-    const pool = withCapital(poolForDifficulty(difficulty));
+    const source = scope ? COUNTRIES.filter((c) => c.region === scope) : poolForDifficulty(difficulty);
+    const pool = withCapital(source);
     const count = roundCount === 0 ? pool.length : roundCount;
     const questions = pickQuestions(pool, count);
     return questions.map((answer) => {
@@ -81,7 +83,7 @@ export function CapitalsGame({ difficulty, mode, variant, roundCount, timed, pra
       };
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [difficulty, roundCount, cityMode, locale]);
+  }, [difficulty, roundCount, cityMode, locale, scope]);
 
   return (
     <QuizGame

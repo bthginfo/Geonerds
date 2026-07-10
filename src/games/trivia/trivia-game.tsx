@@ -28,11 +28,11 @@ interface TriviaRound {
   accepted: string[];
 }
 
-export function TriviaGame({ difficulty, mode, roundCount, timed, onFinish, onExit }: PlayHandlers) {
+export function TriviaGame({ difficulty, mode, roundCount, timed, scope, onFinish, onExit }: PlayHandlers) {
   const { t, locale } = useT();
 
   const rounds = useMemo<TriviaRound[]>(() => {
-    const pool = poolForDifficulty(difficulty);
+    const pool = poolForDifficulty(difficulty).filter((country) => !scope || country.region === scope);
     const count = roundCount === 0 ? pool.length : roundCount;
     return pickQuestions(pool, count).map((answer) => {
       // Cross-region distractors so the early clues (continent, hemisphere…) help.
@@ -45,7 +45,7 @@ export function TriviaGame({ difficulty, mode, roundCount, timed, onFinish, onEx
         accepted: countryAccepted(answer),
       };
     });
-  }, [difficulty, roundCount, locale]);
+  }, [difficulty, roundCount, locale, scope]);
 
   const total = rounds.length;
   const budget = total * PER_ROUND_BUDGET_MS;

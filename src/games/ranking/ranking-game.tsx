@@ -41,12 +41,12 @@ interface RankRound {
   dir: "desc" | "asc";
 }
 
-export function RankingGame({ difficulty, roundCount, timed, onFinish, onExit }: PlayHandlers) {
+export function RankingGame({ difficulty, roundCount, timed, scope, onFinish, onExit }: PlayHandlers) {
   const { t, locale } = useT();
   const n = difficulty === "easy" ? 3 : difficulty === "hard" ? 5 : 4;
 
   const rounds = useMemo<RankRound[]>(() => {
-    const base = poolForDifficulty(difficulty);
+    const base = poolForDifficulty(difficulty).filter((country) => !scope || country.region === scope);
     const count = roundCount === 0 ? 25 : roundCount;
     const out: RankRound[] = [];
     for (let i = 0; i < count; i++) {
@@ -71,7 +71,7 @@ export function RankingGame({ difficulty, roundCount, timed, onFinish, onExit }:
       out.push({ metric, items: shuffle(picked), sorted, dir });
     }
     return out;
-  }, [difficulty, roundCount, n]);
+  }, [difficulty, roundCount, n, scope]);
 
   const total = rounds.length;
   const budget = total * PER_ROUND_BUDGET_MS;

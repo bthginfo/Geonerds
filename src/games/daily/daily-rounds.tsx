@@ -7,7 +7,32 @@ import { FACT_QUESTIONS } from "@/lib/fact-questions";
 import { DAILY_COUNT, WEEKLY_COUNT, mulberry32, seedFromKey, sampleWith, shuffleWith } from "@/lib/daily";
 import type { QuizRound } from "@/games/quiz-core";
 
-type Builder = (answer: Country, pool: Country[], rng: () => number, locale: Locale) => QuizRound | null;
+type Builder = (answer: Country, pool: Country[], rng: () => number, locale: Locale, maxFactTier: 1 | 2 | 3) => QuizRound | null;
+
+export function uniqueExtreme<T>(items: readonly T[], value: (item: T) => number, direction: "min" | "max"): T | null {
+  if (items.length < 4) return null;
+  const sorted = [...items].sort((a, b) => direction === "min" ? value(a) - value(b) : value(b) - value(a));
+  return value(sorted[0]) === value(sorted[1]) ? null : sorted[0];
+}
+
+export function borderCountOptions(real: number, rng: () => number): number[] | null {
+  if (!Number.isInteger(real) || real < 0) return null;
+  const candidates = shuffleWith(
+    Array.from({ length: 15 }, (_, index) => index).filter((value) => value !== real),
+    rng
+  );
+  const distractors = candidates.slice(0, 3);
+  return distractors.length === 3 ? shuffleWith([real, ...distractors], rng) : null;
+}
+
+export function maxFactTierForDifficulty(difficulty: Difficulty): 1 | 2 | 3 {
+  return difficulty === "easy" ? 1 : difficulty === "medium" ? 2 : 3;
+}
+
+export function eligibleFactQuestions(pool: readonly Country[], maxTier: 1 | 2 | 3) {
+  const poolSet = new Set(pool.map((country) => country.cca3));
+  return FACT_QUESTIONS.filter((question) => question.tier <= maxTier && poolSet.has(question.cca3) && getCountryByCca3(question.cca3));
+}
 
 function opts(items: { id: string; label: string }[], rng: () => number) {
   return shuffleWith(items, rng);
@@ -238,10 +263,106 @@ const builders: Builder[] = [
       factCountry: bigger,
     };
   },
-  // Curated "did you know" fact question (ignores `a`, picks from the library).
+  // Smallest area among four (ties are rejected).
+  (_a, pool, rng, locale) => {
+    const four = sampleWith(pool.filter((country) => country.area > 0), 4, rng);
+    if (four.length < 4) return null;
+    const correct = uniqueExtreme(four, (country) => country.area, "min");
+    if (!correct) return null;
+    return {
+      key: `min-area-${four.map((country) => country.cca3).sort().join("-")}`,
+      prompt: <Q>{qt(locale, "Which country is the smallest by area?", "Welches Land ist flächenmäßig am kleinsten?")}</Q>,
+      options: opts(four.map((country) => ({ id: country.cca3, label: countryName(country, locale) })), rng),
+      correctId: correct.cca3,
+      accepted: countryAccepted(correct),
+      answerLabel: countryName(correct, locale),
+      factCountry: correct,
+    };
+  },
+  // Smallest population among four (ties are rejected).
+  (_a, pool, rng, locale) => {
+    const four = sampleWith(pool.filter((country) => country.population > 0), 4, rng);
+    if (four.length < 4) return null;
+    const correct = uniqueExtreme(four, (country) => country.population, "min");
+    if (!correct) return null;
+    return {
+      key: `min-pop-${four.map((country) => country.cca3).sort().join("-")}`,
+      prompt: <Q>{qt(locale, "Which country has the smallest population?", "Welches Land hat die kleinste Bevölkerung?")}</Q>,
+      options: opts(four.map((country) => ({ id: country.cca3, label: countryName(country, locale) })), rng),
+      correctId: correct.cca3,
+      accepted: countryAccepted(correct),
+      answerLabel: countryName(correct, locale),
+      factCountry: correct,
+    };
+  },
+  // Most land neighbours among four (ties are rejected).
+  (_a, pool, rng, locale) => {
+    const four = sampleWith(pool.filter((country) => country.borders.length > 0), 4, rng);
+    if (four.length < 4) return null;
+    const correct = uniqueExtreme(four, (country) => country.borders.length, "max");
+    if (!correct) return null;
+    return {
+      key: `max-borders-${four.map((country) => country.cca3).sort().join("-")}`,
+      prompt: <Q>{qt(locale, "Which country has the most land neighbours?", "Welches Land hat die meisten Landnachbarn?")}</Q>,
+      options: opts(four.map((country) => ({ id: country.cca3, label: countryName(country, locale) })), rng),
+      correctId: correct.cca3,
+      accepted: countryAccepted(correct),
+      answerLabel: countryName(correct, locale),
+      factCountry: correct,
+    };
+  },
+  // Exact border count with unique numeric distractors.
+  (a, _pool, rng, locale) => {
+    const values = borderCountOptions(a.borders.length, rng);
+    if (!values) return null;
+    const correct = String(a.borders.length);
+    return {
+      key: `border-count-${a.cca3}`,
+      prompt: <Q>{qt(locale, `How many countries border ${countryName(a, locale)}?`, `An wie viele Länder grenzt ${countryName(a, locale)}?`)}</Q>,
+      options: values.map((value) => ({ id: String(value), label: String(value) })),
+      correctId: correct,
+      accepted: [correct],
+      answerLabel: correct,
+      factCountry: a,
+    };
+  },
+  // Island/no-land-border country among mainland distractors.
   (a, pool, rng, locale) => {
-    const poolSet = new Set(pool.map((c) => c.cca3));
-    const cand = FACT_QUESTIONS.filter((fq) => poolSet.has(fq.cca3) && getCountryByCca3(fq.cca3));
+    const islands = pool.filter((country) => country.borders.length === 0 && !country.landlocked);
+    const mainland = pool.filter((country) => country.borders.length > 0);
+    if (!islands.length || mainland.length < 3) return null;
+    const correct = islands.find((country) => country.cca3 === a.cca3) ?? sampleWith(islands, 1, rng)[0];
+    const distractors = sampleWith(mainland, 3, rng);
+    return {
+      key: `island-${correct.cca3}`,
+      prompt: <Q>{qt(locale, "Which of these countries has no land border?", "Welches dieser Länder hat keine Landgrenze?")}</Q>,
+      options: opts([correct, ...distractors].map((country) => ({ id: country.cca3, label: countryName(country, locale) })), rng),
+      correctId: correct.cca3,
+      accepted: countryAccepted(correct),
+      answerLabel: countryName(correct, locale),
+      factCountry: correct,
+    };
+  },
+  // Southern-hemisphere country among northern distractors.
+  (a, pool, rng, locale) => {
+    const south = pool.filter((country) => country.latlng && country.latlng[0] < 0);
+    const north = pool.filter((country) => country.latlng && country.latlng[0] > 0);
+    if (!south.length || north.length < 3) return null;
+    const correct = south.find((country) => country.cca3 === a.cca3) ?? sampleWith(south, 1, rng)[0];
+    const distractors = sampleWith(north, 3, rng);
+    return {
+      key: `southern-${correct.cca3}`,
+      prompt: <Q>{qt(locale, "Which country lies in the Southern Hemisphere?", "Welches Land liegt auf der Südhalbkugel?")}</Q>,
+      options: opts([correct, ...distractors].map((country) => ({ id: country.cca3, label: countryName(country, locale) })), rng),
+      correctId: correct.cca3,
+      accepted: countryAccepted(correct),
+      answerLabel: countryName(correct, locale),
+      factCountry: correct,
+    };
+  },
+  // Curated "did you know" fact question (ignores `a`, picks from the library).
+  (_a, pool, rng, locale, maxFactTier) => {
+    const cand = eligibleFactQuestions(pool, maxFactTier);
     if (!cand.length) return null;
     const fq = sampleWith(cand, 1, rng)[0];
     const ans = getCountryByCca3(fq.cca3);
@@ -249,7 +370,7 @@ const builders: Builder[] = [
     const distract = sampleWith(pool.filter((c) => c.cca3 !== ans.cca3), 3, rng);
     if (distract.length < 3) return null;
     return {
-      key: `fact-${fq.cca3}-${fq.q.en.length}`,
+      key: `fact-${fq.cca3}-${seedFromKey(fq.q.en)}`,
       prompt: <div className="text-center text-base font-semibold">{qt(locale, fq.q.en, fq.q.de)}</div>,
       options: opts([ans, ...distract].map((c) => ({ id: c.cca3, label: countryName(c, locale) })), rng),
       correctId: ans.cca3,
@@ -260,8 +381,19 @@ const builders: Builder[] = [
   },
 ];
 
+export const CHALLENGE_BUILDER_COUNT = builders.length;
+
 function popPrompt(locale: Locale) {
   return locale === "de" ? "Welches Land hat mehr Einwohner?" : "Which country has more people?";
+}
+
+function isValidChoiceRound(round: QuizRound): boolean {
+  if (!round.options?.length) return true;
+  const ids = round.options.map((option) => option.id);
+  const labels = round.options.map((option) => option.label);
+  return new Set(ids).size === ids.length
+    && new Set(labels).size === labels.length
+    && ids.filter((id) => id === round.correctId).length === 1;
 }
 
 /** Build a deterministic set of challenge rounds. */
@@ -273,23 +405,44 @@ function generateChallengeRounds(
 ): QuizRound[] {
   const rng = mulberry32(seedFromKey(key));
   const pool = withCapital(poolForDifficulty(difficulty));
-  const answers = sampleWith(pool, count * 4, rng);
+  const answers = sampleWith(pool, pool.length, rng);
   const rounds: QuizRound[] = [];
   const usedKeys = new Set<string>();
-  let bi = 0;
-  for (const a of answers) {
-    if (rounds.length >= count) break;
-    // Try builders starting at a rotating offset so the mix stays varied, but
-    // fall through when a builder can't handle this country (e.g. landlocked).
-    for (let k = 0; k < builders.length; k++) {
-      const r = builders[(bi + k) % builders.length](a, pool, rng, locale);
-      if (r && !usedKeys.has(r.key)) {
-        usedKeys.add(r.key);
-        rounds.push(r);
-        bi += 1;
-        break;
-      }
+  const usedAnswerCountries = new Set<string>();
+  const builderUses = Array.from({ length: builders.length }, () => 0);
+  const maxFactTier = maxFactTierForDifficulty(difficulty);
+  let attempt = 0;
+
+  while (rounds.length < count && attempt < answers.length * 4) {
+    const answer = answers[attempt % answers.length];
+    const offset = attempt % builders.length;
+    const order = builders.map((_, index) => index).sort((left, right) =>
+      builderUses[left] - builderUses[right]
+      || ((left - offset + builders.length) % builders.length) - ((right - offset + builders.length) % builders.length)
+    );
+    for (const index of order) {
+      const round = builders[index](answer, pool, rng, locale, maxFactTier);
+      const answerCountry = round?.factCountry?.cca3;
+      if (!round || usedKeys.has(round.key) || (answerCountry && usedAnswerCountries.has(answerCountry)) || !isValidChoiceRound(round)) continue;
+      usedKeys.add(round.key);
+      if (answerCountry) usedAnswerCountries.add(answerCountry);
+      builderUses[index] += 1;
+      rounds.push(round);
+      break;
     }
+    attempt += 1;
+  }
+
+  // Safe deterministic fallback: flags have unique country IDs/names and can
+  // fill any remaining slots without weakening the integrity guarantees.
+  for (const answer of answers) {
+    if (rounds.length >= count) break;
+    if (usedAnswerCountries.has(answer.cca3)) continue;
+    const round = builders[0](answer, pool, rng, locale, maxFactTier);
+    if (!round || usedKeys.has(round.key) || !isValidChoiceRound(round)) continue;
+    usedKeys.add(round.key);
+    usedAnswerCountries.add(answer.cca3);
+    rounds.push(round);
   }
   return rounds;
 }

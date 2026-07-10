@@ -12,15 +12,15 @@ import { sample, shuffle } from "@/lib/utils";
 import { useT } from "@/i18n/I18nProvider";
 import type { Country } from "@/lib/types";
 
-export function FlagGame({ difficulty, mode, roundCount, timed, variant, practice, onFinish, onExit }: PlayHandlers) {
+export function FlagGame({ difficulty, mode, roundCount, timed, variant, scope, practice, onFinish, onExit }: PlayHandlers) {
   const { locale } = useT();
 
   const rounds = useMemo<QuizRound[]>(() => {
     // World uses the difficulty tiers; a continent uses all its countries.
-    const pool =
-      !variant || variant === "world"
-        ? poolForDifficulty(difficulty)
-        : COUNTRIES.filter((c) => c.region === variant);
+    const requestedRegion = scope || (variant && variant !== "world" ? variant : undefined);
+    const pool = requestedRegion
+      ? COUNTRIES.filter((c) => c.region === requestedRegion)
+      : poolForDifficulty(difficulty);
     const count = roundCount === 0 ? pool.length : roundCount;
     const poolCodes = new Set(pool.map((c) => c.cca3));
     const questions = pickQuestions(pool, count);
@@ -55,7 +55,7 @@ export function FlagGame({ difficulty, mode, roundCount, timed, variant, practic
       };
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [difficulty, roundCount, variant]);
+  }, [difficulty, roundCount, variant, scope]);
 
   return (
     <QuizGame

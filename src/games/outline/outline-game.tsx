@@ -12,7 +12,7 @@ import { featuresByCcn3, type CountryFeature } from "@/lib/geo";
 import { isRecognizableOutline } from "@/lib/geometry";
 import { useT } from "@/i18n/I18nProvider";
 
-export function OutlineGame({ difficulty, mode, roundCount, timed, practice, onFinish, onExit }: PlayHandlers) {
+export function OutlineGame({ difficulty, mode, roundCount, timed, scope, practice, onFinish, onExit }: PlayHandlers) {
   const { t, locale } = useT();
   const [features, setFeatures] = useState<Map<string, CountryFeature> | null>(null);
 
@@ -24,6 +24,7 @@ export function OutlineGame({ difficulty, mode, roundCount, timed, practice, onF
     if (!features) return [];
     const pool = poolForDifficulty(difficulty, { requireGeometry: true }).filter(
       (country) => {
+        if (scope && country.region !== scope) return false;
         if (!country.ccn3) return false;
         const feature = features.get(String(country.ccn3));
         return feature ? isRecognizableOutline(feature.geometry) : false;
@@ -53,7 +54,7 @@ export function OutlineGame({ difficulty, mode, roundCount, timed, practice, onF
       };
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [features, difficulty, roundCount]);
+  }, [features, difficulty, roundCount, scope]);
 
   if (!features || rounds.length === 0) {
     return (

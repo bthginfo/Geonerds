@@ -42,11 +42,11 @@ function roundPeople(n: number): string {
   return String(n);
 }
 
-export function NeighborsGame({ difficulty, mode, roundCount, timed, onFinish, onExit }: PlayHandlers) {
+export function NeighborsGame({ difficulty, mode, roundCount, timed, scope, onFinish, onExit }: PlayHandlers) {
   const { t, locale } = useT();
 
   const rounds = useMemo<Round[]>(() => {
-    const pool = poolForDifficulty(difficulty);
+    const pool = poolForDifficulty(difficulty).filter((country) => !scope || country.region === scope);
     const candidates = pool.filter((c) => c.region && (c.languages.length > 0 || c.currencies.length > 0));
     const count = roundCount === 0 ? candidates.length : roundCount;
 
@@ -95,7 +95,7 @@ export function NeighborsGame({ difficulty, mode, roundCount, timed, onFinish, o
       return { answer, clues, options, accepted: countryAccepted(answer) };
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [difficulty, roundCount, locale]);
+  }, [difficulty, roundCount, locale, scope]);
 
   const total = rounds.length;
   const budget = total * PER_ROUND_BUDGET_MS;

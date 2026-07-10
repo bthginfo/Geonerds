@@ -22,7 +22,13 @@ function build(options: string[], correct: string): { options: string[]; correct
   return { options: opts, correctIndex: opts.indexOf(correct) };
 }
 
-type Builder = (pool: Country[], locale: Locale) => Omit<GnQuestion, "points"> | null;
+type Builder = (pool: Country[], locale: Locale, maxFactTier: 1 | 2 | 3) => Omit<GnQuestion, "points"> | null;
+
+function uniqueMaximum(pool: readonly Country[], value: (country: Country) => number): Country | null {
+  if (pool.length < 4) return null;
+  const sorted = [...pool].sort((a, b) => value(b) - value(a));
+  return value(sorted[0]) === value(sorted[1]) ? null : sorted[0];
+}
 
 const builders: Record<string, Builder> = {
   capital(pool, locale) {
@@ -97,6 +103,27 @@ const builders: Record<string, Builder> = {
     const correct = four.reduce((a, b) => (b.population > a.population ? b : a));
     const { options, correctIndex } = build(four.map((c) => countryName(c, locale)), countryName(correct, locale));
     return { text: translate(locale, "gn.q.largestPop"), options, correctIndex, factCca3: correct.cca3 };
+  },
+  highestDensity(pool, locale) {
+    const four = sample(pool.filter((country) => country.population > 0 && country.area > 0), 4);
+    const correct = uniqueMaximum(four, (country) => country.population / country.area);
+    if (!correct) return null;
+    const { options, correctIndex } = build(four.map((country) => countryName(country, locale)), countryName(correct, locale));
+    return { text: translate(locale, "gn.q.highestDensity"), options, correctIndex, factCca3: correct.cca3 };
+  },
+  largestGdp(pool, locale) {
+    const four = sample(pool.filter((country) => (country.gdp ?? 0) > 0), 4);
+    const correct = uniqueMaximum(four, (country) => country.gdp ?? 0);
+    if (!correct) return null;
+    const { options, correctIndex } = build(four.map((country) => countryName(country, locale)), countryName(correct, locale));
+    return { text: translate(locale, "gn.q.largestGdp"), options, correctIndex, factCca3: correct.cca3 };
+  },
+  northernmost(pool, locale) {
+    const four = sample(pool.filter((country) => country.latlng && Number.isFinite(country.latlng[0])), 4);
+    const correct = uniqueMaximum(four, (country) => country.latlng?.[0] ?? -90);
+    if (!correct) return null;
+    const { options, correctIndex } = build(four.map((country) => countryName(country, locale)), countryName(correct, locale));
+    return { text: translate(locale, "gn.q.northernmost"), options, correctIndex, factCca3: correct.cca3 };
   },
   neighbor(pool, locale) {
     const c = pickOne(pool.filter((x) => x.borders.length));
@@ -185,9 +212,9 @@ const builders: Record<string, Builder> = {
     return { text: translate(locale, "gn.q.borderCount", { c: countryName(c, locale) }), options, correctIndex, factCca3: c.cca3 };
   },
   // Curated "did you know" fact question — the answer is a country.
-  factTrivia(pool, locale) {
+  factTrivia(pool, locale, maxFactTier) {
     const poolSet = new Set(pool.map((c) => c.cca3));
-    const candidates = FACT_QUESTIONS.filter((fq) => poolSet.has(fq.cca3) && getCountryByCca3(fq.cca3));
+    const candidates = FACT_QUESTIONS.filter((fq) => fq.tier <= maxFactTier && poolSet.has(fq.cca3) && getCountryByCca3(fq.cca3));
     if (!candidates.length) return null;
     const fq = pickOne(candidates);
     const answer = getCountryByCca3(fq.cca3)!;
@@ -199,14 +226,16 @@ const builders: Record<string, Builder> = {
   },
 };
 
+export const GN_BUILDER_COUNT = Object.keys(builders).length;
+
 function allowedBuilders(round: number): string[] {
   if (round < 3) return ["capital", "continent", "largestArea", "smallestArea", "factTrivia"];
   if (round < 6)
-    return ["capital", "continent", "currency", "countryByCapital", "largestArea", "largestPop", "smallestArea", "smallestPop", "island", "factTrivia"];
+    return ["capital", "continent", "currency", "countryByCapital", "largestArea", "largestPop", "highestDensity", "smallestArea", "smallestPop", "island", "factTrivia"];
   if (round < 10)
-    return ["capital", "countryByCapital", "currency", "language", "largestArea", "largestPop", "smallestArea", "smallestPop", "neighbor", "landlocked", "island", "southern", "mostNeighbours", "borderCount", "factTrivia"];
+    return ["capital", "countryByCapital", "currency", "language", "largestArea", "largestPop", "highestDensity", "largestGdp", "northernmost", "smallestArea", "smallestPop", "neighbor", "landlocked", "island", "southern", "mostNeighbours", "borderCount", "factTrivia"];
   // Late game leans on the trickier builders.
-  return ["countryByCapital", "currency", "language", "neighbor", "landlocked", "capital", "smallestPop", "southern", "mostNeighbours", "borderCount", "factTrivia"];
+  return ["countryByCapital", "currency", "language", "neighbor", "landlocked", "capital", "smallestPop", "southern", "mostNeighbours", "borderCount", "highestDensity", "largestGdp", "northernmost", "factTrivia"];
 }
 
 export function generateQuestion(round: number, locale: Locale): GnQuestion {
@@ -217,12 +246,13 @@ export function generateQuestion(round: number, locale: Locale): GnQuestion {
   let pool = COUNTRIES.filter((c) => c.difficulty <= maxTier && c.difficulty >= minTier);
   if (pool.length < 8) pool = COUNTRIES.filter((c) => c.difficulty <= maxTier);
   const points = 100 + round * 50;
+  const maxFactTier: 1 | 2 | 3 = round < 3 ? 1 : round < 8 ? 2 : 3;
   const names = allowedBuilders(round);
   for (let i = 0; i < 30; i++) {
-    const q = builders[pickOne(names)](pool, locale);
+    const q = builders[pickOne(names)](pool, locale, maxFactTier);
     if (q) return { ...q, points };
   }
   // Fallback: capital from the whole world.
-  const q = builders.capital(COUNTRIES, locale)!;
+  const q = builders.capital(COUNTRIES, locale, maxFactTier)!;
   return { ...q, points };
 }

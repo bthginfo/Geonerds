@@ -29,8 +29,10 @@ import { ColorFlagGame } from "@/games/colorflag/color-flag-game";
 import { GeoNerdGame } from "@/games/geonerd/geonerd-game";
 import { JigsawGame } from "@/games/jigsaw/jigsaw-game";
 import { ConnectionsGame } from "@/games/connections/connections-game";
+import { ExpeditionGame } from "@/games/expedition/expedition-game";
 
 const COMPONENTS: Record<GameId, (h: PlayHandlers) => React.ReactNode> = {
+  expedition: (h) => <ExpeditionGame {...h} />,
   jigsaw: (h) => <JigsawGame {...h} />,
   connections: (h) => <ConnectionsGame {...h} />,
   flags: (h) => <FlagGame {...h} />,

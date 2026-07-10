@@ -6,6 +6,7 @@ export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 const GAME_IDS = new Set([
+  "expedition",
   "jigsaw",
   "connections",
   "flags",

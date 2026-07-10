@@ -11,7 +11,7 @@ import { simplifyCurrency } from "@/lib/currency";
 import { findScript, loadScriptFonts } from "./scripts";
 import { useT } from "@/i18n/I18nProvider";
 
-export function LanguagesGame({ difficulty, roundCount, timed, practice, onFinish, onExit }: PlayHandlers) {
+export function LanguagesGame({ difficulty, roundCount, timed, scope, practice, onFinish, onExit }: PlayHandlers) {
   const { t, locale } = useT();
 
   useEffect(() => {
@@ -19,7 +19,7 @@ export function LanguagesGame({ difficulty, roundCount, timed, practice, onFinis
   }, []);
 
   const rounds = useMemo<QuizRound[]>(() => {
-    const pool = poolForDifficulty(difficulty).filter((c) => c.currencies.length > 0 || findScript(c));
+    const pool = poolForDifficulty(difficulty).filter((c) => (!scope || c.region === scope) && (c.currencies.length > 0 || findScript(c)));
     const count = roundCount === 0 ? pool.length : roundCount;
     // Bias toward script-capable countries so language clues show up often.
     const scriptCountries = pool.filter((c) => findScript(c));
@@ -96,7 +96,7 @@ export function LanguagesGame({ difficulty, roundCount, timed, practice, onFinis
       };
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [difficulty, roundCount]);
+  }, [difficulty, roundCount, scope]);
 
   return (
     <QuizGame
