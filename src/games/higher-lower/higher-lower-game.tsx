@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { ChevronUp, ChevronDown, Check, X } from "lucide-react";
 import type { Country } from "@/lib/types";
@@ -15,7 +15,17 @@ import { useT } from "@/i18n/I18nProvider";
 import { pickOne, formatNumber, cn } from "@/lib/utils";
 
 type Metric = "population" | "area" | "density" | "gdp" | "neighbors";
-const METRICS: Metric[] = ["population", "area", "density", "gdp", "neighbors"];
+const METRIC_DECK: Metric[] = [
+  "population",
+  "area",
+  "density",
+  "gdp",
+  "population",
+  "area",
+  "density",
+  "gdp",
+  "neighbors",
+];
 const MAX_LIVES = 3;
 
 function metricValue(c: Country, m: Metric): number {
@@ -66,14 +76,13 @@ interface Pair {
 }
 
 function nextPair(prev?: Country): Pair {
-  const metric = pickOne<Metric>(METRICS);
+  const metric = pickOne<Metric>(METRIC_DECK);
   const pool = metricPool(metric);
   const a = prev && pool.includes(prev) ? prev : pickOne(pool);
-  let b = pickOne(pool);
-  let guard = 0;
-  while ((b.cca3 === a.cca3 || metricValue(b, metric) === metricValue(a, metric)) && guard++ < 50) {
-    b = pickOne(pool);
-  }
+  const validOpponents = pool.filter(
+    (country) => country.cca3 !== a.cca3 && metricValue(country, metric) !== metricValue(a, metric)
+  );
+  const b = pickOne(validOpponents);
   return { a, b, metric };
 }
 
@@ -89,6 +98,15 @@ export function HigherLowerGame({ onFinish, onExit }: PlayHandlers) {
   const [revealed, setRevealed] = useState(false);
   const [lastCorrect, setLastCorrect] = useState(false);
   const startRef = useRef(Date.now());
+  const transitionTimerRef = useRef<number | null>(null);
+  const hitsRef = useRef<string[]>([]);
+
+  useEffect(
+    () => () => {
+      if (transitionTimerRef.current !== null) window.clearTimeout(transitionTimerRef.current);
+    },
+    []
+  );
 
   const aVal = metricValue(pair.a, pair.metric);
   const bVal = metricValue(pair.b, pair.metric);
@@ -103,6 +121,7 @@ export function HigherLowerGame({ onFinish, onExit }: PlayHandlers) {
 
     if (isCorrect) {
       sound.correct();
+      hitsRef.current.push(pair.b.cca3);
       const earned = scoreForAnswer({ correct: true, difficulty: "medium" });
       setScore((s) => s + earned);
       setCorrect((c) => c + 1);
@@ -117,7 +136,7 @@ export function HigherLowerGame({ onFinish, onExit }: PlayHandlers) {
       setLives((l) => l - 1);
     }
 
-    setTimeout(() => {
+    transitionTimerRef.current = window.setTimeout(() => {
       const livesLeft = lives - (isCorrect ? 0 : 1);
       if (livesLeft <= 0) {
         onFinish({
@@ -127,6 +146,7 @@ export function HigherLowerGame({ onFinish, onExit }: PlayHandlers) {
           bestStreak: Math.max(bestStreak, isCorrect ? streak + 1 : bestStreak),
           durationMs: Date.now() - startRef.current,
           mode: "endless",
+          countryHits: hitsRef.current,
         });
         return;
       }
