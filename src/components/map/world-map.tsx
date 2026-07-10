@@ -1,11 +1,12 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import { geoNaturalEarth1, geoPath, geoArea, type GeoProjection } from "d3-geo";
+import { geoNaturalEarth1, geoPath, type GeoProjection } from "d3-geo";
 import { select } from "d3-selection";
 import { zoom, zoomIdentity, type ZoomBehavior } from "d3-zoom";
 import { Plus, Minus } from "lucide-react";
 import { loadCountries, type CountryFeature } from "@/lib/geo";
+import { geometryAreaScore, largestPolygonGeometry } from "@/lib/geometry";
 
 const W = 980;
 const H = 500;
@@ -13,21 +14,7 @@ const H = 500;
 /** The biggest landmass of a feature — avoids far-flung territories skewing
  *  a country's centroid / bounds (e.g. French Guiana, Alaska). */
 function largestGeom(f: GeoJSON.Feature): GeoJSON.Feature | GeoJSON.Geometry {
-  const geom = f.geometry;
-  if (geom && geom.type === "MultiPolygon") {
-    let best: GeoJSON.Polygon | null = null;
-    let bestArea = -1;
-    for (const coordinates of geom.coordinates) {
-      const poly: GeoJSON.Polygon = { type: "Polygon", coordinates };
-      const a = geoArea(poly);
-      if (a > bestArea) {
-        bestArea = a;
-        best = poly;
-      }
-    }
-    return best ?? f;
-  }
-  return f;
+  return (f.geometry && largestPolygonGeometry(f.geometry)) ?? f;
 }
 
 // Map id-less Natural Earth features onto the country they belong to.
@@ -118,7 +105,7 @@ export function WorldMap({
           d: path(f as unknown as GeoJSON.Feature) ?? "",
           cx: c[0],
           cy: c[1],
-          area: geoArea(f as unknown as GeoJSON.Feature),
+          area: geometryAreaScore(f.geometry),
         };
       });
   }, [features, projection]);
