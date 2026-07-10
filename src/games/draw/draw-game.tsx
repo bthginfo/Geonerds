@@ -1,13 +1,14 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { geoMercator, geoArea } from "d3-geo";
+import { geoMercator } from "d3-geo";
 import { Loader2, Eraser, Check, ArrowRight } from "lucide-react";
 import type { Country } from "@/lib/types";
 import type { PlayHandlers } from "@/components/game/game-shell";
 import { poolForDifficulty, countryName } from "@/data/countries";
 import { pickQuestions } from "@/games/round-utils";
 import { featuresByCcn3, type CountryFeature } from "@/lib/geo";
+import { isRecognizableOutline, largestPolygonGeometry } from "@/lib/geometry";
 import { largestRing, shapeOverlap, type Point } from "@/lib/draw-score";
 import { scoreForDrawing } from "@/lib/scoring";
 import { GameTopBar, ScorePill, StreakPill, RoundPill } from "@/components/game/hud";
@@ -36,20 +37,12 @@ function normalizeToBox(points: Point[], size: number): Point[] {
   return points.map(([x, y]) => [(x - minX) * scale + offX, (y - minY) * scale + offY]);
 }
 
-function largestPolygonFeature(geometry: GeoJSON.Geometry): GeoJSON.Feature {
-  if (geometry.type === "MultiPolygon") {
-    let best = geometry.coordinates[0];
-    let bestA = -1;
-    for (const coords of geometry.coordinates) {
-      const a = geoArea({ type: "Polygon", coordinates: coords } as GeoJSON.Polygon);
-      if (a > bestA) {
-        bestA = a;
-        best = coords;
-      }
-    }
-    return { type: "Feature", properties: {}, geometry: { type: "Polygon", coordinates: best } };
-  }
-  return { type: "Feature", properties: {}, geometry };
+function largestPolygonFeature(geometry: GeoJSON.Geometry): GeoJSON.Feature<GeoJSON.Geometry> {
+  return {
+    type: "Feature",
+    properties: {},
+    geometry: largestPolygonGeometry(geometry) ?? geometry,
+  };
 }
 
 export function DrawGame({ difficulty, roundCount, onFinish, onExit }: PlayHandlers) {
@@ -73,7 +66,11 @@ export function DrawGame({ difficulty, roundCount, onFinish, onExit }: PlayHandl
   useEffect(() => {
     featuresByCcn3("10m").then((feats) => {
       const pool = poolForDifficulty(difficulty, { requireGeometry: true }).filter(
-        (c) => c.ccn3 && feats.has(String(c.ccn3))
+        (country) => {
+          if (!country.ccn3) return false;
+          const feature = feats.get(String(country.ccn3));
+          return feature ? isRecognizableOutline(feature.geometry) : false;
+        }
       );
       setFeatures(feats);
       const count = roundCount === 0 ? pool.length : roundCount;
@@ -90,7 +87,7 @@ export function DrawGame({ difficulty, roundCount, onFinish, onExit }: PlayHandl
     // Fit to the main landmass so the shape fills the canvas and reads clearly.
     const mainland = largestPolygonFeature(feat.geometry);
     const projection = geoMercator().fitExtent([[12, 12], [R - 12, R - 12]], mainland);
-    return largestRing(feat.geometry, (c) => projection(c) ?? null);
+    return largestRing(mainland.geometry, (c) => projection(c) ?? null);
   }, [features, target]);
 
   const redraw = useCallback(() => {
