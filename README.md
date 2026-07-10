@@ -16,6 +16,8 @@ Deploys cleanly to Vercel.
 | **Outline Quiz** | Identify a country from its silhouette alone. |
 | **Higher or Lower** | Top-Trumps style: compare countries by population, area, density or GDP. Endless streak mode. |
 | **Find on Map** | Tap the right country on an interactive world map; its flag pins to the map so you can track progress. Pinch/scroll to zoom. |
+| **Map Jigsaw** | Drag or tap country-shaped pieces into a regional atlas, with accessible padded targets for tiny states. |
+| **Geo Connections** | Build a country chain through borders, shared languages, currencies and subregions. |
 | **Draw the Outline** | Draw a country's shape with your finger/mouse — scored by how closely it overlaps the real borders (IoU). |
 | **Border Chain** | Name as many of a country's land neighbours as you can before the clock runs out; it chains into neighbours-of-neighbours. |
 | **Rank It** | Put countries in order by population, area, density, GDP or other geographic metrics. |

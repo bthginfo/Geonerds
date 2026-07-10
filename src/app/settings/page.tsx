@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useTheme } from "next-themes";
-import { Languages, Palette, Volume2, Database } from "lucide-react";
+import { Languages, Palette, Volume2, Database, Vibrate } from "lucide-react";
 import { AccountPanel } from "@/components/account/account-panel";
 import { useT } from "@/i18n/I18nProvider";
 import { useSettings } from "@/store/settings";
@@ -17,6 +17,8 @@ export default function SettingsPage() {
   const setLocale = useSettings((s) => s.setLocale);
   const sound = useSettings((s) => s.sound);
   const setSound = useSettings((s) => s.setSound);
+  const haptics = useSettings((s) => s.haptics);
+  const setHaptics = useSettings((s) => s.setHaptics);
   const { theme, setTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
   useEffect(() => setMounted(true), []);
@@ -81,6 +83,20 @@ export default function SettingsPage() {
               sound ? "translate-x-5" : "translate-x-0"
             )}
           />
+        </button>
+      </Section>
+
+      <Section icon={<Vibrate className="h-5 w-5" />} title={t("settings.haptics")}>
+        <button
+          role="switch"
+          aria-checked={haptics}
+          onClick={() => setHaptics(!haptics)}
+          className={cn(
+            "inline-flex h-7 w-12 shrink-0 items-center rounded-full px-0.5 transition-colors",
+            haptics ? "bg-primary" : "bg-input"
+          )}
+        >
+          <span className={cn("inline-block h-6 w-6 rounded-full bg-white shadow transition-transform duration-200", haptics ? "translate-x-5" : "translate-x-0")} />
         </button>
       </Section>
 

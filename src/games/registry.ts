@@ -19,6 +19,8 @@ import {
   ListChecks,
   Mountain,
   Paintbrush,
+  Puzzle,
+  Share2,
   type LucideIcon,
 } from "lucide-react";
 import type { AnswerMode, GameId } from "@/lib/types";
@@ -43,6 +45,18 @@ export interface GameConfig {
 }
 
 export const GAMES: GameConfig[] = [
+  {
+    id: "jigsaw",
+    icon: Puzzle,
+    gradient: "from-blue-500 to-emerald-500",
+    supportsDifficulty: true,
+  },
+  {
+    id: "connections",
+    icon: Share2,
+    gradient: "from-indigo-500 to-cyan-500",
+    supportsDifficulty: true,
+  },
   {
     id: "flags",
     icon: Flag,

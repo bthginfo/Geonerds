@@ -43,7 +43,9 @@ export type GameId =
   | "nameall"
   | "mountains"
   | "colorflag"
-  | "millionaire";
+  | "millionaire"
+  | "jigsaw"
+  | "connections";
 
 export type Difficulty = "easy" | "medium" | "hard";
 

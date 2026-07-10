@@ -260,6 +260,13 @@ export function WorldMap({
             const isFlash = flashCcn3 === d.ccn3;
             return (
               <g key={`dot-${d.ccn3}`}>
+                <circle
+                  cx={p[0]}
+                  cy={p[1]}
+                  r={dotR * 2.2}
+                  className="fill-none stroke-rose-500/40"
+                  style={{ strokeWidth: 1.25 / t.k, strokeDasharray: `${2 / t.k} ${2 / t.k}` }}
+                />
                 {/* Invisible, larger tap target for fat fingers on mobile. */}
                 <circle data-ccn3={d.ccn3} cx={p[0]} cy={p[1]} r={dotHitR} className="fill-transparent" />
                 <circle

@@ -8,13 +8,15 @@ import { WorldMap, type MapDot } from "@/components/map/world-map";
 import { FlagImage } from "@/components/flag-image";
 import { GameTopBar, ScorePill, StreakPill, RoundPill, TimerPill } from "@/components/game/hud";
 import { Compass } from "@/components/map/compass";
-import { COUNTRIES, poolForDifficulty, countryName } from "@/data/countries";
+import { COUNTRIES, getCountryByCcn3, poolForDifficulty, countryName } from "@/data/countries";
 import { pickQuestions } from "@/games/round-utils";
 import { featuresByCcn3 } from "@/lib/geo";
 import { scoreForAnswer } from "@/lib/scoring";
 import { sound } from "@/lib/sound";
 import { useT } from "@/i18n/I18nProvider";
 import { Button } from "@/components/ui/button";
+import { haptic } from "@/lib/haptics";
+import { haversineKm } from "@/lib/utils";
 
 const DOT_THRESHOLD_KM2 = 25_000;
 const MAX_WRONG = 3;
@@ -41,6 +43,7 @@ export function MapClickGame({ difficulty, roundCount, timed, variant, practice,
   const [wrongCount, setWrongCount] = useState(0);
   const [resetSignal, setResetSignal] = useState(0);
   const [timeLeft, setTimeLeft] = useState(0);
+  const [proximity, setProximity] = useState<"hot" | "warm" | "cold" | null>(null);
 
   const startRef = useRef(Date.now());
   const qStartRef = useRef(Date.now());
@@ -54,7 +57,8 @@ export function MapClickGame({ difficulty, roundCount, timed, variant, practice,
 
   useEffect(() => {
     featuresByCcn3("50m").then((feats) => {
-      const base = !variant || variant === "world" ? poolForDifficulty(difficulty) : COUNTRIES.filter((c) => c.region === variant);
+      const difficultyPool = poolForDifficulty(difficulty);
+      const base = !variant || variant === "world" ? difficultyPool : difficultyPool.filter((c) => c.region === variant);
       const pool = base.filter(
         (c) => c.ccn3 && (feats.has(String(c.ccn3)) || DOT_SET.has(String(c.ccn3)))
       );
@@ -110,6 +114,7 @@ export function MapClickGame({ difficulty, roundCount, timed, variant, practice,
     }
     setIdx((i) => i + 1);
     setWrongCount(0);
+    setProximity(null);
     qStartRef.current = Date.now();
     lockRef.current = false;
   }
@@ -128,6 +133,7 @@ export function MapClickGame({ difficulty, roundCount, timed, variant, practice,
     if (lockRef.current || !target) return;
     lockRef.current = true;
     sound.wrong();
+    haptic.error();
     setStreak(0);
     reveal(String(target.ccn3), false, 750);
   }
@@ -137,6 +143,7 @@ export function MapClickGame({ difficulty, roundCount, timed, variant, practice,
     if (ccn3 === String(target.ccn3)) {
       lockRef.current = true;
       sound.correct();
+      haptic.success();
       if (target.cca3) hitsRef.current.push(target.cca3);
       const timeMs = Date.now() - qStartRef.current;
       const earned = scoreForAnswer({ correct: true, difficulty, timed, timeMs, timeLimitMs: TIME_PER_TARGET_MS });
@@ -149,9 +156,18 @@ export function MapClickGame({ difficulty, roundCount, timed, variant, practice,
       reveal(ccn3, true, 650);
     } else {
       sound.wrong();
+      haptic.error();
       setStreak(0);
       setFlash({ ccn3, ok: false });
       setTimeout(() => setFlash((cur) => (cur?.ccn3 === ccn3 ? null : cur)), 450);
+      const picked = getCountryByCcn3(ccn3);
+      if (picked?.latlng && target.latlng) {
+        const distance = haversineKm(
+          [picked.latlng[1], picked.latlng[0]],
+          [target.latlng[1], target.latlng[0]]
+        );
+        setProximity(distance < 900 ? "hot" : distance < 2600 ? "warm" : "cold");
+      }
       // Practice: no penalty, unlimited tries, keep trying until you find it.
       if (practice) return;
       scoreRef.current = Math.max(0, scoreRef.current - WRONG_PENALTY);
@@ -173,6 +189,12 @@ export function MapClickGame({ difficulty, roundCount, timed, variant, practice,
       </div>
     );
   }
+
+  const subregionContext = COUNTRIES.filter((country) => country.subregion === target.subregion && country.ccn3);
+  const regionalContext = DOT_SET.has(String(target.ccn3))
+    ? (subregionContext.length >= 4 ? subregionContext : COUNTRIES.filter((country) => country.region === target.region && country.ccn3))
+        .map((country) => String(country.ccn3))
+    : undefined;
 
   return (
     <div className="flex flex-1 flex-col">
@@ -208,6 +230,21 @@ export function MapClickGame({ difficulty, roundCount, timed, variant, practice,
         </div>
       </div>
 
+      <div className="mx-auto flex min-h-9 w-full max-w-3xl items-center gap-2 px-4 pb-2" aria-live="polite">
+        {!practice && (
+          <div className="flex gap-1" aria-hidden="true">
+            {Array.from({ length: MAX_WRONG }).map((_, index) => (
+              <span key={index} className={`h-1.5 w-8 rounded-full transition-colors ${index < MAX_WRONG - wrongCount ? "bg-primary" : "bg-danger/30"}`} />
+            ))}
+          </div>
+        )}
+        {proximity && (
+          <span className={`ml-auto rounded-lg px-2.5 py-1 text-xs font-bold ${proximity === "hot" ? "bg-orange-500/15 text-orange-600 dark:text-orange-400" : proximity === "warm" ? "bg-warning/15 text-amber-700 dark:text-warning" : "bg-sky-500/15 text-sky-700 dark:text-sky-300"}`}>
+            {t(`mapclick.proximity.${proximity}`)}
+          </span>
+        )}
+      </div>
+
       <div className="relative min-h-0 flex-1 overflow-hidden bg-sky-50 dark:bg-slate-900/40">
         <WorldMap
           onPick={handlePick}
@@ -216,6 +253,7 @@ export function MapClickGame({ difficulty, roundCount, timed, variant, practice,
           flashOk={flash?.ok}
           flagByCcn3={(ccn3) => flagByCcn3Map.get(ccn3)}
           dots={DOTS}
+          fitToCcn3={regionalContext}
           resetSignal={resetSignal}
         />
         <Compass />

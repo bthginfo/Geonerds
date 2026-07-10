@@ -90,6 +90,16 @@ body {
     radial-gradient(55% 50% at 50% 100%, oklch(0.7 0.17 300 / 0.12), transparent 70%);
 }
 
+/* A quiet cartographer's desk for tactile map games. The linework adds depth
+   without competing with country silhouettes or touch targets. */
+.geo-workbench {
+  background-color: var(--background);
+  background-image:
+    linear-gradient(115deg, transparent 0 48%, oklch(0.55 0.18 250 / 0.035) 48% 48.5%, transparent 48.5%),
+    repeating-radial-gradient(circle at 85% 18%, transparent 0 31px, oklch(0.72 0.15 180 / 0.055) 32px 33px, transparent 34px 54px),
+    radial-gradient(60% 45% at 0% 100%, oklch(0.72 0.15 180 / 0.10), transparent 75%);
+}
+
 @keyframes pop {
   0% { transform: scale(1); }
   40% { transform: scale(1.12); }

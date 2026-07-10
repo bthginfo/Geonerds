@@ -10,19 +10,26 @@ export function GameTopBar({
   title,
   onExit,
   children,
+  compactMobileTitle = false,
 }: {
   title: string;
   onExit?: () => void;
   children?: React.ReactNode;
+  /** Hide the visual title below 420px when a game needs a wider status cluster. */
+  compactMobileTitle?: boolean;
 }) {
   return (
-    <div className="sticky top-0 z-30 border-b border-border/60 bg-background/85 backdrop-blur-md">
-      <div className="mx-auto flex h-14 w-full max-w-3xl items-center gap-2 px-3">
+    <div
+      className="sticky top-0 z-30 border-b border-border/60 bg-background/85 backdrop-blur-md"
+      role="banner"
+      aria-label={title}
+    >
+      <div className="mx-auto grid h-14 w-full max-w-3xl grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-1.5 px-3 sm:gap-2">
         {onExit ? (
           <button
             onClick={onExit}
             aria-label="Exit"
-            className="inline-flex h-9 w-9 items-center justify-center rounded-lg text-muted-foreground hover:bg-muted hover:text-foreground"
+            className="col-start-1 inline-flex h-9 w-9 items-center justify-center rounded-lg text-muted-foreground hover:bg-muted hover:text-foreground"
           >
             <X className="h-5 w-5" />
           </button>
@@ -30,13 +37,20 @@ export function GameTopBar({
           <Link
             href="/"
             aria-label="Exit"
-            className="inline-flex h-9 w-9 items-center justify-center rounded-lg text-muted-foreground hover:bg-muted hover:text-foreground"
+            className="col-start-1 inline-flex h-9 w-9 items-center justify-center rounded-lg text-muted-foreground hover:bg-muted hover:text-foreground"
           >
             <X className="h-5 w-5" />
           </Link>
         )}
-        <div className="truncate text-sm font-semibold">{title}</div>
-        <div className="ml-auto flex items-center gap-1.5">{children}</div>
+        <div
+          className={cn(
+            "col-start-2 min-w-0 truncate text-xs font-semibold min-[420px]:text-sm",
+            compactMobileTitle && "max-[419px]:hidden"
+          )}
+        >
+          {title}
+        </div>
+        <div className="col-start-3 flex min-w-max items-center justify-end gap-1 sm:gap-1.5">{children}</div>
       </div>
     </div>
   );
@@ -50,7 +64,7 @@ export function ScorePill({ value }: { value: number }) {
       initial={{ scale: 1 }}
       animate={{ scale: [1, 1.15, 1] }}
       transition={{ duration: 0.3 }}
-      className="flex items-center gap-1 rounded-full bg-primary/10 px-2.5 py-1 text-sm font-bold tabular-nums text-primary"
+      className="flex min-w-0 items-center gap-1 rounded-full bg-primary/10 px-1.5 py-1 text-xs font-bold tabular-nums text-primary min-[420px]:px-2.5 min-[420px]:text-sm"
     >
       <Star className="h-3.5 w-3.5" />
       {formatNumber(value, locale)}
@@ -61,7 +75,7 @@ export function ScorePill({ value }: { value: number }) {
 export function StreakPill({ value }: { value: number }) {
   if (value < 2) return null;
   return (
-    <div className="flex items-center gap-1 rounded-full bg-orange-500/15 px-2.5 py-1 text-sm font-bold tabular-nums text-orange-500">
+    <div className="flex items-center gap-1 rounded-full bg-orange-500/15 px-1.5 py-1 text-xs font-bold tabular-nums text-orange-500 min-[420px]:px-2.5 min-[420px]:text-sm">
       <Flame className="h-3.5 w-3.5" />
       {value}
     </div>
@@ -70,12 +84,12 @@ export function StreakPill({ value }: { value: number }) {
 
 export function LivesPill({ lives, max }: { lives: number; max: number }) {
   return (
-    <div className="flex items-center gap-0.5 rounded-full bg-muted px-2 py-1">
+    <div className="flex items-center gap-0 rounded-full bg-muted px-1 py-1 min-[420px]:gap-0.5 min-[420px]:px-2">
       {Array.from({ length: max }).map((_, i) => (
         <Heart
           key={i}
           className={cn(
-            "h-4 w-4",
+            "h-3.5 w-3.5 min-[420px]:h-4 min-[420px]:w-4",
             i < lives ? "fill-danger text-danger" : "text-muted-foreground/40"
           )}
         />
@@ -88,7 +102,7 @@ export function TimerPill({ ms, danger }: { ms: number; danger?: boolean }) {
   return (
     <div
       className={cn(
-        "flex items-center gap-1 rounded-full px-2.5 py-1 text-sm font-bold tabular-nums",
+        "flex items-center gap-1 rounded-full px-1.5 py-1 text-xs font-bold tabular-nums min-[420px]:px-2.5 min-[420px]:text-sm",
         danger ? "bg-danger/15 text-danger" : "bg-muted text-foreground"
       )}
     >
@@ -100,7 +114,7 @@ export function TimerPill({ ms, danger }: { ms: number; danger?: boolean }) {
 
 export function RoundPill({ current, total }: { current: number; total: number }) {
   return (
-    <div className="rounded-full bg-muted px-2.5 py-1 text-sm font-semibold tabular-nums text-muted-foreground">
+    <div className="rounded-full bg-muted px-1.5 py-1 text-xs font-semibold tabular-nums text-muted-foreground min-[420px]:px-2.5 min-[420px]:text-sm">
       {current}/{total}
     </div>
   );

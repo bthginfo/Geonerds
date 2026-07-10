@@ -27,8 +27,12 @@ import { NameAllGame } from "@/games/nameall/name-all-game";
 import { MountainsGame } from "@/games/mountains/mountains-game";
 import { ColorFlagGame } from "@/games/colorflag/color-flag-game";
 import { GeoNerdGame } from "@/games/geonerd/geonerd-game";
+import { JigsawGame } from "@/games/jigsaw/jigsaw-game";
+import { ConnectionsGame } from "@/games/connections/connections-game";
 
 const COMPONENTS: Record<GameId, (h: PlayHandlers) => React.ReactNode> = {
+  jigsaw: (h) => <JigsawGame {...h} />,
+  connections: (h) => <ConnectionsGame {...h} />,
   flags: (h) => <FlagGame {...h} />,
   capitals: (h) => <CapitalsGame {...h} />,
   outline: (h) => <OutlineGame {...h} />,
