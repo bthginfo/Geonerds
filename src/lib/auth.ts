@@ -5,7 +5,12 @@ const SESSION_COOKIE = "gn_session";
 const SESSION_TTL_MS = 1000 * 60 * 60 * 24 * 365; // 1 year
 
 function secret(): string {
-  return process.env.AUTH_SECRET || "dev-insecure-secret-change-me";
+  const value = process.env.AUTH_SECRET;
+  if (value) return value;
+  if (process.env.NODE_ENV === "production") {
+    throw new Error("AUTH_SECRET must be configured in production");
+  }
+  return "dev-insecure-secret-change-me";
 }
 
 // ---- passcode hashing (scrypt) ----
