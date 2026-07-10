@@ -1,3 +1,4 @@
+import { timingSafeEqual } from "node:crypto";
 import { NextResponse } from "next/server";
 import { getDb, isDbConfigured } from "@/lib/db";
 
@@ -6,9 +7,10 @@ export const dynamic = "force-dynamic";
 
 /**
  * Token-protected leaderboard reset.
- * POST /api/admin/reset?token=SECRET            → wipes all scores
- * POST /api/admin/reset?token=SECRET&users=1    → also wipes user accounts
- * The token must match the ADMIN_RESET_TOKEN environment variable.
+ * POST /api/admin/reset                         → wipes all scores
+ * POST /api/admin/reset?users=1                 → also wipes user accounts
+ * Send `Authorization: Bearer <ADMIN_RESET_TOKEN>` so the secret never appears
+ * in browser history, proxy logs or analytics URLs.
  */
 export async function POST(req: Request) {
   const expected = process.env.ADMIN_RESET_TOKEN;
@@ -16,7 +18,14 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "not_enabled" }, { status: 403 });
   }
   const url = new URL(req.url);
-  if (url.searchParams.get("token") !== expected) {
+  const authorization = req.headers.get("authorization") ?? "";
+  const provided = authorization.startsWith("Bearer ") ? authorization.slice(7) : "";
+  const expectedBytes = Buffer.from(expected);
+  const providedBytes = Buffer.from(provided);
+  if (
+    expectedBytes.length !== providedBytes.length ||
+    !timingSafeEqual(expectedBytes, providedBytes)
+  ) {
     return NextResponse.json({ error: "unauthorized" }, { status: 401 });
   }
   if (!isDbConfigured) {
