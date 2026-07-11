@@ -1,9 +1,27 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { motion } from "framer-motion";
-import { ArrowLeft, Check, Lock, Sparkles, Lightbulb, X, Globe2, Search, Crown, Star } from "lucide-react";
+import {
+  AlertTriangle,
+  ArrowLeft,
+  Check,
+  ChevronLeft,
+  Clock3,
+  Crown,
+  Globe2,
+  Lightbulb,
+  LoaderCircle,
+  Lock,
+  RotateCcw,
+  Search,
+  Sparkles,
+  Star,
+  Utensils,
+  Users,
+  X,
+} from "lucide-react";
 import { useT } from "@/i18n/I18nProvider";
 import { useDex } from "@/store/dex";
 import { countryName } from "@/data/countries";
@@ -24,6 +42,25 @@ import {
 } from "@/lib/dex";
 import type { Country } from "@/lib/types";
 import { cn } from "@/lib/utils";
+import { CountryOutline } from "@/components/map/country-outline";
+import { countryDiscoveryPresentation } from "@/lib/country-discovery";
+import type { Allergen, CountryCuisine, Diet } from "@/data/country-cuisines";
+import type { CountryRecipe, CountryRecipePayload } from "@/data/country-recipe-types";
+
+let recipeDataPromise: Promise<CountryRecipePayload> | null = null;
+
+function loadRecipeData() {
+  recipeDataPromise ??= fetch("/data/country-recipes.json", { cache: "force-cache" })
+    .then(async (response) => {
+      if (!response.ok) throw new Error(`Recipe data request failed (${response.status})`);
+      const payload = await response.json() as Partial<CountryRecipePayload>;
+      if (payload.version !== 1 || !payload.countries || typeof payload.countries !== "object") {
+        throw new Error("Unsupported recipe data payload");
+      }
+      return payload as CountryRecipePayload;
+    });
+  return recipeDataPromise;
+}
 
 const POOL = DEX_POOL;
 
@@ -185,7 +222,7 @@ export default function CollectionPage() {
       <div className="mt-5 space-y-2 rounded-2xl border border-border bg-card p-3">
         <label className="flex min-h-11 items-center gap-2 rounded-xl bg-muted px-3">
           <Search className="h-4 w-4 text-muted-foreground" />
-          <input value={query} onChange={(event) => setQuery(event.target.value)} placeholder={L("Search discovered countries", "Entdeckte Länder suchen")} className="min-w-0 flex-1 bg-transparent text-sm outline-none" />
+          <input aria-label={t("collection.searchLabel")} value={query} onChange={(event) => setQuery(event.target.value)} placeholder={L("Search discovered countries", "Entdeckte Länder suchen")} className="min-w-0 flex-1 bg-transparent text-sm outline-none" />
         </label>
         <div className="grid grid-cols-3 gap-2">
           <select aria-label={L("Continent", "Kontinent")} value={continent} onChange={(event) => setContinent(event.target.value)} className="min-h-11 rounded-xl border border-border bg-background px-2 text-xs">
@@ -206,10 +243,19 @@ export default function CollectionPage() {
           const score = dexScore(hits[c.cca3]);
           const st = dexStateOf(hits[c.cca3]);
           const locked = st === "locked";
+          const discovery = countryDiscoveryPresentation(c.cca3, st);
+          const statusLabel = dexStatusLabel(st, locale);
           return (
             <button
               key={c.cca3}
               onClick={() => setSelected(c)}
+              aria-label={locked
+                ? t("collection.countryCardLocked", { number: String(dexNumber(c.cca3)).padStart(3, "0") })
+                : t("collection.countryCard", {
+                    country: countryName(c, locale),
+                    status: statusLabel,
+                    dish: discovery?.cuisine.dish[locale] ?? "",
+                  })}
               className={cn(
                 "group relative flex flex-col items-center gap-1.5 rounded-2xl border-2 p-2.5 text-center transition-all active:scale-[0.98]",
                 st === "mastered"
@@ -237,6 +283,17 @@ export default function CollectionPage() {
               <div className="w-full truncate text-xs font-semibold">
                 {locked ? "???" : countryName(c, locale)}
               </div>
+              {discovery && (
+                <>
+                  <span className="flex h-10 w-full items-center justify-center rounded-lg border border-sky-500/20 bg-sky-500/10 px-2 py-1" aria-hidden="true">
+                    <CountryOutline cca3={c.cca3} decorative className="max-h-8" pathClassName="fill-sky-500 stroke-sky-700 dark:fill-sky-400 dark:stroke-sky-200" />
+                  </span>
+                  <span className="flex w-full min-w-0 items-center gap-1 text-left text-[10px] font-semibold leading-tight text-amber-700 dark:text-amber-300">
+                    <Utensils className="h-3 w-3 shrink-0" aria-hidden="true" />
+                    <span className="truncate">{discovery.cuisine.dish[locale]}</span>
+                  </span>
+                </>
+              )}
               <div className="text-[9px] font-bold tabular-nums text-muted-foreground">#{String(dexNumber(c.cca3)).padStart(3, "0")} · {dexGameCount(hits[c.cca3])} {L("games", "Spiele")}</div>
               {/* progress pips */}
               {!locked && st !== "unlocked" && st !== "mastered" && (
@@ -254,6 +311,17 @@ export default function CollectionPage() {
       {selected && <DetailModal country={selected} score={dexScore(hits[selected.cca3])} games={dexGameCount(hits[selected.cca3])} state={dexStateOf(hits[selected.cca3])} perGame={hits[selected.cca3] ?? {}} favorite={favorites.includes(selected.cca3)} onFavorite={() => toggleFavorite(selected.cca3)} onClose={() => setSelected(null)} locale={locale} t={t} />}
     </div>
   );
+}
+
+function dexStatusLabel(state: DexState, locale: "en" | "de") {
+  const labels: Record<DexState, { en: string; de: string }> = {
+    locked: { en: "Unknown", de: "Unbekannt" },
+    discovered: { en: "Discovered", de: "Entdeckt" },
+    researched: { en: "Researched", de: "Erforscht" },
+    unlocked: { en: "Unlocked", de: "Freigeschaltet" },
+    mastered: { en: "Mastered", de: "Gemeistert" },
+  };
+  return labels[state][locale];
 }
 
 function DetailModal({
@@ -279,69 +347,265 @@ function DetailModal({
   locale: "en" | "de";
   t: (k: string, v?: Record<string, string | number>) => string;
 }) {
-  const locked = score <= 0;
+  const locked = state === "locked";
   const unlocked = score >= UNLOCK_TOTAL;
-  const L = (en: string, de: string) => locale === "de" ? de : en;
   const facts = dexFacts(country, score, locale);
   const cool = dexCoolFacts(country, score, locale);
+  const discovery = countryDiscoveryPresentation(country.cca3, state);
+  const cuisine = discovery?.cuisine ?? null;
+  const [view, setView] = useState<"country" | "recipe">("country");
+  const [recipe, setRecipe] = useState<CountryRecipe | null>(null);
+  const [recipeState, setRecipeState] = useState<"idle" | "loading" | "error" | "ready">("idle");
+  const dialogRef = useRef<HTMLDivElement>(null);
+  const closeRef = useRef<HTMLButtonElement>(null);
+  const recipeButtonRef = useRef<HTMLButtonElement>(null);
+  const openerRef = useRef<HTMLElement | null>(null);
+  const backdropPressRef = useRef(false);
+  const onCloseRef = useRef(onClose);
 
+  useEffect(() => {
+    onCloseRef.current = onClose;
+  }, [onClose]);
+
+  useEffect(() => {
+    if (view !== "recipe") return;
+    requestAnimationFrame(() => dialogRef.current?.querySelector<HTMLButtonElement>("[data-recipe-back]")?.focus());
+  }, [view]);
+
+  useEffect(() => {
+    openerRef.current = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    requestAnimationFrame(() => closeRef.current?.focus());
+
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        event.preventDefault();
+        onCloseRef.current();
+        return;
+      }
+      if (event.key !== "Tab" || !dialogRef.current) return;
+      const focusable = Array.from(
+        dialogRef.current.querySelectorAll<HTMLElement>(
+          'button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'
+        )
+      ).filter((element) => !element.hasAttribute("hidden"));
+      if (!focusable.length) return;
+      const first = focusable[0];
+      const last = focusable[focusable.length - 1];
+      if (event.shiftKey && document.activeElement === first) {
+        event.preventDefault();
+        last.focus();
+      } else if (!event.shiftKey && document.activeElement === last) {
+        event.preventDefault();
+        first.focus();
+      }
+    };
+    document.addEventListener("keydown", onKeyDown);
+    return () => {
+      document.removeEventListener("keydown", onKeyDown);
+      document.body.style.overflow = previousOverflow;
+      openerRef.current?.focus();
+    };
+  }, []);
+
+  async function showRecipe() {
+    if (!cuisine) return;
+    setView("recipe");
+    if (recipe) return;
+    setRecipeState("loading");
+    try {
+      const recipeData = await loadRecipeData();
+      const nextRecipe = recipeData.countries[country.cca3];
+      if (!nextRecipe) throw new Error(`Missing recipe for ${country.cca3}`);
+      setRecipe(nextRecipe);
+      setRecipeState("ready");
+    } catch {
+      recipeDataPromise = null;
+      setRecipeState("error");
+    }
+  }
+
+  function backToCountry() {
+    setView("country");
+    requestAnimationFrame(() => recipeButtonRef.current?.focus());
+  }
+
+  const title = locked ? "???" : countryName(country, locale);
   return (
-    <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/50 p-0 sm:items-center sm:p-4" onClick={onClose}>
+    <div
+      className="fixed inset-0 z-50 flex items-end justify-center bg-black/60 p-0 sm:items-center sm:p-4"
+      onPointerDown={(event) => { backdropPressRef.current = event.target === event.currentTarget; }}
+      onPointerUp={(event) => {
+        if (backdropPressRef.current && event.target === event.currentTarget) onClose();
+        backdropPressRef.current = false;
+      }}
+    >
       <motion.div
+        ref={dialogRef}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="dex-dialog-title"
         initial={{ opacity: 0, y: 24 }}
         animate={{ opacity: 1, y: 0 }}
-        onClick={(e) => e.stopPropagation()}
-        className="max-h-[85vh] w-full max-w-md overflow-y-auto rounded-t-3xl border border-border bg-card p-5 shadow-xl sm:rounded-3xl"
+        className="flex max-h-[92dvh] w-full max-w-lg flex-col overflow-hidden rounded-t-3xl border border-border bg-card shadow-2xl sm:max-h-[88dvh] sm:rounded-3xl"
       >
-        <div className="flex items-start gap-3">
-          {locked ? <span className="flex aspect-[4/3] w-20 shrink-0 items-center justify-center rounded bg-muted"><Lock className="h-6 w-6 text-muted-foreground" /></span> : <FlagImage code={country.flag} alt="" className="aspect-[4/3] w-20 shrink-0 rounded shadow" />}
+        <header className="sticky top-0 z-10 flex min-h-16 shrink-0 items-center gap-2 border-b border-border bg-card px-3 py-2 sm:px-5">
+          {view === "recipe" && (
+            <button data-recipe-back onClick={backToCountry} className="inline-flex min-h-11 min-w-11 items-center justify-center gap-1 rounded-xl px-2 text-sm font-semibold hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary" aria-label={t("collection.cuisine.backToCountry", { country: title })}>
+              <ChevronLeft className="h-5 w-5" aria-hidden="true" />
+              <span className="hidden xs:inline">{t("common.back")}</span>
+            </button>
+          )}
           <div className="min-w-0 flex-1">
-            <div className="text-lg font-bold">{locked ? "???" : countryName(country, locale)}</div>
-            <div className="mt-0.5 text-xs text-muted-foreground">
-              {state === "mastered" ? L("Mastered", "Gemeistert") : unlocked ? t("collection.complete") : t("collection.progress", { n: Math.min(score, UNLOCK_TOTAL), total: UNLOCK_TOTAL })}
-              {games > 0 && ` · ${t("collection.fromGames", { n: games })}`}
-            </div>
-            <div className="mt-2 h-2 overflow-hidden rounded-full bg-muted">
-              <div className="h-full rounded-full bg-gradient-to-r from-amber-500 to-orange-600" style={{ width: `${Math.min(100, (score / UNLOCK_TOTAL) * 100)}%` }} />
-            </div>
+            <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-muted-foreground">
+              {view === "recipe" ? t("collection.cuisine.recipeLabel") : t("collection.title")}
+            </p>
+            <h2 id="dex-dialog-title" className="truncate text-base font-extrabold">
+              {view === "recipe" && cuisine ? cuisine.dish[locale] : title}
+            </h2>
           </div>
-          {!locked && <button onClick={onFavorite} aria-label={L("Toggle favorite", "Favorit umschalten")} className="min-h-11 min-w-11 rounded-full p-2 text-amber-500 hover:bg-muted"><Star className={cn("h-5 w-5", favorite && "fill-current")} /></button>}
-          <button onClick={onClose} aria-label={L("Close", "Schließen")} className="min-h-11 min-w-11 rounded-full p-2 text-muted-foreground hover:bg-muted">
-            <X className="h-5 w-5" />
+          {view === "country" && !locked && (
+            <button onClick={onFavorite} aria-label={t("collection.toggleFavorite")} className="flex h-11 w-11 items-center justify-center rounded-xl text-amber-500 hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary">
+              <Star className={cn("h-5 w-5", favorite && "fill-current")} aria-hidden="true" />
+            </button>
+          )}
+          <button ref={closeRef} onClick={onClose} aria-label={t("common.close")} className="flex h-11 w-11 items-center justify-center rounded-xl text-muted-foreground hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary">
+            <X className="h-5 w-5" aria-hidden="true" />
           </button>
-        </div>
+        </header>
 
-        {locked ? (
-          <p className="mt-5 rounded-xl bg-muted/50 p-4 text-center text-sm text-muted-foreground">{t("collection.playToUnlock")}</p>
-        ) : (
-          <div className="mt-4 space-y-1.5">
-            <div className={cn("mb-3 rounded-2xl border p-3", state === "mastered" ? "border-amber-400 bg-amber-500/10" : "border-primary/30 bg-primary/5")}>
-              <div className="flex items-center gap-2 font-bold">{state === "mastered" ? <Crown className="h-5 w-5 text-amber-500" /> : <Sparkles className="h-5 w-5 text-primary" />}{L("Passport mastery", "Pass-Meisterschaft")}</div>
-              <p className="mt-1 text-xs text-muted-foreground">{state === "mastered" ? L("Mastered across four or more games.", "In mindestens vier Spielen gemeistert.") : L("Reach 20 encounters across four games to master this country.", "Erreiche 20 Begegnungen in vier Spielen, um dieses Land zu meistern.")}</p>
-              {Object.keys(perGame).length > 0 && <div className="mt-2 flex flex-wrap gap-1.5">{Object.entries(perGame).sort((a,b) => b[1]-a[1]).map(([game, count]) => <span key={game} className="rounded-lg bg-card px-2 py-1 text-[11px] font-semibold">{game === "daily" ? t("daily.title") : game === "weekly" ? t("weekly.title") : t(`games.${game}.name`)} · {count}</span>)}</div>}
-            </div>
-            {facts.map((f) => (
-              <div key={f.label} className="flex items-baseline justify-between gap-3 rounded-lg bg-muted/40 px-3 py-2 text-sm">
-                <span className="text-muted-foreground">{f.label}</span>
-                <span className="text-right font-semibold">{f.value}</span>
-              </div>
-            ))}
-            {score < UNLOCK_TOTAL && (
-              <p className="pt-1 text-center text-xs text-muted-foreground">{t("collection.moreToReveal")}</p>
-            )}
-            {cool.length > 0 && (
-              <div className="mt-3 space-y-2">
-                {cool.map((f, i) => (
-                  <div key={i} className="flex items-start gap-2 rounded-xl border border-amber-500/30 bg-amber-500/5 p-3 text-sm">
-                    <Lightbulb className="mt-0.5 h-4 w-4 shrink-0 text-amber-500" />
-                    <span>{f}</span>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-        )}
+        <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 pb-[max(1.25rem,env(safe-area-inset-bottom))] pt-4 sm:px-5">
+          {view === "recipe" && cuisine ? (
+            <RecipeView cuisine={cuisine} recipe={recipe} state={recipeState} locale={locale} t={t} onRetry={showRecipe} />
+          ) : (
+            <CountryView
+              country={country}
+              score={score}
+              games={games}
+              state={state}
+              perGame={perGame}
+              locked={locked}
+              unlocked={unlocked}
+              cuisine={cuisine}
+              facts={facts}
+              cool={cool}
+              locale={locale}
+              t={t}
+              recipeButtonRef={recipeButtonRef}
+              onRecipe={showRecipe}
+            />
+          )}
+        </div>
       </motion.div>
     </div>
   );
+}
+
+function CountryView({
+  country, score, games, state, perGame, locked, unlocked, cuisine, facts, cool, locale, t, recipeButtonRef, onRecipe,
+}: {
+  country: Country; score: number; games: number; state: DexState; perGame: Record<string, number>;
+  locked: boolean; unlocked: boolean; cuisine: CountryCuisine | null;
+  facts: ReturnType<typeof dexFacts>; cool: string[]; locale: "en" | "de";
+  t: (k: string, v?: Record<string, string | number>) => string;
+  recipeButtonRef: React.RefObject<HTMLButtonElement | null>; onRecipe: () => void;
+}) {
+  const name = locked ? "???" : countryName(country, locale);
+  return (
+    <>
+      {locked ? (
+        <div className="flex flex-col items-center rounded-2xl border border-dashed border-border bg-muted/40 p-6 text-center">
+          <span className="flex h-20 w-24 items-center justify-center rounded-xl bg-muted"><Lock className="h-7 w-7 text-muted-foreground" /></span>
+          <p className="mt-4 text-sm text-muted-foreground">{t("collection.playToUnlock")}</p>
+        </div>
+      ) : (
+        <>
+          <section className="grid grid-cols-[5fr_6fr] gap-3" aria-label={t("collection.cuisine.countryHero", { country: name })}>
+            <div className="flex min-h-32 items-center rounded-2xl border border-border bg-muted/30 p-3">
+              <FlagImage code={country.flag} alt="" className="aspect-[4/3] w-full rounded-lg shadow-sm" />
+            </div>
+            <div className="flex min-h-32 items-center justify-center rounded-2xl border border-sky-500/25 bg-sky-500/10 p-4">
+              <CountryOutline cca3={country.cca3} decorative className="max-h-28" />
+            </div>
+          </section>
+
+          <div className="mt-3">
+            <div className="flex items-end justify-between gap-3 text-xs text-muted-foreground">
+              <span>{dexStatusLabel(state, locale)}{games > 0 && ` · ${t("collection.fromGames", { n: games })}`}</span>
+              <span className="font-bold tabular-nums">{Math.min(score, UNLOCK_TOTAL)}/{UNLOCK_TOTAL}</span>
+            </div>
+            <div className="mt-1.5 h-2 overflow-hidden rounded-full bg-muted">
+              <div className="h-full rounded-full bg-gradient-to-r from-amber-500 to-orange-600" style={{ width: `${Math.min(100, (score / UNLOCK_TOTAL) * 100)}%` }} />
+            </div>
+          </div>
+
+          {cuisine && (
+            <section className="mt-5 overflow-hidden rounded-2xl border border-amber-500/30 bg-gradient-to-br from-amber-500/10 to-orange-500/5">
+              <div className="flex items-start gap-3 p-4">
+                <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-amber-500 text-amber-950 shadow-sm"><Utensils className="h-5 w-5" aria-hidden="true" /></span>
+                <div className="min-w-0">
+                  <p className="text-[10px] font-extrabold uppercase tracking-[0.16em] text-amber-700 dark:text-amber-300">{t("collection.cuisine.famousDish")}</p>
+                  <h3 className="mt-0.5 text-lg font-extrabold leading-tight">{cuisine.dish[locale]}</h3>
+                  <p className="mt-1.5 text-sm leading-relaxed text-muted-foreground">{cuisine.blurb[locale]}</p>
+                </div>
+              </div>
+              <div className="flex flex-wrap gap-1.5 border-t border-amber-500/20 px-4 py-3">
+                <MetaChip icon={Clock3} label={t("collection.cuisine.minutes", { n: cuisine.totalMinutes })} />
+                <MetaChip icon={Users} label={t("collection.cuisine.servings", { n: cuisine.servings })} />
+                <span className="rounded-lg bg-card/80 px-2.5 py-1.5 text-xs font-semibold">{dietLabel(cuisine.diet, t)}</span>
+                {cuisine.allergens.map((allergen) => <span key={allergen} className="rounded-lg bg-card/80 px-2.5 py-1.5 text-xs font-semibold">{allergenLabel(allergen, t)}</span>)}
+              </div>
+              <div className="px-4 pb-4">
+                <button ref={recipeButtonRef} onClick={onRecipe} className="flex min-h-11 w-full items-center justify-center gap-2 rounded-xl bg-amber-500 px-4 py-2.5 text-sm font-extrabold text-amber-950 shadow-sm transition hover:bg-amber-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-500 focus-visible:ring-offset-2">
+                  <Utensils className="h-4 w-4" aria-hidden="true" />{t("collection.cuisine.viewRecipe")}
+                </button>
+              </div>
+            </section>
+          )}
+
+          <div className={cn("mt-5 rounded-2xl border p-3", state === "mastered" ? "border-amber-400 bg-amber-500/10" : "border-primary/30 bg-primary/5")}>
+            <div className="flex items-center gap-2 font-bold">{state === "mastered" ? <Crown className="h-5 w-5 text-amber-500" /> : <Sparkles className="h-5 w-5 text-primary" />}{t("collection.passportMastery")}</div>
+            <p className="mt-1 text-xs text-muted-foreground">{state === "mastered" ? t("collection.masteredAcrossGames") : t("collection.masteryGoal")}</p>
+            {Object.keys(perGame).length > 0 && <div className="mt-2 flex flex-wrap gap-1.5">{Object.entries(perGame).sort((a,b) => b[1]-a[1]).map(([game, count]) => <span key={game} className="rounded-lg bg-card px-2 py-1 text-[11px] font-semibold">{game === "daily" ? t("daily.title") : game === "weekly" ? t("weekly.title") : t(`games.${game}.name`)} · {count}</span>)}</div>}
+          </div>
+          <div className="mt-3 space-y-1.5">
+            {facts.map((fact) => <div key={fact.label} className="flex items-baseline justify-between gap-3 rounded-lg bg-muted/40 px-3 py-2 text-sm"><span className="text-muted-foreground">{fact.label}</span><span className="text-right font-semibold">{fact.value}</span></div>)}
+            {!unlocked && <p className="pt-1 text-center text-xs text-muted-foreground">{t("collection.moreToReveal")}</p>}
+          </div>
+          {cool.length > 0 && <div className="mt-3 space-y-2">{cool.map((fact, index) => <div key={index} className="flex items-start gap-2 rounded-xl border border-amber-500/30 bg-amber-500/5 p-3 text-sm"><Lightbulb className="mt-0.5 h-4 w-4 shrink-0 text-amber-500" /><span>{fact}</span></div>)}</div>}
+        </>
+      )}
+    </>
+  );
+}
+
+function RecipeView({ cuisine, recipe, state, locale, t, onRetry }: {
+  cuisine: CountryCuisine; recipe: CountryRecipe | null; state: "idle" | "loading" | "error" | "ready";
+  locale: "en" | "de"; t: (k: string, v?: Record<string, string | number>) => string; onRetry: () => void;
+}) {
+  if (state === "loading" || state === "idle") return <div className="flex min-h-64 flex-col items-center justify-center text-center" role="status"><LoaderCircle className="h-8 w-8 animate-spin text-amber-500" /><p className="mt-3 font-semibold">{t("collection.cuisine.loading")}</p></div>;
+  if (state === "error" || !recipe) return <div className="flex min-h-64 flex-col items-center justify-center rounded-2xl border border-destructive/30 bg-destructive/5 p-6 text-center" role="alert"><AlertTriangle className="h-8 w-8 text-destructive" /><p className="mt-3 font-bold">{t("collection.cuisine.error")}</p><button onClick={onRetry} className="mt-4 flex min-h-11 items-center gap-2 rounded-xl bg-foreground px-4 py-2 text-sm font-bold text-background"><RotateCcw className="h-4 w-4" />{t("common.retry")}</button></div>;
+  return (
+    <article>
+      <p className="text-sm leading-relaxed text-muted-foreground">{cuisine.blurb[locale]}</p>
+      <div className="mt-4 flex flex-wrap gap-1.5"><MetaChip icon={Clock3} label={t("collection.cuisine.minutes", { n: cuisine.totalMinutes })} /><MetaChip icon={Users} label={t("collection.cuisine.servings", { n: cuisine.servings })} /><span className="rounded-lg bg-muted px-2.5 py-1.5 text-xs font-semibold">{dietLabel(cuisine.diet, t)}</span>{cuisine.allergens.map((allergen) => <span key={allergen} className="rounded-lg bg-muted px-2.5 py-1.5 text-xs font-semibold">{allergenLabel(allergen, t)}</span>)}</div>
+      <section className="mt-6"><h3 className="text-sm font-extrabold uppercase tracking-[0.14em] text-amber-700 dark:text-amber-300">{t("collection.cuisine.ingredients")}</h3><ul className="mt-3 divide-y divide-border rounded-2xl border border-border bg-background/60 px-4">{recipe.ingredients.map((item, index) => <li key={index} className="py-3 text-sm leading-relaxed">{item[locale]}</li>)}</ul></section>
+      <section className="mt-6"><h3 className="text-sm font-extrabold uppercase tracking-[0.14em] text-amber-700 dark:text-amber-300">{t("collection.cuisine.method")}</h3><ol className="mt-3 space-y-3">{recipe.steps.map((step, index) => <li key={index} className="grid grid-cols-[2rem_1fr] gap-3 rounded-2xl border border-border bg-background/60 p-3 text-sm leading-relaxed"><span className="flex h-8 w-8 items-center justify-center rounded-lg bg-amber-500 font-extrabold text-amber-950">{index + 1}</span><span className="pt-1.5">{step[locale]}</span></li>)}</ol></section>
+      {recipe.note && <aside className="mt-5 rounded-2xl border border-amber-500/30 bg-amber-500/10 p-4 text-sm leading-relaxed"><strong>{t("collection.cuisine.recipeNote")}: </strong>{recipe.note[locale]}</aside>}
+      <aside className="mt-4 flex items-start gap-3 rounded-2xl border border-border bg-muted/50 p-4 text-xs leading-relaxed text-muted-foreground"><AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-amber-500" aria-hidden="true" /><p><strong className="text-foreground">{t("collection.cuisine.safetyTitle")}: </strong>{t("collection.cuisine.safetyWarning")}</p></aside>
+    </article>
+  );
+}
+
+function MetaChip({ icon: Icon, label }: { icon: typeof Clock3; label: string }) {
+  return <span className="inline-flex items-center gap-1 rounded-lg bg-card/80 px-2.5 py-1.5 text-xs font-semibold"><Icon className="h-3.5 w-3.5" aria-hidden="true" />{label}</span>;
+}
+
+function dietLabel(diet: Diet, t: (key: string) => string) {
+  return t(`collection.cuisine.diet.${diet}`);
+}
+
+function allergenLabel(allergen: Allergen, t: (key: string) => string) {
+  return t(`collection.cuisine.allergen.${allergen}`);
 }
