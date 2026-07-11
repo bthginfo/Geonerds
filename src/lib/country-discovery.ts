@@ -7,9 +7,13 @@ export interface CountryDiscoveryPresentation {
   outline: { d: string; source: "10m" | "50m" | "110m" };
 }
 
-/** A single leak-safe gate for every visual/textual country discovery reward. */
+/**
+ * The canonical mastery gate for every visual/textual country discovery reward.
+ * Keep this module server-only in practice: the collection UI obtains the payload
+ * from its on-demand route only after this gate has been reached.
+ */
 export function countryDiscoveryPresentation(cca3: string, state: DexState): CountryDiscoveryPresentation | null {
-  if (state === "locked") return null;
+  if (state !== "unlocked" && state !== "mastered") return null;
   const cuisine = getCountryCuisine(cca3);
   const outline = outlines.countries[cca3 as keyof typeof outlines.countries];
   if (!cuisine || !outline) return null;

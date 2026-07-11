@@ -1,8 +1,8 @@
-import outlines from "@/data/country-outlines.json";
 import { cn } from "@/lib/utils";
 
 export interface CountryOutlineProps {
-  cca3: string;
+  /** The shape is deliberately passed in by an unlocked discovery payload. */
+  d: string;
   className?: string;
   pathClassName?: string;
   label?: string;
@@ -10,22 +10,21 @@ export interface CountryOutlineProps {
 }
 
 export function CountryOutline({
-  cca3,
+  d,
   className,
   pathClassName = "fill-sky-500 stroke-sky-700 dark:fill-sky-400 dark:stroke-sky-200",
   label,
   decorative = false,
 }: CountryOutlineProps) {
-  const outline = outlines.countries[cca3 as keyof typeof outlines.countries];
-  if (!outline) return null;
+  if (!d) return null;
   const accessibility = decorative
     ? { "aria-hidden": true as const }
     : { role: "img", "aria-label": label ?? "Country outline" };
 
   return (
-    <svg viewBox={outlines.viewBox} className={cn("h-full w-full", className)} preserveAspectRatio="xMidYMid meet" {...accessibility}>
+    <svg viewBox="0 0 280 280" className={cn("h-full w-full", className)} preserveAspectRatio="xMidYMid meet" {...accessibility}>
       <path
-        d={outline.d}
+        d={d}
         className={cn("drop-shadow-sm", pathClassName)}
         strokeWidth={1}
         strokeLinejoin="round"

@@ -43,11 +43,12 @@ import {
 import type { Country } from "@/lib/types";
 import { cn } from "@/lib/utils";
 import { CountryOutline } from "@/components/map/country-outline";
-import { countryDiscoveryPresentation } from "@/lib/country-discovery";
+import type { CountryDiscoveryPresentation } from "@/lib/country-discovery";
 import type { Allergen, CountryCuisine, Diet } from "@/data/country-cuisines";
 import type { CountryRecipe, CountryRecipePayload } from "@/data/country-recipe-types";
 
 let recipeDataPromise: Promise<CountryRecipePayload> | null = null;
+const discoveryDataPromises = new Map<string, Promise<CountryDiscoveryPresentation>>();
 
 function loadRecipeData() {
   recipeDataPromise ??= fetch("/data/country-recipes.json", { cache: "force-cache" })
@@ -62,6 +63,24 @@ function loadRecipeData() {
   return recipeDataPromise;
 }
 
+function loadDiscoveryData(cca3: string) {
+  const existing = discoveryDataPromises.get(cca3);
+  if (existing) return existing;
+  const request = fetch(`/api/collection/${encodeURIComponent(cca3)}`, { cache: "force-cache" })
+    .then(async (response) => {
+      if (!response.ok) throw new Error(`Discovery reward request failed (${response.status})`);
+      const payload = await response.json() as Partial<CountryDiscoveryPresentation>;
+      if (!payload.cuisine || !payload.outline?.d) throw new Error("Unsupported discovery reward payload");
+      return payload as CountryDiscoveryPresentation;
+    })
+    .catch((error) => {
+      discoveryDataPromises.delete(cca3);
+      throw error;
+    });
+  discoveryDataPromises.set(cca3, request);
+  return request;
+}
+
 const POOL = DEX_POOL;
 
 export default function CollectionPage() {
@@ -73,9 +92,34 @@ export default function CollectionPage() {
   const [continent, setContinent] = useState("all");
   const [status, setStatus] = useState<"all" | DexState>("all");
   const [sort, setSort] = useState<"number" | "name" | "progress">("number");
+  const [discoveries, setDiscoveries] = useState<Record<string, CountryDiscoveryPresentation>>({});
   const favorites = useDex((s) => s.favorites);
   const toggleFavorite = useDex((s) => s.toggleFavorite);
   const L = (en: string, de: string) => locale === "de" ? de : en;
+
+  const fullyUnlockedCodes = useMemo(
+    () => POOL.filter((country) => {
+      const state = dexStateOf(hits[country.cca3]);
+      return state === "unlocked" || state === "mastered";
+    }).map((country) => country.cca3),
+    [hits]
+  );
+  const fullyUnlockedKey = fullyUnlockedCodes.join(",");
+
+  useEffect(() => {
+    const missing = fullyUnlockedCodes.filter((cca3) => !discoveries[cca3]);
+    if (!missing.length) return;
+    let cancelled = false;
+    void Promise.all(missing.map(async (cca3) => [cca3, await loadDiscoveryData(cca3)] as const))
+      .then((loaded) => {
+        if (cancelled) return;
+        setDiscoveries((current) => ({ ...current, ...Object.fromEntries(loaded) }));
+      })
+      .catch(() => {
+        // The country view remains a sealed field note until a later render can retry.
+      });
+    return () => { cancelled = true; };
+  }, [fullyUnlockedKey, fullyUnlockedCodes, discoveries]);
 
   const sorted = useMemo(() => {
     const needle = query.trim().toLocaleLowerCase(locale);
@@ -243,7 +287,8 @@ export default function CollectionPage() {
           const score = dexScore(hits[c.cca3]);
           const st = dexStateOf(hits[c.cca3]);
           const locked = st === "locked";
-          const discovery = countryDiscoveryPresentation(c.cca3, st);
+          const discovery = discoveries[c.cca3];
+          const rewardsRevealed = st === "unlocked" || st === "mastered";
           const statusLabel = dexStatusLabel(st, locale);
           return (
             <button
@@ -251,10 +296,12 @@ export default function CollectionPage() {
               onClick={() => setSelected(c)}
               aria-label={locked
                 ? t("collection.countryCardLocked", { number: String(dexNumber(c.cca3)).padStart(3, "0") })
-                : t("collection.countryCard", {
+                : rewardsRevealed && discovery ? t("collection.countryCard", {
                     country: countryName(c, locale),
                     status: statusLabel,
-                    dish: discovery?.cuisine.dish[locale] ?? "",
+                    dish: discovery.cuisine.dish[locale],
+                  }) : t("collection.countryCardProgress", {
+                    country: countryName(c, locale), status: statusLabel, score, total: UNLOCK_TOTAL,
                   })}
               className={cn(
                 "group relative flex flex-col items-center gap-1.5 rounded-2xl border-2 p-2.5 text-center transition-all active:scale-[0.98]",
@@ -286,13 +333,18 @@ export default function CollectionPage() {
               {discovery && (
                 <>
                   <span className="flex h-10 w-full items-center justify-center rounded-lg border border-sky-500/20 bg-sky-500/10 px-2 py-1" aria-hidden="true">
-                    <CountryOutline cca3={c.cca3} decorative className="max-h-8" pathClassName="fill-sky-500 stroke-sky-700 dark:fill-sky-400 dark:stroke-sky-200" />
+                    <CountryOutline d={discovery.outline.d} decorative className="max-h-8" pathClassName="fill-sky-500 stroke-sky-700 dark:fill-sky-400 dark:stroke-sky-200" />
                   </span>
                   <span className="flex w-full min-w-0 items-center gap-1 text-left text-[10px] font-semibold leading-tight text-amber-700 dark:text-amber-300">
                     <Utensils className="h-3 w-3 shrink-0" aria-hidden="true" />
                     <span className="truncate">{discovery.cuisine.dish[locale]}</span>
                   </span>
                 </>
+              )}
+              {!locked && !rewardsRevealed && (
+                <span className="flex min-h-10 w-full items-center justify-center gap-1 rounded-lg border border-dashed border-amber-500/30 bg-amber-500/5 px-1 text-[9px] font-bold leading-tight text-amber-700 dark:text-amber-300">
+                  <Lock className="h-3 w-3 shrink-0" aria-hidden="true" />{t("collection.cuisine.sealedShort")}
+                </span>
               )}
               <div className="text-[9px] font-bold tabular-nums text-muted-foreground">#{String(dexNumber(c.cca3)).padStart(3, "0")} · {dexGameCount(hits[c.cca3])} {L("games", "Spiele")}</div>
               {/* progress pips */}
@@ -308,7 +360,7 @@ export default function CollectionPage() {
       </>
       )}
 
-      {selected && <DetailModal country={selected} score={dexScore(hits[selected.cca3])} games={dexGameCount(hits[selected.cca3])} state={dexStateOf(hits[selected.cca3])} perGame={hits[selected.cca3] ?? {}} favorite={favorites.includes(selected.cca3)} onFavorite={() => toggleFavorite(selected.cca3)} onClose={() => setSelected(null)} locale={locale} t={t} />}
+      {selected && <DetailModal country={selected} discovery={discoveries[selected.cca3] ?? null} score={dexScore(hits[selected.cca3])} games={dexGameCount(hits[selected.cca3])} state={dexStateOf(hits[selected.cca3])} perGame={hits[selected.cca3] ?? {}} favorite={favorites.includes(selected.cca3)} onFavorite={() => toggleFavorite(selected.cca3)} onClose={() => setSelected(null)} locale={locale} t={t} />}
     </div>
   );
 }
@@ -326,6 +378,7 @@ function dexStatusLabel(state: DexState, locale: "en" | "de") {
 
 function DetailModal({
   country,
+  discovery,
   score,
   games,
   state,
@@ -337,6 +390,7 @@ function DetailModal({
   t,
 }: {
   country: Country;
+  discovery: CountryDiscoveryPresentation | null;
   score: number;
   games: number;
   state: DexState;
@@ -351,7 +405,6 @@ function DetailModal({
   const unlocked = score >= UNLOCK_TOTAL;
   const facts = dexFacts(country, score, locale);
   const cool = dexCoolFacts(country, score, locale);
-  const discovery = countryDiscoveryPresentation(country.cca3, state);
   const cuisine = discovery?.cuisine ?? null;
   const [view, setView] = useState<"country" | "recipe">("country");
   const [recipe, setRecipe] = useState<CountryRecipe | null>(null);
@@ -488,6 +541,7 @@ function DetailModal({
               locked={locked}
               unlocked={unlocked}
               cuisine={cuisine}
+              outline={discovery?.outline.d ?? null}
               facts={facts}
               cool={cool}
               locale={locale}
@@ -503,10 +557,10 @@ function DetailModal({
 }
 
 function CountryView({
-  country, score, games, state, perGame, locked, unlocked, cuisine, facts, cool, locale, t, recipeButtonRef, onRecipe,
+  country, score, games, state, perGame, locked, unlocked, cuisine, outline, facts, cool, locale, t, recipeButtonRef, onRecipe,
 }: {
   country: Country; score: number; games: number; state: DexState; perGame: Record<string, number>;
-  locked: boolean; unlocked: boolean; cuisine: CountryCuisine | null;
+  locked: boolean; unlocked: boolean; cuisine: CountryCuisine | null; outline: string | null;
   facts: ReturnType<typeof dexFacts>; cool: string[]; locale: "en" | "de";
   t: (k: string, v?: Record<string, string | number>) => string;
   recipeButtonRef: React.RefObject<HTMLButtonElement | null>; onRecipe: () => void;
@@ -521,12 +575,12 @@ function CountryView({
         </div>
       ) : (
         <>
-          <section className="grid grid-cols-[5fr_6fr] gap-3" aria-label={t("collection.cuisine.countryHero", { country: name })}>
+          <section className="grid grid-cols-[5fr_6fr] gap-3" aria-label={outline ? t("collection.cuisine.countryHero", { country: name }) : t("collection.cuisine.sealedHero", { country: name })}>
             <div className="flex min-h-32 items-center rounded-2xl border border-border bg-muted/30 p-3">
               <FlagImage code={country.flag} alt="" className="aspect-[4/3] w-full rounded-lg shadow-sm" />
             </div>
-            <div className="flex min-h-32 items-center justify-center rounded-2xl border border-sky-500/25 bg-sky-500/10 p-4">
-              <CountryOutline cca3={country.cca3} decorative className="max-h-28" />
+            <div className={cn("flex min-h-32 items-center justify-center rounded-2xl border p-4", outline ? "border-sky-500/25 bg-sky-500/10" : "border-dashed border-amber-500/30 bg-amber-500/5")}>
+              {outline ? <CountryOutline d={outline} decorative className="max-h-28" /> : <div className="flex flex-col items-center gap-2 text-center text-amber-700 dark:text-amber-300"><Lock className="h-7 w-7" aria-hidden="true" /><span className="text-[10px] font-extrabold uppercase tracking-[0.13em]">{t("collection.cuisine.sealedOutline")}</span></div>}
             </div>
           </section>
 
@@ -560,6 +614,18 @@ function CountryView({
                 <button ref={recipeButtonRef} onClick={onRecipe} className="flex min-h-11 w-full items-center justify-center gap-2 rounded-xl bg-amber-500 px-4 py-2.5 text-sm font-extrabold text-amber-950 shadow-sm transition hover:bg-amber-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-500 focus-visible:ring-offset-2">
                   <Utensils className="h-4 w-4" aria-hidden="true" />{t("collection.cuisine.viewRecipe")}
                 </button>
+              </div>
+            </section>
+          )}
+          {!cuisine && (
+            <section className="mt-5 overflow-hidden rounded-2xl border border-dashed border-amber-500/35 bg-gradient-to-br from-amber-500/10 to-orange-500/5" aria-label={t("collection.cuisine.sealedTitle")}>
+              <div className="flex items-start gap-3 p-4">
+                <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-amber-500/20 text-amber-700 shadow-sm dark:text-amber-300"><Lock className="h-5 w-5" aria-hidden="true" /></span>
+                <div className="min-w-0">
+                  <p className="text-[10px] font-extrabold uppercase tracking-[0.16em] text-amber-700 dark:text-amber-300">{t("collection.cuisine.sealedEyebrow")}</p>
+                  <h3 className="mt-0.5 text-lg font-extrabold leading-tight">{t("collection.cuisine.sealedTitle")}</h3>
+                  <p className="mt-1.5 text-sm leading-relaxed text-muted-foreground">{t("collection.cuisine.sealedBody", { score: Math.min(score, UNLOCK_TOTAL), total: UNLOCK_TOTAL })}</p>
+                </div>
               </div>
             </section>
           )}

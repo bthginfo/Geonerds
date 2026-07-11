@@ -88,6 +88,22 @@ describe("country cuisine content", () => {
     expect(allText).not.toMatch(/\b(?:named|measured|listed|remaining|main ingredients?|protein|everything|suitable|as needed|to taste|if appropriate)\b|vegetables?, beans? or grain|\b(?:genannt|abgemessen|aufgeführt|übrig(?:e[snm]?)?|hauptzutaten?|proteinzutaten?|alles|passende gewürze|nach bedarf|nach geschmack|gegebenenfalls)\b|gemüse, bohnen oder getreide/i);
   });
 
+  it("keeps grilled halloumi a coherent Cyprus recipe instead of a generic grill template", () => {
+    const recipe = COUNTRY_RECIPES.CYP;
+    const text = `${recipe.ingredients.map((item) => item.en).join(" ")} ${recipe.steps.map((step) => step.en).join(" ")}`.toLowerCase();
+    expect(text).toMatch(/halloumi[\s\S]*olive oil[\s\S]*lemon[\s\S]*(?:mint|oregano)/);
+    expect(text).toMatch(/1.?2 minutes per side/);
+    expect(text).not.toMatch(/grated cheese|chopped tomatoes|cucumber|cooked accompaniments/);
+    expect(COUNTRY_CUISINES.CYP.allergens).toEqual(["milk"]);
+    expect(COUNTRY_CUISINES.CYP.servings).toBe(4);
+  });
+
+  it("rejects the former generic grill template and awkward duplicated dish constructions", () => {
+    const text = JSON.stringify(COUNTRY_RECIPES);
+    expect(text).not.toMatch(/cooked accompaniments from the ingredient list|gegarten beilagen aus der zutatenliste/i);
+    expect(text).not.toMatch(/grill the grilled\b|grille den gegrillten\b/i);
+  });
+
   it("does not duplicate core ingredient concepts within a recipe", () => {
     const concepts: Record<string, RegExp> = {
       lime:/\blime|limette/i, garlic:/\bgarlic|knoblauch/i,
@@ -200,9 +216,11 @@ describe("country cuisine content", () => {
     }
   });
 
-  it("never exposes discovery payload for locked countries", () => {
+  it("only exposes outline and cuisine payload once the canonical 100% state is reached", () => {
     expect(countryDiscoveryPresentation("JPN", "locked")).toBeNull();
-    for (const state of ["discovered", "researched", "unlocked", "mastered"] as const) {
+    expect(countryDiscoveryPresentation("JPN", "discovered")).toBeNull();
+    expect(countryDiscoveryPresentation("JPN", "researched")).toBeNull();
+    for (const state of ["unlocked", "mastered"] as const) {
       const payload = countryDiscoveryPresentation("JPN", state);
       expect(payload?.cuisine.dish.en).toContain("sushi");
       expect(payload?.outline.d).not.toBe("");
