@@ -1,24 +1,24 @@
+import { getCountryByCca3 } from "@/data/countries";
 import type { Country, Difficulty } from "@/lib/types";
 
-export interface JigsawPuzzle {
-  subregion: string;
-  context: Country[];
-  pieces: Country[];
+export interface NeighborPuzzle {
+  anchor: Country;
+  neighbors: Country[];
 }
 
-export interface JigsawPresentation {
-  pieceCount: number;
+export interface NeighborJigsawPresentation {
+  minNeighbors: number;
+  maxNeighbors: number;
   namedPieces: boolean;
-  sequential: boolean;
-  exactSlots: boolean;
-  positionMarkers: boolean;
-  tolerance: number;
+  boundsPadding: number;
+  centroidRadius: number;
 }
 
-export interface JigsawTarget {
+export interface NeighborTarget {
   code: string;
   cx: number;
   cy: number;
+  bounds: [[number, number], [number, number]];
   tiny: boolean;
 }
 
@@ -29,10 +29,10 @@ export interface JigsawDropBounds {
   bottom: number;
 }
 
-export const JIGSAW_PRESENTATION: Record<Difficulty, JigsawPresentation> = {
-  easy: { pieceCount: 6, namedPieces: true, sequential: true, exactSlots: true, positionMarkers: true, tolerance: 110 },
-  medium: { pieceCount: 9, namedPieces: false, sequential: false, exactSlots: false, positionMarkers: true, tolerance: 74 },
-  hard: { pieceCount: 12, namedPieces: false, sequential: false, exactSlots: false, positionMarkers: false, tolerance: 52 },
+export const JIGSAW_PRESENTATION: Record<Difficulty, NeighborJigsawPresentation> = {
+  easy: { minNeighbors: 2, maxNeighbors: 4, namedPieces: true, boundsPadding: 64, centroidRadius: 96 },
+  medium: { minNeighbors: 4, maxNeighbors: 6, namedPieces: true, boundsPadding: 48, centroidRadius: 76 },
+  hard: { minNeighbors: 6, maxNeighbors: 9, namedPieces: false, boundsPadding: 36, centroidRadius: 62 },
 };
 
 function shuffleWith<T>(values: readonly T[], rng: () => number): T[] {
@@ -44,29 +44,92 @@ function shuffleWith<T>(values: readonly T[], rng: () => number): T[] {
   return result;
 }
 
-export function jigsawPieceCount(difficulty: Difficulty) {
-  return JIGSAW_PRESENTATION[difficulty].pieceCount;
-}
+/**
+ * Builds a complete, trustworthy neighborhood. If even one declared border is
+ * missing, asymmetric, or lacks map geometry, the anchor is rejected instead
+ * of silently creating a misleading partial puzzle.
+ */
+export function neighborPuzzleForAnchor(
+  anchor: Country,
+  geometryIds: ReadonlySet<string>
+): NeighborPuzzle | null {
+  if (!anchor.independent || !anchor.ccn3 || !geometryIds.has(String(anchor.ccn3))) return null;
+  if (anchor.borders.length < 2 || new Set(anchor.borders).size !== anchor.borders.length) return null;
 
-export function targetTolerance(difficulty: Difficulty, tiny: boolean): number {
-  return JIGSAW_PRESENTATION[difficulty].tolerance * (tiny ? 1.65 : 1);
-}
-
-export function nearestJigsawTarget(
-  point: { x: number; y: number },
-  targets: readonly JigsawTarget[],
-  difficulty: Difficulty
-): JigsawTarget | null {
-  let nearest: JigsawTarget | null = null;
-  let nearestDistance = Number.POSITIVE_INFINITY;
-  for (const target of targets) {
-    const distance = Math.hypot(point.x - target.cx, point.y - target.cy);
-    if (distance <= targetTolerance(difficulty, target.tiny) && distance < nearestDistance) {
-      nearest = target;
-      nearestDistance = distance;
-    }
+  const neighbors: Country[] = [];
+  for (const code of anchor.borders) {
+    const neighbor = getCountryByCca3(code);
+    if (!neighbor?.ccn3 || !geometryIds.has(String(neighbor.ccn3))) return null;
+    if (!neighbor.borders.includes(anchor.cca3)) return null;
+    neighbors.push(neighbor);
   }
-  return nearest;
+  if (neighbors.length > 9) return null;
+  return { anchor, neighbors };
+}
+
+export function eligibleNeighborPuzzles(
+  countries: readonly Country[],
+  geometryIds: ReadonlySet<string>,
+  difficulty: Difficulty
+): NeighborPuzzle[] {
+  const { minNeighbors, maxNeighbors } = JIGSAW_PRESENTATION[difficulty];
+  return [...countries]
+    .sort((a, b) => a.cca3.localeCompare(b.cca3))
+    .map((anchor) => neighborPuzzleForAnchor(anchor, geometryIds))
+    .filter((puzzle): puzzle is NeighborPuzzle => Boolean(
+      puzzle && puzzle.neighbors.length >= minNeighbors && puzzle.neighbors.length <= maxNeighbors
+    ));
+}
+
+export function selectNeighborPuzzles(
+  countries: readonly Country[],
+  geometryIds: ReadonlySet<string>,
+  difficulty: Difficulty,
+  count: number,
+  rng: () => number = Math.random
+): NeighborPuzzle[] {
+  const eligible = eligibleNeighborPuzzles(countries, geometryIds, difficulty);
+  return shuffleWith(eligible, rng).slice(0, Math.max(0, Math.min(count, eligible.length)));
+}
+
+export function neighborRunSummary(puzzles: readonly NeighborPuzzle[]): { total: number; countryHits: string[] } {
+  return {
+    total: puzzles.reduce((sum, puzzle) => sum + puzzle.neighbors.length, 0),
+    countryHits: [...new Set(puzzles.flatMap((puzzle) => [
+      puzzle.anchor.cca3,
+      ...puzzle.neighbors.map((neighbor) => neighbor.cca3),
+    ]))],
+  };
+}
+
+/** A rough placement succeeds within the expanded true bounds or near its centroid. */
+export function dropMatchesTarget(
+  point: { x: number; y: number },
+  target: NeighborTarget,
+  difficulty: Difficulty
+): boolean {
+  const presentation = JIGSAW_PRESENTATION[difficulty];
+  const extra = target.tiny ? 26 : 0;
+  const padding = presentation.boundsPadding + extra;
+  const [[left, top], [right, bottom]] = target.bounds;
+  const insideExpandedBounds = point.x >= left - padding
+    && point.x <= right + padding
+    && point.y >= top - padding
+    && point.y <= bottom + padding;
+  const nearCentroid = Math.hypot(point.x - target.cx, point.y - target.cy)
+    <= presentation.centroidRadius + extra;
+  return insideExpandedBounds || nearCentroid;
+}
+
+export type CompassSector = "N" | "NE" | "E" | "SE" | "S" | "SW" | "W" | "NW";
+
+export function compassSector(
+  anchor: Pick<NeighborTarget, "cx" | "cy">,
+  target: Pick<NeighborTarget, "cx" | "cy">
+): CompassSector {
+  const angle = Math.atan2(target.cy - anchor.cy, target.cx - anchor.cx) * 180 / Math.PI;
+  const sectors: CompassSector[] = ["E", "SE", "S", "SW", "W", "NW", "N", "NE"];
+  return sectors[Math.round(((angle + 360) % 360) / 45) % 8];
 }
 
 /** A tray tap is selection only; placement starts after a real drag ending on the board. */
@@ -79,30 +142,4 @@ export function isRealBoardDrop(
   return Math.hypot(end.x - start.x, end.y - start.y) >= minimumDistance
     && end.x >= board.left && end.x <= board.right
     && end.y >= board.top && end.y <= board.bottom;
-}
-
-export function selectJigsawPuzzle(
-  countries: readonly Country[],
-  geometryIds: ReadonlySet<string>,
-  difficulty: Difficulty,
-  rng: () => number = Math.random
-): JigsawPuzzle | null {
-  const count = jigsawPieceCount(difficulty);
-  const geometric = countries.filter(
-    (country) => country.ccn3 && geometryIds.has(String(country.ccn3)) && country.subregion && country.independent
-  );
-  const groups = new Map<string, Country[]>();
-  for (const country of geometric) {
-    const group = groups.get(country.subregion) ?? [];
-    group.push(country);
-    groups.set(country.subregion, group);
-  }
-  const eligible = [...groups.entries()].filter(([, group]) => group.length >= count);
-  if (!eligible.length) return null;
-  const [subregion, group] = eligible[Math.floor(rng() * eligible.length)];
-  const context = [...group].sort((a, b) => a.cca3.localeCompare(b.cca3));
-  const tierLimit = difficulty === "easy" ? 2 : difficulty === "medium" ? 3 : 4;
-  const preferred = context.filter((country) => country.difficulty <= tierLimit);
-  const source = preferred.length >= count ? preferred : context;
-  return { subregion, context, pieces: shuffleWith(source, rng).slice(0, count) };
 }

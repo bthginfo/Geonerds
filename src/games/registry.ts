@@ -72,6 +72,7 @@ export const GAMES: GameConfig[] = [
     icon: Puzzle,
     gradient: "from-blue-500 to-emerald-500",
     supportsDifficulty: true,
+    countOptions: [3, 5, 8],
   },
   {
     id: "connections",
