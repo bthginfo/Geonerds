@@ -190,12 +190,6 @@ export function MapClickGame({ difficulty, roundCount, timed, variant, practice,
     );
   }
 
-  const subregionContext = COUNTRIES.filter((country) => country.subregion === target.subregion && country.ccn3);
-  const regionalContext = DOT_SET.has(String(target.ccn3))
-    ? (subregionContext.length >= 4 ? subregionContext : COUNTRIES.filter((country) => country.region === target.region && country.ccn3))
-        .map((country) => String(country.ccn3))
-    : undefined;
-
   return (
     <div className="flex flex-1 flex-col">
       <GameTopBar title={t("games.map-click.name")} onExit={onExit}>
@@ -253,7 +247,6 @@ export function MapClickGame({ difficulty, roundCount, timed, variant, practice,
           flashOk={flash?.ok}
           flagByCcn3={(ccn3) => flagByCcn3Map.get(ccn3)}
           dots={DOTS}
-          fitToCcn3={regionalContext}
           resetSignal={resetSignal}
         />
         <Compass />
