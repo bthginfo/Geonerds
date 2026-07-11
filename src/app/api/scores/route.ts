@@ -17,6 +17,8 @@ const GAME_IDS = new Set([
   "map-click",
   "draw",
   "border-chain",
+  "grid",
+  "minesweeper",
   "ranking",
   "languages",
   "pin",
@@ -30,6 +32,7 @@ const GAME_IDS = new Set([
   "colorflag",
   "millionaire",
   "daily",
+  "weekly",
 ]);
 const DIFFICULTIES = new Set(["easy", "medium", "hard"]);
 

@@ -18,6 +18,7 @@ import { levelFromXp } from "@/lib/level";
 import { earnedIds } from "@/lib/badges";
 import { ResultScreen } from "./result-screen";
 import { cn } from "@/lib/utils";
+import { useProgression } from "@/store/progression";
 
 export interface PlayResult {
   score: number;
@@ -73,7 +74,7 @@ export function GameShell({
   const [result, setResult] = useState<RunResult | null>(null);
   const [isRecord, setIsRecord] = useState(false);
   const [newBadges, setNewBadges] = useState<string[]>([]);
-  const [newCountries, setNewCountries] = useState<{ discovered: string[]; unlocked: string[] }>({ discovered: [], unlocked: [] });
+  const [newCountries, setNewCountries] = useState<{ discovered: string[]; researched: string[]; unlocked: string[]; mastered: string[] }>({ discovered: [], researched: [], unlocked: [], mastered: [] });
   const [levelUp, setLevelUp] = useState<number | null>(null);
   const [howOpen, setHowOpen] = useState(false);
 
@@ -106,19 +107,24 @@ export function GameShell({
     if (hits.length) useDex.getState().record(gameId, hits);
     const dexAfter = useDex.getState().hits;
     const discovered: string[] = [];
+    const researched: string[] = [];
     const unlockedCountries: string[] = [];
+    const mastered: string[] = [];
     for (const [cca3, before] of beforeState) {
       const after = dexStateOf(dexAfter[cca3]);
       if (before === "locked" && after !== "locked") discovered.push(cca3);
-      if (before !== "unlocked" && after === "unlocked") unlockedCountries.push(cca3);
+      if (!["researched", "unlocked", "mastered"].includes(before) && ["researched", "unlocked", "mastered"].includes(after)) researched.push(cca3);
+      if (!["unlocked", "mastered"].includes(before) && ["unlocked", "mastered"].includes(after)) unlockedCountries.push(cca3);
+      if (before !== "mastered" && after === "mastered") mastered.push(cca3);
     }
 
     const prevBest = await scoreStore.bestScore(gameId);
     const allBefore = await scoreStore.allRuns();
-    const totalBefore = allBefore.reduce((s, x) => s + x.score, 0);
-    const before = earnedIds(allBefore, dexBefore);
+    const progressionBefore = useProgression.getState();
+    const totalBefore = progressionBefore.totalScore;
+    const before = earnedIds(allBefore, dexBefore, progressionBefore);
     await scoreStore.saveRun(run);
-    const after = earnedIds(await scoreStore.allRuns(), dexAfter);
+    const after = earnedIds(await scoreStore.allRuns(), dexAfter, useProgression.getState());
     const unlocked = [...after].filter((id) => !before.has(id));
     const lvlBefore = levelFromXp(totalBefore).level;
     const lvlAfter = levelFromXp(totalBefore + run.score).level;
@@ -129,7 +135,7 @@ export function GameShell({
     setResult(run);
     setIsRecord(r.score > 0 && r.score > prevBest);
     setNewBadges(unlocked);
-    setNewCountries({ discovered, unlocked: unlockedCountries });
+    setNewCountries({ discovered, researched, unlocked: unlockedCountries, mastered });
     setLevelUp(lvlAfter > lvlBefore ? lvlAfter : null);
     setPhase("result");
   }

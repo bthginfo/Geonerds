@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { scoreStore } from "@/lib/leaderboard/local";
 import type { Locale } from "@/lib/types";
 import { cn } from "@/lib/utils";
+import { clearGameplayStorage } from "@/lib/reset";
 
 export default function SettingsPage() {
   const { t } = useT();
@@ -36,7 +37,7 @@ export default function SettingsPage() {
   async function clearData() {
     if (!confirm(t("settings.clearConfirm"))) return;
     await scoreStore.clear();
-    localStorage.removeItem("geonerds-expedition");
+    clearGameplayStorage(localStorage);
     localStorage.removeItem("geonerds-settings");
     location.reload();
   }

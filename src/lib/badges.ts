@@ -5,9 +5,15 @@ import {
   Scale, ListOrdered, ListChecks, Mountain, Crosshair, Spline, PenLine, Swords,
   Diamond, Compass, Gauge, TrendingUp, Repeat, type LucideIcon,
 } from "lucide-react";
-import type { GameId, Locale } from "./types";
+import type { Locale } from "./types";
 import type { ScoreEntry } from "./leaderboard/types";
 import { CONTINENTS, DEX_POOL, dexStateOf } from "./dex";
+import { GAMES } from "@/games/registry";
+import type { ProgressionData } from "./progression";
+
+export type BadgeCategory = "journey" | "skill" | "mastery" | "collection" | "challenge";
+export type BadgeTier = "bronze" | "silver" | "gold" | "mythic";
+export interface BadgeProgress { current: number; target: number }
 
 export interface Stats {
   totalRuns: number;
@@ -25,9 +31,16 @@ export interface Stats {
   correctByGame: Record<string, number>;
   bestStreakByGame: Record<string, number>;
   maxTotalByGame: Record<string, number>;
+  runsByGame: Record<string, number>;
+  perfectByGame: Record<string, number>;
+  hardRunsByGame: Record<string, number>;
+  hardPerfectByGame: Record<string, number>;
+  flawlessByGame: Record<string, number>;
   // Geo-Dex collection
   dexDiscovered: number; // discovered or unlocked
   dexUnlocked: number; // fully unlocked
+  dexResearched: number;
+  dexMastered: number;
   dexTotal: number;
   dexUnlockedRegions: string[]; // continents fully unlocked
   dexDiscoveredRegions: string[]; // continents fully discovered (every country at least discovered)
@@ -35,11 +48,17 @@ export interface Stats {
 
 export function computeStats(
   runs: ScoreEntry[],
-  dexHits: Record<string, Record<string, number>> = {}
+  dexHits: Record<string, Record<string, number>> = {},
+  progression?: ProgressionData
 ): Stats {
   const correctByGame: Record<string, number> = {};
   const bestStreakByGame: Record<string, number> = {};
   const maxTotalByGame: Record<string, number> = {};
+  const runsByGame: Record<string, number> = {};
+  const perfectByGame: Record<string, number> = {};
+  const hardRunsByGame: Record<string, number> = {};
+  const hardPerfectByGame: Record<string, number> = {};
+  const flawlessByGame: Record<string, number> = {};
   const games = new Set<string>();
   const days = new Set<string>();
   let totalScore = 0;
@@ -54,6 +73,7 @@ export function computeStats(
 
   for (const r of runs) {
     games.add(r.gameId);
+    runsByGame[r.gameId] = (runsByGame[r.gameId] ?? 0) + 1;
     totalScore += r.score;
     maxScoreRun = Math.max(maxScoreRun, r.score);
     bestStreak = Math.max(bestStreak, r.bestStreak ?? 0);
@@ -62,9 +82,13 @@ export function computeStats(
     maxTotalByGame[r.gameId] = Math.max(maxTotalByGame[r.gameId] ?? 0, r.total ?? 0);
     const perfect = r.total > 0 && r.correct === r.total;
     if (perfect) perfectRounds += 1;
+    if (perfect) perfectByGame[r.gameId] = (perfectByGame[r.gameId] ?? 0) + 1;
     if (perfect && r.total >= 25) bigPerfect += 1;
     if (r.difficulty === "hard" && (r.correct ?? 0) > 0) hardRuns += 1;
+    if (r.difficulty === "hard") hardRunsByGame[r.gameId] = (hardRunsByGame[r.gameId] ?? 0) + 1;
     if (r.difficulty === "hard" && perfect) hardPerfect += 1;
+    if (r.difficulty === "hard" && perfect) hardPerfectByGame[r.gameId] = (hardPerfectByGame[r.gameId] ?? 0) + 1;
+    if (typeof r.mode === "string" && r.mode.includes("flawless")) flawlessByGame[r.gameId] = (flawlessByGame[r.gameId] ?? 0) + 1;
     if (r.mode === "type") typeRuns += 1;
     if (r.createdAt) {
       const d = new Date(r.createdAt);
@@ -76,10 +100,21 @@ export function computeStats(
   // ── Geo-Dex collection ──────────────────────────────────
   let dexDiscovered = 0;
   let dexUnlocked = 0;
+  let dexResearched = 0;
+  let dexMastered = 0;
   for (const c of DEX_POOL) {
     const st = dexStateOf(dexHits[c.cca3]);
-    if (st === "unlocked") {
+    if (st === "mastered") {
+      dexMastered++;
       dexUnlocked++;
+      dexResearched++;
+      dexDiscovered++;
+    } else if (st === "unlocked") {
+      dexUnlocked++;
+      dexResearched++;
+      dexDiscovered++;
+    } else if (st === "researched") {
+      dexResearched++;
       dexDiscovered++;
     } else if (st === "discovered") {
       dexDiscovered++;
@@ -90,30 +125,49 @@ export function computeStats(
   for (const region of CONTINENTS) {
     const list = DEX_POOL.filter((c) => c.region === region);
     if (!list.length) continue;
-    const allUnlocked = list.every((c) => dexStateOf(dexHits[c.cca3]) === "unlocked");
+    const allUnlocked = list.every((c) => ["unlocked", "mastered"].includes(dexStateOf(dexHits[c.cca3])));
     const allDiscovered = list.every((c) => dexStateOf(dexHits[c.cca3]) !== "locked");
     if (allUnlocked) dexUnlockedRegions.push(region);
     if (allDiscovered) dexDiscoveredRegions.push(region);
   }
 
+  const lifetime = progression?.totalRuns ? progression : null;
+  if (lifetime) {
+    for (const [gameId, game] of Object.entries(lifetime.games)) {
+      correctByGame[gameId] = game.correct;
+      runsByGame[gameId] = game.runs;
+      perfectByGame[gameId] = game.perfectRuns;
+      hardRunsByGame[gameId] = game.hardRuns;
+      hardPerfectByGame[gameId] = game.hardPerfectRuns ?? 0;
+      flawlessByGame[gameId] = game.flawlessRuns ?? 0;
+      games.add(gameId);
+    }
+  }
   return {
-    totalRuns: runs.length,
-    totalScore,
+    totalRuns: lifetime?.totalRuns ?? runs.length,
+    totalScore: lifetime?.totalScore ?? totalScore,
     maxScoreRun,
-    bestStreak,
+    bestStreak: Math.max(bestStreak, lifetime?.bestStreak ?? 0),
     perfectRounds,
     bigPerfect,
-    distinctGames: games.size,
+    distinctGames: lifetime ? Object.keys(lifetime.games).length : games.size,
     hardRuns,
     hardPerfect,
     typeRuns,
-    distinctDays: days.size,
+    distinctDays: lifetime ? Object.keys(lifetime.days).length : days.size,
     nightOwl,
     correctByGame,
     bestStreakByGame,
     maxTotalByGame,
+    runsByGame,
+    perfectByGame,
+    hardRunsByGame,
+    hardPerfectByGame,
+    flawlessByGame,
     dexDiscovered,
     dexUnlocked,
+    dexResearched,
+    dexMastered,
     dexTotal: DEX_POOL.length,
     dexUnlockedRegions,
     dexDiscoveredRegions,
@@ -126,9 +180,13 @@ export interface Badge {
   desc: { en: string; de: string };
   icon: LucideIcon;
   earned: (s: Stats) => boolean;
+  category?: BadgeCategory;
+  tier?: BadgeTier;
+  progress?: (s: Stats) => BadgeProgress;
+  hidden?: boolean;
 }
 
-const g = (s: Stats, id: GameId) => s.correctByGame[id] ?? 0;
+const g = (s: Stats, id: string) => s.correctByGame[id] ?? 0;
 
 export const BADGES: Badge[] = [
   // ── Volume ──────────────────────────────────────────────
@@ -165,7 +223,7 @@ export const BADGES: Badge[] = [
   { id: "sampler", icon: Compass, name: { en: "Sampler", de: "Schnupperer" }, desc: { en: "Try 5 different games", de: "5 verschiedene Spiele" }, earned: (s) => s.distinctGames >= 5 },
   { id: "explorer", icon: Globe2, name: { en: "Explorer", de: "Entdecker" }, desc: { en: "Try 10 different games", de: "10 verschiedene Spiele" }, earned: (s) => s.distinctGames >= 10 },
   { id: "allgames", icon: Globe2, name: { en: "Globetrotter", de: "Weltenbummler" }, desc: { en: "Try 15 different games", de: "15 verschiedene Spiele" }, earned: (s) => s.distinctGames >= 15 },
-  { id: "completionist", icon: Crown, name: { en: "Completionist", de: "Komplettist" }, desc: { en: "Try every single game", de: "Wirklich jedes Spiel" }, earned: (s) => s.distinctGames >= 19 },
+  { id: "completionist", icon: Crown, name: { en: "Completionist", de: "Komplettist" }, desc: { en: "Try every single game", de: "Wirklich jedes Spiel" }, earned: (s) => s.distinctGames >= GAMES.length, category: "journey", tier: "mythic", progress: (s) => ({ current: s.distinctGames, target: GAMES.length }) },
 
   // ── Difficulty & style ──────────────────────────────────
   { id: "hardMode", icon: Swords, name: { en: "Hard Mode", de: "Harter Modus" }, desc: { en: "Win points on hard difficulty", de: "Punkte auf Schwer holen" }, earned: (s) => s.hardRuns >= 1 },
@@ -256,14 +314,72 @@ export const BADGES: Badge[] = [
   { id: "regionOceania", icon: Flag, name: { en: "Oceania Explored", de: "Ozeanien erkundet" }, desc: { en: "Discover all of Oceania", de: "Ganz Ozeanien entdecken" }, earned: (s) => s.dexDiscoveredRegions.includes("Oceania") },
   { id: "regionMaster1", icon: Medal, name: { en: "Continent Master", de: "Kontinent-Meister" }, desc: { en: "Fully unlock a whole continent", de: "Einen ganzen Kontinent freispielen" }, earned: (s) => s.dexUnlockedRegions.length >= 1 },
   { id: "regionMasterAll", icon: Crown, name: { en: "Five Continents", de: "Fünf Kontinente" }, desc: { en: "Fully unlock every continent", de: "Jeden Kontinent freispielen" }, earned: (s) => s.dexUnlockedRegions.length >= CONTINENTS.length },
+  // Strategic game and deeper collection chains.
+  { id: "gridFirst", icon: Spline, name: { en: "First Intersection", de: "Erste Kreuzung" }, desc: { en: "Solve a Geo Grid", de: "Löse ein Geo Grid" }, earned: (s) => (s.perfectByGame.grid ?? 0) >= 1, category: "skill", tier: "bronze", progress: (s) => ({ current: s.perfectByGame.grid ?? 0, target: 1 }) },
+  { id: "gridFlawless", icon: Target, name: { en: "Perfect Fit", de: "Passt perfekt" }, desc: { en: "Solve a flawless Geo Grid", de: "Löse ein Geo Grid fehlerfrei" }, earned: (s) => (s.flawlessByGame.grid ?? 0) >= 1, category: "challenge", tier: "silver", progress: (s) => ({ current: s.flawlessByGame.grid ?? 0, target: 1 }) },
+  { id: "gridHard", icon: Swords, name: { en: "Grid Scholar", de: "Grid-Gelehrter" }, desc: { en: "Complete Geo Grid on hard", de: "Schaffe Geo Grid auf Schwer" }, earned: (s) => (s.hardPerfectByGame.grid ?? 0) >= 1, category: "skill", tier: "gold", progress: (s) => ({ current: s.hardPerfectByGame.grid ?? 0, target: 1 }) },
+  { id: "grid25", icon: Crown, name: { en: "Intersection Master", de: "Kreuzungsmeister" }, desc: { en: "Complete 25 Geo Grids", de: "Schaffe 25 Geo Grids" }, earned: (s) => (s.perfectByGame.grid ?? 0) >= 25, category: "mastery", tier: "mythic", progress: (s) => ({ current: s.perfectByGame.grid ?? 0, target: 25 }) },
+  { id: "minesFirst", icon: Fingerprint, name: { en: "First Deduction", de: "Erste Deduktion" }, desc: { en: "Solve Geo Minesweeper", de: "Löse Geo Minesweeper" }, earned: (s) => (s.perfectByGame.minesweeper ?? 0) >= 1, category: "skill", tier: "bronze", progress: (s) => ({ current: s.perfectByGame.minesweeper ?? 0, target: 1 }) },
+  { id: "minesFlawless", icon: Target, name: { en: "No False Moves", de: "Kein Fehltritt" }, desc: { en: "Solve without an error", de: "Löse es ohne Fehler" }, earned: (s) => (s.flawlessByGame.minesweeper ?? 0) >= 1, category: "challenge", tier: "silver", progress: (s) => ({ current: s.flawlessByGame.minesweeper ?? 0, target: 1 }) },
+  { id: "minesHard", icon: Swords, name: { en: "Hidden Logic", de: "Verborgene Logik" }, desc: { en: "Complete Geo Minesweeper on hard", de: "Schaffe Geo Minesweeper auf Schwer" }, earned: (s) => (s.hardPerfectByGame.minesweeper ?? 0) >= 1, category: "skill", tier: "gold", progress: (s) => ({ current: s.hardPerfectByGame.minesweeper ?? 0, target: 1 }) },
+  { id: "mines25", icon: Crown, name: { en: "Border Oracle", de: "Grenzorakel" }, desc: { en: "Complete 25 Geo Minesweeper boards", de: "Schaffe 25 Geo-Minesweeper-Felder" }, earned: (s) => (s.perfectByGame.minesweeper ?? 0) >= 25, category: "mastery", tier: "mythic", progress: (s) => ({ current: s.perfectByGame.minesweeper ?? 0, target: 25 }) },
+  { id: "dexResearch10", icon: Compass, name: { en: "Field Researcher", de: "Feldforscher" }, desc: { en: "Research 10 countries", de: "Erforsche 10 Länder" }, earned: (s) => s.dexResearched >= 10, category: "collection", tier: "silver", progress: (s) => ({ current: s.dexResearched, target: 10 }) },
+  { id: "dexMaster1", icon: Crown, name: { en: "Country Master", de: "Ländermeister" }, desc: { en: "Master your first country", de: "Meistere dein erstes Land" }, earned: (s) => s.dexMastered >= 1, category: "mastery", tier: "gold", progress: (s) => ({ current: s.dexMastered, target: 1 }) },
+  { id: "dexMaster25", icon: Diamond, name: { en: "Golden Atlas", de: "Goldener Atlas" }, desc: { en: "Master 25 countries", de: "Meistere 25 Länder" }, earned: (s) => s.dexMastered >= 25, category: "mastery", tier: "mythic", progress: (s) => ({ current: s.dexMastered, target: 25 }) },
 ];
 
 export function earnedIds(
   runs: ScoreEntry[],
-  dexHits: Record<string, Record<string, number>> = {}
+  dexHits: Record<string, Record<string, number>> = {},
+  progression?: ProgressionData
 ): Set<string> {
-  const stats = computeStats(runs, dexHits);
+  const stats = computeStats(runs, dexHits, progression);
   return new Set(BADGES.filter((b) => b.earned(stats)).map((b) => b.id));
+}
+
+export function badgeCategory(badge: Badge): BadgeCategory {
+  if (badge.category) return badge.category;
+  if (badge.id.startsWith("dex") || badge.id.startsWith("region")) return "collection";
+  if (badge.id.toLowerCase().includes("perfect") || badge.id.toLowerCase().includes("hard") || badge.id.includes("streak")) return "challenge";
+  return "journey";
+}
+
+/** Explicit prestige ladder for milestone chains. Later milestones never regress. */
+const BADGE_TIER_OVERRIDES: Partial<Record<string, BadgeTier>> = {
+  first: "bronze", ten: "bronze", fifty: "silver", hundred: "gold", marathon: "gold", runs500: "gold", runs1000: "mythic",
+  score1k: "bronze", score10k: "bronze", score50k: "silver", score100k: "gold", score250k: "gold", score500k: "gold", score1m: "mythic", score2m: "mythic", score5m: "mythic",
+  bigrun: "bronze", megarun: "silver", run7500: "gold", run10k: "gold", run15k: "mythic",
+  streak10: "bronze", speedy: "bronze", streak25: "silver", streak50b: "gold", streak50: "gold", streak75: "mythic", streak100: "mythic",
+  perfect: "bronze", perfect5: "bronze", perfect10: "silver", perfect25: "gold", perfect25b: "gold", perfect100: "mythic", bigPerfect: "silver",
+  sampler: "bronze", explorer: "silver", allgames: "gold", completionist: "mythic",
+  regular: "bronze", loyal: "silver", days30: "gold", days100: "mythic",
+  hardMode: "bronze", hardcore: "silver", hard25: "gold", typist: "silver", typist50: "gold",
+  flags50: "silver", flags200: "gold", flags500: "mythic",
+  capitals50: "silver", capitals150: "gold", capitals300: "mythic",
+  map100: "silver", map250: "gold", map500: "mythic",
+  trivia30: "silver", trivia100: "gold",
+  waters20: "silver", waters50: "gold",
+  nerd10: "silver", nerd20: "gold", nerd30: "mythic",
+  dexFirst: "bronze", dex25: "silver", dex50: "silver", dex100: "gold", dexAll: "mythic",
+  dexComplete1: "bronze", dexUnlock25: "silver", dexUnlock100: "gold", dexUnlockAll: "mythic",
+  regionEurope: "gold", regionAsia: "gold", regionAfrica: "gold", regionAmericas: "gold", regionOceania: "gold", regionMaster1: "gold", regionMasterAll: "mythic",
+};
+
+export function badgeTier(badge: Badge): BadgeTier {
+  const override = BADGE_TIER_OVERRIDES[badge.id];
+  if (override) return override;
+  if (badge.tier) return badge.tier;
+  const id = badge.id.toLowerCase();
+  if (id.includes("all") || id.includes("1000") || id.includes("1m") || id.includes("5m")) return "mythic";
+  if (id.includes("100") || id.includes("500") || id.includes("master")) return "gold";
+  if (id.includes("25") || id.includes("50") || id.includes("hard")) return "silver";
+  return "bronze";
+}
+
+export function badgeProgress(badge: Badge, stats: Stats): BadgeProgress | null {
+  if (!badge.progress) return badge.earned(stats) ? { current: 1, target: 1 } : null;
+  const progress = badge.progress(stats);
+  return { current: Math.min(progress.current, progress.target), target: progress.target };
 }
 
 export function badgeName(b: Badge, locale: Locale) {

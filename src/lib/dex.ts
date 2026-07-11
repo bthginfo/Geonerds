@@ -5,7 +5,10 @@ import { COUNTRIES, getCountryByCca3, countryName } from "@/data/countries";
 import { formatNumber } from "./utils";
 
 export const PER_GAME_CAP = 5;
+export const RESEARCH_TOTAL = 5;
 export const UNLOCK_TOTAL = 10;
+export const MASTER_TOTAL = 20;
+export const MASTER_GAMES = 4;
 
 /** Progress toward unlocking a country: each game contributes at most PER_GAME_CAP. */
 export function dexScore(per?: Record<string, number>): number {
@@ -16,13 +19,24 @@ export function dexProgress(per?: Record<string, number>): number {
   return Math.min(1, dexScore(per) / UNLOCK_TOTAL);
 }
 export function dexGameCount(per?: Record<string, number>): number {
-  return per ? Object.keys(per).length : 0;
+  return per ? Object.values(per).filter((count) => count > 0).length : 0;
 }
-export type DexState = "locked" | "discovered" | "unlocked";
+export function dexRawHits(per?: Record<string, number>): number {
+  return per ? Object.values(per).reduce((sum, count) => sum + Math.max(0, count), 0) : 0;
+}
+export type DexState = "locked" | "discovered" | "researched" | "unlocked" | "mastered";
 export function dexStateOf(per?: Record<string, number>): DexState {
   const s = dexScore(per);
   if (s <= 0) return "locked";
-  return s >= UNLOCK_TOTAL ? "unlocked" : "discovered";
+  if (dexRawHits(per) >= MASTER_TOTAL && dexGameCount(per) >= MASTER_GAMES) return "mastered";
+  if (s >= UNLOCK_TOTAL) return "unlocked";
+  if (s >= RESEARCH_TOTAL) return "researched";
+  return "discovered";
+}
+
+export function dexNumber(cca3: string): number {
+  const index = DEX_POOL.findIndex((country) => country.cca3 === cca3);
+  return index < 0 ? 0 : index + 1;
 }
 
 const REGION: Record<string, { en: string; de: string }> = {
@@ -84,6 +98,7 @@ export interface ContinentProgress {
   total: number;
   unlocked: number;
   discovered: number;
+  mastered: number;
   facts: DexFact[];
 }
 
@@ -119,12 +134,14 @@ export function continentProgress(hits: Record<string, Record<string, number>>, 
     const list = DEX_POOL.filter((c) => c.region === region);
     let unlocked = 0;
     let discovered = 0;
+    let mastered = 0;
     for (const c of list) {
       const st = dexStateOf(hits[c.cca3]);
-      if (st === "unlocked") unlocked++;
-      else if (st === "discovered") discovered++;
+      if (st !== "locked") discovered++;
+      if (st === "unlocked" || st === "mastered") unlocked++;
+      if (st === "mastered") mastered++;
     }
-    return { region, total: list.length, unlocked, discovered, facts: continentFacts(region, locale) };
+    return { region, total: list.length, unlocked, discovered, mastered, facts: continentFacts(region, locale) };
   });
 }
 

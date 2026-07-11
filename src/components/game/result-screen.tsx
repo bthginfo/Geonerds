@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { motion } from "framer-motion";
-import { RotateCcw, Home, Share2, Trophy, Check, Sparkles, ArrowUpCircle } from "lucide-react";
+import { RotateCcw, Home, Share2, Trophy, Check, Sparkles, ArrowUpCircle, Crown } from "lucide-react";
 import type { RunResult } from "@/lib/types";
 import { useT } from "@/i18n/I18nProvider";
 import { Button } from "@/components/ui/button";
@@ -19,21 +19,21 @@ export function ResultScreen({
   result,
   isRecord,
   newBadges = [],
-  newCountries = { discovered: [], unlocked: [] },
+  newCountries = { discovered: [], researched: [], unlocked: [], mastered: [] },
   levelUp = null,
   onReplay,
 }: {
   result: RunResult;
   isRecord: boolean;
   newBadges?: string[];
-  newCountries?: { discovered: string[]; unlocked: string[] };
+  newCountries?: { discovered: string[]; researched: string[]; unlocked: string[]; mastered: string[] };
   levelUp?: number | null;
   onReplay: () => void;
 }) {
   const { t, locale } = useT();
   const [copied, setCopied] = useState(false);
 
-  const collectCount = newCountries.discovered.length + newCountries.unlocked.length;
+  const collectCount = new Set([...newCountries.discovered, ...newCountries.researched, ...newCountries.unlocked, ...newCountries.mastered]).size;
 
   useEffect(() => {
     sound.finish();
@@ -148,22 +148,27 @@ export function ResultScreen({
           >
             <div className="mb-2 flex items-center justify-center gap-1.5 text-xs font-bold uppercase tracking-wide text-amber-600 dark:text-amber-400">
               <Sparkles className="h-3.5 w-3.5" />
-              {newCountries.unlocked.length > 0
+              {newCountries.mastered.length > 0
+                ? (locale === "de" ? `${newCountries.mastered.length} Länder gemeistert` : `${newCountries.mastered.length} countries mastered`)
+                : newCountries.researched.length > 0
+                ? (locale === "de" ? `${newCountries.researched.length} Länder erforscht` : `${newCountries.researched.length} countries researched`)
+                : newCountries.unlocked.length > 0
                 ? t("result.countriesUnlocked", { n: collectCount })
                 : t("result.countriesProgress", { n: collectCount })}
             </div>
             <div className="flex flex-wrap justify-center gap-2">
-              {[...newCountries.unlocked, ...newCountries.discovered.filter((c) => !newCountries.unlocked.includes(c))]
+              {[...newCountries.mastered, ...newCountries.unlocked, ...newCountries.researched, ...newCountries.discovered].filter((cca3, index, all) => all.indexOf(cca3) === index)
                 .slice(0, 12)
                 .map((cca3) => {
                   const c = getCountryByCca3(cca3);
                   if (!c) return null;
-                  const full = newCountries.unlocked.includes(cca3);
+                  const full = newCountries.unlocked.includes(cca3) || newCountries.mastered.includes(cca3);
+                  const mastered = newCountries.mastered.includes(cca3);
                   return (
                     <span key={cca3} className="inline-flex items-center gap-1.5 rounded-full bg-card px-2 py-1 text-xs font-semibold shadow-sm">
                       <FlagImage code={c.flag} alt="" className="aspect-[4/3] w-4" rounded={false} />
                       {countryName(c, locale)}
-                      {full && <Check className="h-3 w-3 text-success" />}
+                      {mastered ? <Crown className="h-3 w-3 text-amber-500" /> : full && <Check className="h-3 w-3 text-success" />}
                     </span>
                   );
                 })}

@@ -24,6 +24,8 @@ export interface Country {
 }
 
 export type GameId =
+  | "daily"
+  | "weekly"
   | "flags"
   | "capitals"
   | "outline"
@@ -32,6 +34,8 @@ export type GameId =
   | "map-click"
   | "draw"
   | "border-chain"
+  | "grid"
+  | "minesweeper"
   | "ranking"
   | "languages"
   | "pin"

@@ -30,8 +30,10 @@ import { GeoNerdGame } from "@/games/geonerd/geonerd-game";
 import { JigsawGame } from "@/games/jigsaw/jigsaw-game";
 import { ConnectionsGame } from "@/games/connections/connections-game";
 import { ExpeditionGame } from "@/games/expedition/expedition-game";
+import { GridGame } from "@/games/grid/grid-game";
+import { MinesweeperGame } from "@/games/minesweeper/minesweeper-game";
 
-const COMPONENTS: Record<GameId, (h: PlayHandlers) => React.ReactNode> = {
+const COMPONENTS: Partial<Record<GameId, (h: PlayHandlers) => React.ReactNode>> = {
   expedition: (h) => <ExpeditionGame {...h} />,
   jigsaw: (h) => <JigsawGame {...h} />,
   connections: (h) => <ConnectionsGame {...h} />,
@@ -43,6 +45,8 @@ const COMPONENTS: Record<GameId, (h: PlayHandlers) => React.ReactNode> = {
   "map-click": (h) => <MapClickGame {...h} />,
   draw: (h) => <DrawGame {...h} />,
   "border-chain": (h) => <BorderChainGame {...h} />,
+  grid: (h) => <GridGame {...h} />,
+  minesweeper: (h) => <MinesweeperGame {...h} />,
   ranking: (h) => <RankingGame {...h} />,
   languages: (h) => <LanguagesGame {...h} />,
   pin: (h) => <PinGame {...h} />,
@@ -62,7 +66,8 @@ export default function PlayPage() {
   const { t } = useT();
   const config = getGame(params.game);
 
-  if (!config) {
+  const render = config ? COMPONENTS[config.id] : undefined;
+  if (!config || !render) {
     return (
       <div className="flex flex-1 flex-col items-center justify-center gap-4 px-4 text-center">
         <p className="text-muted-foreground">404</p>
@@ -73,6 +78,5 @@ export default function PlayPage() {
     );
   }
 
-  const render = COMPONENTS[config.id];
   return <GameShell gameId={config.id}>{render}</GameShell>;
 }

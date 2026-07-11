@@ -5,7 +5,6 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import { Swords, Share2, Check, Home, Trophy, Play } from "lucide-react";
-import type { GameId } from "@/lib/types";
 import { QuizGame } from "@/games/quiz-core";
 import { generateWeeklyRounds } from "@/games/daily/daily-rounds";
 import { GameTopBar } from "@/components/game/hud";
@@ -14,6 +13,7 @@ import { useT } from "@/i18n/I18nProvider";
 import { useWeekly } from "@/store/weekly";
 import { scoreStore } from "@/lib/leaderboard/local";
 import { weekKey, msUntilNextWeek, WEEKLY_COUNT } from "@/lib/daily";
+import { useDex } from "@/store/dex";
 
 function grid(marks: boolean[], total: number): string {
   const cells = Array.from({ length: total }, (_, i) => (i < marks.length ? (marks[i] ? "🟩" : "🟥") : "⬜"));
@@ -51,7 +51,7 @@ export default function WeeklyPage() {
   if (playing && !weekResult) {
     return (
       <QuizGame
-        gameId={"weekly" as GameId}
+        gameId="weekly"
         rounds={rounds}
         mode="choice"
         difficulty="hard"
@@ -60,8 +60,9 @@ export default function WeeklyPage() {
         onFinish={(r) => {
           const marks = r.marks ?? [];
           record({ week, score: r.score, correct: r.correct, total: r.total, marks });
+          useDex.getState().record("weekly", r.countryHits ?? []);
           scoreStore.saveRun({
-            gameId: "weekly" as GameId,
+            gameId: "weekly",
             difficulty: "hard",
             mode: "weekly",
             score: r.score,

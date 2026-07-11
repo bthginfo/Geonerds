@@ -5,7 +5,6 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import { Flame, CalendarDays, Share2, Check, Home, Trophy, Play } from "lucide-react";
-import type { GameId } from "@/lib/types";
 import { QuizGame } from "@/games/quiz-core";
 import { generateDailyRounds } from "@/games/daily/daily-rounds";
 import { GameTopBar } from "@/components/game/hud";
@@ -14,6 +13,7 @@ import { useT } from "@/i18n/I18nProvider";
 import { useDaily } from "@/store/daily";
 import { scoreStore } from "@/lib/leaderboard/local";
 import { dateKey, streakFromDates, msUntilTomorrow, DAILY_COUNT } from "@/lib/daily";
+import { useDex } from "@/store/dex";
 
 function grid(marks: boolean[], total: number): string {
   const cells = Array.from({ length: total }, (_, i) => (i < marks.length ? (marks[i] ? "🟩" : "🟥") : "⬜"));
@@ -54,7 +54,7 @@ export default function DailyPage() {
   if (playing && !todayResult) {
     return (
       <QuizGame
-        gameId={"daily" as GameId}
+        gameId="daily"
         rounds={rounds}
         mode="choice"
         difficulty="medium"
@@ -63,8 +63,9 @@ export default function DailyPage() {
         onFinish={(r) => {
           const marks = r.marks ?? [];
           record({ date: today, score: r.score, correct: r.correct, total: r.total, marks });
+          useDex.getState().record("daily", r.countryHits ?? []);
           scoreStore.saveRun({
-            gameId: "daily" as GameId,
+            gameId: "daily",
             difficulty: "medium",
             mode: "daily",
             score: r.score,

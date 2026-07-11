@@ -12,13 +12,16 @@ import { Button } from "@/components/ui/button";
 import { useT } from "@/i18n/I18nProvider";
 import { useAllRuns } from "@/hooks/use-scores";
 import { formatNumber } from "@/lib/utils";
+import { FieldJournal } from "@/components/field-journal";
+import { useProgression } from "@/store/progression";
 
 export default function Home() {
   const { t, locale } = useT();
   const { runs } = useAllRuns();
+  const progression = useProgression();
 
-  const gamesPlayed = runs?.length ?? 0;
-  const totalPoints = runs?.reduce((s, r) => s + r.score, 0) ?? 0;
+  const gamesPlayed = progression.totalRuns || runs?.length || 0;
+  const totalPoints = progression.totalScore || runs?.reduce((s, r) => s + r.score, 0) || 0;
 
   return (
     <div className="geo-aurora flex flex-1 flex-col">
@@ -58,6 +61,7 @@ export default function Home() {
 
         <DailyCard />
         <WeeklyCard />
+        <FieldJournal />
       </section>
 
       <section id="games" className="mx-auto w-full max-w-5xl scroll-mt-20 px-4 pb-24 pt-4">

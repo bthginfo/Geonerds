@@ -10,7 +10,9 @@ import { persist } from "zustand/middleware";
 export interface DexState {
   /** cca3 -> gameId -> correct count. */
   hits: Record<string, Record<string, number>>;
+  favorites: string[];
   record: (gameId: string, cca3s: string[]) => void;
+  toggleFavorite: (cca3: string) => void;
   reset: () => void;
 }
 
@@ -18,6 +20,7 @@ export const useDex = create<DexState>()(
   persist(
     (set) => ({
       hits: {},
+      favorites: [],
       record: (gameId, cca3s) =>
         set((s) => {
           if (!cca3s.length) return s;
@@ -30,8 +33,17 @@ export const useDex = create<DexState>()(
           }
           return { hits };
         }),
-      reset: () => set({ hits: {} }),
+      toggleFavorite: (cca3) =>
+        set((s) => ({ favorites: s.favorites.includes(cca3) ? s.favorites.filter((id) => id !== cca3) : [...s.favorites, cca3] })),
+      reset: () => set({ hits: {}, favorites: [] }),
     }),
-    { name: "geonerds-dex" }
+    {
+      name: "geonerds-dex",
+      version: 2,
+      migrate: (value) => {
+        const old = (value ?? {}) as Partial<DexState>;
+        return { ...old, hits: old.hits ?? {}, favorites: Array.isArray(old.favorites) ? old.favorites : [] };
+      },
+    }
   )
 );

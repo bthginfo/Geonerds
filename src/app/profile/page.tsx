@@ -14,12 +14,14 @@ import { levelFromXp, rankName } from "@/lib/level";
 import { streakFromDates } from "@/lib/daily";
 import { getGame } from "@/games/registry";
 import { formatNumber } from "@/lib/utils";
+import { useProgression } from "@/store/progression";
 
 export default function ProfilePage() {
   const { t, locale } = useT();
   const { runs } = useAllRuns();
   const user = useAuth((s) => s.user);
   const dailyResults = useDaily((s) => s.results);
+  const progression = useProgression();
 
   const dexHits = useDex((s) => s.hits);
   const dexCollected = useMemo(() => {
@@ -29,7 +31,7 @@ export default function ProfilePage() {
     return { collected, total: pool.length };
   }, [dexHits]);
 
-  const stats = useMemo(() => computeStats(runs ?? [], dexHits), [runs, dexHits]);
+  const stats = useMemo(() => computeStats(runs ?? [], dexHits, progression), [runs, dexHits, progression]);
   const level = useMemo(() => levelFromXp(stats.totalScore), [stats.totalScore]);
   const earned = useMemo(() => BADGES.filter((b) => b.earned(stats)), [stats]);
   const dailyStreak = useMemo(() => streakFromDates(Object.keys(dailyResults)), [dailyResults]);
@@ -61,6 +63,7 @@ export default function ProfilePage() {
           <div className="truncate text-lg font-bold">{user?.name ?? t("profile.guest")}</div>
           <div className="flex items-center gap-2 text-sm text-muted-foreground">
             <span>{rankName(level.rank, locale)}</span>
+            {stats.dexMastered > 0 && <span className="rounded-md bg-amber-500/15 px-1.5 py-0.5 text-[10px] font-black uppercase tracking-wide text-amber-600 dark:text-amber-400">{locale === "de" ? "Atlas-Meister" : "Atlas Master"} · {stats.dexMastered}</span>}
             {level.prestige > 0 && (
               <span className="inline-flex items-center gap-0.5 rounded-full bg-amber-500/15 px-2 py-0.5 text-xs font-bold text-amber-600 dark:text-amber-400">
                 ✦ {t("profile.prestige", { n: level.prestige })}

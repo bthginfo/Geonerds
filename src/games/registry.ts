@@ -22,6 +22,8 @@ import {
   Puzzle,
   Share2,
   Map,
+  Grid3X3,
+  Bomb,
   type LucideIcon,
 } from "lucide-react";
 import type { AnswerMode, GameId } from "@/lib/types";
@@ -150,6 +152,19 @@ export const GAMES: GameConfig[] = [
     defaultTimed: true,
   },
   {
+    id: "grid",
+    icon: Grid3X3,
+    gradient: "from-cyan-500 via-blue-500 to-violet-600",
+    supportsDifficulty: true,
+  },
+  {
+    id: "minesweeper",
+    icon: Bomb,
+    gradient: "from-slate-700 via-cyan-600 to-emerald-500",
+    supportsDifficulty: true,
+    setupNoteKey: "mines.setupNote",
+  },
+  {
     id: "ranking",
     icon: ListOrdered,
     gradient: "from-teal-500 to-emerald-600",
@@ -255,9 +270,9 @@ export const GAMES: GameConfig[] = [
   },
 ];
 
-export const GAME_MAP: Record<GameId, GameConfig> = Object.fromEntries(
+export const GAME_MAP: Partial<Record<GameId, GameConfig>> = Object.fromEntries(
   GAMES.map((g) => [g.id, g])
-) as Record<GameId, GameConfig>;
+) as Partial<Record<GameId, GameConfig>>;
 
 export function getGame(id: string): GameConfig | undefined {
   return GAME_MAP[id as GameId];
