@@ -5,7 +5,7 @@ import { Loader2 } from "lucide-react";
 import type { PlayHandlers } from "@/components/game/game-shell";
 import { QuizGame, type QuizRound } from "@/games/quiz-core";
 import { FeatureMap } from "@/components/map/feature-map";
-import { loadWaters, waterLabel, type Water } from "@/lib/waters";
+import { loadWaters, waterLabel, waterPoolForDifficulty, type Water } from "@/lib/waters";
 import { sample, shuffle } from "@/lib/utils";
 import { useT } from "@/i18n/I18nProvider";
 
@@ -19,8 +19,7 @@ export function WatersGame({ difficulty, mode, roundCount, timed, practice, onFi
 
   const rounds = useMemo<QuizRound[]>(() => {
     if (!waters) return [];
-    // Easy favours the best-known (earlier in the list); hard uses all.
-    const pool = difficulty === "easy" ? waters.filter((_, i) => i % 2 === 0) : waters;
+    const pool = waterPoolForDifficulty(waters, difficulty);
     const count = roundCount === 0 ? pool.length : roundCount;
     return sample(pool, Math.min(count, pool.length)).map((answer) => {
       const distractors = sample(

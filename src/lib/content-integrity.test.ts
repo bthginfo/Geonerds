@@ -20,7 +20,7 @@ describe("content pool integrity", () => {
     expect(PEAKS.length).toBeGreaterThanOrEqual(70);
     expect(ITEMS.length).toBeGreaterThanOrEqual(160);
     expect(colorFlags.length).toBeGreaterThanOrEqual(130);
-    expect(waters.length).toBeGreaterThanOrEqual(90);
+    expect(waters.length).toBeGreaterThanOrEqual(115);
     expect(GN_BUILDER_COUNT).toBeGreaterThanOrEqual(19);
     expect(COUNTRIES.length).toBeGreaterThanOrEqual(190);
   });
