@@ -1,5 +1,6 @@
 import { feature } from "topojson-client";
 import { geometryAreaScore } from "@/lib/geometry";
+import { COMPANION_FEATURE_NAMES, mergedCompanionGeometries } from "@/lib/geo-companions";
 
 export interface CountryFeature {
   type: "Feature";
@@ -23,9 +24,18 @@ export function loadCountries(res: Resolution = "50m"): Promise<CountryFeature[]
         const fc = feature(topo, topo.objects.countries) as unknown as {
           features: CountryFeature[];
         };
-        // Keep all features (incl. id-less ones like Somaliland) so the map has
+        // Dissolve id-less companion territories (Northern Cyprus,
+        // Somaliland, …) into their country so outlines read as one landmass.
+        const merged = mergedCompanionGeometries(topo);
+        // Keep all features (incl. id-less ones like Kosovo) so the map has
         // no visual gaps; callers that need country matching filter by id.
-        return fc.features;
+        // Absorbed companions are dropped — their country now covers them.
+        return fc.features
+          .filter((f) => f.id != null || !COMPANION_FEATURE_NAMES.has(f.properties?.name ?? ""))
+          .map((f) => {
+            const replacement = f.id != null ? merged.get(String(f.id)) : undefined;
+            return replacement ? { ...f, geometry: replacement } : f;
+          });
       });
     caches[res] = request.catch((error) => {
       delete caches[res];

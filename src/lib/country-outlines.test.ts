@@ -23,4 +23,14 @@ describe("prebuilt country outlines", () => {
     expect(outlines.countries.FJI.d.split("M").length).toBeGreaterThan(2);
     expect(outlines.countries.IDN.d.split("M").length).toBeGreaterThan(2);
   });
+
+  it("draws companion-merged countries as one whole landmass", () => {
+    // Cyprus without Northern Cyprus renders as a torn island with a
+    // detached south-eastern exclave; Somalia without Somaliland loses the
+    // Horn. After merging, each must be a single closed subpath.
+    for (const code of ["CYP", "SOM", "CUB"] as const) {
+      const subpaths = outlines.countries[code].d.split("M").filter(Boolean);
+      expect(subpaths, `${code} should be one dissolved landmass`).toHaveLength(1);
+    }
+  });
 });

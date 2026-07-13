@@ -44,6 +44,19 @@ describe("water geography", () => {
     expect(bounds("Mekong").maxLat).toBeGreaterThan(30);
     expect(bounds("Yangtze").minLon).toBeLessThan(100);
     expect(bounds("Congo").minLat).toBeLessThan(-10);
+    // Rivers whose upstream stretches carry local Natural Earth names.
+    expect(bounds("Tagus").maxLon, "Tagus must include the Spanish Tajo").toBeGreaterThan(-3);
+    expect(bounds("Euphrates").maxLat, "Euphrates must reach Turkey (Firat)").toBeGreaterThan(38);
+    expect(bounds("Tigris").maxLat, "Tigris must include the Turkish Dicle").toBeGreaterThan(37.5);
+    expect(bounds("Yenisey").minLat, "Yenisey must reach its Tuva headwaters").toBeLessThan(53);
+  });
+
+  it("quizzes whole lakes, not national halves", () => {
+    expect(bounds("Lake Tanganyika").minLat).toBeLessThan(-8);
+    expect(waters.filter((water) => water.name === "Vistula Lagoon")).toHaveLength(1);
+    for (const half of ["Kaliningradskiy Zaliv", "Zalev Wislany"]) {
+      expect(waters.some((water) => water.name === half), `${half} should be merged away`).toBe(false);
+    }
   });
 
   it("has valid, unique and tiered water entries", () => {
