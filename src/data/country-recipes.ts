@@ -143,6 +143,35 @@ function methodExtras(method: Method, keys: readonly IngredientKey[]): Localized
   return [];
 }
 
+// Cooking roles per ingredient key, so generated steps follow a real order:
+// soften aromatics, sear meat, simmer the base, add delicate items late.
+const AROMATIC_KEYS: readonly IngredientKey[] = ["onion", "peppers", "carrot"];
+const SEAR_KEYS: readonly IngredientKey[] = ["beef", "chicken", "lamb", "pork", "meat", "sausage", "bacon"];
+const LATE_KEYS: readonly IngredientKey[] = [
+  "greens", "spinach", "lime", "yogurt", "peanut", "sesamePaste", "cheese", "cream", "egg",
+  "fish", "salmon", "shellfish", "tuna", "cannedFish", "ackee", "soySauce", "sesameOil", "cucumber",
+];
+
+interface RoleGroups {
+  aromatics: Localized[];
+  seared: Localized[];
+  late: Localized[];
+  base: Localized[];
+}
+
+function groupByRole(food: readonly Localized[], keys: readonly IngredientKey[], skip = 0): RoleGroups {
+  const groups: RoleGroups = { aromatics: [], seared: [], late: [], base: [] };
+  food.forEach((item, index) => {
+    if (index < skip) return;
+    const key = index < keys.length ? keys[index] : null;
+    if (key && AROMATIC_KEYS.includes(key)) groups.aromatics.push(item);
+    else if (key && SEAR_KEYS.includes(key)) groups.seared.push(item);
+    else if (key && LATE_KEYS.includes(key)) groups.late.push(item);
+    else groups.base.push(item);
+  });
+  return groups;
+}
+
 function concreteSteps(method: Method, ingredients: readonly Localized[], dish: Localized, keys: readonly IngredientKey[]): Localized[] {
   const pantry = ingredients.at(-1)!;
   const food = ingredients.slice(0, -1);
@@ -153,36 +182,85 @@ function concreteSteps(method: Method, ingredients: readonly Localized[], dish: 
   switch (method) {
     case "bake":
       return keys.includes("dough")
-        ? [L(`Heat the oven to 200°C. Mix ${fillingEn} with ${pantry.en} into the ${dish.en} filling.`,`Den Backofen auf 200 °C vorheizen. ${fillingDe} mit ${pantry.de} zur Füllung für ${dish.de} mischen.`),L(`Divide and roll ${food[0].en}; add the filling, shape and seal the ${dish.en}.`,`${food[0].de} teilen und ausrollen; die Füllung daraufgeben, ${dish.de} formen und verschließen.`),L(`Bake the ${dish.en} until deeply golden and steaming hot, then rest for 5 minutes.`,`${dish.de} kräftig goldbraun und dampfend heiß backen, dann 5 Minuten ruhen lassen.`)]
-        : [L(`Heat the oven to 200°C. Combine ${en} with ${pantry.en}.`,`Den Backofen auf 200 °C vorheizen. ${de} mit ${pantry.de} vermengen.`),L(`Spread the mixture evenly in an oiled dish to form ${dish.en}.`,`Die Mischung gleichmäßig in einer geölten Form als ${dish.de} verteilen.`),L(`Bake until browned, tender and steaming hot; rest for 5 minutes before serving.`,`Gebräunt, weich und dampfend heiß backen; vor dem Servieren 5 Minuten ruhen lassen.`)];
+        ? [L(`Heat the oven to 200°C. Mix ${fillingEn} with ${pantry.en} into the ${dish.en} filling.`,`Den Backofen auf 200 °C vorheizen. ${fillingDe} mit ${pantry.de} zur Füllung für ${dish.de} mischen.`),L(`Divide and roll ${food[0].en}; add the filling, shape and seal the ${dish.en}.`,`${food[0].de} teilen und ausrollen; die Füllung daraufgeben, ${dish.de} formen und verschließen.`),L(`Bake for 20–25 minutes until deeply golden and steaming hot, then rest for 5 minutes.`,`20–25 Minuten kräftig goldbraun und dampfend heiß backen, dann 5 Minuten ruhen lassen.`)]
+        : [L(`Heat the oven to 200°C. Combine ${en} with ${pantry.en}.`,`Den Backofen auf 200 °C vorheizen. ${de} mit ${pantry.de} vermengen.`),L(`Spread the mixture evenly in an oiled dish to form ${dish.en}.`,`Die Mischung gleichmäßig in einer geölten Form als ${dish.de} verteilen.`),L(`Bake for 30–40 minutes until browned at the edges and set in the middle; rest for 5 minutes before serving.`,`30–40 Minuten backen, bis die Ränder gebräunt sind und die Mitte gestockt ist; vor dem Servieren 5 Minuten ruhen lassen.`)];
     case "bread":
       return keys.includes("lentils")
-        ? [L(`Combine the flour and warm water with a pinch of salt; knead and cover for 20 minutes.`,`Mehl und warmes Wasser mit einer Prise Salz verkneten; 20 Minuten abdecken.`),L(`Cook ${joinItems(food.slice(1,-1),"en")} with ${pantry.en} into a thick filling.`,`${joinItems(food.slice(1,-1),"de")} mit ${pantry.de} zu einer dicken Füllung garen.`),L(`Roll thin rounds, enclose the filling and cook both sides in a dry pan until browned.`,`Dünne Fladen ausrollen, die Füllung einschließen und in einer trockenen Pfanne von beiden Seiten bräunen.`)]
-        : [L(`Whisk ${en} into a smooth batter for ${dish.en}.`,`${de} zu einem glatten Teig für ${dish.de} verrühren.`),L(`Cover the batter and let it rest for 20 minutes.`,`Den Teig abdecken und 20 Minuten ruhen lassen.`),L(`Cook thin portions in a hot lightly oiled pan until set and browned on both sides.`,`Dünne Portionen in einer heißen, leicht geölten Pfanne von beiden Seiten fest und gebräunt backen.`)];
+        ? [L(`Combine the flour and warm water with a pinch of salt; knead until smooth and rest, covered, for 20 minutes.`,`Mehl und warmes Wasser mit einer Prise Salz glatt verkneten und zugedeckt 20 Minuten ruhen lassen.`),L(`Cook ${joinItems(food.slice(1,-1),"en")} with ${pantry.en} into a thick, spreadable filling.`,`${joinItems(food.slice(1,-1),"de")} mit ${pantry.de} zu einer dicken, streichfähigen Füllung garen.`),L(`Roll thin rounds, enclose the filling and cook each ${dish.en} in a dry pan for 2–3 minutes per side until browned.`,`Dünne Fladen ausrollen, die Füllung einschließen und ${dish.de} in einer trockenen Pfanne pro Seite 2–3 Minuten bräunen.`)]
+        : [L(`Whisk ${en} into a smooth batter for ${dish.en}.`,`${de} zu einem glatten Teig für ${dish.de} verrühren.`),L(`Cover the batter and let it rest for 20 minutes.`,`Den Teig abdecken und 20 Minuten ruhen lassen.`),L(`Cook thin portions in a hot, lightly oiled pan for 2–3 minutes per side until set and browned.`,`Dünne Portionen in einer heißen, leicht geölten Pfanne pro Seite 2–3 Minuten fest und gebräunt backen.`)];
     case "dumpling":
       return [L(`Combine the flour and warm water into a smooth wrapper dough.`,`Mehl und warmes Wasser zu einem glatten Hüllenteig verkneten.`),L(`Mix ${joinItems(food.slice(1,-1),"en")} with ${pantry.en}; fill and seal small ${dish.en}.`,`${joinItems(food.slice(1,-1),"de")} mit ${pantry.de} mischen; kleine ${dish.de} füllen und verschließen.`),L(`Simmer the ${dish.en} until the wrappers are tender and the centres are steaming hot.`,`${dish.de} sanft kochen, bis der Teig weich und die Füllung dampfend heiß ist.`)];
     case "fry":
-      return [L(`Combine ${en} with ${pantry.en} in the coating or shaped mixture for ${dish.en}.`,`${de} mit ${pantry.de} zur Panade oder Formmasse für ${dish.de} verarbeiten.`),L(`Heat a thin layer of oil and cook the ${dish.en} in batches.`,`Eine dünne Ölschicht erhitzen und ${dish.de} portionsweise braten.`),L(`Turn once and cook until crisp, deeply golden and hot through; drain before serving.`,`Einmal wenden und knusprig, kräftig goldbraun sowie durchgehend heiß garen; vor dem Servieren abtropfen lassen.`)];
-    case "grill":
-      return [L(`Prepare ${en} for the grill. Keep the main item separate from any bread, vegetables or fresh garnish.`,`${de} zum Grillen vorbereiten. Die Hauptzutat von Brot, Gemüse oder frischer Garnitur getrennt halten.`),L(`Brush the main item with ${pantry.en}; heat a grill pan over medium-high heat.`,`Die Hauptzutat mit ${pantry.de} bestreichen; eine Grillpfanne auf mittlere bis hohe Hitze erhitzen.`),L(`Grill the main item on both sides until browned and hot through, then warm or char the other ingredients separately before serving.`,`Die Hauptzutat von beiden Seiten bräunen und durchgehend erhitzen; die übrigen Zutaten getrennt erwärmen oder angrillen und anschließend servieren.`)];
-    case "mix":
-      return [L(`Cook ${food[0].en} until tender and hot, then cool it for 5 minutes.`,`${food[0].de} weich und heiß garen, dann 5 Minuten abkühlen lassen.`),L(`Fold in ${fillingEn} and ${pantry.en}.`,`${fillingDe} und ${pantry.de} unterheben.`),L(`Taste the ${dish.en} for salt and serve promptly.`,`${dish.de} salzen und zeitnah servieren.`)];
-    case "noodle":
-      return [L(`Cook ${food[0].en} until just tender and drain.`,`${food[0].de} bissfest garen und abgießen.`),L(`Cook ${fillingEn} with ${pantry.en} in a wide pan until tender.`,`${fillingDe} mit ${pantry.de} in einer breiten Pfanne weich garen.`),L(`Toss in the drained noodles and cook the ${dish.en} until evenly hot.`,`Die abgetropften Nudeln unterschwenken und ${dish.de} gleichmäßig heiß garen.`)];
+      return [L(`Mix ${en} with ${pantry.en} and shape or coat the mixture into ${dish.en} portions.`,`${de} mit ${pantry.de} mischen und zu Portionen für ${dish.de} formen oder panieren.`),L(`Heat a thin layer of oil in a wide pan over medium-high heat until it shimmers.`,`Eine dünne Ölschicht in einer weiten Pfanne bei mittelhoher Hitze erhitzen, bis sie flirrt.`),L(`Fry the ${dish.en} in batches for 3–4 minutes per side until deeply golden and cooked through; drain on kitchen paper.`,`${dish.de} portionsweise pro Seite 3–4 Minuten kräftig goldbraun und gar braten; auf Küchenpapier abtropfen lassen.`)];
+    case "grill": {
+      return [L(`Mix ${food[0].en} with ${pantry.en} and let it stand for 10 minutes.`,`${food[0].de} mit ${pantry.de} mischen und 10 Minuten ziehen lassen.`),L(`Heat a grill pan over medium-high heat; grill in one layer, turning once, until browned on both sides and cooked through.`,`Eine Grillpfanne auf mittelhohe Hitze bringen; in einer Lage grillen, einmal wenden, bis beide Seiten gebräunt und gar sind.`),L(`Warm or lightly char ${fillingEn} alongside and serve with the hot ${dish.en}.`,`${fillingDe} nebenher erwärmen oder leicht angrillen und zu ${dish.de} heiß servieren.`)];
+    }
+    case "mix": {
+      const first =
+        keys[0] === "bread"
+          ? L(`Warm ${food[0].en} briefly and tear it into bite-sized pieces.`,`${food[0].de} kurz erwärmen und in mundgerechte Stücke zupfen.`)
+          : keys[0] === "tuna" || keys[0] === "cannedFish"
+            ? L(`Drain ${food[0].en} well and flake it into a bowl.`,`${food[0].de} gut abtropfen lassen und in eine Schüssel zupfen.`)
+            : L(`Cook ${food[0].en} until tender and cooked through, then let it cool for 5 minutes.`,`${food[0].de} weich und vollständig gar kochen, dann 5 Minuten abkühlen lassen.`);
+      return [first,L(`Fold in ${fillingEn} and ${pantry.en}.`,`${fillingDe} und ${pantry.de} unterheben.`),L(`Season the ${dish.en} with salt and serve promptly.`,`${dish.de} salzen und zeitnah servieren.`)];
+    }
+    case "noodle": {
+      const { seared, late, aromatics, base } = groupByRole(food, keys, 1);
+      const panEn = joinItems([...seared, ...aromatics, ...base], "en");
+      const panDe = joinItems([...seared, ...aromatics, ...base], "de");
+      return [L(`Cook ${food[0].en} in plenty of salted water until just tender; drain, saving a cup of the cooking water.`,`${food[0].de} in reichlich Salzwasser bissfest garen; abgießen und eine Tasse Kochwasser auffangen.`),L(`Sear ${panEn} with ${pantry.en} in a wide, very hot pan until browned and cooked through.`,`${panDe} mit ${pantry.de} in einer weiten, sehr heißen Pfanne anbraten, bis sie gebräunt und gar sind.`),late.length ? L(`Toss the noodles through with a splash of the cooking water, then top the ${dish.en} with ${joinItems(late,"en")}.`,`Die Nudeln mit einem Schuss Kochwasser unterschwenken und ${dish.de} mit ${joinItems(late,"de")} anrichten.`) : L(`Toss the noodles through with a splash of the cooking water until every strand is coated and hot.`,`Die Nudeln mit einem Schuss Kochwasser unterschwenken, bis sie überzogen und heiß sind.`)];
+    }
     case "pancake":
-      return [L(`Grate or whisk ${en} with ${pantry.en} into the batter for ${dish.en}.`,`${de} mit ${pantry.de} zum Teig für ${dish.de} reiben oder verquirlen.`),L(`Spoon small portions into a lightly oiled pan over medium heat.`,`Kleine Portionen in eine leicht geölte Pfanne bei mittlerer Hitze geben.`),L(`Cook both sides until golden and completely set in the centre.`,`Von beiden Seiten goldbraun backen, bis die Mitte vollständig gestockt ist.`)];
-    case "rice":
-      return [L(`Rinse the rice until the water is mostly clear. Cook ${joinItems(food.slice(1,-1),"en")} with ${pantry.en}.`,`Den Reis spülen, bis das Wasser weitgehend klar bleibt. ${joinItems(food.slice(1,-1),"de")} mit ${pantry.de} garen.`),L(`Stir in the rice and ${food.at(-1)!.en}, cover and simmer gently.`,`Reis und ${food.at(-1)!.de} einrühren, abdecken und sanft köcheln.`),L(`When the rice is tender, rest the ${dish.en} off the heat for 10 minutes and fluff.`,`Wenn der Reis weich ist, ${dish.de} vom Herd nehmen, 10 Minuten ruhen lassen und auflockern.`)];
+      return [L(`Grate or whisk ${en} with ${pantry.en} into the batter for ${dish.en}.`,`${de} mit ${pantry.de} zum Teig für ${dish.de} reiben oder verquirlen.`),L(`Spoon small portions into a lightly oiled pan over medium heat.`,`Kleine Portionen in eine leicht geölte Pfanne bei mittlerer Hitze geben.`),L(`Cook for about 3 minutes per side until golden and completely set in the centre.`,`Pro Seite etwa 3 Minuten goldbraun backen, bis die Mitte vollständig gestockt ist.`)];
+    case "rice": {
+      const { seared, late, aromatics, base } = groupByRole(food, keys, 1);
+      const potEn = joinItems([...aromatics, ...base], "en");
+      const potDe = joinItems([...aromatics, ...base], "de");
+      const second = seared.length
+        ? L(`Heat ${pantry.en} in a wide pot; brown ${joinItems(seared,"en")} on all sides, then stir in ${potEn}.`,`${pantry.de} in einem weiten Topf erhitzen; ${joinItems(seared,"de")} rundum anbraten und ${potDe} einrühren.`)
+        : L(`Heat ${pantry.en} in a wide pot and stir in ${potEn}; cook for 5 minutes.`,`${pantry.de} in einem weiten Topf erhitzen und ${potDe} einrühren; 5 Minuten garen.`);
+      const last = late.length
+        ? L(`Rest the ${dish.en} off the heat for 10 minutes, fluff the grains and finish with ${joinItems(late,"en")}.`,`${dish.de} vom Herd 10 Minuten ruhen lassen, die Körner auflockern und mit ${joinItems(late,"de")} vollenden.`)
+        : L(`Rest the ${dish.en} off the heat for 10 minutes, then fluff the grains before serving.`,`${dish.de} vom Herd 10 Minuten ruhen lassen und die Körner vor dem Servieren auflockern.`);
+      return [L(`Rinse the rice until the water runs mostly clear; drain well.`,`Den Reis spülen, bis das Wasser weitgehend klar bleibt; gut abtropfen lassen.`),second,L(`Add the drained rice, cover and cook on the lowest heat for about 15 minutes until the liquid is absorbed.`,`Den abgetropften Reis zugeben, abdecken und bei kleinster Hitze etwa 15 Minuten garen, bis die Flüssigkeit aufgenommen ist.`),last];
+    }
     case "roast":
-      return [L(`Heat the oven to 190°C. Coat ${en} with ${pantry.en}.`,`Den Backofen auf 190 °C vorheizen. ${de} mit ${pantry.de} vermengen.`),L(`Arrange ${en} in one layer and roast, turning the solid pieces once.`,`${de} in einer Lage verteilen und rösten; feste Stücke einmal wenden.`),L(`Cook the ${dish.en} until browned, tender and steaming hot, then rest for 5 minutes.`,`${dish.de} gebräunt, weich und dampfend heiß garen, dann 5 Minuten ruhen lassen.`)];
+      return [L(`Heat the oven to 190°C. Coat ${en} with ${pantry.en}.`,`Den Backofen auf 190 °C vorheizen. ${de} mit ${pantry.de} vermengen.`),L(`Arrange ${en} in one layer and roast, turning the solid pieces once halfway.`,`${de} in einer Lage verteilen und rösten; feste Stücke nach der Hälfte einmal wenden.`),L(`Roast the ${dish.en} for 40–50 minutes until browned, tender and steaming hot, then rest for 5 minutes.`,`${dish.de} 40–50 Minuten gebräunt, weich und dampfend heiß rösten, dann 5 Minuten ruhen lassen.`)];
     case "roll":
       return [L(`Cook and season ${food[0].en}, then cool until just warm.`,`${food[0].de} garen und würzen, dann lauwarm abkühlen lassen.`),L(`Cut ${fillingEn} into slim strips and arrange them over small portions of the base.`,`${fillingDe} in schmale Streifen schneiden und auf kleinen Portionen der Basis verteilen.`),L(`Roll the ${dish.en} firmly, slice with a damp sharp knife and serve promptly.`,`${dish.de} fest rollen, mit einem feuchten scharfen Messer schneiden und zeitnah servieren.`)];
     case "sandwich":
-      return [L(`Cook ${fillingEn} with ${pantry.en} until hot and tender.`,`${fillingDe} mit ${pantry.de} heiß und weich garen.`),L(`Warm ${food[0].en} and divide the cooked filling evenly over it.`,`${food[0].de} erwärmen und die gegarte Füllung gleichmäßig darauf verteilen.`),L(`Fold or close the ${dish.en} and serve immediately.`,`${dish.de} falten oder schließen und sofort servieren.`)];
-    case "soup":
-      return [L(`Add ${en} and ${pantry.en} to a deep pot.`,`${de} und ${pantry.de} in einen tiefen Topf geben.`),L(`Bring the ${dish.en} to a gentle simmer and cook until every solid piece is tender.`,`${dish.de} sanft zum Köcheln bringen und alle festen Stücke weich garen.`),L(`Taste, adjust salt and serve the ${dish.en} steaming hot.`,`Abschmecken, salzen und ${dish.de} dampfend heiß servieren.`)];
-    case "stew":
-      return [L(`Heat ${pantry.en}; add ${en} and stir well.`,`${pantry.de} erhitzen; ${de} zugeben und gut umrühren.`),L(`Cover and simmer the ${dish.en} gently until every solid ingredient is tender.`,`${dish.de} zugedeckt sanft köcheln, bis alle festen Zutaten weich sind.`),L(`Uncover to thicken, taste for salt and serve the ${dish.en} hot.`,`Offen eindicken, salzen und ${dish.de} heiß servieren.`)];
+      return keys.includes("cannedFish")
+        ? [L(`Boil the eggs for 9 minutes, cool them in cold water, peel and slice.`,`Die Eier 9 Minuten kochen, in kaltem Wasser abschrecken, pellen und in Scheiben schneiden.`),L(`Spread ${food[0].en} edge to edge and layer ${fillingEn} on top in neat rows; season lightly with ${pantry.en}.`,`${food[0].de} bis zum Rand bestreichen und ${fillingDe} in ordentlichen Reihen darauflegen; leicht mit ${pantry.de} würzen.`),L(`Serve the ${dish.en} open-faced and freshly made, with a knife and fork.`,`${dish.de} offen und frisch zubereitet servieren – mit Messer und Gabel.`)]
+        : [L(`Cook ${fillingEn} with ${pantry.en} until hot, browned and tender.`,`${fillingDe} mit ${pantry.de} heiß, gebräunt und weich garen.`),L(`Warm ${food[0].en} in a dry pan and divide the cooked filling evenly over it.`,`${food[0].de} in einer trockenen Pfanne erwärmen und die gegarte Füllung gleichmäßig darauf verteilen.`),L(`Fold or close the ${dish.en} and serve immediately, while the centre is still hot.`,`${dish.de} falten oder schließen und sofort servieren, solange die Mitte noch heiß ist.`)];
+    case "soup": {
+      const { aromatics, seared, late, base } = groupByRole(food, keys);
+      const start = aromatics.length
+        ? L(`Heat ${pantry.en} in a soup pot; soften ${joinItems(aromatics,"en")} in it for 5 minutes.`,`${pantry.de} in einem Suppentopf erhitzen; ${joinItems(aromatics,"de")} darin 5 Minuten weich dünsten.`)
+        : L(`Heat ${pantry.en} in a soup pot over medium heat until fragrant.`,`${pantry.de} in einem Suppentopf bei mittlerer Hitze erhitzen, bis es duftet.`);
+      const build = seared.length
+        ? L(`Add ${joinItems(seared,"en")} and brown lightly, then pour in ${joinItems(base,"en")} and bring to a gentle simmer.`,`${joinItems(seared,"de")} zugeben und leicht anbraten, dann ${joinItems(base,"de")} angießen und sanft zum Köcheln bringen.`)
+        : L(`Pour in ${joinItems(base,"en")} and bring the ${dish.en} to a gentle simmer.`,`${joinItems(base,"de")} angießen und ${dish.de} sanft zum Köcheln bringen.`);
+      const finish = late.length
+        ? L(`Simmer until each piece is tender, add ${joinItems(late,"en")} for the final 10 minutes, then season with salt and serve steaming hot.`,`Köcheln, bis jedes Stück weich ist; ${joinItems(late,"de")} in den letzten 10 Minuten zugeben, dann salzen und dampfend heiß servieren.`)
+        : L(`Simmer, skimming any foam, until each piece is completely tender; season with salt and serve steaming hot.`,`Köcheln und dabei Schaum abschöpfen, bis jedes Stück vollständig weich ist; salzen und dampfend heiß servieren.`);
+      return [start, build, finish];
+    }
+    case "stew": {
+      const { aromatics, seared, late, base } = groupByRole(food, keys);
+      const start = aromatics.length
+        ? L(`Heat ${pantry.en} in a deep pot; soften ${joinItems(aromatics,"en")} in it for 5 minutes.`,`${pantry.de} in einem tiefen Topf erhitzen; ${joinItems(aromatics,"de")} darin 5 Minuten weich dünsten.`)
+        : L(`Heat ${pantry.en} in a deep pot over medium heat until fragrant.`,`${pantry.de} in einem tiefen Topf bei mittlerer Hitze erhitzen, bis es duftet.`);
+      const build = seared.length
+        ? (base.length
+          ? L(`Add ${joinItems(seared,"en")} and brown on all sides, then stir in ${joinItems(base,"en")} and bring to a gentle simmer.`,`${joinItems(seared,"de")} zugeben und rundum anbraten, dann ${joinItems(base,"de")} einrühren und sanft zum Köcheln bringen.`)
+          : L(`Add ${joinItems(seared,"en")} and brown on all sides, then pour in a splash of water and bring to a gentle simmer.`,`${joinItems(seared,"de")} zugeben und rundum anbraten, dann einen Schuss Wasser angießen und sanft zum Köcheln bringen.`))
+        : L(`Stir in ${joinItems(base,"en")} and bring the ${dish.en} to a gentle simmer.`,`${joinItems(base,"de")} einrühren und ${dish.de} sanft zum Köcheln bringen.`);
+      const simmer = L(`Cover and simmer gently, stirring now and then, until each piece is completely tender.`,`Zugedeckt sanft köcheln und gelegentlich umrühren, bis jedes Stück vollständig weich ist.`);
+      const finish = late.length
+        ? L(`Stir in ${joinItems(late,"en")} for the final 10 minutes, then season the ${dish.en} with salt and serve hot.`,`${joinItems(late,"de")} in den letzten 10 Minuten einrühren, dann ${dish.de} salzen und heiß servieren.`)
+        : L(`Simmer uncovered until the sauce thickens slightly, season the ${dish.en} with salt and serve hot.`,`Offen leicht eindicken lassen, ${dish.de} salzen und heiß servieren.`);
+      return [start, build, simmer, finish];
+    }
   }
 }
 const CUSTOM_RECIPES: Record<string, Omit<CountryRecipe,"cca3"|"definingAction">> = {

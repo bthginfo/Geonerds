@@ -3,8 +3,13 @@ import { fileURLToPath } from "node:url";
 
 const SOURCE_URL =
   "https://raw.githubusercontent.com/nvkelso/natural-earth-vector/v5.1.2/geojson/ne_10m_rivers_lake_centerlines.geojson";
+const LAKES_URL =
+  "https://raw.githubusercontent.com/nvkelso/natural-earth-vector/v5.1.2/geojson/ne_10m_lakes.geojson";
 const OUTPUT = fileURLToPath(new URL("../public/geo/waters.json", import.meta.url));
 
+// Natural Earth names river stretches in the local language, so a river is
+// only complete when every segment name is listed (e.g. the Tagus is
+// "Tajo" in Spain and "Tejo" in Portugal).
 const replacements = [
   { existing: "Nile", aliases: ["Nile", "White Nile", "Mountain Nile", "Albert Nile", "Victoria Nile", "Blue Nile"] },
   { existing: "Irtysh", aliases: ["Irtysh", "Ertix"] },
@@ -12,7 +17,11 @@ const replacements = [
   { existing: "Salween", aliases: ["Salween", "Nu"] },
   { existing: "Mekong", aliases: ["Mekong", "Lancang"] },
   { existing: "Danube", aliases: ["Danube", "Donau"], nameDe: "Donau", accepted: ["Danube", "Donau"] },
-  { existing: "Yangtze", aliases: ["Yangtze", "Chang Jiang", "Jinsha"], nameDe: "Jangtsekiang" },
+  { existing: "Yangtze", aliases: ["Yangtze", "Chang Jiang", "Jinsha", "Tongtian"], nameDe: "Jangtsekiang" },
+  { existing: "Tagus", aliases: ["Tagus", "Tejo", "Tajo"] },
+  { existing: "Euphrates", aliases: ["Euphrates", "Firat", "Al Furat"] },
+  { existing: "Tigris", aliases: ["Tigris", "Dicle"] },
+  { existing: "Yenisey", aliases: ["Yenisey", "Verkhniy Yenisey", "Bol’shoy Yenisey", "Malyy Yenisey"] },
 ];
 
 const additions = [
@@ -38,11 +47,34 @@ const additions = [
   { id: "river-darling", name: "Darling", aliases: ["Darling"] },
 ];
 
+// The Vistula Lagoon ships as two national halves that quizzed as two
+// different "lakes" with the same German name; fold them into one entry.
+const lakeMerges = [
+  {
+    id: "lake-vistula-lagoon",
+    name: "Vistula Lagoon",
+    nameDe: "Frisches Haff",
+    accepted: ["Vistula Lagoon", "Frisches Haff", "Zalew Wislany", "Kaliningradskiy Zaliv"],
+    replaces: ["Kaliningradskiy Zaliv", "Zalev Wislany"],
+    sourceNames: ["Kaliningradskiy Zaliv", "Zalew Wislany"],
+  },
+];
+
+const lakeAdditions = [
+  {
+    id: "lake-tanganyika",
+    name: "Lake Tanganyika",
+    nameDe: "Tanganjikasee",
+    accepted: ["Lake Tanganyika", "Tanganyika", "Tanganjikasee"],
+    sourceNames: ["Lake Tanganyika"],
+  },
+];
+
 const easyNames = new Set([
   "Amazonas", "Brahmaputra", "Congo", "Danube", "Euphrates", "Ganges", "Indus", "Mekong", "Mississippi",
   "Niger", "Nile", "Rhine", "Rio Grande", "Tigris", "Volga", "Yangtze", "Yellow River", "Zambezi",
   "Lake Baikal", "Lake Chad", "Lake Erie", "Lake Huron", "Lake Malawi", "Lake Michigan", "Lake Ontario",
-  "Lake Superior", "Lake Victoria", "Lago Titicaca",
+  "Lake Superior", "Lake Tanganyika", "Lake Victoria", "Lago Titicaca",
 ]);
 
 const mediumNames = new Set([
@@ -105,9 +137,28 @@ function tierFor(water) {
   return 3;
 }
 
+function lakeGeometryFor(features, sourceNames) {
+  const wanted = new Set(sourceNames);
+  const matches = features.filter((feature) => wanted.has(feature.properties.name));
+  if (matches.length !== sourceNames.length) {
+    throw new Error(`Expected ${sourceNames.length} lake features for ${sourceNames.join(", ")}, found ${matches.length}`);
+  }
+  const polygons = matches
+    .flatMap((feature) =>
+      feature.geometry.type === "Polygon" ? [feature.geometry.coordinates] : feature.geometry.coordinates
+    )
+    .map((polygon) => polygon.map((ring) => simplify(ring, 0.006)));
+  return polygons.length === 1
+    ? { type: "Polygon", coordinates: polygons[0] }
+    : { type: "MultiPolygon", coordinates: polygons };
+}
+
 const response = await fetch(SOURCE_URL);
 if (!response.ok) throw new Error(`Natural Earth download failed: ${response.status}`);
 const source = await response.json();
+const lakesResponse = await fetch(LAKES_URL);
+if (!lakesResponse.ok) throw new Error(`Natural Earth lakes download failed: ${lakesResponse.status}`);
+const lakesSource = await lakesResponse.json();
 const current = JSON.parse(await readFile(OUTPUT, "utf8"));
 
 for (const spec of replacements) {
@@ -129,6 +180,35 @@ const newRivers = additions.filter((spec) => !existingIds.has(spec.id)).map((spe
   geometry: geometryFor(source.features, spec.aliases),
 }));
 current.splice(lakeIndex, 0, ...newRivers);
+
+for (const spec of lakeMerges) {
+  const halves = current.filter((entry) => entry.kind === "lake" && spec.replaces.includes(entry.name));
+  if (!halves.length) continue; // already merged on a previous run
+  const insertAt = current.indexOf(halves[0]);
+  const mergedEntry = {
+    id: spec.id,
+    kind: "lake",
+    name: spec.name,
+    nameDe: spec.nameDe,
+    accepted: spec.accepted,
+    geometry: lakeGeometryFor(lakesSource.features, spec.sourceNames),
+  };
+  for (const half of halves) current.splice(current.indexOf(half), 1);
+  current.splice(insertAt, 0, mergedEntry);
+}
+
+const currentIds = new Set(current.map((entry) => entry.id));
+for (const spec of lakeAdditions) {
+  if (currentIds.has(spec.id)) continue;
+  current.push({
+    id: spec.id,
+    kind: "lake",
+    name: spec.name,
+    ...(spec.nameDe ? { nameDe: spec.nameDe } : {}),
+    accepted: spec.accepted ?? [spec.name],
+    geometry: lakeGeometryFor(lakesSource.features, spec.sourceNames),
+  });
+}
 
 for (const water of current) water.tier = tierFor(water);
 await writeFile(OUTPUT, `${JSON.stringify(current)}\n`, "utf8");

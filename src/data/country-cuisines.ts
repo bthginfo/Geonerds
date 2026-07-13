@@ -1,4 +1,5 @@
-import { getCountryByCca3, countryName } from "@/data/countries";
+import { getCountryByCca3 } from "@/data/countries";
+import { COUNTRY_DISH_BLURBS } from "@/data/country-dish-blurbs";
 
 export type Localized = { en: string; de: string };
 export type Diet = "vegan" | "vegetarian" | "meat" | "fish";
@@ -218,13 +219,12 @@ const rows: CuisineRow[] = [
 function fromRow([cca3, en, de, totalMinutes, servings, diet, allergens]: CuisineRow): CountryCuisine {
   const country = getCountryByCca3(cca3);
   if (!country) throw new Error(`Unknown cuisine country ${cca3}`);
+  const blurb = COUNTRY_DISH_BLURBS[cca3];
+  if (!blurb) throw new Error(`Missing dish blurb for ${cca3}`);
   return {
     cca3,
     dish: { en, de },
-    blurb: {
-      en: `${en} is widely associated with the cooking of ${countryName(country, "en")}; this is one approachable home version.`,
-      de: `${de} ist eng mit der Küche von ${countryName(country, "de")} verbunden; hier zeigen wir eine zugängliche Variante für zu Hause.`,
-    },
+    blurb,
     totalMinutes,
     servings,
     diet,

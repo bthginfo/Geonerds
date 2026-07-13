@@ -2,12 +2,24 @@ import { readFileSync, writeFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { geoCentroid, geoMercator, geoPath } from "d3-geo";
 import { feature } from "topojson-client";
+import { createServer } from "vite";
 
 const ROOT = resolve(import.meta.dirname, "..");
 const VIEWBOX_SIZE = 280;
 const PAD = 10;
 const resolutions = ["110m", "50m", "10m"];
 const countries = JSON.parse(readFileSync(resolve(ROOT, "src/data/countries.json"), "utf8"));
+
+// Shared companion mapping (Northern Cyprus → Cyprus, Somaliland → Somalia, …)
+// so the pre-rendered outlines match what the app merges at runtime.
+const vite = await createServer({
+  root: ROOT,
+  configFile: false,
+  server: { middlewareMode: true },
+  resolve: { alias: { "@": resolve(ROOT, "src") } },
+});
+const { mergedCompanionGeometries } = await vite.ssrLoadModule("/src/lib/geo-companions.ts");
+await vite.close();
 
 function ringArea(ring) {
   let sum = 0;
@@ -76,6 +88,10 @@ for (const resolution of resolutions) {
     const id = String(candidate.id);
     const current = byId.get(id);
     if (!current || geometryArea(candidate.geometry) > geometryArea(current.geometry)) byId.set(id, candidate);
+  }
+  for (const [id, geometry] of mergedCompanionGeometries(topology)) {
+    const existing = byId.get(id);
+    if (existing) byId.set(id, { ...existing, geometry });
   }
   maps.set(resolution, byId);
 }
