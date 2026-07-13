@@ -46,12 +46,13 @@ import { CountryOutline } from "@/components/map/country-outline";
 import type { CountryDiscoveryPresentation } from "@/lib/country-discovery";
 import type { Allergen, CountryCuisine, Diet } from "@/data/country-cuisines";
 import type { CountryRecipe, CountryRecipePayload } from "@/data/country-recipe-types";
+import { DISCOVERY_CONTENT_VERSION } from "@/lib/discovery-version";
 
 let recipeDataPromise: Promise<CountryRecipePayload> | null = null;
 const discoveryDataPromises = new Map<string, Promise<CountryDiscoveryPresentation>>();
 
 function loadRecipeData() {
-  recipeDataPromise ??= fetch("/data/country-recipes.json", { cache: "force-cache" })
+  recipeDataPromise ??= fetch(`/data/country-recipes.json?v=${DISCOVERY_CONTENT_VERSION}`, { cache: "force-cache" })
     .then(async (response) => {
       if (!response.ok) throw new Error(`Recipe data request failed (${response.status})`);
       const payload = await response.json() as Partial<CountryRecipePayload>;
@@ -66,7 +67,7 @@ function loadRecipeData() {
 function loadDiscoveryData(cca3: string) {
   const existing = discoveryDataPromises.get(cca3);
   if (existing) return existing;
-  const request = fetch(`/api/collection/${encodeURIComponent(cca3)}`, { cache: "force-cache" })
+  const request = fetch(`/api/collection/${encodeURIComponent(cca3)}?v=${DISCOVERY_CONTENT_VERSION}`, { cache: "force-cache" })
     .then(async (response) => {
       if (!response.ok) throw new Error(`Discovery reward request failed (${response.status})`);
       const payload = await response.json() as Partial<CountryDiscoveryPresentation>;

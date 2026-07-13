@@ -13,6 +13,9 @@ export async function GET(_request: Request, context: { params: Promise<{ cca3: 
   const reward = countryDiscoveryPresentation(cca3.toUpperCase(), "unlocked");
   if (!reward) return Response.json({ error: "Unknown country" }, { status: 404 });
   return Response.json(reward, {
-    headers: { "Cache-Control": "public, max-age=31536000, immutable" },
+    // Never immutable: this content is edited over time, and clients that
+    // cached an immutable response only refresh when the URL version bumps
+    // (see DISCOVERY_CONTENT_VERSION).
+    headers: { "Cache-Control": "public, max-age=3600, stale-while-revalidate=86400" },
   });
 }
