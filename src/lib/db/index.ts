@@ -55,6 +55,21 @@ async function ensureSchema(sql: ReturnType<typeof postgres>) {
   await sql`CREATE INDEX IF NOT EXISTS gn_scores_game_score_idx ON gn_scores (game_id, score DESC)`;
   await sql`CREATE INDEX IF NOT EXISTS gn_scores_score_idx ON gn_scores (score DESC)`;
   await sql`
+    CREATE TABLE IF NOT EXISTS wn_scores (
+      id text PRIMARY KEY,
+      user_id text NOT NULL REFERENCES gn_users(id) ON DELETE CASCADE,
+      name text NOT NULL,
+      game_id text NOT NULL,
+      difficulty text,
+      score integer NOT NULL,
+      correct integer,
+      total integer,
+      duration_ms integer,
+      created_at timestamptz NOT NULL DEFAULT now()
+    )
+  `;
+  await sql`CREATE INDEX IF NOT EXISTS wn_scores_user_game_idx ON wn_scores (user_id, game_id, score DESC)`;
+  await sql`
     CREATE TABLE IF NOT EXISTS gn_rate_limit (
       bucket text PRIMARY KEY,
       count integer NOT NULL,

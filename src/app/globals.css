@@ -152,3 +152,70 @@ body {
   scrollbar-width: thin;
   scrollbar-color: var(--border) transparent;
 }
+
+/* Wine-Nerds is a companion product with a deliberately scoped cellar palette.
+   Never lift these variables to :root: client navigation must leave GeoNerds clean. */
+.wine-nerds-shell {
+  --wine-bg: #130c11;
+  --wine-ink: #f3e9db;
+  --wine-cream: #fff3df;
+  --wine-muted: #bcaea7;
+  --wine-grape: #77314c;
+  --wine-burgundy: #451628;
+  --wine-copper: #d49362;
+  --wine-vine: #91a47c;
+  --wine-line: rgba(226, 194, 163, .19);
+  color-scheme: dark;
+  background:
+    radial-gradient(70% 50% at 85% -5%, rgba(118,49,76,.35), transparent 70%),
+    repeating-linear-gradient(102deg, transparent 0 46px, rgba(255,255,255,.012) 47px 48px),
+    var(--wine-bg);
+}
+.wine-header { background:rgba(19,12,17,.94);backdrop-filter:blur(14px) }
+.wine-hero {background:radial-gradient(circle at 75% 35%,rgba(212,147,98,.13),transparent 28%),linear-gradient(140deg,#1a0d14,#26101a 65%,#172016)}
+.wine-kicker {font-size:.68rem;font-weight:800;text-transform:uppercase;letter-spacing:.19em;color:var(--wine-copper)}
+.wine-passport {position:relative;border:1px solid var(--wine-line);padding:1.5rem;background:linear-gradient(145deg,rgba(255,243,223,.055),rgba(0,0,0,.15));box-shadow:18px 18px 0 rgba(0,0,0,.18)}
+.wine-passport::after {content:"";position:absolute;inset:8px;border:1px dashed rgba(212,147,98,.22);pointer-events:none}
+.wine-button {display:inline-flex;min-height:44px;align-items:center;justify-content:center;gap:.6rem;border:1px solid var(--wine-copper);background:var(--wine-copper);color:#21110f;padding:.72rem 1rem;font-size:.84rem;font-weight:850;letter-spacing:.01em;transition:.15s}
+.wine-button:hover {filter:brightness(1.09);transform:translateY(-1px)}
+.wine-button:focus-visible,.wine-answer:focus-visible,.wine-option:focus-visible,.wine-tile:focus-visible,.wine-mini:focus-visible,.wine-icon:focus-visible {outline:2px solid var(--wine-cream);outline-offset:3px}
+.wine-button:disabled {opacity:.35;pointer-events:none}
+.wine-button-quiet {background:transparent;color:var(--wine-cream);border-color:var(--wine-line)}
+.wine-back {display:inline-flex;min-height:44px;align-items:center;gap:.5rem;color:var(--wine-muted);font-size:.8rem;font-weight:700}
+.wine-icon {display:inline-flex;height:44px;width:44px;align-items:center;justify-content:center;border:1px solid var(--wine-line);color:var(--wine-muted);background:rgba(0,0,0,.12)}
+.wine-feature {display:flex;min-height:128px;align-items:center;justify-content:space-between;gap:2rem;border-block:1px solid var(--wine-line);padding:1.5rem;background:linear-gradient(90deg,rgba(119,49,76,.18),transparent);transition:.2s}
+.wine-feature:hover {padding-left:2rem;background:linear-gradient(90deg,rgba(119,49,76,.3),transparent)}
+.wine-game-list {border-top:1px solid var(--wine-line)}
+.wine-game-row {display:grid;grid-template-columns:2rem 1fr auto;align-items:center;gap:1rem;min-height:120px;border-bottom:1px solid var(--wine-line);padding:1.2rem .2rem;transition:.15s}
+.wine-game-row:hover {padding-left:.8rem;background:linear-gradient(90deg,rgba(212,147,98,.08),transparent)}
+.wine-game-row>div:last-child {color:var(--wine-copper)}
+.wine-tone-vine>div:last-child {color:var(--wine-vine)} .wine-tone-grape>div:last-child {color:#c2819a}
+.wine-option,.wine-mini {min-height:44px;border:1px solid var(--wine-line);padding:.65rem .75rem;color:var(--wine-muted);background:rgba(0,0,0,.14);font-size:.78rem;font-weight:700}
+.wine-option.is-selected,.wine-mini.is-selected,.wine-icon.is-selected {border-color:var(--wine-copper);color:var(--wine-cream);background:rgba(212,147,98,.12)}
+.wine-answer {display:flex;min-height:64px;align-items:center;justify-content:space-between;gap:1rem;border:1px solid var(--wine-line);padding:1rem;text-align:left;color:var(--wine-cream);background:rgba(255,255,255,.025);font-size:.9rem;transition:.15s}
+.wine-answer:hover:not(:disabled),.wine-answer.is-selected {border-color:var(--wine-copper);background:rgba(212,147,98,.09)}
+.wine-answer.is-correct {border-color:#82a46f;background:rgba(130,164,111,.16)}
+.wine-answer.is-wrong {border-color:#b45263;background:rgba(180,82,99,.14)}
+.wine-reveal {margin-top:1.5rem;border-left:3px solid var(--wine-copper);padding:1.15rem 1.3rem;background:rgba(212,147,98,.075);color:var(--wine-ink)}
+.wine-world {position:relative;aspect-ratio:2/1;overflow:hidden;border:1px solid var(--wine-line);background-color:#18201d;background-image:linear-gradient(rgba(255,255,255,.04) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.04) 1px,transparent 1px);background-size:10% 16.67%;cursor:crosshair}
+.wine-continent {position:absolute;display:block;background:#6d795d;opacity:.72;filter:drop-shadow(0 2px 0 #101510)}
+.wine-continent.c1{left:8%;top:20%;width:28%;height:35%;clip-path:polygon(0 15%,60% 0,100% 20%,70% 45%,85% 100%,45% 72%,20% 50%)}
+.wine-continent.c2{left:27%;top:53%;width:13%;height:39%;clip-path:polygon(25% 0,100% 12%,65% 100%,18% 62%)}
+.wine-continent.c3{left:48%;top:18%;width:39%;height:39%;clip-path:polygon(0 20%,20% 2%,38% 20%,53% 8%,100% 25%,82% 65%,53% 58%,35% 100%,20% 55%,4% 52%)}
+.wine-continent.c4{left:47%;top:51%;width:17%;height:37%;clip-path:polygon(15% 0,100% 10%,68% 100%,30% 87%,0 30%)}
+.wine-continent.c5{left:81%;top:67%;width:12%;height:18%;clip-path:polygon(10% 15%,80% 0,100% 70%,35% 100%)}
+.wine-pin,.wine-target {position:absolute;z-index:5;width:18px;height:18px;border-radius:50%;transform:translate(-50%,-50%)}
+.wine-pin {background:var(--wine-copper);box-shadow:0 0 0 5px rgba(212,147,98,.22)}
+.wine-target {border:3px solid var(--wine-cream);box-shadow:0 0 0 8px rgba(255,243,223,.14)}
+.wine-tile {min-height:82px;border:1px solid var(--wine-line);padding:.6rem;background:rgba(255,255,255,.025);font-size:.78rem;font-weight:750;color:var(--wine-ink)}
+.wine-tile.is-selected {border-color:var(--wine-copper);background:rgba(212,147,98,.16)}
+.wine-assign {display:flex;flex-direction:column;gap:.75rem;border-bottom:1px solid var(--wine-line);padding:1rem 0;color:var(--wine-ink)}
+.wine-dex-card {min-height:170px;border:1px solid var(--wine-line);padding:1.2rem;background:rgba(255,255,255,.025)}
+.wine-dex-card.is-sealed {background:repeating-linear-gradient(135deg,rgba(255,255,255,.025) 0 4px,transparent 4px 12px)}
+.wine-stat {display:flex;min-height:110px;flex-direction:column;align-items:flex-start;justify-content:center;border-top:2px solid var(--wine-copper);padding:1rem;background:rgba(255,255,255,.025)}
+.wine-stat span {font-family:var(--font-mono);font-size:1.7rem;font-weight:900;color:var(--wine-cream)}
+.wine-stat small {margin-top:.2rem;text-transform:uppercase;letter-spacing:.12em;color:var(--wine-muted)}
+.wine-leader {display:flex;align-items:center;gap:1rem;border-block:1px solid var(--wine-line);padding:1.3rem;background:linear-gradient(90deg,rgba(212,147,98,.1),transparent)}
+.wine-rank-row {display:flex;min-height:54px;align-items:center;justify-content:space-between;border-bottom:1px solid var(--wine-line);color:var(--wine-muted)}
+@media(min-width:640px){.wine-assign{flex-direction:row;align-items:center;justify-content:space-between}}
+@media(max-width:500px){.wine-game-row{grid-template-columns:1.5rem 1fr}.wine-game-row>div:last-child{display:none}.wine-passport{box-shadow:8px 8px 0 rgba(0,0,0,.18)}}

@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { motion } from "framer-motion";
-import { Sparkles, Gamepad2 } from "lucide-react";
+import { Sparkles, Gamepad2, Grape } from "lucide-react";
 import { GAMES } from "@/games/registry";
 import { GameCard } from "@/components/game-card";
 import { DailyCard } from "@/components/daily-card";
@@ -75,6 +75,16 @@ export default function Home() {
         </div>
 
         <SupportCard />
+        <div className="mt-7 flex justify-end">
+          <Link
+            href="/wine-nerds"
+            className="group inline-flex min-h-11 items-center gap-2 px-2 text-xs font-medium text-muted-foreground transition-colors hover:text-foreground"
+          >
+            <Grape className="h-4 w-4 text-rose-700/75" />
+            {locale === "de" ? "Eine andere Art von Geografie: Wine-Nerds" : "A different kind of geography: Wine-Nerds"}
+            <span aria-hidden className="transition-transform group-hover:translate-x-0.5">→</span>
+          </Link>
+        </div>
       </section>
     </div>
   );
