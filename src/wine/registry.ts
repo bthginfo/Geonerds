@@ -9,11 +9,12 @@ export const WINE_GAMES: WineGameDefinition[] = [
   ["label-decoder", "Label Decoder", "Etiketten-Decoder", "Read between the lines", "Zwischen den Zeilen lesen", "Decode original synthetic labels without relying on a named grape.", "Entschlüssele fiktive Etiketten, auch ohne genannte Rebsorte.", "theory", "grape", 8],
   ["regional-connections", "Regional Connections", "Regionale Connections", "Find the four", "Finde die Vierergruppe", "Resolve four linked wine terms among plausible decoys.", "Finde vier zusammengehörige Weinbegriffe zwischen glaubhaften Ablenkungen.", "theory", "vine", 4],
   ["appellation-ladder", "Appellation Ladder", "Appellations-Leiter", "Climb with precision", "Werde immer präziser", "Climb from country to region, appellation and typical style.", "Steige von Land über Region und Appellation bis zum typischen Stil.", "geography", "copper", 5],
-  ["winemakers-dilemma", "Winemaker's Dilemma", "Winemaker's Dilemma", "Every choice leaves a trace", "Jede Wahl hinterlässt Spuren", "Shape a wine through vineyard and cellar decisions with visible trade-offs.", "Forme einen Wein durch Entscheidungen im Weinberg und Keller.", "production", "vine", 3],
+  ["winemakers-dilemma", "Vintage Simulator", "Jahrgangs-Simulator", "Every choice leaves a trace", "Jede Wahl hinterlässt Spuren", "Guide a fictional vintage through vineyard decisions and visible trade-offs.", "Führe einen fiktiven Jahrgang durch Weinbergsentscheidungen und sichtbare Zielkonflikte.", "production", "vine", 4],
   ["grape-dna", "Grape DNA", "Rebsorten-DNA", "Identify the signature", "Erkenne die Signatur", "Identify grapes from ripening, skin, structure, climate and synonyms.", "Erkenne Rebsorten an Reife, Schale, Struktur, Klima und Synonymen.", "grapes", "grape", 8],
   ["same-grape", "Same Grape, Different World", "Gleiche Rebe, andere Welt", "Compare expressions", "Stile vergleichen", "Assign contrasting traits to two regional expressions of one grape.", "Ordne Unterschiede zwei regionalen Ausprägungen derselben Rebe zu.", "terroir", "copper", 8],
   ["cellar-mystery", "Cellar Mystery", "Keller-Mysterium", "Eliminate the impossible", "Schließe Unmögliches aus", "Reveal clues and eliminate bottles until one defensible answer remains.", "Decke Hinweise auf und schließe Flaschen logisch aus.", "theory", "grape", 6],
   ["tasting-note-builder", "Tasting Note Builder", "Tasting-Note-Werkstatt", "Make the note cohere", "Baue eine stimmige Notiz", "Compose an original, internally consistent observation and conclusion.", "Baue eine eigene, in sich stimmige Beobachtung mit Schlussfolgerung.", "sensory", "vine", 5],
+  ["service-challenge", "Sommelier Service Challenge", "Sommelier-Service-Challenge", "Set the table", "Decke den Tisch", "Build a defensible service station through glass, temperature, decanting and presentation decisions.", "Baue durch Glas-, Temperatur-, Dekantier- und Präsentationsentscheidungen eine stimmige Service-Station.", "service", "copper", 4],
   ["sommelier-exam", "Sommelier Exam", "Sommelier-Prüfung", "Unofficial mixed practice", "Inoffizielle Übungsprüfung", "A timed mixed practice flight with explanations and competency breakdown.", "Eine gemischte Übungsrunde auf Zeit mit Erklärungen und Kompetenzprofil.", "theory", "copper", 12],
 ].map(([id, en, de, eEn, eDe, dEn, dDe, competency, tone, rounds]) => ({
   id: id as WineGameId,
@@ -27,12 +28,19 @@ export const WINE_GAMES: WineGameDefinition[] = [
 
 export const WINE_GAME_IDS = WINE_GAMES.map((game) => game.id);
 export const GRAPHICAL_WINE_GAME_IDS = [
+  "terroir-detective",
   "aroma-atelier",
+  "wine-map",
+  "pairing-duel",
   "cellar-builder",
   "label-decoder",
+  "appellation-ladder",
   "tasting-note-builder",
   "winemakers-dilemma",
+  "grape-dna",
+  "same-grape",
   "cellar-mystery",
+  "service-challenge",
 ] as const satisfies readonly WineGameId[];
 export const isWineGameId = (id: string): id is WineGameId =>
   WINE_GAME_IDS.includes(id as WineGameId);

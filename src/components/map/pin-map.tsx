@@ -21,6 +21,7 @@ export function PinMap({
   focus = null,
   focusZoom = 5,
   initialScale = 1.35,
+  controls = true,
 }: {
   onPin: (lng: number, lat: number) => void;
   userPin?: LngLat | null;
@@ -32,6 +33,7 @@ export function PinMap({
   focusZoom?: number;
   /** Initial/reset zoom. Use 1 for a neutral whole-world view. */
   initialScale?: number;
+  controls?: boolean;
 }) {
   const [features, setFeatures] = useState<CountryFeature[] | null>(null);
   const [t, setT] = useState({ k: 1, x: 0, y: 0 });
@@ -174,7 +176,7 @@ export function PinMap({
         </g>
       </svg>
 
-      <div className="pin-map-controls absolute bottom-3 right-3 z-10 flex flex-col overflow-hidden rounded-xl border border-border bg-card/90 shadow-md backdrop-blur">
+      {controls && <div className="pin-map-controls absolute bottom-3 right-3 z-10 flex flex-col overflow-hidden rounded-xl border border-border bg-card/90 shadow-md backdrop-blur">
         <button type="button" onClick={() => zoomBy(2)} aria-label="Zoom in" className="flex h-11 w-11 items-center justify-center hover:bg-muted active:scale-95">
           <Plus className="h-5 w-5" />
         </button>
@@ -182,7 +184,7 @@ export function PinMap({
         <button type="button" onClick={() => zoomBy(0.5)} aria-label="Zoom out" className="flex h-11 w-11 items-center justify-center hover:bg-muted active:scale-95">
           <Minus className="h-5 w-5" />
         </button>
-      </div>
+      </div>}
     </>
   );
 }

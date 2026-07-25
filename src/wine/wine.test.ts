@@ -4,6 +4,7 @@ import { questionsFor } from "./engine";
 import { applyWineRun, dexStage, emptyWineProgression } from "./progression";
 import { GRAPHICAL_WINE_GAME_IDS, WINE_GAME_IDS, WINE_GAMES } from "./registry";
 import { WINE_STORAGE_KEYS } from "./store";
+import { AROMA_WHEEL_FAMILIES, SAME_GRAPE_PAIRS, SERVICE_SCENARIOS, VINTAGE_SCENARIOS } from "./visual-content";
 
 const unique=(values:string[])=>new Set(values).size===values.length;
 describe("Wine-Nerds content",()=>{
@@ -28,9 +29,9 @@ describe("Wine-Nerds content",()=>{
  });
 });
 describe("Wine game engine",()=>{
- it("keeps registry and routes at fourteen distinct games",()=>{
-  expect(WINE_GAMES).toHaveLength(14);expect(unique(WINE_GAME_IDS)).toBe(true);
-  expect(GRAPHICAL_WINE_GAME_IDS).toHaveLength(6);
+ it("keeps registry and routes at fifteen distinct games",()=>{
+  expect(WINE_GAMES).toHaveLength(15);expect(unique(WINE_GAME_IDS)).toBe(true);
+  expect(GRAPHICAL_WINE_GAME_IDS).toHaveLength(13);
   GRAPHICAL_WINE_GAME_IDS.forEach(id=>expect(WINE_GAME_IDS).toContain(id));
  });
  it("creates thousands of safe choice rounds with one included answer",()=>{
@@ -40,6 +41,24 @@ describe("Wine game engine",()=>{
    expect(unique(q.choices.map(c=>c.id))).toBe(true);expect(q.choices.filter(c=>c.id===q.answer)).toHaveLength(1);checked++;
   }
   expect(checked).toBeGreaterThan(1000);
+ });
+});
+describe("Wine visual content",()=>{
+ it("uses explicit aroma families for every playable grape aroma",()=>{
+  const classified=new Set(AROMA_WHEEL_FAMILIES.flatMap(f=>f.tokens));
+  const missing=[...new Set(GRAPES.flatMap(g=>g.aromas).filter(aroma=>!classified.has(aroma)))];
+  expect(missing).toEqual([]);
+ });
+ it("cross-references curated comparison pairs",()=>{
+  const grapeIds=new Set(GRAPES.map(g=>g.id)),regionIds=new Set(REGIONS.map(r=>r.id));
+  expect(SAME_GRAPE_PAIRS.length).toBeGreaterThanOrEqual(5);
+  for(const pair of SAME_GRAPE_PAIRS){expect(grapeIds.has(pair.grapeId)).toBe(true);expect(regionIds.has(pair.regionAId)).toBe(true);expect(regionIds.has(pair.regionBId)).toBe(true);expect(REGIONS.find(r=>r.id===pair.regionAId)?.grapes).toContain(pair.grapeId);expect(REGIONS.find(r=>r.id===pair.regionBId)?.grapes).toContain(pair.grapeId);expect(pair.tendencies).toHaveLength(4)}
+ });
+ it("has deep bilingual simulator and service content",()=>{
+  expect(VINTAGE_SCENARIOS.length).toBeGreaterThanOrEqual(6);
+  VINTAGE_SCENARIOS.forEach(s=>{expect(s.title.en).toBeTruthy();expect(s.title.de).toBeTruthy();expect(s.stages).toHaveLength(4);s.stages.forEach(stage=>expect(stage.choices.length).toBeGreaterThanOrEqual(2))});
+  expect(SERVICE_SCENARIOS.length).toBeGreaterThanOrEqual(12);
+  SERVICE_SCENARIOS.forEach(s=>{expect(s.title.en).toBeTruthy();expect(s.title.de).toBeTruthy();expect(Object.keys(s.answers)).toHaveLength(4)});
  });
 });
 describe("Wine progression isolation",()=>{

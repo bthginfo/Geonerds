@@ -14,6 +14,7 @@ export type WineGameId =
   | "same-grape"
   | "cellar-mystery"
   | "tasting-note-builder"
+  | "service-challenge"
   | "sommelier-exam";
 
 export type WineCompetency =
@@ -95,4 +96,3 @@ export interface WineRun {
   practice: boolean;
   createdAt: number;
 }
-
