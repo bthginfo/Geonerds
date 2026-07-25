@@ -26,7 +26,14 @@ export const WINE_GAMES: WineGameDefinition[] = [
 }));
 
 export const WINE_GAME_IDS = WINE_GAMES.map((game) => game.id);
+export const GRAPHICAL_WINE_GAME_IDS = [
+  "aroma-atelier",
+  "cellar-builder",
+  "label-decoder",
+  "tasting-note-builder",
+  "winemakers-dilemma",
+  "cellar-mystery",
+] as const satisfies readonly WineGameId[];
 export const isWineGameId = (id: string): id is WineGameId =>
   WINE_GAME_IDS.includes(id as WineGameId);
 export const getWineGame = (id: WineGameId) => WINE_GAMES.find((game) => game.id === id)!;
-

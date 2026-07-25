@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import { APPELLATIONS, AROMAS, CELLAR_BRIEFS, DILEMMAS, EXAM_PROMPTS, GRAPES, PAIRINGS, REGIONS } from "./content";
 import { questionsFor } from "./engine";
 import { applyWineRun, dexStage, emptyWineProgression } from "./progression";
-import { WINE_GAME_IDS, WINE_GAMES } from "./registry";
+import { GRAPHICAL_WINE_GAME_IDS, WINE_GAME_IDS, WINE_GAMES } from "./registry";
 import { WINE_STORAGE_KEYS } from "./store";
 
 const unique=(values:string[])=>new Set(values).size===values.length;
@@ -30,6 +30,8 @@ describe("Wine-Nerds content",()=>{
 describe("Wine game engine",()=>{
  it("keeps registry and routes at fourteen distinct games",()=>{
   expect(WINE_GAMES).toHaveLength(14);expect(unique(WINE_GAME_IDS)).toBe(true);
+  expect(GRAPHICAL_WINE_GAME_IDS).toHaveLength(6);
+  GRAPHICAL_WINE_GAME_IDS.forEach(id=>expect(WINE_GAME_IDS).toContain(id));
  });
  it("creates thousands of safe choice rounds with one included answer",()=>{
   const ids=["terroir-detective","grape-dna","aroma-atelier","pairing-duel","label-decoder","wine-map"] as const;
