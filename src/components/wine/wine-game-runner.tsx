@@ -1,14 +1,16 @@
 "use client";
 import { useMemo, useState } from "react";
 import Link from "next/link";
-import { ArrowLeft, ArrowRight, Check, Clock3, RotateCcw, Sparkles, X } from "lucide-react";
+import { ArrowLeft, ArrowRight, Check, Clock3, RotateCcw, Sparkles, X, LocateFixed } from "lucide-react";
 import { useT } from "@/i18n/I18nProvider";
 import { getWineGame } from "@/wine/registry";
 import type { WineGameId, WineRun } from "@/wine/types";
 import { localize } from "@/wine/types";
 import { questionsFor, scoreMapClick, shuffle, type WineQuestion } from "@/wine/engine";
-import { APPELLATIONS, CELLAR_BOTTLES, CELLAR_BRIEFS, DILEMMAS, GRAPES, REGIONS } from "@/wine/content";
+import { APPELLATIONS, CELLAR_BOTTLES, CELLAR_BRIEFS, DILEMMAS, GRAPES, PAIRINGS, REGIONS } from "@/wine/content";
 import { useWineDaily, useWineDex, useWineProgression, useWineScores } from "@/wine/store";
+import { PinMap } from "@/components/map/pin-map";
+import { Compass } from "@/components/map/compass";
 
 type Difficulty="easy"|"medium"|"hard";
 const ROUND_COUNTS:Record<Difficulty,number>={easy:5,medium:8,hard:12};
@@ -57,6 +59,25 @@ function useFinish({gameId,difficulty,practice}:PlayProps) {
 function PlayHeader({gameId,round,total,score,practice,onExit}:{gameId:WineGameId;round:number;total:number;score:number;practice:boolean;onExit:()=>void}){
  const {locale}=useT();return <header className="border-b border-[var(--wine-line)] bg-black/15"><div className="mx-auto flex min-h-16 max-w-4xl items-center gap-4 px-4"><button onClick={onExit} className="wine-icon" aria-label="Exit"><X className="h-5 w-5"/></button><div className="min-w-0 flex-1"><p className="truncate text-sm font-bold text-[var(--wine-cream)]">{localize(getWineGame(gameId).title,locale)}</p><div className="mt-1 h-1 bg-white/10"><div className="h-full bg-[var(--wine-copper)]" style={{width:`${Math.min(100,round/Math.max(1,total)*100)}%`}}/></div></div><span className="font-mono text-sm font-bold">{score}</span>{practice&&<span className="hidden text-[10px] uppercase tracking-wider text-[var(--wine-vine)] sm:block">practice</span>}</div></header>
 }
+function structureLevel(text:string,trait:"body"|"acidity"|"tannin"){
+ const segment=text.toLowerCase().split(",").find(part=>part.includes(trait))??text.toLowerCase();
+ if(segment.includes("very high"))return 5;if(segment.includes("high"))return 4;if(segment.includes("medium-high"))return 4;if(segment.includes("medium"))return 3;if(segment.includes("low-medium"))return 2;if(segment.includes("low"))return 1;return 2;
+}
+function TerroirDossier({grape,locale}:{grape:typeof GRAPES[number];locale:"en"|"de"}){
+ return <section className="wine-terroir-dossier" aria-label={locale==="de"?"Visuelles Lagen-Dossier":"Visual site dossier"}>
+  <div className="wine-vineyard-scene"><span className="wine-site-sun"/><span className="wine-site-slope"/><span className="wine-vine-row row-a"/><span className="wine-vine-row row-b"/><span className="wine-vine-row row-c"/><span className="wine-soil-layer layer-a"/><span className="wine-soil-layer layer-b"/><span className="wine-scene-label label-climate">{localize(grape.climate,locale)}</span><span className="wine-scene-label label-soil">{locale==="de"?"Boden: herkunftsspezifisch":"Soil: origin-specific"}</span></div>
+  <div className="wine-evidence-ledger"><p className="wine-kicker">{locale==="de"?"Beobachtbare Indizien":"Observed evidence"}</p><strong>{localize(grape.structure,locale)}</strong><div>{grape.aromas.map(a=><span key={a}>{a}</span>)}</div><small>{locale==="de"?"Exposition und Boden sind keine festen Rebsortenmerkmale; sie bleiben Teil der Lagenanalyse.":"Exposure and soil are not fixed grape traits; they remain part of site analysis."}</small></div>
+ </section>
+}
+function GrapeDnaBoard({grape,locale}:{grape:typeof GRAPES[number];locale:"en"|"de"}){
+ const metrics=[["acidity",structureLevel(grape.structure.en,"acidity")],["tannin",structureLevel(grape.structure.en,"tannin")],["body",structureLevel(grape.structure.en,"body")]] as const;
+ return <section className="wine-dna-board" aria-label={locale==="de"?"Anonymes Rebsortenprofil":"Anonymous grape profile"}>
+  <div className="wine-dna-mark"><i/><i/><i/><i/><i/><i/><span>?</span></div><div className="wine-dna-data"><p className="wine-kicker">{locale==="de"?"Anonyme Probe":"Anonymous sample"}</p><div className="wine-climate-band"><span>{locale==="de"?"kühl":"cool"}</span><b style={{left:grape.climate.en.includes("warm")?"72%":grape.climate.en.includes("moderate")?"50%":"24%"}}/><span>{locale==="de"?"warm":"warm"}</span></div>{metrics.map(([label,value])=><ProfileMeter key={label} label={label} value={value}/>)}</div><div className="wine-dna-aromas">{grape.aromas.map((a,i)=><span key={a}><i>{String(i+1).padStart(2,"0")}</i>{a}</span>)}</div>
+ </section>
+}
+function PairingDuelScene({pairing,locale,selected}:{pairing:typeof PAIRINGS[number];locale:"en"|"de";selected:string|null}){
+ return <div className={`wine-pairing-arena ${selected?`leans-${selected}`:""}`}><div className="wine-duel-bottle bottle-left"><i/><span>A</span></div><div className="wine-pairing-plate"><i/><span>{localize(pairing.dish,locale)}</span></div><div className="wine-duel-bottle bottle-right"><i/><span>B</span></div><div className="wine-duel-line"/></div>
+}
 function ChoiceGame(props:PlayProps){
  const {locale}=useT();const isExam=props.gameId==="sommelier-exam";const count=isExam?12:ROUND_COUNTS[props.difficulty];
  const questions=useMemo(()=> {
@@ -71,7 +92,7 @@ function ChoiceGame(props:PlayProps){
   ],props.seed+6).slice(0,count);
  },[props.gameId,props.seed,count,isExam]);
  const [index,setIndex]=useState(0),[selected,setSelected]=useState<string|null>(null),[score,setScore]=useState(0),[correct,setCorrect]=useState(0),[streak,setStreak]=useState(0),[best,setBest]=useState(0),[done,setDone]=useState(false);const [start]=useState(Date.now());
- const encounter=useWineDex(s=>s.encounter), finish=useFinish(props); const q=questions[index];
+ const encounter=useWineDex(s=>s.encounter), finish=useFinish(props); const q=questions[index];const evidenceGrape=(props.gameId==="terroir-detective"||props.gameId==="grape-dna")?GRAPES.find(g=>g.id===q.answer):null;const pairing=props.gameId==="pairing-duel"?PAIRINGS.find(p=>p.id===q.entity?.id):null;
  const answer=(id:string)=>{if(selected)return;setSelected(id);const ok=id===q.answer;const next=ok?streak+1:0;if(ok){setCorrect(x=>x+1);setScore(x=>x+100+Math.min(100,next*10));setBest(Math.max(best,next));}setStreak(next);if(q.entity&&!props.practice)encounter(q.entity.id,q.entity.type,props.gameId,ok)};
  const next=()=>{if(index+1>=questions.length){finish(score+(selected===q.answer?0:0),correct,questions.length,best,start);setDone(true)}else{setIndex(x=>x+1);setSelected(null)}};
  if(done)return <Result {...props} score={score} correct={correct} total={questions.length} onReplay={props.onReplay}/>;
@@ -79,7 +100,10 @@ function ChoiceGame(props:PlayProps){
   {isExam&&<div className="mb-5 flex items-center gap-2 text-xs text-[var(--wine-muted)]"><Clock3 className="h-4 w-4"/>{locale==="de"?"Inoffizielle gemischte Übung · 12 Aufgaben":"Unofficial mixed practice · 12 prompts"}</div>}
   <p className="wine-kicker">{locale==="de"?`Aufgabe ${index+1} von ${questions.length}`:`Prompt ${index+1} of ${questions.length}`}</p>
   <h1 className="mt-4 text-2xl font-black leading-tight text-[var(--wine-cream)] md:text-4xl">{localize(q.prompt,locale)}</h1>
-  <div className="mt-8 grid gap-3 sm:grid-cols-2">{q.choices.map(c=>{const reveal=selected!==null,ok=c.id===q.answer,chosen=c.id===selected;return <button key={c.id} disabled={reveal} onClick={()=>answer(c.id)} className={`wine-answer ${reveal&&ok?"is-correct":""} ${reveal&&chosen&&!ok?"is-wrong":""}`}><span>{localize(c.label,locale)}</span>{reveal&&ok&&<Check className="h-5 w-5"/>}{reveal&&chosen&&!ok&&<X className="h-5 w-5"/>}</button>})}</div>
+  {props.gameId==="terroir-detective"&&evidenceGrape&&<TerroirDossier grape={evidenceGrape} locale={locale}/>}
+  {props.gameId==="grape-dna"&&evidenceGrape&&<GrapeDnaBoard grape={evidenceGrape} locale={locale}/>}
+  {pairing&&<PairingDuelScene pairing={pairing} locale={locale} selected={selected}/>}
+  <div className={`mt-8 grid gap-3 sm:grid-cols-2 ${pairing?"wine-duel-choices":""}`}>{q.choices.map((c,choiceIndex)=>{const reveal=selected!==null,ok=c.id===q.answer,chosen=c.id===selected;return <button key={c.id} disabled={reveal} onClick={()=>answer(c.id)} className={`${pairing?"wine-duel-challenger":"wine-answer"} ${pairing?`challenger-${choiceIndex}`:""} ${reveal&&ok?"is-correct":""} ${reveal&&chosen&&!ok?"is-wrong":""}`}><span>{pairing&&<b>{choiceIndex?"B":"A"}</b>}{localize(c.label,locale)}</span>{reveal&&ok&&<Check className="h-5 w-5"/>}{reveal&&chosen&&!ok&&<X className="h-5 w-5"/>}</button>})}</div>
   {selected&&<div className="wine-reveal"><p className="wine-kicker">{selected===q.answer?(locale==="de"?"Stimmige Begründung":"Defensible reasoning"):(locale==="de"?"Lernmoment":"Study the miss")}</p><p className="mt-2 leading-6">{localize(q.explanation,locale)}</p><button onClick={next} className="wine-button mt-5">{index+1===questions.length?(locale==="de"?"Auswertung":"Results"):(locale==="de"?"Nächste Aufgabe":"Next prompt")}<ArrowRight className="h-4 w-4"/></button></div>}
  </div></>;
 }
@@ -130,11 +154,14 @@ function LabelDecoderGame(props:PlayProps){
  </div></>;
 }
 function MapGame(props:PlayProps){
- const {locale}=useT();const regions=useMemo(()=>shuffle(REGIONS,props.seed).slice(0,ROUND_COUNTS[props.difficulty]),[props.seed,props.difficulty]);const [i,setI]=useState(0),[pin,setPin]=useState<{lat:number;lng:number}|null>(null),[score,setScore]=useState(0),[correct,setCorrect]=useState(0),[done,setDone]=useState(false),[start]=useState(Date.now());const finish=useFinish(props),encounter=useWineDex(s=>s.encounter),target=regions[i];const result=pin?scoreMapClick(pin.lat,pin.lng,target):null;
- const click=(e:React.MouseEvent<HTMLButtonElement>)=>{if(pin)return;const r=e.currentTarget.getBoundingClientRect();setPin({lng:(e.clientX-r.left)/r.width*360-180,lat:90-(e.clientY-r.top)/r.height*180})};
- const next=()=>{if(result){setScore(x=>x+result.score);if(result.correct)setCorrect(x=>x+1);if(!props.practice)encounter(target.id,"region",props.gameId,result.correct)}if(i+1===regions.length){finish(score+(result?.score??0),correct+(result?.correct?1:0),regions.length,0,start);setDone(true)}else{setI(x=>x+1);setPin(null)}};
+ const {locale}=useT();const regions=useMemo(()=>shuffle(REGIONS,props.seed).slice(0,ROUND_COUNTS[props.difficulty]),[props.seed,props.difficulty]);const [i,setI]=useState(0),[pin,setPin]=useState<[number,number]|null>(null),[confirmed,setConfirmed]=useState(false),[resetSignal,setResetSignal]=useState(0),[score,setScore]=useState(0),[correct,setCorrect]=useState(0),[done,setDone]=useState(false),[start]=useState(Date.now());const finish=useFinish(props),encounter=useWineDex(s=>s.encounter),target=regions[i];const result=confirmed&&pin?scoreMapClick(pin[1],pin[0],target):null;
+ const next=()=>{if(result){setScore(x=>x+result.score);if(result.correct)setCorrect(x=>x+1);if(!props.practice)encounter(target.id,"region",props.gameId,result.correct)}if(i+1===regions.length){finish(score+(result?.score??0),correct+(result?.correct?1:0),regions.length,0,start);setDone(true)}else{setI(x=>x+1);setPin(null);setConfirmed(false);setResetSignal(x=>x+1)}};
  if(done)return <Result {...props} score={score} correct={correct} total={regions.length} onReplay={props.onReplay}/>;
- return <><PlayHeader gameId={props.gameId} round={i+1} total={regions.length} score={score} practice={props.practice} onExit={props.onExit}/><div className="mx-auto max-w-4xl px-4 py-8"><p className="wine-kicker">{locale==="de"?"Setze den Pin":"Place the pin"}</p><h1 className="mt-2 text-3xl font-black text-[var(--wine-cream)]">{localize(target.name,locale)} · {localize(target.country,locale)}</h1><button onClick={click} className="wine-world mt-6 block w-full" aria-label={locale==="de"?"Weltkarte, Position wählen":"World map, choose a position"}>{pin&&<span className="wine-pin" style={{left:`${(pin.lng+180)/3.6}%`,top:`${(90-pin.lat)/1.8}%`}}/>}{pin&&<span className="wine-target" style={{left:`${(target.lng+180)/3.6}%`,top:`${(90-target.lat)/1.8}%`}}/>}<span className="wine-continent c1"/><span className="wine-continent c2"/><span className="wine-continent c3"/><span className="wine-continent c4"/><span className="wine-continent c5"/></button>{result&&<div className="wine-reveal"><p className="text-2xl font-black">{Math.round(result.distance*111)} km · +{result.score}</p><p className="mt-2 text-[var(--wine-muted)]">{localize(target.climate,locale)} · {target.grapes.map(id=>GRAPES.find(g=>g.id===id)?.name).join(", ")}</p><button className="wine-button mt-5" onClick={next}>{locale==="de"?"Weiter":"Continue"}<ArrowRight className="h-4 w-4"/></button></div>}</div></>;
+ return <><PlayHeader gameId={props.gameId} round={i+1} total={regions.length} score={score} practice={props.practice} onExit={props.onExit}/><div className="mx-auto max-w-5xl px-4 py-6"><div className="flex flex-wrap items-end justify-between gap-3"><div><p className="wine-kicker">{locale==="de"?"Atlas-Aufgabe":"Atlas assignment"}</p><h1 className="mt-2 text-3xl font-black text-[var(--wine-cream)]">{localize(target.name,locale)} · {localize(target.country,locale)}</h1></div><button type="button" onClick={()=>setResetSignal(x=>x+1)} className="wine-button wine-button-quiet"><LocateFixed className="h-4 w-4"/>{locale==="de"?"Weltansicht":"World view"}</button></div>
+  <p className="mt-3 text-xs leading-5 text-[var(--wine-muted)]">{locale==="de"?"Ziehen oder mit zwei Fingern bewegen · Mausrad/Pinch und +/− zum Zoomen · kurz tippen, um den Pin zu setzen oder zu versetzen.":"Drag or use two fingers to move · wheel/pinch and +/− to zoom · briefly tap to place or reposition your pin."}</p>
+  <div className="wine-real-map relative mt-4 h-[420px] overflow-hidden border border-[var(--wine-line)] sm:h-[520px]"><PinMap onPin={(lng,lat)=>{if(!confirmed)setPin([lng,lat])}} userPin={pin} target={confirmed?[target.lng,target.lat]:null} locked={confirmed} resetSignal={resetSignal} initialScale={1}/><Compass/></div>
+  {!confirmed?<div className="mt-4 flex flex-wrap items-center justify-between gap-3"><p className="text-sm text-[var(--wine-muted)]">{pin?(locale==="de"?"Pin gesetzt — du kannst ihn noch versetzen.":"Pin placed — you can still reposition it."):(locale==="de"?"Setze zuerst einen Pin auf die echte Weltkarte.":"Place a pin on the real world map first.")}</p><button type="button" disabled={!pin} onClick={()=>setConfirmed(true)} className="wine-button">{locale==="de"?"Pin bestätigen":"Lock in pin"}<Check className="h-4 w-4"/></button></div>:result&&<div className="wine-reveal"><div className="flex flex-wrap items-baseline gap-x-4 gap-y-1"><p className="text-2xl font-black">{Math.round(result.distance).toLocaleString(locale)} km</p><b className="font-mono text-[var(--wine-copper)]">+{result.score}</b></div><p className="mt-2 text-[var(--wine-muted)]">{localize(target.climate,locale)} · {target.grapes.map(id=>GRAPES.find(g=>g.id===id)?.name).join(", ")}</p><button className="wine-button mt-5" onClick={next}>{locale==="de"?"Weiter":"Continue"}<ArrowRight className="h-4 w-4"/></button></div>}
+ </div></>;
 }
 function CellarBuilder(props:PlayProps){
  const {locale}=useT();const brief=CELLAR_BRIEFS[props.seed%CELLAR_BRIEFS.length];const [selected,setSelected]=useState<string[]>([]),[feedback,setFeedback]=useState<string|null>(null),[done,setDone]=useState(false),[start]=useState(Date.now());const finish=useFinish(props);const cost=CELLAR_BOTTLES.filter(b=>selected.includes(b.id)).reduce((s,b)=>s+b.price,0);const covered=new Set(CELLAR_BOTTLES.filter(b=>selected.includes(b.id)).map(b=>b.category));const missing=brief.needs.filter(n=>!covered.has(n));const valid=cost<=brief.budget&&missing.length===0;

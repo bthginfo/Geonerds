@@ -1,5 +1,6 @@
 import { APPELLATIONS, AROMAS, GRAPES, PAIRINGS, REGIONS } from "./content";
 import type { Localized, WineGameId } from "./types";
+import { haversineKm } from "@/lib/utils";
 
 export function seeded(seed:number) {
   let value=seed>>>0;
@@ -41,7 +42,7 @@ export function questionsFor(game:WineGameId,seed=1):WineQuestion[] {
 }
 
 export function scoreMapClick(lat:number,lng:number,target:{lat:number;lng:number}) {
- const dy=lat-target.lat; const dx=(lng-target.lng)*Math.cos(target.lat*Math.PI/180); const distance=Math.sqrt(dy*dy+dx*dx);
- return {distance,score:Math.max(0,Math.round(1000-distance*35)),correct:distance<=8};
+ const distance=haversineKm([lng,lat],[target.lng,target.lat]);
+ const score=distance<=50?1000:distance<=150?900:distance<=300?750:distance<=600?550:distance<=1000?300:distance<=1600?100:0;
+ return {distance,score,correct:distance<=600};
 }
-

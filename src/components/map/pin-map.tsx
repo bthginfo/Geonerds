@@ -20,6 +20,7 @@ export function PinMap({
   resetSignal = 0,
   focus = null,
   focusZoom = 5,
+  initialScale = 1.35,
 }: {
   onPin: (lng: number, lat: number) => void;
   userPin?: LngLat | null;
@@ -29,6 +30,8 @@ export function PinMap({
   /** When set, the map centres/zooms on this point (e.g. to show a peak's region). */
   focus?: LngLat | null;
   focusZoom?: number;
+  /** Initial/reset zoom. Use 1 for a neutral whole-world view. */
+  initialScale?: number;
 }) {
   const [features, setFeatures] = useState<CountryFeature[] | null>(null);
   const [t, setT] = useState({ k: 1, x: 0, y: 0 });
@@ -68,17 +71,21 @@ export function PinMap({
     zoomRef.current = z;
     sel.call(z);
     sel.on("dblclick.zoom", null);
-    const s = 1.35;
+    const s = initialScale;
     sel.call(z.transform, zoomIdentity.translate(((1 - s) * W) / 2, ((1 - s) * H) / 2).scale(s));
     return () => {
       sel.on(".zoom", null);
     };
-  }, []);
+  }, [initialScale]);
 
   useEffect(() => {
     if (resetSignal === 0 || !svgRef.current || !zoomRef.current) return;
-    select(svgRef.current).call(zoomRef.current.transform, zoomIdentity);
-  }, [resetSignal]);
+    const s = initialScale;
+    select(svgRef.current).call(
+      zoomRef.current.transform,
+      zoomIdentity.translate(((1 - s) * W) / 2, ((1 - s) * H) / 2).scale(s)
+    );
+  }, [resetSignal, initialScale]);
 
   // Centre/zoom on a focus point (e.g. a peak's region) when its coordinates change.
   useEffect(() => {
@@ -167,12 +174,12 @@ export function PinMap({
         </g>
       </svg>
 
-      <div className="absolute bottom-3 right-3 z-10 flex flex-col overflow-hidden rounded-xl border border-border bg-card/90 shadow-md backdrop-blur">
-        <button onClick={() => zoomBy(2)} aria-label="Zoom in" className="flex h-10 w-10 items-center justify-center hover:bg-muted active:scale-95">
+      <div className="pin-map-controls absolute bottom-3 right-3 z-10 flex flex-col overflow-hidden rounded-xl border border-border bg-card/90 shadow-md backdrop-blur">
+        <button type="button" onClick={() => zoomBy(2)} aria-label="Zoom in" className="flex h-11 w-11 items-center justify-center hover:bg-muted active:scale-95">
           <Plus className="h-5 w-5" />
         </button>
         <div className="h-px bg-border" />
-        <button onClick={() => zoomBy(0.5)} aria-label="Zoom out" className="flex h-10 w-10 items-center justify-center hover:bg-muted active:scale-95">
+        <button type="button" onClick={() => zoomBy(0.5)} aria-label="Zoom out" className="flex h-11 w-11 items-center justify-center hover:bg-muted active:scale-95">
           <Minus className="h-5 w-5" />
         </button>
       </div>
