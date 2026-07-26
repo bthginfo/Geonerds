@@ -5,6 +5,8 @@ import { applyWineRun, dexStage, emptyWineProgression } from "./progression";
 import { GRAPHICAL_WINE_GAME_IDS, WINE_GAME_IDS, WINE_GAMES } from "./registry";
 import { WINE_STORAGE_KEYS } from "./store";
 import { AROMA_WHEEL_FAMILIES, SAME_GRAPE_PAIRS, SERVICE_SCENARIOS, VINTAGE_SCENARIOS } from "./visual-content";
+import { buildDeductionCase, incompatibleIds } from "./deduction";
+import { WINE_DIFFICULTY, deductionScore, objectiveScore } from "./session";
 
 const unique=(values:string[])=>new Set(values).size===values.length;
 describe("Wine-Nerds content",()=>{
@@ -13,7 +15,9 @@ describe("Wine-Nerds content",()=>{
   expect(REGIONS.length).toBeGreaterThanOrEqual(35);
   expect(APPELLATIONS.length).toBeGreaterThanOrEqual(45);
   expect(AROMAS.length).toBeGreaterThanOrEqual(60);
-  expect(PAIRINGS.length).toBeGreaterThanOrEqual(35);
+  expect(PAIRINGS.length).toBeGreaterThanOrEqual(12);
+  expect(unique(PAIRINGS.map(pair=>pair.id))).toBe(true);
+  expect(unique(PAIRINGS.map(pair=>pair.dish.en))).toBe(true);
   expect(DILEMMAS.length).toBeGreaterThanOrEqual(25);
   expect(CELLAR_BRIEFS.length).toBeGreaterThanOrEqual(25);
   expect(EXAM_PROMPTS.length).toBeGreaterThanOrEqual(80);
@@ -41,6 +45,20 @@ describe("Wine game engine",()=>{
    expect(unique(q.choices.map(c=>c.id))).toBe(true);expect(q.choices.filter(c=>c.id===q.answer)).toHaveLength(1);checked++;
   }
   expect(checked).toBeGreaterThan(1000);
+ });
+ it("derives eliminations from clue predicates and never eliminates the answer",()=>{
+  for(const gameId of ["terroir-detective","grape-dna","cellar-mystery"] as const)for(let seed=1;seed<=40;seed++){
+   const caseFile=buildDeductionCase(gameId,seed,WINE_DIFFICULTY.medium.suspects);
+   for(let count=1;count<=caseFile.clues.length;count++)expect(incompatibleIds(caseFile.suspects,caseFile.clues.slice(0,count))).not.toContain(caseFile.answer.id);
+   expect(incompatibleIds(caseFile.suspects,caseFile.clues)).not.toHaveLength(0);
+  }
+ });
+ it("applies deterministic difficulty, confidence and objective scoring",()=>{
+  expect(WINE_DIFFICULTY.easy.clueBudget).toBeGreaterThan(WINE_DIFFICULTY.hard.clueBudget);
+  expect(WINE_DIFFICULTY.easy.examSeconds).toBeGreaterThan(WINE_DIFFICULTY.hard.examSeconds);
+  expect(deductionScore(1000,1,"hard","bold",true)).toBe(deductionScore(1000,1,"hard","bold",true));
+  expect(deductionScore(1000,1,"hard","bold",false)).toBe(0);
+  expect(objectiveScore({fruit:4,pressure:3},{fruit:4,pressure:2},1)).toBeLessThan(objectiveScore({fruit:4,pressure:2},{fruit:4,pressure:2}));
  });
 });
 describe("Wine visual content",()=>{

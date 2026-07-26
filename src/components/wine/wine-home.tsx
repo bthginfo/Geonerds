@@ -47,7 +47,7 @@ export function WineHome() {
    </Link>
   </section>
   <section className="mx-auto max-w-6xl px-4 pb-16">
-   <div className="mb-5 flex items-center justify-between"><h2 className="text-xl font-black text-[var(--wine-cream)]">{locale==="de"?"Übungskeller":"Practice cellar"}</h2><span className="text-xs text-[var(--wine-muted)]">14 {locale==="de"?"aktive Spiele":"live games"}</span></div>
+   <div className="mb-5 flex items-center justify-between"><h2 className="text-xl font-black text-[var(--wine-cream)]">{locale==="de"?"Übungskeller":"Practice cellar"}</h2><span className="text-xs text-[var(--wine-muted)]">{WINE_GAMES.length} {locale==="de"?"aktive Spiele":"live games"}</span></div>
    <div className="wine-game-list">{WINE_GAMES.map((game,i)=><Link key={game.id} href={`/wine-nerds/play/${game.id}`} className={`wine-game-row wine-tone-${game.tone}`}>
     <span className="font-mono text-xs text-[var(--wine-muted)]">{String(i+1).padStart(2,"0")}</span>
     <div><p className="wine-kicker">{localize(game.eyebrow,locale)}</p><h3 className="mt-1 text-xl font-bold text-[var(--wine-cream)]">{localize(game.title,locale)}</h3><p className="mt-1 text-sm leading-5 text-[var(--wine-muted)]">{localize(game.description,locale)}</p></div>
@@ -58,4 +58,3 @@ export function WineHome() {
  </div>;
 }
 function Metric({icon:Icon,value,label}:{icon:typeof Flame;value:string|number;label:string}){return <div className="border border-[var(--wine-line)] bg-black/15 p-3"><Icon className="mx-auto h-4 w-4 text-[var(--wine-copper)]"/><p className="mt-1 font-mono text-xl font-bold">{value}</p><p className="text-[10px] uppercase tracking-wider text-[var(--wine-muted)]">{label}</p></div>}
-
