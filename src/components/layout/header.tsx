@@ -20,7 +20,7 @@ export function Header() {
   const { t } = useT();
   const pathname = usePathname();
   // Hide global chrome inside an active game for a focused experience.
-  if (pathname.startsWith("/play/") || pathname.startsWith("/wine-nerds")) return null;
+  if (pathname.startsWith("/play/") || pathname.startsWith("/wine-nerds") || pathname.startsWith("/poke-nerds")) return null;
 
   return (
     <header className="sticky top-0 z-40 border-b border-border/60 bg-background/80 backdrop-blur-md">

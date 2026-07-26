@@ -1,6 +1,7 @@
 import type { MetadataRoute } from "next";
 import { GAMES } from "@/games/registry";
 import { WINE_GAMES } from "@/wine/registry";
+import { POKE_GAMES } from "@/poke/registry";
 
 const SITE_URL = "https://geo-nerds.com";
 
@@ -35,5 +36,18 @@ export default function sitemap(): MetadataRoute.Sitemap {
     priority: 0.55,
   }));
 
-  return [...staticRoutes, ...gameRoutes, ...wineStatic, ...wineGames];
+  const pokeStatic = ["", "/dex", "/cards", "/leaderboard", "/badges", "/profile"].map((path) => ({
+    url: `${SITE_URL}/poke-nerds${path}`,
+    lastModified: now,
+    changeFrequency: "weekly" as const,
+    priority: path === "" ? 0.6 : 0.45,
+  }));
+  const pokeGames = POKE_GAMES.map((game) => ({
+    url: `${SITE_URL}/poke-nerds/play/${game.id}`,
+    lastModified: now,
+    changeFrequency: "monthly" as const,
+    priority: 0.55,
+  }));
+
+  return [...staticRoutes, ...gameRoutes, ...wineStatic, ...wineGames, ...pokeStatic, ...pokeGames];
 }

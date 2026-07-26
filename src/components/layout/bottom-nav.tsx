@@ -18,7 +18,7 @@ const ITEMS = [
 export function BottomNav() {
   const { t } = useT();
   const pathname = usePathname();
-  if (pathname.startsWith("/play/") || pathname.startsWith("/wine-nerds")) return null;
+  if (pathname.startsWith("/play/") || pathname.startsWith("/wine-nerds") || pathname.startsWith("/poke-nerds")) return null;
 
   return (
     <nav className="sticky bottom-0 z-40 border-t border-border/60 bg-background/90 backdrop-blur-md sm:hidden">

@@ -11,7 +11,7 @@ export function Footer() {
   const { t } = useT();
   const pathname = usePathname();
   // Keep games chrome-free.
-  if (pathname.startsWith("/play/") || pathname.startsWith("/wine-nerds")) return null;
+  if (pathname.startsWith("/play/") || pathname.startsWith("/wine-nerds") || pathname.startsWith("/poke-nerds")) return null;
 
   return (
     <footer className="mt-auto border-t border-border/50 bg-background/60">
