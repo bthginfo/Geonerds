@@ -24,7 +24,7 @@ export function CookieBanner() {
         initial={{ opacity: 0, y: 24 }}
         animate={{ opacity: 1, y: 0 }}
         exit={{ opacity: 0, y: 24 }}
-        className="fixed inset-x-0 bottom-0 z-50 px-3 pb-3 sm:px-4 sm:pb-4"
+        className="cookie-banner pointer-events-none fixed inset-x-0 bottom-0 z-50 px-3 pb-3 sm:px-4 sm:pb-4"
         role="dialog"
         aria-label={t("consent.title")}
       >
@@ -36,12 +36,12 @@ export function CookieBanner() {
             <div className="text-sm font-semibold">{t("consent.title")}</div>
             <p className="mt-0.5 text-xs leading-relaxed text-muted-foreground">
               {t("consent.text")}{" "}
-              <Link href="/privacy" className="font-medium text-primary underline-offset-2 hover:underline">
+              <Link href="/privacy" className="pointer-events-auto font-medium text-primary underline-offset-2 hover:underline">
                 {t("consent.more")}
               </Link>
             </p>
           </div>
-          <div className="flex shrink-0 gap-2 sm:self-center">
+          <div className="pointer-events-auto flex shrink-0 gap-2 sm:self-center">
             <Button variant="outline" onClick={() => setChoice("necessary")}>
               {t("consent.necessary")}
             </Button>

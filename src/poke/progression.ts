@@ -12,6 +12,8 @@ export function applyPokeRun(state:PokeProgressionData,run:PokeRun):PokeProgress
  return {...state,xp:state.xp+gained,researchCredits:state.researchCredits+Math.max(18,Math.round(run.score/45)),totalRuns:state.totalRuns+1,correct:state.correct+run.correct,total:state.total+run.total,activeDays:[...new Set([...state.activeDays,day])].slice(-90),competencyXp:{...state.competencyXp,[competency]:state.competencyXp[competency]+gained}};
 }
 export const trainerLevel=(xp:number)=>Math.floor(Math.sqrt(xp/100))+1;
+export const normalizeRunScore=(score:number,completedRounds:number)=>Math.round(score/Math.max(1,completedRounds)*10);
+export const shouldRecordDex=(practice:boolean)=>!practice;
 export function pokeDexStage(correct=0,games=0):PokeDexStage {if(correct>=10&&games>=3)return"mastered";if(correct>=4&&games>=2)return"researched";if(correct>0)return"encountered";return"sealed"}
 export const POKE_BADGES=[
  {id:"first-scan",name:{en:"First Contact",de:"Erstkontakt"},metric:"runs",goal:1},
