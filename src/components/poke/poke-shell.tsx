@@ -1,7 +1,7 @@
 "use client";
 import Link from "next/link";
 import {usePathname} from "next/navigation";
-import {Award,BookOpen,Globe2,Home,Layers3,Trophy,UserRound} from "lucide-react";
+import {Award,BookOpen,Globe2,Home,Layers3,Swords,Trophy,UserRound} from "lucide-react";
 import {useT} from "@/i18n/I18nProvider";
 import {PokeLogo} from "./poke-logo";
 import {PokeLanguageSwitch} from "./poke-language-switch";
@@ -9,6 +9,7 @@ const nav=[
  {href:"/poke-nerds",icon:Home,en:"Base",de:"Basis"},
  {href:"/poke-nerds/dex",icon:BookOpen,en:"PokéDex",de:"PokéDex"},
  {href:"/poke-nerds/cards",icon:Layers3,en:"Cards",de:"Karten"},
+ {href:"/poke-nerds/challenges",icon:Swords,en:"Duels",de:"Duelle"},
  {href:"/poke-nerds/leaderboard",icon:Trophy,en:"Ranks",de:"Ränge"},
  {href:"/poke-nerds/badges",icon:Award,en:"Badges",de:"Orden"},
  {href:"/poke-nerds/profile",icon:UserRound,en:"Profile",de:"Profil"},

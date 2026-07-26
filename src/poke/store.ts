@@ -3,16 +3,17 @@ import {create} from "zustand";
 import {persist} from "zustand/middleware";
 import {applyPokeRun,emptyPokeProgression,type PokeProgressionData} from "./progression";
 import type {PokeRun} from "./types";
+import {migrateLocalRun} from "./competition";
 import {BOOSTER_COST,GEN_UNLOCK_COST,canSpendCredits,cardVariantKey,generateBooster,normalizeLegacyCard,validKeepSelection,type PokeCard} from "./cards";
 
-export const POKE_STORAGE_KEYS={progression:"poke-nerds-progression",dex:"poke-nerds-dex",scores:"poke-nerds-scores",daily:"poke-nerds-daily",cards:"poke-nerds-cards",session:"poke-nerds-session"} as const;
+export const POKE_STORAGE_KEYS={progression:"poke-nerds-progression",dex:"poke-nerds-dex",scores:"poke-nerds-scores",daily:"poke-nerds-daily",cards:"poke-nerds-cards",session:"poke-nerds-session",competition:"poke-nerds-competition"} as const;
 interface ProgressionStore extends PokeProgressionData{record:(run:PokeRun)=>void;spendCredits:(amount:number)=>boolean;addCredits:(amount:number)=>void;reset:()=>void}
 export const usePokeProgression=create<ProgressionStore>()(persist((set,get)=>({...emptyPokeProgression(),record:(run)=>set((state)=>applyPokeRun(state,run)),spendCredits:(amount)=>{if(!canSpendCredits(get().researchCredits,amount))return false;set((state)=>({...state,researchCredits:state.researchCredits-amount}));return true},addCredits:(amount)=>set((state)=>({...state,researchCredits:state.researchCredits+Math.max(0,amount)})),reset:()=>set(emptyPokeProgression())}),{name:POKE_STORAGE_KEYS.progression,version:2}));
 export interface DexRecord{id:number;correct:number;games:string[];favorite:boolean}
 interface DexStore{records:Record<number,DexRecord>;encounter:(id:number,gameId:string,correct:boolean)=>void;toggleFavorite:(id:number)=>void}
 export const usePokeDex=create<DexStore>()(persist((set)=>({records:{},encounter:(id,gameId,correct)=>set((state)=>{if(!correct)return state;const old=state.records[id]??{id,correct:0,games:[],favorite:false};return{records:{...state.records,[id]:{...old,correct:old.correct+1,games:[...new Set([...old.games,gameId])]}}}}),toggleFavorite:(id)=>set((state)=>{const old=state.records[id];if(!old)return state;return{records:{...state.records,[id]:{...old,favorite:!old.favorite}}}})}),{name:POKE_STORAGE_KEYS.dex,version:1}));
 interface ScoresStore{runs:PokeRun[];add:(run:PokeRun)=>void}
-export const usePokeScores=create<ScoresStore>()(persist((set)=>({runs:[],add:(run)=>set((state)=>run.practice?state:{runs:[run,...state.runs].slice(0,250)})}),{name:POKE_STORAGE_KEYS.scores,version:1}));
+export const usePokeScores=create<ScoresStore>()(persist((set)=>({runs:[],add:(run)=>set((state)=>run.practice?state:{runs:[run,...state.runs].slice(0,250)})}),{name:POKE_STORAGE_KEYS.scores,version:2,migrate:(persisted)=>{const old=(persisted??{}) as Partial<ScoresStore>;return{runs:(old.runs??[]).map((run)=>migrateLocalRun(run))} as ScoresStore}}));
 interface SessionStore{roundCount:5|10|20;setRoundCount:(count:5|10|20)=>void}
 export const usePokeSession=create<SessionStore>()(persist((set)=>({roundCount:5,setRoundCount:(roundCount)=>set({roundCount})}),{name:POKE_STORAGE_KEYS.session,version:1}));
 

@@ -36,10 +36,21 @@ export async function POST(req: Request) {
   const wipeUsers = url.searchParams.get("users") === "1";
 
   if (wipeUsers) {
-    // gn_scores cascades on user delete, but delete explicitly to be safe.
+    // Clear competition rows in explicit FK order before account cascade.
+    await sql`DELETE FROM pn_challenge_attempts`;
+    await sql`DELETE FROM pn_scores`;
+    await sql`DELETE FROM pn_challenges`;
+    await sql`DELETE FROM pn_badge_awards`;
+    await sql`DELETE FROM pn_ratings`;
+    await sql`DELETE FROM pn_profiles`;
     await sql`DELETE FROM gn_scores`;
     await sql`DELETE FROM gn_users`;
   } else {
+    await sql`DELETE FROM pn_challenge_attempts`;
+    await sql`DELETE FROM pn_scores`;
+    await sql`DELETE FROM pn_challenges`;
+    await sql`DELETE FROM pn_badge_awards`;
+    await sql`DELETE FROM pn_ratings`;
     await sql`DELETE FROM gn_scores`;
   }
 

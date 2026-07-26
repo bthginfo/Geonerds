@@ -116,9 +116,12 @@ export default function PrivacyPage() {
               <h2>4. Optional account &amp; leaderboard</h2>
               <p>
                 Only if you voluntarily sign in do we store your chosen name, a hashed passcode and the
-                game results you submit on our server in order to show the global leaderboard. Please
-                don&apos;t use your real name if you wish to stay anonymous. You may request deletion of
-                your account at any time by email.
+                game results you submit on our server. In Poke-Nerds this also includes your optional
+                trainer passport, league rating, seasonal record, challenges and server-verified
+                badges. Public trainer passports and rankings show your chosen name; you can make the
+                passport private. Challenge and seasonal records are retained for ranking integrity
+                until the account is deleted. Please don&apos;t use your real name if you wish to stay
+                anonymous. You may request deletion of your account at any time by email.
               </p>
             </section>
             <section>

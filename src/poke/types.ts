@@ -55,11 +55,24 @@ export interface PokeRun {
   score: number;
   correct: number;
   total: number;
-  selectedRounds: number;
+  selectedRounds: 5 | 10 | 20;
   completedRounds: number;
   normalizedRating: number;
   difficulty: PokeDifficulty;
+  generationCap: number;
+  durationMs: number;
   practice: boolean;
   speciesIds: number[];
   createdAt: number;
+  verified?: boolean;
+  legacy?: boolean;
+}
+
+export interface PokePlayResult {
+  score: number;
+  correct: number;
+  questions: number;
+  completedRounds: number;
+  speciesIds: number[];
+  durationMs: number;
 }

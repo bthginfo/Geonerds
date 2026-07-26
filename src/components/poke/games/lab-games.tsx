@@ -10,8 +10,8 @@ import type {ComponentType} from "react";
 export {EvolutionLab} from "./evolution-lab";
 
 function MultiRound({Component,...props}:GameProps&{Component:ComponentType<GameProps>}){
- const[index,setIndex]=useState(0),[score,setScore]=useState(0),[correct,setCorrect]=useState(0),[encountered,setEncountered]=useState<number[]>([]);
- const finish=(gained:number,good:number,_total:number,ids:number[])=>{const nextScore=score+gained,nextCorrect=correct+good,nextIds=[...encountered,...ids];if(index+1>=props.roundCount)props.onFinish(nextScore,nextCorrect,index+1,nextIds);else{setScore(nextScore);setCorrect(nextCorrect);setEncountered(nextIds);setIndex((value)=>value+1)}};
+ const[index,setIndex]=useState(0),[score,setScore]=useState(0),[correct,setCorrect]=useState(0),[questions,setQuestions]=useState(0),[encountered,setEncountered]=useState<number[]>([]);
+ const finish=(gained:number,good:number,total:number,ids:number[])=>{const nextScore=score+gained,nextCorrect=correct+good,nextQuestions=questions+total,nextIds=[...encountered,...ids];if(index+1>=props.roundCount)props.onFinish(nextScore,nextCorrect,nextQuestions,nextIds,index+1);else{setScore(nextScore);setCorrect(nextCorrect);setQuestions(nextQuestions);setEncountered(nextIds);setIndex((value)=>value+1)}};
  return <Component {...props} key={`${props.runSeed}:${index}`} runSeed={`${props.runSeed}:${index}`} onFinish={finish}/>;
 }
 
