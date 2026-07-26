@@ -17,9 +17,19 @@ import {PokemonSprite} from "../pokemon-sprite";
 
 const CONDITION_DISTRACTORS=[
  {en:"Level 20",de:"Level 20"},
+ {en:"Level 30",de:"Level 30"},
+ {en:"Level 36",de:"Level 36"},
+ {en:"Level 50",de:"Level 50"},
  {en:"High friendship",de:"Hohe Freundschaft"},
  {en:"Evolution stone",de:"Entwicklungsstein"},
+ {en:"Moon Stone",de:"Mondstein"},
+ {en:"Leaf Stone",de:"Blattstein"},
+ {en:"Water Stone",de:"Wasserstein"},
  {en:"Trade",de:"Tausch"},
+ {en:"Trade holding an item",de:"Tausch mit getragenem Item"},
+ {en:"Level up during the day",de:"Levelaufstieg am Tag"},
+ {en:"Level up at night",de:"Levelaufstieg bei Nacht"},
+ {en:"Level up after learning a move",de:"Levelaufstieg nach Erlernen einer Attacke"},
  {en:"Level up during rain",de:"Levelaufstieg bei Regen"},
 ] as const;
 
@@ -88,15 +98,17 @@ function EvolutionLabMission({family,locale,difficulty,runSeed,missionIndex,miss
  const allPlaced=placedIds.length===family.nodes.length;
  const allConditions=family.edges.every((edge)=>Boolean(conditions[evolutionEdgeKey(edge)]));
  const conditionsCorrect=family.edges.every((edge)=>conditions[evolutionEdgeKey(edge)]===edge.condition.en);
+ const wrongEdges=family.edges.filter((edge)=>conditions[evolutionEdgeKey(edge)]!==edge.condition.en);
  const gained=Math.max(450,1500+family.edges.length*120-mistakes*90);
 
  const conditionOptions=useMemo(()=>{
+  const distractorCount=difficulty==="easy"?3:difficulty==="medium"?6:9;
   const options=[
    ...family.edges.map((edge)=>edge.condition),
-   ...CONDITION_DISTRACTORS,
+   ...seededShuffle(CONDITION_DISTRACTORS,`${runSeed}:distractors`).slice(0,distractorCount),
   ].filter((item,index,items)=>items.findIndex((candidate)=>candidate.en===item.en)===index);
   return seededShuffle(options,`${runSeed}:conditions`);
- },[family,runSeed]);
+ },[difficulty,family,runSeed]);
 
  const place=(depth:number,slotKey:string)=>{
   if(selected===null||placed[slotKey]!==undefined)return;
@@ -179,6 +191,7 @@ function EvolutionLabMission({family,locale,difficulty,runSeed,missionIndex,miss
        <small>{branching&&family.edges.filter((candidate)=>candidate.from===edge.from).length>1?(locale==="de"?"Verzweigung":"Branch"):(locale==="de"?"Entwicklungsstufe":"Evolution stage")}</small>
       </span>
       <select
+       className={validated&&conditions[key]!==edge.condition.en?"is-invalid":resolved?"is-valid":""}
        aria-label={`${visible?`${species(edge.from).name[locale]} to ${species(edge.to).name[locale]}`:`Edge ${index+1}`} condition`}
        value={conditions[key]??""}
        disabled={!visible||resolved}
@@ -194,7 +207,7 @@ function EvolutionLabMission({family,locale,difficulty,runSeed,missionIndex,miss
 
   {allPlaced&&allConditions&&!resolved&&<button className="poke-primary" onClick={verify}>{locale==="de"?"RIG PRÜFEN":"VERIFY RIG"}</button>}
   {validated&&!conditionsCorrect&&!resolved&&<Feedback good={false}>
-   <X/><span><b>{locale==="de"?"Mindestens eine Bedingung ist falsch verkabelt":"At least one condition is wired incorrectly"}</b><small>{locale==="de"?"Prüfe jede explizite Kante; die Speziespositionen bleiben erhalten.":"Check each explicit edge; specimen positions remain in place."}</small></span>
+   <X/><span><b>{locale==="de"?`${wrongEdges.length} Bedingung(en) sind falsch verkabelt`:`${wrongEdges.length} condition(s) are wired incorrectly`}</b><small>{locale==="de"?"Fehlerhafte Ports sind markiert; Speziespositionen bleiben erhalten.":"Incorrect ports are marked; specimen positions remain in place."}</small></span>
   </Feedback>}
   {resolved&&<Feedback good>
    <Check/><span><b>{branching?(locale==="de"?"Verzweigungsrig stabil":"Branching rig stable"):(locale==="de"?"Evolutionsrig stabil":"Evolution rig stable")}</b><small>{locale==="de"?"Alle dargestellten Pfeile sind echte Kanten dieser kuratierten Familie.":"Every displayed arrow is a real edge in this curated family."}</small></span>

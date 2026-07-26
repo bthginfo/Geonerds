@@ -19,7 +19,7 @@ export interface RankedRunInput extends PokePlayResult {
  * Completion prevents short/abandoned runs from outranking complete missions.
  * Accuracy contributes 65% of the completed-run value. Difficulty is a small,
  * explicit multiplier; raw game score is deliberately excluded because the
- * ten modules use different scoring scales.
+ * twelve modules use different scoring scales.
  */
 export function normalizedPokeRating(input: Pick<RankedRunInput, "correct" | "questions" | "completedRounds" | "selectedRounds" | "difficulty">): number {
   if (input.questions <= 0 || input.selectedRounds <= 0 || input.completedRounds <= 0) return 0;

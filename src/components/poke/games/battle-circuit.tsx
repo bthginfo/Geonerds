@@ -5,7 +5,8 @@ import {BatteryCharging,RotateCcw,Shield,ShieldPlus,Sparkles,Swords,UsersRound} 
 import {PokemonSprite} from "../pokemon-sprite";
 import {RunHud} from "../gameplay";
 import {CIRCUIT_MOVES,battleWinReward,circuitDamage,circuitHp,circuitMovesFor,circuitPartners,generateBattleCircuit,recoveryCounterOutcome,type CircuitMove} from "@/poke/battle";
-import {TYPE_COLORS,localizedType,typeMultiplier} from "@/poke/type-chart";
+import {TYPE_COLORS,localizedType} from "@/poke/type-chart";
+import {seededShuffle} from "@/poke/variety";
 import type {GameProps} from "../gameplay";
 import type {Species} from "@/poke/types";
 
@@ -80,12 +81,12 @@ export function BattleCircuit({locale,difficulty,generationCap,roundCount,runSee
   setMatch(completed);setRivalHp(circuitHp(opponents[completed]));setBetween(false);setResolvedScore(null);setTurn(1);
   setLog([{tone:"system",text:locale==="de"?`Match ${completed+1}: neuer Gegner erfasst.`:`Match ${completed+1}: new rival scanned.`}]);
  };
- const pitAction=(choice:PitChoice)=>{
+ const pitAction=(choice:PitChoice,payload?:number|string)=>{
   if(choice==="switch"){
-   const replacement=partners.find((entry)=>entry.id!==partner.id&&entry.types.some((type)=>typeMultiplier(type,opponents[match+1]?.types??[])>1))??partners.find((entry)=>entry.id!==partner.id);
+   const replacement=partners.find((entry)=>entry.id===payload)??partners.find((entry)=>entry.id!==partner.id);
    if(replacement){setPartner(replacement);setPlayerHp(circuitHp(replacement));setMoves(circuitMovesFor(replacement))}
   }else if(choice==="move"){
-   const learned=CIRCUIT_MOVES.find((move)=>!moves.some((owned)=>owned.id===move.id)&&partner.types.includes(move.type))??CIRCUIT_MOVES.find((move)=>!moves.some((owned)=>owned.id===move.id));
+   const learned=CIRCUIT_MOVES.find((move)=>move.id===payload)??CIRCUIT_MOVES.find((move)=>!moves.some((owned)=>owned.id===move.id));
    if(learned)setMoves((owned)=>[...owned.slice(0,3),learned]);
   }else{
    setPlayerHp(circuitHp(partner));setRecoveries((value)=>value+1);
@@ -94,12 +95,15 @@ export function BattleCircuit({locale,difficulty,generationCap,roundCount,runSee
  };
 
  const completed=match+(between?1:0);
+ const intentMoves=circuitMovesFor(rival),intent=intentMoves[(turn+rival.id)%intentMoves.length],intentDamage=circuitDamage(intent,rival,partner);
+ const switchOptions=seededShuffle(partners.filter((entry)=>entry.id!==partner.id),`${runSeed}:pit:${match}:partners`).slice(0,3);
+ const moveOptions=seededShuffle(CIRCUIT_MOVES.filter((move)=>!moves.some((owned)=>owned.id===move.id)),`${runSeed}:pit:${match}:moves`).slice(0,3);
  return <div className="poke-circuit">
   <RunHud score={score} round={Math.min(match+1,roundCount)} total={roundCount} resource={energy} label="ENERGY"/>
   <div className="poke-checkpoint-rail" aria-label={locale==="de"?"Circuit-Fortschritt":"Circuit progress"}>{Array.from({length:roundCount},(_,index)=><i key={index} className={index<completed?"is-cleared":index===match?"is-live":index>0&&index%5===0?"is-pit":""}><span>{index+1}</span></i>)}</div>
   <section className="poke-circuit-stage">
    <Combatant entry={partner} locale={locale} hp={playerHp} max={circuitHp(partner)} label={locale==="de"?"DEIN PARTNER":"YOUR PARTNER"}/>
-   <div className="poke-circuit-core"><Swords/><b>TURN {turn}</b><small>{locale==="de"?"Eigenes Forschungs-Regelset":"Original research ruleset"}</small></div>
+   <div className="poke-circuit-core"><Swords/><b>TURN {turn}</b><small>{locale==="de"?"Eigenes Forschungs-Regelset":"Original research ruleset"}</small><div className="poke-enemy-intent"><span>{locale==="de"?"GEGNERABSICHT":"ENEMY INTENT"}</span><b>{intent.name[locale]}</b><small>{localizedType(intent.type,locale)} · {intentDamage} {locale==="de"?"Schaden":"damage"} · {locale==="de"?"Schutz reduziert auf":"guard reduces to"} {circuitDamage(intent,rival,partner,true)}</small></div></div>
    <Combatant entry={rival} locale={locale} hp={rivalHp} max={circuitHp(rival)} label={`${locale==="de"?"MATCH":"MATCH"} ${match+1}`}/>
   </section>
   <div className="poke-circuit-console">
@@ -108,7 +112,7 @@ export function BattleCircuit({locale,difficulty,generationCap,roundCount,runSee
   </div>
   <div className="poke-circuit-actions"><button onClick={guard} disabled={between||pit}><Shield/> {locale==="de"?"Schützen + Energie":"Guard + energy"}</button><button onClick={recover} disabled={between||pit||recoveries<=0}><ShieldPlus/> {locale==="de"?"Feldkit":"Field kit"} ({recoveries})</button>{between&&!pit&&<button className="poke-primary" onClick={advance}>{match+1>=roundCount?(locale==="de"?"Circuit beenden":"Finish circuit"):(locale==="de"?"Nächstes Match":"Next match")} →</button>}</div>
   <p className="poke-ruleset">{locale==="de"?"Typenwirkung und STAB folgen dem modernen Typensystem. Attackenwerte sind geprüft; die Partner-Kompatibilität ist ein bewusst eigenes Lern-Regelset und keine kanonische Learnset-Aussage.":"Type effectiveness and STAB follow the modern type chart. Move values are checked; partner compatibility is an original learning ruleset, not a claim about canonical learnsets."}</p>
-  {pit&&<PitStop locale={locale} partner={partner} onChoose={pitAction}/>}
+  {pit&&<PitStop locale={locale} partner={partner} switchOptions={switchOptions} moveOptions={moveOptions} onChoose={pitAction}/>}
  </div>;
 }
 
@@ -120,6 +124,7 @@ function Combatant({entry,locale,hp,max,label}:{entry:Species;locale:"de"|"en";h
  return <div className="poke-circuit-combatant"><span>{label}</span><PokemonSprite entry={entry} size={175}/><h3>{entry.name[locale]}</h3><div className="poke-hp-track"><i style={{width:`${Math.max(0,hp/max*100)}%`}}/></div><b>{hp} / {max} HP</b></div>;
 }
 
-function PitStop({locale,partner,onChoose}:{locale:"de"|"en";partner:Species;onChoose:(choice:PitChoice)=>void}){
- return <div className="poke-pit-overlay" role="dialog" aria-modal="true" aria-label="Pit stop"><section><Sparkles/><p className="poke-kicker">CHECKPOINT 05 / PIT STOP</p><h2>{locale==="de"?"Eine strategische Entscheidung":"One strategic decision"}</h2><p>{locale==="de"?`${partner.name.de} hat den Kontrollpunkt erreicht. Wähle genau ein Upgrade.`:`${partner.name.en} reached the checkpoint. Choose exactly one upgrade.`}</p><div><button onClick={()=>onChoose("switch")}><UsersRound/><b>{locale==="de"?"Partner wechseln":"Switch partner"}</b><small>{locale==="de"?"Konter-Pokémon mit voller HP":"Counter partner at full HP"}</small></button><button onClick={()=>onChoose("move")}><RotateCcw/><b>{locale==="de"?"Attacke lernen":"Learn a move"}</b><small>{locale==="de"?"Ersetzt den vierten Slot":"Replaces slot four"}</small></button><button onClick={()=>onChoose("recover")}><ShieldPlus/><b>{locale==="de"?"Vollwartung":"Full service"}</b><small>{locale==="de"?"Volle HP + ein Feldkit":"Full HP + one field kit"}</small></button></div></section></div>;
+function PitStop({locale,partner,switchOptions,moveOptions,onChoose}:{locale:"de"|"en";partner:Species;switchOptions:Species[];moveOptions:CircuitMove[];onChoose:(choice:PitChoice,payload?:number|string)=>void}){
+ const[mode,setMode]=useState<"menu"|"switch"|"move">("menu");
+ return <div className="poke-pit-overlay" role="dialog" aria-modal="true" aria-label="Pit stop"><section><Sparkles/><p className="poke-kicker">CHECKPOINT 05 / PIT STOP</p><h2>{locale==="de"?"Eine strategische Entscheidung":"One strategic decision"}</h2><p>{locale==="de"?`${partner.name.de} hat den Kontrollpunkt erreicht. Du entscheidest, welches konkrete Upgrade der Run erhält.`:`${partner.name.en} reached the checkpoint. You choose the exact upgrade for this run.`}</p>{mode==="menu"?<div><button onClick={()=>setMode("switch")}><UsersRound/><b>{locale==="de"?"Partner wählen":"Choose partner"}</b><small>{locale==="de"?"Drei Kandidaten mit voller HP vergleichen":"Compare three full-HP candidates"}</small></button><button onClick={()=>setMode("move")}><RotateCcw/><b>{locale==="de"?"Attacke wählen":"Choose a move"}</b><small>{locale==="de"?"Ersetzt den vierten Slot":"Replaces slot four"}</small></button><button onClick={()=>onChoose("recover")}><ShieldPlus/><b>{locale==="de"?"Vollwartung":"Full service"}</b><small>{locale==="de"?"Volle HP + ein Feldkit":"Full HP + one field kit"}</small></button></div>:mode==="switch"?<div className="poke-pit-options">{switchOptions.map((entry)=><button key={entry.id} onClick={()=>onChoose("switch",entry.id)}><PokemonSprite entry={entry} size={72}/><b>{entry.name[locale]}</b><small>{entry.types.map((type)=>localizedType(type,locale)).join(" / ")} · {circuitHp(entry)} HP</small></button>)}<button onClick={()=>setMode("menu")}>{locale==="de"?"Zurück":"Back"}</button></div>:<div className="poke-pit-options">{moveOptions.map((move)=><button key={move.id} onClick={()=>onChoose("move",move.id)} style={{"--type-color":TYPE_COLORS[move.type]} as React.CSSProperties}><b>{move.name[locale]}</b><small>{localizedType(move.type,locale)} · {move.power} PWR</small></button>)}<button onClick={()=>setMode("menu")}>{locale==="de"?"Zurück":"Back"}</button></div>}</section></div>;
 }

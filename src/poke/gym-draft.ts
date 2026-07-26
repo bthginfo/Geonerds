@@ -41,6 +41,7 @@ export function gymMemberUses(roundCount:number,difficulty:GymDifficulty):number
 
 export interface GymDeployment {
  effectiveness:number;
+ resistance:number;
  points:number;
  success:boolean;
  grade:"counter"|"neutral"|"resisted"|"immune";
@@ -54,13 +55,15 @@ export function evaluateGymDeployment(
  difficulty:GymDifficulty,
 ):GymDeployment {
  const effectiveness=Math.max(...attackTypes.map((type)=>typeMultiplier(type,[trialType])));
- const base=effectiveness>=2?600:effectiveness===1?320:effectiveness>0?150:60;
+ const resistance=typeMultiplier(trialType,[...attackTypes]);
+ const base=(effectiveness>=2?560:effectiveness===1?280:effectiveness>0?130:50)+(resistance===0?220:resistance<1?120:resistance>1?-80:0);
  const fatiguePenalty=Math.round((usedBefore/Math.max(1,maxUses))*120);
  const pressure=difficulty==="hard"?0.9:difficulty==="easy"?1.08:1;
  return {
   effectiveness,
+  resistance,
   points:Math.max(40,Math.round((base-fatiguePenalty)*pressure)),
-  success:effectiveness>1,
+  success:effectiveness>1||resistance<1,
   grade:effectiveness>=2?"counter":effectiveness===1?"neutral":effectiveness>0?"resisted":"immune",
  };
 }

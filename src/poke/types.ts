@@ -4,6 +4,7 @@ export type Localized = { en: string; de: string };
 export const pl = (value: Localized, locale: Locale) => value[locale];
 
 export type PokeGameId =
+  | "guess-that-pokemon"
   | "poke-path-expedition"
   | "region-ranger"
   | "habitat-hunt"
@@ -13,9 +14,10 @@ export type PokeGameId =
   | "field-scanner"
   | "cry-radar"
   | "poke-grid"
+  | "binder-ascension"
   | "professor-case-files";
 
-export type PokeCompetency = "exploration" | "locations" | "ecology" | "types" | "teamcraft" | "evolution" | "recognition" | "audio" | "taxonomy" | "deduction";
+export type PokeCompetency = "exploration" | "locations" | "ecology" | "types" | "teamcraft" | "evolution" | "deckcraft" | "recognition" | "audio" | "taxonomy" | "deduction";
 export type PokeDifficulty = "easy" | "medium" | "hard";
 export type PokeDexStage = "sealed" | "encountered" | "researched" | "mastered";
 

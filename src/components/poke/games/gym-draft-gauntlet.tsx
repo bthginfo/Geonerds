@@ -4,7 +4,7 @@ import {useMemo,useState} from "react";
 import {Check,LockKeyhole,ShieldAlert,Swords} from "lucide-react";
 import {SPECIES,species} from "@/poke/data";
 import {buildGymTrials,evaluateGymDeployment,gymMemberUses,type GymDeployment} from "@/poke/gym-draft";
-import {TYPE_COLORS,localizedType} from "@/poke/type-chart";
+import {STANDARD_TYPES,TYPE_COLORS,localizedType} from "@/poke/type-chart";
 import {seededShuffle} from "@/poke/variety";
 import {Feedback,RunHud,type GameProps} from "../gameplay";
 import {PokemonSprite} from "../pokemon-sprite";
@@ -28,10 +28,15 @@ export function GymDraftGauntlet({locale,difficulty,generationCap,roundCount,run
  const [streak,setStreak]=useState(0);
  const [results,setResults]=useState<GymDeployment[]>([]);
  const [deployment,setDeployment]=useState<{memberId:number;outcome:GymDeployment;gained:number}|null>(null);
+ const [filterType,setFilterType]=useState("all");
+ const [sortBy,setSortBy]=useState<"seeded"|"cost"|"speed">("seeded");
  const budget=difficulty==="easy"?520:difficulty==="medium"?460:420;
  const maxUses=gymMemberUses(roundCount,difficulty);
  const cost=(id:number)=>Math.round(Object.values(species(id).stats).reduce((sum,value)=>sum+value,0)/6);
  const spent=draft.reduce((sum,id)=>sum+cost(id),0);
+ const visiblePool=pool.filter((entry)=>filterType==="all"||entry.types.includes(filterType)).sort((a,b)=>sortBy==="cost"?cost(a.id)-cost(b.id):sortBy==="speed"?b.stats.speed-a.stats.speed:0);
+ const forecast=Object.entries(trials.reduce<Record<string,number>>((counts,trial)=>({...counts,[trial.type]:(counts[trial.type]??0)+1}),{})).sort((a,b)=>b[1]-a[1]).slice(0,5);
+ const projected=trials.filter((trial)=>draft.some((id)=>evaluateGymDeployment(species(id).types,trial.type,0,maxUses,difficulty).success)).length;
 
  const toggle=(id:number)=>setDraft((items)=>
   items.includes(id)
@@ -72,7 +77,7 @@ export function GymDraftGauntlet({locale,difficulty,generationCap,roundCount,run
     <div>
      <p className="poke-kicker">ACTIVE TRIAL // {String(trialIndex+1).padStart(2,"0")}</p>
      <h2>{current.label[locale]}</h2>
-     <p>{locale==="de"?"Setze ein Teammitglied ein. Sein stärkster eigener Typ wird gegen den Prüfungstyp getestet.":"Deploy one team member. Its strongest own type is tested against the trial type."}</p>
+     <p>{locale==="de"?"Setze ein Teammitglied ein. Offensive Coverage und defensive Resistenz zählen gemeinsam; wiederholte Einsätze erzeugen Erschöpfung.":"Deploy one team member. Offensive coverage and defensive resistance both matter; repeated deployments create fatigue."}</p>
     </div>
     <div>{localizedType(current.type,locale).toUpperCase()}<small> TYPE</small></div>
    </header>
@@ -126,7 +131,7 @@ export function GymDraftGauntlet({locale,difficulty,generationCap,roundCount,run
      <b>{deployment.outcome.success
       ?(locale==="de"?"Effektiver Konter":"Effective counter")
       :(locale==="de"?"Protokolliert, aber ohne Typenvorteil":"Logged without a type advantage")}</b>
-     <small>{species(deployment.memberId).name[locale]} · {deployment.outcome.effectiveness}× · +{deployment.gained} · {locale==="de"?"Einsatz":"deployment"} {uses[deployment.memberId]??0}/{maxUses}</small>
+     <small>{species(deployment.memberId).name[locale]} · {deployment.outcome.effectiveness}× offense · {deployment.outcome.resistance}× incoming · +{deployment.gained} · {locale==="de"?"Einsatz":"deployment"} {uses[deployment.memberId]??0}/{maxUses}</small>
     </span>
     <button onClick={next}>{trialIndex+1>=trials.length
      ?(locale==="de"?"Gauntlet abschließen":"Complete gauntlet")
@@ -141,9 +146,11 @@ export function GymDraftGauntlet({locale,difficulty,generationCap,roundCount,run
    <div><p className="poke-kicker">BLIND TYPE TRIAL SEQUENCE</p><h2>{locale==="de"?"Drafte sechs unter Budget":"Draft six under budget"}</h2></div>
    <div>{spent}<small> / {budget}</small></div>
   </header>
+  <section className="poke-draft-forecast"><div><span>{locale==="de"?"RISIKOPROGNOSE":"RISK FORECAST"}</span>{forecast.map(([type,count])=><b key={type} style={{"--type-color":TYPE_COLORS[type]} as React.CSSProperties}>{localizedType(type,locale)} <small>{count}×</small></b>)}</div><strong>{projected}/{trials.length}<small>{locale==="de"?" Prüfungen aktuell abgedeckt":" trials currently covered"}</small></strong></section>
+  <div className="poke-draft-filters"><select aria-label={locale==="de"?"Typ filtern":"Filter type"} value={filterType} onChange={(event)=>setFilterType(event.target.value)}><option value="all">{locale==="de"?"Alle Typen":"All types"}</option>{STANDARD_TYPES.map((type)=><option key={type} value={type}>{localizedType(type,locale)}</option>)}</select><select aria-label={locale==="de"?"Sortieren":"Sort"} value={sortBy} onChange={(event)=>setSortBy(event.target.value as typeof sortBy)}><option value="seeded">{locale==="de"?"Seed-Reihenfolge":"Seed order"}</option><option value="cost">{locale==="de"?"Kosten aufsteigend":"Lowest cost"}</option><option value="speed">{locale==="de"?"Initiative absteigend":"Highest speed"}</option></select></div>
   <div className="poke-draft-layout">
-   <div className="poke-roster-wall">{pool.map((entry)=><button key={entry.id} onClick={()=>toggle(entry.id)} className={draft.includes(entry.id)?"is-drafted":""} disabled={!draft.includes(entry.id)&&(draft.length>=6||spent+cost(entry.id)>budget)}>
-    <PokemonSprite entry={entry} size={82}/><span>#{entry.id} · {cost(entry.id)}</span><b>{entry.name[locale]}</b>
+   <div className="poke-roster-wall">{visiblePool.map((entry)=><button key={entry.id} onClick={()=>toggle(entry.id)} className={draft.includes(entry.id)?"is-drafted":""} disabled={!draft.includes(entry.id)&&(draft.length>=6||spent+cost(entry.id)>budget)}>
+    <PokemonSprite entry={entry} size={82}/><span>#{entry.id} · {cost(entry.id)} · {entry.types.map((type)=>localizedType(type,locale)).join("/")}</span><b>{entry.name[locale]}</b>
    </button>)}</div>
    <aside className="poke-draft-tray">
     <span>FIELD SIX</span>

@@ -13,8 +13,10 @@ import {apiSubmitPokeScore,getPokeChallenge,submitPokeChallengeAttempt,type Poke
 import {challengePlayBlockReason} from "@/poke/competition";
 import {PokePathExpedition,RegionRanger,HabitatHunt,TypeClashArena,GymDraftGauntlet} from "./games/exploration-games";
 import {CryRadar,EvolutionLab,FieldScanner,PokeGrid,ProfessorCaseFiles} from "./games/lab-games";
+import {BinderAscension} from "./games/binder-ascension";
+import {GuessThatPokemon} from "./games/guess-that-pokemon";
 
-const components={"poke-path-expedition":PokePathExpedition,"region-ranger":RegionRanger,"habitat-hunt":HabitatHunt,"type-clash-arena":TypeClashArena,"gym-draft-gauntlet":GymDraftGauntlet,"evolution-lab":EvolutionLab,"field-scanner":FieldScanner,"cry-radar":CryRadar,"poke-grid":PokeGrid,"professor-case-files":ProfessorCaseFiles};
+const components={"guess-that-pokemon":GuessThatPokemon,"poke-path-expedition":PokePathExpedition,"region-ranger":RegionRanger,"habitat-hunt":HabitatHunt,"type-clash-arena":TypeClashArena,"gym-draft-gauntlet":GymDraftGauntlet,"evolution-lab":EvolutionLab,"binder-ascension":BinderAscension,"field-scanner":FieldScanner,"cry-radar":CryRadar,"poke-grid":PokeGrid,"professor-case-files":ProfessorCaseFiles};
 const mapGames:PokeGameId[]=["poke-path-expedition","region-ranger","habitat-hunt"];
 
 export function PokeGameRunner({gameId}:{gameId:PokeGameId}){
