@@ -1,0 +1,63 @@
+.switch {
+  display: inline-grid;
+  min-height: 44px;
+  flex: none;
+  grid-template-columns: repeat(2, 44px);
+  overflow: hidden;
+  border: 1px solid var(--wine-line);
+  border-radius: 3px;
+  background: rgba(5, 3, 4, 0.36);
+  box-shadow:
+    inset 0 1px rgba(255, 243, 223, 0.04),
+    0 3px 0 rgba(0, 0, 0, 0.18);
+}
+
+.option {
+  position: relative;
+  min-width: 44px;
+  min-height: 44px;
+  border: 0;
+  color: var(--wine-muted);
+  background: transparent;
+  font-size: 0.65rem;
+  font-weight: 900;
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
+  transition:
+    color 140ms ease,
+    background-color 140ms ease,
+    transform 140ms ease;
+}
+
+.option + .option {
+  border-left: 1px solid var(--wine-line);
+}
+
+.option:hover {
+  color: var(--wine-cream);
+  background: rgba(255, 243, 223, 0.045);
+}
+
+.option:active {
+  transform: translateY(1px);
+}
+
+.option[aria-pressed="true"] {
+  color: #21110f;
+  background: var(--wine-copper);
+  box-shadow:
+    inset 0 2px rgba(255, 243, 223, 0.2),
+    inset 0 -2px rgba(50, 24, 18, 0.22);
+}
+
+.option:focus-visible {
+  z-index: 1;
+  outline: 2px solid var(--wine-cream);
+  outline-offset: -4px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .option {
+    transition: none;
+  }
+}
