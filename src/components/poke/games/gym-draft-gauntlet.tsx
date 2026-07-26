@@ -36,7 +36,8 @@ export function GymDraftGauntlet({locale,difficulty,generationCap,roundCount,run
  const spent=draft.reduce((sum,id)=>sum+cost(id),0);
  const visiblePool=pool.filter((entry)=>filterType==="all"||entry.types.includes(filterType)).sort((a,b)=>sortBy==="cost"?cost(a.id)-cost(b.id):sortBy==="speed"?b.stats.speed-a.stats.speed:0);
  const forecast=Object.entries(trials.reduce<Record<string,number>>((counts,trial)=>({...counts,[trial.type]:(counts[trial.type]??0)+1}),{})).sort((a,b)=>b[1]-a[1]).slice(0,5);
- const projected=trials.filter((trial)=>draft.some((id)=>evaluateGymDeployment(species(id).types,trial.type,0,maxUses,difficulty).success)).length;
+ const coverageFor=(ids:number[])=>trials.filter((trial)=>ids.some((id)=>evaluateGymDeployment(species(id).types,trial.type,0,maxUses,difficulty).success)).length;
+ const projected=coverageFor(draft);
 
  const toggle=(id:number)=>setDraft((items)=>
   items.includes(id)
@@ -149,9 +150,9 @@ export function GymDraftGauntlet({locale,difficulty,generationCap,roundCount,run
   <section className="poke-draft-forecast"><div><span>{locale==="de"?"RISIKOPROGNOSE":"RISK FORECAST"}</span>{forecast.map(([type,count])=><b key={type} style={{"--type-color":TYPE_COLORS[type]} as React.CSSProperties}>{localizedType(type,locale)} <small>{count}×</small></b>)}</div><strong>{projected}/{trials.length}<small>{locale==="de"?" Prüfungen aktuell abgedeckt":" trials currently covered"}</small></strong></section>
   <div className="poke-draft-filters"><select aria-label={locale==="de"?"Typ filtern":"Filter type"} value={filterType} onChange={(event)=>setFilterType(event.target.value)}><option value="all">{locale==="de"?"Alle Typen":"All types"}</option>{STANDARD_TYPES.map((type)=><option key={type} value={type}>{localizedType(type,locale)}</option>)}</select><select aria-label={locale==="de"?"Sortieren":"Sort"} value={sortBy} onChange={(event)=>setSortBy(event.target.value as typeof sortBy)}><option value="seeded">{locale==="de"?"Seed-Reihenfolge":"Seed order"}</option><option value="cost">{locale==="de"?"Kosten aufsteigend":"Lowest cost"}</option><option value="speed">{locale==="de"?"Initiative absteigend":"Highest speed"}</option></select></div>
   <div className="poke-draft-layout">
-   <div className="poke-roster-wall">{visiblePool.map((entry)=><button key={entry.id} onClick={()=>toggle(entry.id)} className={draft.includes(entry.id)?"is-drafted":""} disabled={!draft.includes(entry.id)&&(draft.length>=6||spent+cost(entry.id)>budget)}>
-    <PokemonSprite entry={entry} size={82}/><span>#{entry.id} · {cost(entry.id)} · {entry.types.map((type)=>localizedType(type,locale)).join("/")}</span><b>{entry.name[locale]}</b>
-   </button>)}</div>
+   <div className="poke-roster-wall">{visiblePool.map((entry)=>{const selected=draft.includes(entry.id),coverageGain=selected?0:coverageFor([...draft,entry.id])-projected;return <button key={entry.id} onClick={()=>toggle(entry.id)} className={selected?"is-drafted":""} disabled={!selected&&(draft.length>=6||spent+cost(entry.id)>budget)}>
+    <PokemonSprite entry={entry} size={82}/><span>#{entry.id} · {cost(entry.id)} · {entry.types.map((type)=>localizedType(type,locale)).join("/")}</span><b>{entry.name[locale]}</b><small>{selected?(locale==="de"?"IM TEAM":"IN TEAM"):`+${coverageGain} ${locale==="de"?"neue Prüfungs-Coverage":"new trial coverage"}`}</small>
+   </button>})}</div>
    <aside className="poke-draft-tray">
     <span>FIELD SIX</span>
     {[0,1,2,3,4,5].map((slot)=>draft[slot]?<button key={slot} onClick={()=>toggle(draft[slot])}><PokemonSprite entry={species(draft[slot])} size={65}/><small>{species(draft[slot]).name[locale]}</small></button>:<div key={slot}>EMPTY</div>)}

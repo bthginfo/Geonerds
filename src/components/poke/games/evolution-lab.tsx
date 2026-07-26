@@ -124,6 +124,14 @@ function EvolutionLabMission({family,locale,difficulty,runSeed,missionIndex,miss
   setValidated(false);
   setResolved(false);
  };
+ const remove=(slotKey:string,id:number)=>{
+  if(resolved)return;
+  setPlaced((state)=>Object.fromEntries(Object.entries(state).filter(([key])=>key!==slotKey)));
+  const affected=new Set(family.edges.filter((edge)=>edge.from===id||edge.to===id).map(evolutionEdgeKey));
+  setConditions((state)=>Object.fromEntries(Object.entries(state).filter(([key])=>!affected.has(key))));
+  setValidated(false);
+  setSelected(id);
+ };
 
  const verify=()=>{
   setValidated(true);
@@ -155,13 +163,13 @@ function EvolutionLabMission({family,locale,difficulty,runSeed,missionIndex,miss
   </header>
 
   <section className={`poke-evolution-rig ${resolved?"is-active":""}`} aria-label={locale==="de"?"Evolutionsgraph":"Evolution graph"}>
-   {levels.map((level,depth)=><div key={depth} style={{display:"grid",gridTemplateColumns:`repeat(${level.length}, minmax(150px, 1fr))`,gap:".6rem",alignItems:"center"}}>
+   {levels.map((level,depth)=><div key={depth} style={{display:"grid",gridTemplateColumns:`repeat(${level.length}, minmax(0, 1fr))`,gap:".6rem",alignItems:"center"}}>
     <p className="poke-kicker" style={{gridColumn:"1 / -1"}}>{depth===0?"ROOT":`${locale==="de"?"STUFE":"STAGE"} ${depth+1}`}{level.length>1?` · ${level.length} BRANCHES`:""}</p>
     {level.map((_,slot)=>{
      const slotKey=`${depth}:${slot}`;
      const id=placed[slotKey];
-     return <button className="poke-evolution-slot" key={slotKey} onClick={()=>place(depth,slotKey)} disabled={id!==undefined}>
-      {id!==undefined?<><PokemonSprite entry={species(id)} size={118}/><b>{species(id).name[locale]}</b></>:<span>{selected===null?(locale==="de"?"EXEMPLAR WÄHLEN":"SELECT SPECIMEN"):(locale==="de"?"HIER EINSETZEN":"PLACE HERE")}</span>}
+     return <button className="poke-evolution-slot" key={slotKey} onClick={()=>id!==undefined?remove(slotKey,id):place(depth,slotKey)} disabled={resolved}>
+      {id!==undefined?<><PokemonSprite entry={species(id)} size={118}/><b>{species(id).name[locale]}</b><small>{locale==="de"?"Zum Umsetzen antippen":"Tap to reposition"}</small></>:<span>{selected===null?(locale==="de"?"EXEMPLAR WÄHLEN":"SELECT SPECIMEN"):(locale==="de"?"HIER EINSETZEN":"PLACE HERE")}</span>}
      </button>;
     })}
    </div>)}

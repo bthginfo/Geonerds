@@ -96,6 +96,12 @@ export function BattleCircuit({locale,difficulty,generationCap,roundCount,runSee
 
  const completed=match+(between?1:0);
  const intentMoves=circuitMovesFor(rival),intent=intentMoves[(turn+rival.id)%intentMoves.length],intentDamage=circuitDamage(intent,rival,partner);
+ const moveRead=(move:CircuitMove)=>{
+  const projected=circuitDamage(move,partner,rival);
+  const neutral=Math.max(1,Math.round(move.power/4*(partner.types.includes(move.type)?1.5:1)));
+  const ratio=projected/neutral;
+  return{projected,label:ratio>1.15?(locale==="de"?"sehr effektiv":"strong"):ratio<.85?(locale==="de"?"resistiert":"resisted"):(locale==="de"?"neutral":"neutral")};
+ };
  const switchOptions=seededShuffle(partners.filter((entry)=>entry.id!==partner.id),`${runSeed}:pit:${match}:partners`).slice(0,3);
  const moveOptions=seededShuffle(CIRCUIT_MOVES.filter((move)=>!moves.some((owned)=>owned.id===move.id)),`${runSeed}:pit:${match}:moves`).slice(0,3);
  return <div className="poke-circuit">
@@ -107,7 +113,7 @@ export function BattleCircuit({locale,difficulty,generationCap,roundCount,runSee
    <Combatant entry={rival} locale={locale} hp={rivalHp} max={circuitHp(rival)} label={`${locale==="de"?"MATCH":"MATCH"} ${match+1}`}/>
   </section>
   <div className="poke-circuit-console">
-   <div className="poke-circuit-moves">{moves.map((move)=><button type="button" key={move.id} disabled={between||pit||energy<move.energy} onClick={()=>attack(move)} style={{"--type-color":TYPE_COLORS[move.type]} as React.CSSProperties}><span><b>{move.name[locale]}</b><small>{localizedType(move.type,locale)} · {move.power} PWR</small></span><strong>{move.energy}<BatteryCharging/></strong></button>)}</div>
+   <div className="poke-circuit-moves">{moves.map((move)=>{const read=moveRead(move);return <button type="button" key={move.id} disabled={between||pit||energy<move.energy} onClick={()=>attack(move)} style={{"--type-color":TYPE_COLORS[move.type]} as React.CSSProperties}><span><b>{move.name[locale]}</b><small>{localizedType(move.type,locale)} · {move.power} PWR · {difficulty==="hard"?read.label:`${read.projected} DMG · ${read.label}`}</small></span><strong>{move.energy}<BatteryCharging/></strong></button>})}</div>
    <aside className="poke-battle-log">{log.map((item,index)=><p className={`is-${item.tone}`} key={`${item.text}-${index}`}>{item.text}</p>)}</aside>
   </div>
   <div className="poke-circuit-actions"><button onClick={guard} disabled={between||pit}><Shield/> {locale==="de"?"Schützen + Energie":"Guard + energy"}</button><button onClick={recover} disabled={between||pit||recoveries<=0}><ShieldPlus/> {locale==="de"?"Feldkit":"Field kit"} ({recoveries})</button>{between&&!pit&&<button className="poke-primary" onClick={advance}>{match+1>=roundCount?(locale==="de"?"Circuit beenden":"Finish circuit"):(locale==="de"?"Nächstes Match":"Next match")} →</button>}</div>

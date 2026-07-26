@@ -2,7 +2,7 @@ import type {PokeCompetency,PokeDexStage,PokeRun} from "./types";
 import {getPokeGame} from "./registry";
 import {normalizedPokeRating} from "./competition";
 
-export const POKE_COMPETENCIES:PokeCompetency[]=["exploration","locations","ecology","types","teamcraft","evolution","deckcraft","recognition","audio","taxonomy","deduction"];
+export const POKE_COMPETENCIES:PokeCompetency[]=["exploration","locations","ecology","types","teamcraft","evolution","deckcraft","capture","recognition","audio","taxonomy","deduction"];
 export interface PokeProgressionData{xp:number;researchCredits:number;totalRuns:number;correct:number;total:number;activeDays:string[];competencyXp:Record<PokeCompetency,number>}
 export const emptyPokeProgression=():PokeProgressionData=>({xp:0,researchCredits:120,totalRuns:0,correct:0,total:0,activeDays:[],competencyXp:Object.fromEntries(POKE_COMPETENCIES.map((item)=>[item,0])) as Record<PokeCompetency,number>});
 export function applyPokeRun(state:PokeProgressionData,run:PokeRun):PokeProgressionData{
@@ -32,7 +32,7 @@ export const POKE_BADGES:PokeBadgeDefinition[]=[
  b("accuracy-first","Clean Read","Saubere Messung","Finish a perfect account-linked run.","Beende einen perfekten account-verknüpften Run.","accuracy",1,"online",1,true),
  b("accuracy-perfect-10","Tenfold Lock","Zehnfach-Lock","Finish a perfect ten-round run.","Beende einen perfekten Zehn-Runden-Run.","accuracy",3,"online",1,true),
  b("accuracy-hard","Hard Proof","Harter Beweis","Finish a perfect hard run.","Beende einen perfekten schweren Run.","accuracy",4,"online",1,true),
- b("mastery-ten","Full Curriculum","Volles Curriculum","Log a result in all twelve modules.","Erfasse ein Ergebnis in allen zwölf Modulen.","mastery",4,"games",12),
+ b("mastery-ten","Full Curriculum","Volles Curriculum","Log a result in all thirteen modules.","Erfasse ein Ergebnis in allen dreizehn Modulen.","mastery",4,"games",13),
  b("specialist","Module Specialist","Modulspezialist","Reach a 1,000 Field Rating in one module.","Erreiche 1.000 Feldrating in einem Modul.","mastery",3,"online",1000,true),
  b("circuit-1","Circuit Clear","Circuit geschafft","Clear one Battle Circuit.","Schließe einen Battle Circuit ab.","battle",1,"online",1,true),
  b("circuit-10","Circuit Ten","Circuit Zehn","Clear a ten-match Battle Circuit.","Schließe einen Battle Circuit mit zehn Kämpfen ab.","battle",2,"online",1,true),

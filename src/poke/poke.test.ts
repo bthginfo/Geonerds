@@ -14,7 +14,7 @@ import {buildGymTrials,evaluateGymDeployment,gymMemberUses} from "./gym-draft";
 import {eligibleEvolutionFamilies,evolutionFamilySequence,evolutionLevels,isBranchingFamily} from "./evolution";
 
 describe("Poke-Nerds launch integrity",()=>{
- it("registers exactly twelve unique games",()=>{expect(POKE_GAME_IDS).toHaveLength(12);expect(new Set(POKE_GAME_IDS).size).toBe(12)});
+ it("registers exactly thirteen unique games",()=>{expect(POKE_GAME_IDS).toHaveLength(13);expect(new Set(POKE_GAME_IDS).size).toBe(13)});
  it("contains 1,025 unique localized default species in correct cumulative caps",()=>{
   expect(SPECIES).toHaveLength(1025);expect(new Set(SPECIES.map((entry)=>entry.id)).size).toBe(1025);
   expect(new Set(SPECIES.map((entry)=>entry.name.en)).size).toBe(1025);expect(new Set(SPECIES.map((entry)=>entry.name.de)).size).toBe(1025);

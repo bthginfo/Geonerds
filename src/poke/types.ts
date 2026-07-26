@@ -15,9 +15,10 @@ export type PokeGameId =
   | "cry-radar"
   | "poke-grid"
   | "binder-ascension"
+  | "field-capture"
   | "professor-case-files";
 
-export type PokeCompetency = "exploration" | "locations" | "ecology" | "types" | "teamcraft" | "evolution" | "deckcraft" | "recognition" | "audio" | "taxonomy" | "deduction";
+export type PokeCompetency = "exploration" | "locations" | "ecology" | "types" | "teamcraft" | "evolution" | "deckcraft" | "capture" | "recognition" | "audio" | "taxonomy" | "deduction";
 export type PokeDifficulty = "easy" | "medium" | "hard";
 export type PokeDexStage = "sealed" | "encountered" | "researched" | "mastered";
 
