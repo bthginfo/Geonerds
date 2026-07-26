@@ -173,20 +173,38 @@ export function buildDynamicCase(cap:number,seed=`case:${cap}`):DynamicCase {
   {label:{en:target.evolvesFrom===null?"No recorded pre-evolution":"Has a recorded pre-evolution",de:target.evolvesFrom===null?"Keine Vorentwicklung erfasst":"Vorentwicklung erfasst"},test:(id)=>(species(id).evolvesFrom===null)===(target.evolvesFrom===null)},
   ...(target.abilities[0]?[{label:{en:`Ability record includes ${target.abilities[0]}`,de:`Fähigkeitseintrag enthält ${target.abilities[0]}`},test:(id:number)=>species(id).abilities.includes(target.abilities[0])}]:[]),
  ];
+ const shuffledPool=seededShuffle(pool,`${seed}:clues`);
+ const archiveBand=(entries:typeof suspects,size:number):CaseClue=>{
+  const sorted=[...entries].sort((a,b)=>a.id-b.id),targetIndex=sorted.findIndex((entry)=>entry.id===target.id);
+  const start=Math.max(0,Math.min(sorted.length-size,targetIndex-Math.floor(size/2)));
+  const band=sorted.slice(start,start+size),minimum=band[0].id,maximum=band.at(-1)!.id;
+  return{label:{en:`National Dex archive band ${minimum}–${maximum}`,de:`National-Dex-Archivband ${minimum}–${maximum}`},test:(id)=>id>=minimum&&id<=maximum};
+ };
  let remaining=suspects;
  const clues:CaseClue[]=[];
- for(const clue of seededShuffle(pool,`${seed}:clues`).sort((a,b)=>remaining.filter((entry)=>a.test(entry.id)).length-remaining.filter((entry)=>b.test(entry.id)).length)){
-  const next=remaining.filter((entry)=>clue.test(entry.id));
-  if(next.length>0&&next.length<remaining.length){clues.push(clue);remaining=next}
-  if(remaining.length===1)break;
+ const broad=shuffledPool.map((clue,index)=>({clue,index,next:remaining.filter((entry)=>clue.test(entry.id))}))
+  .filter(({next})=>next.length>=3&&next.length<=5)
+  .sort((a,b)=>Math.abs(a.next.length-4)-Math.abs(b.next.length-4)||a.index-b.index)[0];
+ const first=broad?.clue??archiveBand(remaining,4);
+ clues.push(first);remaining=remaining.filter((entry)=>first.test(entry.id));
+ const unused=shuffledPool.filter((clue)=>clue!==first);
+ while(remaining.length>2){
+  const desired=Math.max(2,Math.ceil(remaining.length*.55));
+  const candidate=unused.map((clue,index)=>({clue,index,next:remaining.filter((entry)=>clue.test(entry.id))}))
+   .filter(({next})=>next.length>=2&&next.length<remaining.length)
+   .sort((a,b)=>Math.abs(a.next.length-desired)-Math.abs(b.next.length-desired)||a.index-b.index)[0];
+  const clue=candidate?.clue??archiveBand(remaining,desired);
+  clues.push(clue);remaining=remaining.filter((entry)=>clue.test(entry.id));
+  const usedIndex=unused.indexOf(clue);if(usedIndex>=0)unused.splice(usedIndex,1);
  }
  while(remaining.length>1){
-  const sorted=[...remaining].sort((a,b)=>a.id-b.id);
-  const pivot=sorted[Math.floor(sorted.length/2)-1]?.id??sorted[0].id;
-  const targetIsLower=target.id<=pivot;
-  const clue:CaseClue=targetIsLower
+  const candidate=unused.map((clue,index)=>({clue,index,next:remaining.filter((entry)=>clue.test(entry.id))}))
+   .filter(({next})=>next.length===1)
+   .sort((a,b)=>a.index-b.index)[0];
+  const sorted=[...remaining].sort((a,b)=>a.id-b.id),pivot=sorted[0].id,targetIsLower=target.id<=pivot;
+  const clue:CaseClue=candidate?.clue??(targetIsLower
    ?{label:{en:`National Dex file number is at most ${pivot}`,de:`Die National-Dex-Aktennummer ist höchstens ${pivot}`},test:(id)=>id<=pivot}
-   :{label:{en:`National Dex file number is above ${pivot}`,de:`Die National-Dex-Aktennummer liegt über ${pivot}`},test:(id)=>id>pivot};
+   :{label:{en:`National Dex file number is above ${pivot}`,de:`Die National-Dex-Aktennummer liegt über ${pivot}`},test:(id)=>id>pivot});
   const next=remaining.filter((entry)=>clue.test(entry.id));
   if(next.length===remaining.length)throw new Error("Case clue failed to reduce candidates");
   clues.push(clue);remaining=next;
