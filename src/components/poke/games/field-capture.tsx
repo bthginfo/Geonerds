@@ -21,6 +21,7 @@ import {
   classifyThrow,
   generateCaptureEncounters,
   projectDragThrow,
+  resolveCaptureGestureEnd,
   resolveCaptureAttempt,
   type CaptureBall,
   type CaptureTier,
@@ -134,6 +135,17 @@ export function FieldCapture({
   const gestureRef = useRef<DragState>(emptyDrag());
   const resolvingPointerRef = useRef<number | null>(null);
   const throwPendingRef = useRef(false);
+  const nativeMoveRef = useRef<
+    (pointerId: number, clientX: number, clientY: number) => boolean
+  >(() => false);
+  const nativeEndRef = useRef<
+    (
+      pointerId: number,
+      clientX: number,
+      clientY: number,
+      canceled: boolean,
+    ) => boolean
+  >(() => false);
 
   useEffect(() => {
     if (phase !== "encounter" || result || drag.active) return;
@@ -162,14 +174,12 @@ export function FieldCapture({
     };
   }, []);
 
-  const localPoint = (
-    event: React.PointerEvent<HTMLDivElement>,
-  ): Point | null => {
+  const pointFromClient = (clientX: number, clientY: number): Point | null => {
     if (!clearingRef.current) return null;
     const rect = clearingRef.current.getBoundingClientRect();
     return {
-      x: Math.max(0, Math.min(rect.width, event.clientX - rect.left)),
-      y: Math.max(0, Math.min(rect.height, event.clientY - rect.top)),
+      x: Math.max(0, Math.min(rect.width, clientX - rect.left)),
+      y: Math.max(0, Math.min(rect.height, clientY - rect.top)),
       t: performance.now(),
     };
   };
@@ -182,15 +192,18 @@ export function FieldCapture({
   };
 
   const beginDrag = (event: React.PointerEvent<HTMLDivElement>) => {
+    const ballTarget = (event.target as HTMLElement).closest(
+      "[data-capture-ball]",
+    ) as HTMLElement | null;
     if (
       result ||
       flight !== "ready" ||
       throwPendingRef.current ||
       gestureRef.current.active ||
-      !(event.target as HTMLElement).closest("[data-capture-ball]")
+      !ballTarget
     )
       return;
-    const point = localPoint(event);
+    const point = pointFromClient(event.clientX, event.clientY);
     if (!point) return;
     event.preventDefault();
     const nextGesture: DragState = {
@@ -203,20 +216,30 @@ export function FieldCapture({
     gestureRef.current = nextGesture;
     resolvingPointerRef.current = null;
     try {
-      event.currentTarget.setPointerCapture(event.pointerId);
+      ballTarget.setPointerCapture(event.pointerId);
     } catch {
-      // The scene still receives a release while the pointer remains inside it.
+      // Window listeners below still own move/end if capture is unavailable.
     }
     setHasThrown(true);
     setDrag(nextGesture);
   };
 
-  const moveDrag = (event: React.PointerEvent<HTMLDivElement>) => {
+  const updateGesture = (
+    pointerId: number,
+    clientX: number,
+    clientY: number,
+  ) => {
     const gesture = gestureRef.current;
-    if (!gesture.active || gesture.pointerId !== event.pointerId) return;
-    const point = localPoint(event);
-    if (!point) return;
-    event.preventDefault();
+    if (!gesture.active || gesture.pointerId !== pointerId) return false;
+    const point = pointFromClient(clientX, clientY);
+    if (!point) return false;
+    const previous = gesture.current;
+    if (
+      previous &&
+      Math.abs(previous.x - point.x) < 0.25 &&
+      Math.abs(previous.y - point.y) < 0.25
+    )
+      return true;
     const nextGesture: DragState = {
       ...gesture,
       current: point,
@@ -240,24 +263,35 @@ export function FieldCapture({
         }),
       );
     }
+    return true;
   };
 
-  const releaseDrag = (event: React.PointerEvent<HTMLDivElement>) => {
+  const moveDrag = (event: React.PointerEvent<HTMLDivElement>) => {
+    if (updateGesture(event.pointerId, event.clientX, event.clientY))
+      event.preventDefault();
+  };
+
+  const finalizeGesture = (
+    pointerId: number,
+    clientX: number,
+    clientY: number,
+    canceled = false,
+  ) => {
     const gesture = gestureRef.current;
-    if (
-      !gesture.active ||
-      gesture.pointerId !== event.pointerId ||
-      !gesture.start ||
-      !clearingRef.current
-    )
-      return;
-    const end = localPoint(event);
-    if (!end) {
-      resetDrag();
-      return;
-    }
-    event.preventDefault();
-    resolvingPointerRef.current = event.pointerId;
+    if (!gesture.active || !gesture.start || !clearingRef.current) return false;
+    const releasePoint = canceled ? null : pointFromClient(clientX, clientY);
+    const decision = resolveCaptureGestureEnd({
+      activePointerId: gesture.pointerId,
+      endingPointerId: pointerId,
+      pending: resolvingPointerRef.current !== null || throwPendingRef.current,
+      start: gesture.start,
+      current: gesture.current,
+      release: releasePoint,
+      canceled,
+    });
+    if (!decision.claimed || !decision.end) return false;
+    const end: Point = { ...decision.end, t: performance.now() };
+    resolvingPointerRef.current = pointerId;
     const rect = clearingRef.current.getBoundingClientRect();
     const points = [...gesture.points, end];
     const curvature = signedCurveAmount(points, gesture.start, end);
@@ -268,9 +302,12 @@ export function FieldCapture({
       sceneHeight: rect.height,
       curveOffset: curvature,
     });
-    if (!projection.isThrow) {
-      resetDrag();
-      return;
+    gestureRef.current = emptyDrag();
+    setDrag(emptyDrag());
+    setDragPreview(null);
+    if (!decision.shouldThrow || !projection.isThrow) {
+      resolvingPointerRef.current = null;
+      return true;
     }
     const curve = Math.abs(curvature) > Math.max(18, rect.width * 0.055);
     const startPercent = {
@@ -281,7 +318,6 @@ export function FieldCapture({
       x: (projection.impact.x / rect.width) * 100,
       y: (projection.impact.y / rect.height) * 100,
     };
-    resetDrag();
     performThrow(
       {
         accuracy: projection.accuracy,
@@ -292,15 +328,63 @@ export function FieldCapture({
       },
       { start: startPercent, impact },
     );
+    return true;
+  };
+
+  const releaseDrag = (event: React.PointerEvent<HTMLDivElement>) => {
+    if (finalizeGesture(event.pointerId, event.clientX, event.clientY, false))
+      event.preventDefault();
   };
 
   const cancelDrag = (event: React.PointerEvent<HTMLDivElement>) => {
-    if (resolvingPointerRef.current === event.pointerId) {
-      resolvingPointerRef.current = null;
-      return;
-    }
-    if (gestureRef.current.pointerId === event.pointerId) resetDrag();
+    if (finalizeGesture(event.pointerId, event.clientX, event.clientY, true))
+      event.preventDefault();
   };
+
+  nativeMoveRef.current = updateGesture;
+  nativeEndRef.current = finalizeGesture;
+
+  useEffect(() => {
+    const move = (event: PointerEvent) => {
+      if (
+        nativeMoveRef.current(event.pointerId, event.clientX, event.clientY) &&
+        event.cancelable
+      )
+        event.preventDefault();
+    };
+    const end = (event: PointerEvent) => {
+      if (
+        nativeEndRef.current(
+          event.pointerId,
+          event.clientX,
+          event.clientY,
+          false,
+        ) &&
+        event.cancelable
+      )
+        event.preventDefault();
+    };
+    const cancel = (event: PointerEvent) => {
+      if (
+        nativeEndRef.current(
+          event.pointerId,
+          event.clientX,
+          event.clientY,
+          true,
+        ) &&
+        event.cancelable
+      )
+        event.preventDefault();
+    };
+    window.addEventListener("pointermove", move, { passive: false });
+    window.addEventListener("pointerup", end, { passive: false });
+    window.addEventListener("pointercancel", cancel, { passive: false });
+    return () => {
+      window.removeEventListener("pointermove", move);
+      window.removeEventListener("pointerup", end);
+      window.removeEventListener("pointercancel", cancel);
+    };
+  }, []);
 
   const fallbackThrow = () => {
     if (result || flight !== "ready") return;
@@ -665,8 +749,8 @@ export function FieldCapture({
                 : "DRAG BALL TO POKÉMON · RELEASE"}
             </b>
             {locale === "de"
-              ? "Direkt zum Ring ziehen oder kurz nach oben wischen. Seitliche Bewegung gibt Curve-Bonus."
-              : "Drag directly to the ring or use a short upward swipe. Sideways motion adds a curve bonus."}
+              ? "Zum Ring ziehen und den Finger einfach irgendwo anheben. Seitliche Bewegung gibt Curve-Bonus."
+              : "Drag toward the ring and simply lift anywhere. Sideways motion adds a curve bonus."}
           </span>
         </p>
         <div

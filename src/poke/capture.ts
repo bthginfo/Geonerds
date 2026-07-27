@@ -118,3 +118,9 @@ export function projectDragThrow({start,end,sceneWidth,sceneHeight,curveOffset=0
  const speed=Math.max(0,Math.min(1,displacement/(height*.5)));
  return{isThrow:true,impact,accuracy,direction,speed,goodAim:direction>=.28&&accuracy>=.34,distance};
 }
+
+export function resolveCaptureGestureEnd({activePointerId,endingPointerId,pending,start,current,release,canceled,tapThreshold=14}:{activePointerId:number|null;endingPointerId:number;pending:boolean;start:DragThrowPoint|null;current:DragThrowPoint|null;release:DragThrowPoint|null;canceled:boolean;tapThreshold?:number}){
+ if(activePointerId===null||activePointerId!==endingPointerId||pending||!start)return{claimed:false,shouldThrow:false,end:null};
+ const end=(canceled?current:release)??current??start;
+ return{claimed:true,shouldThrow:Math.hypot(end.x-start.x,end.y-start.y)>=tapThreshold,end};
+}

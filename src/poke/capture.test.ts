@@ -1,5 +1,5 @@
 import {describe,expect,it} from "vitest";
-import {captureChance,captureTelemetry,captureTierForSpecies,classifyThrow,generateCaptureEncounters,projectDragThrow,resolveCaptureAttempt} from "./capture";
+import {captureChance,captureTelemetry,captureTierForSpecies,classifyThrow,generateCaptureEncounters,projectDragThrow,resolveCaptureAttempt,resolveCaptureGestureEnd} from "./capture";
 
 describe("Field Capture",()=>{
  it("generates deterministic generation-scoped encounters with weighted rarity",()=>{
@@ -40,7 +40,19 @@ describe("Field Capture",()=>{
   expect(tap.isThrow).toBe(false);
  });
  it("keeps displacement projection independent from gesture timing and sample frequency",()=>{
-  const input={start:{x:187.5,y:550},end:{x:205,y:410},sceneWidth:375,sceneHeight:600};
+ const input={start:{x:187.5,y:550},end:{x:205,y:410},sceneWidth:375,sceneHeight:600};
   expect(projectDragThrow(input)).toEqual(projectDragThrow(input));
+ });
+ it("claims an ordinary release once and rejects a duplicate end",()=>{
+  const first=resolveCaptureGestureEnd({activePointerId:7,endingPointerId:7,pending:false,start:{x:187.5,y:550},current:{x:190,y:430},release:{x:190,y:400},canceled:false});
+  expect(first.claimed).toBe(true);expect(first.shouldThrow).toBe(true);
+  const duplicate=resolveCaptureGestureEnd({activePointerId:null,endingPointerId:7,pending:false,start:{x:187.5,y:550},current:{x:190,y:430},release:{x:190,y:400},canceled:false});
+  expect(duplicate.claimed).toBe(false);
+ });
+ it("commits a meaningful cancel from its last point but resets a tiny cancel",()=>{
+  const meaningful=resolveCaptureGestureEnd({activePointerId:4,endingPointerId:4,pending:false,start:{x:187.5,y:550},current:{x:190,y:410},release:{x:0,y:0},canceled:true});
+  expect(meaningful.end).toEqual({x:190,y:410});expect(meaningful.shouldThrow).toBe(true);
+  const tiny=resolveCaptureGestureEnd({activePointerId:4,endingPointerId:4,pending:false,start:{x:187.5,y:550},current:{x:190,y:544},release:null,canceled:true});
+  expect(tiny.claimed).toBe(true);expect(tiny.shouldThrow).toBe(false);
  });
 });

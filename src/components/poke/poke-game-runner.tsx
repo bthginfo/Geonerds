@@ -211,8 +211,8 @@ const gameHelp: Record<
   },
   "field-capture": {
     prompt: {
-      en: "Drag the ball up toward the Pokémon and release; a short upward swipe works too.",
-      de: "Ziehe den Ball nach oben zum Pokémon und lasse los; ein kurzer Wisch nach oben funktioniert auch.",
+      en: "Touch the ball, drag toward the Pokémon and lift anywhere; a short upward swipe works too.",
+      de: "Berühre den Ball, ziehe ihn zum Pokémon und hebe den Finger irgendwo an; ein kurzer Wisch funktioniert auch.",
     },
     rule: {
       en: "Hit the shrinking ring for Nice, Great or Excellent; sideways motion adds a curve bonus.",
