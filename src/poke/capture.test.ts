@@ -1,5 +1,5 @@
 import {describe,expect,it} from "vitest";
-import {captureChance,captureTelemetry,captureTierForSpecies,classifyThrow,generateCaptureEncounters,resolveCaptureAttempt} from "./capture";
+import {captureChance,captureTelemetry,captureTierForSpecies,classifyThrow,generateCaptureEncounters,projectDragThrow,resolveCaptureAttempt} from "./capture";
 
 describe("Field Capture",()=>{
  it("generates deterministic generation-scoped encounters with weighted rarity",()=>{
@@ -23,5 +23,24 @@ describe("Field Capture",()=>{
   expect(captureTelemetry("legendary","field",false)).toBe("low");
   const input={speciesId:25,tier:"rare" as const,quality:"great" as const,curve:true,ball:"advanced" as const,berry:true,attempt:1,seed:"fixed"};
   expect(resolveCaptureAttempt(input)).toEqual(resolveCaptureAttempt(input));
+ });
+ it("projects direct releases and ordinary upward drags into the target band",()=>{
+  const direct=projectDragThrow({start:{x:187.5,y:550},end:{x:190,y:245},sceneWidth:375,sceneHeight:600});
+  expect(direct.impact.x).toBeCloseTo(190);expect(direct.impact.y).toBeCloseTo(245);expect(direct.goodAim).toBe(true);
+  const ordinary=projectDragThrow({start:{x:187.5,y:550},end:{x:187.5,y:442},sceneWidth:375,sceneHeight:600});
+  expect(ordinary.goodAim).toBe(true);
+  expect(classifyThrow({accuracy:ordinary.accuracy,ring:1,direction:ordinary.direction,speed:ordinary.speed,curve:false})).toBe("nice");
+ });
+ it("dampens modest drift, rejects strong sideways aim and ignores tiny taps",()=>{
+  const drift=projectDragThrow({start:{x:187.5,y:550},end:{x:230,y:442},sceneWidth:375,sceneHeight:600});
+  expect(drift.goodAim).toBe(true);
+  const sideways=projectDragThrow({start:{x:187.5,y:550},end:{x:367.5,y:460},sceneWidth:375,sceneHeight:600});
+  expect(sideways.goodAim).toBe(false);
+  const tap=projectDragThrow({start:{x:187.5,y:550},end:{x:191,y:544},sceneWidth:375,sceneHeight:600});
+  expect(tap.isThrow).toBe(false);
+ });
+ it("keeps displacement projection independent from gesture timing and sample frequency",()=>{
+  const input={start:{x:187.5,y:550},end:{x:205,y:410},sceneWidth:375,sceneHeight:600};
+  expect(projectDragThrow(input)).toEqual(projectDragThrow(input));
  });
 });

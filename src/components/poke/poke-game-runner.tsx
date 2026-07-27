@@ -105,8 +105,8 @@ const gameSkills: Record<PokeGameId, { en: string[]; de: string[] }> = {
     de: ["Deckbau", "Gegnerabsichten", "Risikorouten"],
   },
   "field-capture": {
-    en: ["Flick aim", "Shrinking ring", "Curve throws"],
-    de: ["Wisch-Ziel", "Schrumpfender Ring", "Curve-Würfe"],
+    en: ["Direct drag", "Shrinking ring", "Curve throws"],
+    de: ["Direktes Ziehen", "Schrumpfender Ring", "Curve-Würfe"],
   },
   "field-scanner": {
     en: ["Silhouettes", "Optional signals", "Score economy"],
@@ -211,8 +211,8 @@ const gameHelp: Record<
   },
   "field-capture": {
     prompt: {
-      en: "Hold the ball in the encounter, flick upward and release toward the Pokémon.",
-      de: "Halte den Ball in der Fangszene, wische nach oben und lasse Richtung Pokémon los.",
+      en: "Drag the ball up toward the Pokémon and release; a short upward swipe works too.",
+      de: "Ziehe den Ball nach oben zum Pokémon und lasse los; ein kurzer Wisch nach oben funktioniert auch.",
     },
     rule: {
       en: "Hit the shrinking ring for Nice, Great or Excellent; sideways motion adds a curve bonus.",

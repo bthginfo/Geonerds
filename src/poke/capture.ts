@@ -79,3 +79,42 @@ export function captureTelemetry(tier:CaptureTier,ball:CaptureBall,berry:boolean
 }
 
 export const captureTierWeight=(tier:CaptureTier)=>TIER_WEIGHTS[tier];
+
+export interface DragThrowPoint{x:number;y:number}
+export interface DragThrowProjection{
+ isThrow:boolean;
+ impact:DragThrowPoint;
+ accuracy:number;
+ direction:number;
+ speed:number;
+ goodAim:boolean;
+ distance:number;
+}
+
+export function projectDragThrow({start,end,sceneWidth,sceneHeight,curveOffset=0}:{start:DragThrowPoint;end:DragThrowPoint;sceneWidth:number;sceneHeight:number;curveOffset?:number}):DragThrowProjection{
+ const width=Math.max(1,sceneWidth),height=Math.max(1,sceneHeight);
+ const dx=end.x-start.x,dy=end.y-start.y,displacement=Math.hypot(dx,dy);
+ const target={x:width/2,y:height*.4},targetRadius=Math.min(width,height)*.19;
+ if(displacement<14){
+  const distance=Math.hypot(end.x-target.x,end.y-target.y);
+  return{isThrow:false,impact:{x:end.x,y:end.y},accuracy:0,direction:0,speed:0,goodAim:false,distance};
+ }
+ const upward=Math.max(0,start.y-end.y),upRatio=upward/height;
+ const releaseDistance=Math.hypot(end.x-target.x,end.y-target.y);
+ const direct=releaseDistance<=targetRadius*1.35;
+ const lift=Math.max(0,Math.min(1,(upRatio-.1)/.12));
+ const curve=Math.max(-width*.06,Math.min(width*.06,curveOffset*.18));
+ const impact=direct
+  ?{x:end.x+curve,y:end.y}
+  :{
+    x:start.x+dx*.72+curve,
+    y:end.y+(target.y-end.y)*lift,
+   };
+ impact.x=Math.max(width*.03,Math.min(width*.97,impact.x));
+ impact.y=Math.max(height*.05,Math.min(height*.94,impact.y));
+ const distance=Math.hypot(impact.x-target.x,impact.y-target.y);
+ const accuracy=Math.max(0,Math.min(1,1-distance/(targetRadius*1.75)));
+ const direction=Math.max(0,Math.min(1,upRatio/.18));
+ const speed=Math.max(0,Math.min(1,displacement/(height*.5)));
+ return{isThrow:true,impact,accuracy,direction,speed,goodAim:direction>=.28&&accuracy>=.34,distance};
+}

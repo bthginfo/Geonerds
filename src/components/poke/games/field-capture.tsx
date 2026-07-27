@@ -20,9 +20,11 @@ import {
   captureTierForSpecies,
   classifyThrow,
   generateCaptureEncounters,
+  projectDragThrow,
   resolveCaptureAttempt,
   type CaptureBall,
   type CaptureTier,
+  type DragThrowProjection,
   type ThrowMetrics,
   type ThrowQuality,
 } from "@/poke/capture";
@@ -113,6 +115,9 @@ export function FieldCapture({
     impact: { x: 50, y: 40 },
   });
   const [drag, setDrag] = useState<DragState>(emptyDrag);
+  const [dragPreview, setDragPreview] = useState<DragThrowProjection | null>(
+    null,
+  );
   const [result, setResult] = useState<ThrowResult | null>(null);
   const [resistance, setResistance] = useState(
     TIER_RESISTANCE[tier] ?? TIER_RESISTANCE.common,
@@ -173,6 +178,7 @@ export function FieldCapture({
     gestureRef.current = emptyDrag();
     resolvingPointerRef.current = null;
     setDrag(emptyDrag());
+    setDragPreview(null);
   };
 
   const beginDrag = (event: React.PointerEvent<HTMLDivElement>) => {
@@ -218,6 +224,22 @@ export function FieldCapture({
     };
     gestureRef.current = nextGesture;
     setDrag(nextGesture);
+    if (clearingRef.current && gesture.start) {
+      const rect = clearingRef.current.getBoundingClientRect();
+      setDragPreview(
+        projectDragThrow({
+          start: gesture.start,
+          end: point,
+          sceneWidth: rect.width,
+          sceneHeight: rect.height,
+          curveOffset: signedCurveAmount(
+            nextGesture.points,
+            gesture.start,
+            point,
+          ),
+        }),
+      );
+    }
   };
 
   const releaseDrag = (event: React.PointerEvent<HTMLDivElement>) => {
@@ -237,65 +259,37 @@ export function FieldCapture({
     event.preventDefault();
     resolvingPointerRef.current = event.pointerId;
     const rect = clearingRef.current.getBoundingClientRect();
-    const displacement = Math.hypot(
-      end.x - gesture.start.x,
-      end.y - gesture.start.y,
-    );
-    if (displacement < 14) {
+    const points = [...gesture.points, end];
+    const curvature = signedCurveAmount(points, gesture.start, end);
+    const projection = projectDragThrow({
+      start: gesture.start,
+      end,
+      sceneWidth: rect.width,
+      sceneHeight: rect.height,
+      curveOffset: curvature,
+    });
+    if (!projection.isThrow) {
       resetDrag();
       return;
     }
-    const points = [...gesture.points, end];
-    const recent =
-      points.filter((point) => point.t >= end.t - 120).slice(-7).length >= 2
-        ? points.filter((point) => point.t >= end.t - 120).slice(-7)
-        : points.slice(-3);
-    const first = recent[0] ?? gesture.start;
-    const elapsed = Math.max(24, end.t - first.t);
-    const clampVelocity = (value: number) =>
-      Math.max(-0.58, Math.min(0.58, value));
-    const velocity = {
-      x: clampVelocity((end.x - first.x) / elapsed),
-      y: clampVelocity((end.y - first.y) / elapsed),
-    };
-    const upwardDisplacement = Math.max(0, gesture.start.y - end.y);
-    const upwardSpeed = Math.max(0, -velocity.y, upwardDisplacement / 320);
-    const projectionMs = Math.max(300, Math.min(520, 320 + upwardSpeed * 250));
-    const curvature = signedCurveAmount(points, gesture.start, end);
-    const projected = {
-      x: end.x + velocity.x * projectionMs + curvature * 0.42,
-      y: end.y + velocity.y * projectionMs,
-    };
-    const target = { x: rect.width / 2, y: rect.height * 0.4 };
-    const targetRadius = Math.min(rect.width, rect.height) * 0.19;
-    const distance = Math.hypot(projected.x - target.x, projected.y - target.y);
-    const firstThrowAssist =
-      round === 0 &&
-      attemptsLeft === maxAttempts &&
-      distance < targetRadius * 1.7
-        ? 0.08
-        : 0;
-    const accuracy = Math.min(
-      1,
-      Math.max(0, 1 - distance / (targetRadius * 1.55)) + firstThrowAssist,
-    );
-    const speed = Math.min(
-      1,
-      Math.max(Math.hypot(velocity.x, velocity.y), displacement / 500) / 1.15,
-    );
-    const direction = Math.min(1, upwardSpeed / 0.7);
     const curve = Math.abs(curvature) > Math.max(18, rect.width * 0.055);
     const startPercent = {
       x: (end.x / rect.width) * 100,
       y: (end.y / rect.height) * 100,
     };
     const impact = {
-      x: Math.max(3, Math.min(97, (projected.x / rect.width) * 100)),
-      y: Math.max(5, Math.min(94, (projected.y / rect.height) * 100)),
+      x: (projection.impact.x / rect.width) * 100,
+      y: (projection.impact.y / rect.height) * 100,
     };
     resetDrag();
     performThrow(
-      { accuracy, ring, direction, speed, curve },
+      {
+        accuracy: projection.accuracy,
+        ring,
+        direction: projection.direction,
+        speed: projection.speed,
+        curve,
+      },
       { start: startPercent, impact },
     );
   };
@@ -644,8 +638,8 @@ export function FieldCapture({
         tabIndex={0}
         aria-label={
           locale === "de"
-            ? "Fangszene. Ball halten, nach oben wischen und loslassen."
-            : "Capture scene. Hold the ball, flick upward and release."
+            ? "Fangszene. Ball nach oben zum Pokémon ziehen und loslassen."
+            : "Capture scene. Drag the ball up toward the Pokémon and release."
         }
       >
         <div className="poke-field-sky" />
@@ -667,12 +661,12 @@ export function FieldCapture({
           <span>
             <b>
               {locale === "de"
-                ? "BALL HALTEN · NACH OBEN WISCHEN"
-                : "HOLD BALL · FLICK UPWARD"}
+                ? "BALL ZUM POKÉMON ZIEHEN · LOSLASSEN"
+                : "DRAG BALL TO POKÉMON · RELEASE"}
             </b>
             {locale === "de"
-              ? "Im kleinen Ring treffen. Eine seitliche Bewegung gibt Curve-Bonus."
-              : "Hit inside the small ring. Add sideways motion for a curve bonus."}
+              ? "Direkt zum Ring ziehen oder kurz nach oben wischen. Seitliche Bewegung gibt Curve-Bonus."
+              : "Drag directly to the ring or use a short upward swipe. Sideways motion adds a curve bonus."}
           </span>
         </p>
         <div
@@ -690,7 +684,7 @@ export function FieldCapture({
           <div className="poke-flick-ghost" aria-hidden="true">
             <i />
             <Wind />
-            <span>{locale === "de" ? "WISCHEN" : "FLICK"}</span>
+            <span>{locale === "de" ? "ZIEHEN" : "DRAG"}</span>
           </div>
         )}
         {drag.points.length > 1 && (
@@ -698,6 +692,18 @@ export function FieldCapture({
             {drag.points.map((point, index) => (
               <i key={index} style={{ left: point.x, top: point.y }} />
             ))}
+          </div>
+        )}
+        {drag.active && dragPreview && (
+          <div
+            className={`poke-drag-impact-preview ${dragPreview.goodAim ? "is-good" : "is-weak"}`}
+            style={{
+              left: dragPreview.impact.x,
+              top: dragPreview.impact.y,
+            }}
+            aria-hidden="true"
+          >
+            <Crosshair />
           </div>
         )}
         <div className="poke-capture-tools">
@@ -740,8 +746,8 @@ export function FieldCapture({
           disabled={!!result || flight !== "ready"}
           aria-label={
             locale === "de"
-              ? "Ball halten und nach oben werfen"
-              : "Hold ball and flick upward"
+              ? "Ball nach oben zum Pokémon ziehen und loslassen"
+              : "Drag ball up toward the Pokémon and release"
           }
         >
           <CircleDot />
@@ -823,8 +829,8 @@ export function FieldCapture({
               <em>
                 {result.quality === "miss"
                   ? locale === "de"
-                    ? "Wische schneller nach oben und ziele auf den Ring."
-                    : "Flick upward faster and aim for the ring."
+                    ? "Ziehe den Ball direkt zum Ring und lasse dort los."
+                    : "Drag the ball directly to the ring and release there."
                   : `${result.removed} ${locale === "de" ? "Widerstand entfernt" : "resistance removed"} · ${result.attemptsLeft} ${locale === "de" ? "Würfe übrig" : "throws left"}`}
               </em>
             </span>
