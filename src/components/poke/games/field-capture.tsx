@@ -5,20 +5,18 @@ import {
   Apple,
   Archive,
   Check,
+  ChevronLeft,
+  ChevronRight,
   CircleDot,
   Crosshair,
-  Gauge,
   Keyboard,
   MousePointer2,
-  Radar,
   ShieldPlus,
   Sparkles,
   Wind,
   X,
-  Zap,
 } from "lucide-react";
 import {
-  captureTelemetry,
   captureTierForSpecies,
   classifyThrow,
   generateCaptureEncounters,
@@ -33,7 +31,6 @@ import { RunHud, type GameProps } from "../gameplay";
 import { PokemonSprite } from "../pokemon-sprite";
 import { emitGameFeel } from "../game-feel";
 
-type PrepReward = "advanced" | "berry" | "steady" | "extra";
 type FlightState = "ready" | "flight" | "shake";
 interface Point {
   x: number;
@@ -45,11 +42,13 @@ interface ThrowResult {
   curve: boolean;
   caught: boolean;
   escaped: boolean;
-  chance: number;
   attemptsLeft: number;
   removed: number;
   remaining: number;
-  practice?: boolean;
+}
+interface FlightPath {
+  start: { x: number; y: number };
+  impact: { x: number; y: number };
 }
 
 const TIER_SCORE: Record<CaptureTier, number> = {
@@ -79,223 +78,222 @@ export function FieldCapture({
     () => generateCaptureEncounters(generationCap, roundCount, runSeed),
     [generationCap, roundCount, runSeed],
   );
-  const [phase, setPhase] = useState<"prep" | "encounter" | "summary">("prep");
   const [round, setRound] = useState(0);
+  const current = encounters[round];
+  const tier = current ? captureTierForSpecies(current) : "common";
+  const maxAttempts = difficulty === "easy" ? 4 : 3;
+  const [phase, setPhase] = useState<"encounter" | "summary">("encounter");
   const [score, setScore] = useState(0);
   const [caughtCount, setCaughtCount] = useState(0);
   const [streak, setStreak] = useState(0);
-  const [scanPos, setScanPos] = useState(0);
-  const [prepResult, setPrepResult] = useState<{
-    success: boolean;
-    clean: boolean;
-  } | null>(null);
-  const [inventory, setInventory] = useState({ advanced: 0, berries: 0 });
-  const [activePrep, setActivePrep] = useState<PrepReward | null>(null);
-  const [attemptsLeft, setAttemptsLeft] = useState(3);
-  const [maxAttempts, setMaxAttempts] = useState(3);
+  const [inventory, setInventory] = useState({ advanced: 1, berries: 1 });
+  const [attemptsLeft, setAttemptsLeft] = useState(maxAttempts);
   const [ball, setBall] = useState<CaptureBall>("field");
   const [berry, setBerry] = useState(false);
-  const [kitReviewed, setKitReviewed] = useState(false);
   const [ring, setRing] = useState(1);
   const [aim, setAim] = useState(50);
   const [flight, setFlight] = useState<FlightState>("ready");
-  const [impact, setImpact] = useState({ x: 50, y: 46 });
+  const [flightPath, setFlightPath] = useState<FlightPath>({
+    start: { x: 50, y: 90 },
+    impact: { x: 50, y: 40 },
+  });
   const [drag, setDrag] = useState<{
     active: boolean;
+    pointerId: number | null;
     start: Point | null;
+    current: Point | null;
     points: Point[];
-  }>({ active: false, start: null, points: [] });
+  }>({
+    active: false,
+    pointerId: null,
+    start: null,
+    current: null,
+    points: [],
+  });
   const [result, setResult] = useState<ThrowResult | null>(null);
-  const [resistance, setResistance] = useState(1);
-  const [practiceThrow, setPracticeThrow] = useState(
-    () =>
-      typeof window !== "undefined" &&
-      !sessionStorage.getItem("poke-capture-practice"),
+  const [resistance, setResistance] = useState(
+    TIER_RESISTANCE[tier] ?? TIER_RESISTANCE.common,
   );
+  const [hasThrown, setHasThrown] = useState(false);
   const [caughtLog, setCaughtLog] = useState<
     { id: number; tier: CaptureTier; quality: ThrowQuality; curve: boolean }[]
   >([]);
   const [encounterLog, setEncounterLog] = useState<
     { id: number; caught: boolean; tier: CaptureTier }[]
   >([]);
-  const interactionRef = useRef<HTMLDivElement>(null),
-    clearingRef = useRef<HTMLDivElement>(null),
-    timers = useRef<number[]>([]);
-  const current = encounters[round],
-    tier = current ? captureTierForSpecies(current) : "common";
-  const reward: PrepReward =
-    scanPos < 33.333 ? "advanced" : scanPos < 66.666 ? "berry" : "steady";
-  const speed =
-    difficulty === "easy" ? 3200 : difficulty === "hard" ? 2050 : 2600;
+  const clearingRef = useRef<HTMLDivElement>(null);
+  const timers = useRef<number[]>([]);
 
   useEffect(() => {
-    if (phase !== "prep" || prepResult) return;
+    if (phase !== "encounter" || result || drag.active) return;
     const started = performance.now();
-    const id = window.setInterval(() => {
-      const travel = ((performance.now() - started) % speed) / speed;
-      setScanPos(travel <= 0.5 ? travel * 200 : (1 - travel) * 200);
-    }, 32);
-    return () => window.clearInterval(id);
-  }, [phase, prepResult, speed, round]);
-  useEffect(() => {
-    if (phase !== "encounter" || result) return;
-    const started = performance.now(),
-      tierSpeed =
-        {
-          common: 2500,
-          uncommon: 2200,
-          rare: 1850,
-          ultra: 1500,
-          legendary: 1250,
-        }[tier] * (activePrep === "steady" ? 1.35 : 1);
+    const tierSpeed =
+      {
+        common: 2600,
+        uncommon: 2300,
+        rare: 1950,
+        ultra: 1650,
+        legendary: 1400,
+      }[tier] * (difficulty === "easy" ? 1.18 : 1);
     const id = window.setInterval(() => {
       const elapsed = performance.now() - started;
-      setRing(
-        0.28 + Math.abs(Math.sin((elapsed / tierSpeed) * Math.PI)) * 0.72,
-      );
-      setAim(50 + Math.sin((elapsed / 920) * Math.PI) * 45);
+      setRing(0.3 + Math.abs(Math.sin((elapsed / tierSpeed) * Math.PI)) * 0.7);
     }, 35);
     return () => window.clearInterval(id);
-  }, [activePrep, phase, result, round, tier]);
-  useEffect(() => () => timers.current.forEach(window.clearTimeout), []);
+  }, [difficulty, drag.active, phase, result, round, tier]);
 
-  const stopScanner = () => {
-    if (prepResult) return;
-    const success = true,
-      center =
-        reward === "advanced" ? 16.666 : reward === "berry" ? 50 : 83.333,
-      clean = Math.abs(scanPos - center) <= 5;
-    setPrepResult({ success, clean });
-    if (clean) setScore((value) => value + 90);
+  useEffect(
+    () => () => timers.current.forEach((timer) => window.clearTimeout(timer)),
+    [],
+  );
+
+  const localPoint = (
+    event: React.PointerEvent<HTMLDivElement>,
+  ): Point | null => {
+    if (!clearingRef.current) return null;
+    const rect = clearingRef.current.getBoundingClientRect();
+    return {
+      x: Math.max(0, Math.min(rect.width, event.clientX - rect.left)),
+      y: Math.max(0, Math.min(rect.height, event.clientY - rect.top)),
+      t: performance.now(),
+    };
   };
-  const beginEncounter = () => {
-    const earned = prepResult?.success ? reward : null;
-    setActivePrep(earned);
-    if (earned === "advanced")
-      setInventory((value) => ({ ...value, advanced: value.advanced + 1 }));
-    if (earned === "berry")
-      setInventory((value) => ({ ...value, berries: value.berries + 1 }));
-    const attempts = 3;
-    setAttemptsLeft(attempts);
-    setMaxAttempts(attempts);
-    setBall("field");
-    setBerry(false);
-    setResistance(TIER_RESISTANCE[tier]);
-    setKitReviewed(earned === "steady");
-    setResult(null);
-    setFlight("ready");
-    setDrag({ active: false, start: null, points: [] });
-    setPhase("encounter");
-  };
+
+  const resetDrag = () =>
+    setDrag({
+      active: false,
+      pointerId: null,
+      start: null,
+      current: null,
+      points: [],
+    });
+
   const beginDrag = (event: React.PointerEvent<HTMLDivElement>) => {
     if (
-      !kitReviewed ||
       result ||
       flight !== "ready" ||
-      !(event.target as HTMLElement).closest("[data-capture-cradle]")
+      !(event.target as HTMLElement).closest("[data-capture-ball]")
     )
       return;
+    const point = localPoint(event);
+    if (!point) return;
+    event.preventDefault();
     event.currentTarget.setPointerCapture(event.pointerId);
-    const rect = interactionRef.current!.getBoundingClientRect(),
-      point = {
-        x: event.clientX - rect.left,
-        y: event.clientY - rect.top,
-        t: performance.now(),
-      };
-    setDrag({ active: true, start: point, points: [point] });
+    setHasThrown(true);
+    setDrag({
+      active: true,
+      pointerId: event.pointerId,
+      start: point,
+      current: point,
+      points: [point],
+    });
   };
+
   const moveDrag = (event: React.PointerEvent<HTMLDivElement>) => {
-    if (!drag.active || !interactionRef.current) return;
-    const rect = interactionRef.current.getBoundingClientRect(),
-      point = {
-        x: event.clientX - rect.left,
-        y: event.clientY - rect.top,
-        t: performance.now(),
-      };
+    if (!drag.active || drag.pointerId !== event.pointerId) return;
+    const point = localPoint(event);
+    if (!point) return;
+    event.preventDefault();
     setDrag((value) => ({
       ...value,
-      points: [...value.points.slice(-18), point],
+      current: point,
+      points: [...value.points.slice(-20), point],
     }));
   };
+
   const releaseDrag = (event: React.PointerEvent<HTMLDivElement>) => {
     if (
       !drag.active ||
+      drag.pointerId !== event.pointerId ||
       !drag.start ||
-      !interactionRef.current ||
       !clearingRef.current
     )
       return;
-    const wrapper = interactionRef.current.getBoundingClientRect(),
-      clear = clearingRef.current.getBoundingClientRect(),
-      end = {
-        x: event.clientX - wrapper.left,
-        y: event.clientY - wrapper.top,
-        t: performance.now(),
-      },
-      targetPoint = {
-        x: clear.left - wrapper.left + clear.width / 2,
-        y: clear.top - wrapper.top + clear.height * 0.48,
-      };
-    const distance = Math.hypot(end.x - targetPoint.x, end.y - targetPoint.y),
-      maxDistance = Math.hypot(clear.width * 0.58, clear.height * 0.58),
-      accuracy = Math.max(0, 1 - distance / maxDistance);
-    const direction = Math.max(
-      0,
-      Math.min(
-        1,
-        (drag.start.y - end.y) / Math.max(90, drag.start.y - targetPoint.y),
-      ),
+    const end = localPoint(event);
+    if (!end) {
+      resetDrag();
+      return;
+    }
+    event.preventDefault();
+    const rect = clearingRef.current.getBoundingClientRect();
+    const points = [...drag.points, end];
+    const recent =
+      points.filter((point) => point.t >= end.t - 120).slice(-7).length >= 2
+        ? points.filter((point) => point.t >= end.t - 120).slice(-7)
+        : points.slice(-3);
+    const first = recent[0] ?? drag.start;
+    const elapsed = Math.max(16, end.t - first.t);
+    const velocity = {
+      x: (end.x - first.x) / elapsed,
+      y: (end.y - first.y) / elapsed,
+    };
+    const upwardSpeed = Math.max(0, -velocity.y);
+    const projectionMs = Math.max(300, Math.min(650, 320 + upwardSpeed * 250));
+    const curvature = signedCurveAmount(points, drag.start, end);
+    const projected = {
+      x: end.x + velocity.x * projectionMs + curvature * 0.42,
+      y: end.y + velocity.y * projectionMs,
+    };
+    const target = { x: rect.width / 2, y: rect.height * 0.4 };
+    const targetRadius = Math.min(rect.width, rect.height) * 0.19;
+    const distance = Math.hypot(projected.x - target.x, projected.y - target.y);
+    const firstThrowAssist =
+      round === 0 &&
+      attemptsLeft === maxAttempts &&
+      distance < targetRadius * 1.7
+        ? 0.08
+        : 0;
+    const accuracy = Math.min(
+      1,
+      Math.max(0, 1 - distance / (targetRadius * 1.55)) + firstThrowAssist,
     );
-    const points = [...drag.points, end],
-      previous = points.at(-2) ?? drag.start,
-      velocity =
-        Math.hypot(end.x - previous.x, end.y - previous.y) /
-        Math.max(8, end.t - previous.t),
-      curve =
-        curveAmount(points, drag.start, end) >
-        Math.max(25, wrapper.width * 0.07);
-    const x = Math.max(
-        5,
-        Math.min(
-          95,
-          ((end.x - (clear.left - wrapper.left)) / clear.width) * 100,
-        ),
-      ),
-      y = Math.max(
-        8,
-        Math.min(
-          88,
-          ((end.y - (clear.top - wrapper.top)) / clear.height) * 100,
-        ),
-      );
-    setDrag({ active: false, start: null, points: [] });
+    const speed = Math.min(1, Math.hypot(velocity.x, velocity.y) / 1.15);
+    const direction = Math.min(1, upwardSpeed / 0.7);
+    const curve = Math.abs(curvature) > Math.max(18, rect.width * 0.055);
+    const startPercent = {
+      x: (end.x / rect.width) * 100,
+      y: (end.y / rect.height) * 100,
+    };
+    const impact = {
+      x: Math.max(3, Math.min(97, (projected.x / rect.width) * 100)),
+      y: Math.max(5, Math.min(94, (projected.y / rect.height) * 100)),
+    };
+    resetDrag();
     performThrow(
-      { accuracy, ring, direction, speed: Math.min(1, velocity / 1.1), curve },
-      { x, y },
+      { accuracy, ring, direction, speed, curve },
+      { start: startPercent, impact },
     );
   };
+
+  const cancelDrag = (event: React.PointerEvent<HTMLDivElement>) => {
+    if (drag.pointerId === event.pointerId) resetDrag();
+  };
+
   const fallbackThrow = () => {
-    if (!kitReviewed) return;
+    if (result || flight !== "ready") return;
+    setHasThrown(true);
+    const accuracy = Math.max(0, 1 - Math.abs(aim - 50) / 36);
     performThrow(
       {
-        accuracy: Math.max(0, 1 - Math.abs(aim - 50) / 50),
+        accuracy,
         ring,
-        direction: 0.82,
-        speed: 0.35,
+        direction: 0.88,
+        speed: 0.38,
         curve: false,
       },
-      { x: aim, y: 48 },
+      {
+        start: { x: 50, y: 90 },
+        impact: { x: aim, y: 40 },
+      },
     );
   };
-  const performThrow = (
-    metrics: ThrowMetrics,
-    landing: { x: number; y: number },
-  ) => {
+
+  const performThrow = (metrics: ThrowMetrics, path: FlightPath) => {
     if (!current || result || flight !== "ready") return;
-    const quality = classifyThrow(metrics),
-      attempt = maxAttempts - attemptsLeft + 1,
-      usedBall = ball,
-      usedBerry = berry;
+    const quality = classifyThrow(metrics);
+    const attempt = maxAttempts - attemptsLeft + 1;
+    const usedBall = ball;
+    const usedBerry = berry;
     const resolved = resolveCaptureAttempt({
       speciesId: current.id,
       tier,
@@ -306,78 +304,62 @@ export function FieldCapture({
       attempt,
       seed: `${runSeed}:${round}`,
     });
-    const baseRemoved = { miss: 0, nice: 1, great: 2, excellent: 3 }[quality],
-      removed =
-        baseRemoved +
-        (metrics.curve ? 1 : 0) +
-        (usedBall === "advanced" ? 1 : 0) +
-        (usedBerry ? 1 : 0),
-      remaining = Math.max(0, resistance - removed),
-      earlyCatch = remaining === 1 && resolved.caught,
-      caught = remaining === 0 || earlyCatch,
-      nextAttempts = practiceThrow
-        ? attemptsLeft
-        : Math.max(0, attemptsLeft - 1),
-      escaped =
-        !practiceThrow && !caught && (resolved.fled || nextAttempts <= 0);
-    if (practiceThrow) {
-      sessionStorage.setItem("poke-capture-practice", "done");
-      setPracticeThrow(false);
-    }
-    if (!practiceThrow && usedBall === "advanced")
+    const baseRemoved = { miss: 0, nice: 1, great: 2, excellent: 3 }[quality];
+    const removed =
+      baseRemoved +
+      (metrics.curve ? 1 : 0) +
+      (usedBall === "advanced" ? 1 : 0) +
+      (usedBerry ? 1 : 0);
+    const remaining = Math.max(0, resistance - removed);
+    const caught = remaining === 0 || (remaining === 1 && resolved.caught);
+    const nextAttempts = Math.max(0, attemptsLeft - 1);
+    const escaped = !caught && (resolved.fled || nextAttempts <= 0);
+    if (usedBall === "advanced")
       setInventory((value) => ({
         ...value,
         advanced: Math.max(0, value.advanced - 1),
       }));
-    if (!practiceThrow && usedBerry)
+    if (usedBerry)
       setInventory((value) => ({
         ...value,
         berries: Math.max(0, value.berries - 1),
       }));
     setBall("field");
     setBerry(false);
-    setImpact(landing);
+    setFlightPath(path);
     setFlight("flight");
     timers.current.push(
       window.setTimeout(
         () => setFlight(quality === "miss" ? "flight" : "shake"),
-        430,
+        520,
       ),
     );
     timers.current.push(
       window.setTimeout(
         () => {
           setAttemptsLeft(nextAttempts);
-          if (!practiceThrow) setResistance(remaining);
+          setResistance(remaining);
           setResult({
             quality,
             curve: metrics.curve,
             caught,
             escaped,
-            chance: resolved.chance,
             attemptsLeft: nextAttempts,
             removed,
             remaining,
-            practice: practiceThrow,
           });
           emitGameFeel({
-            id: `capture-throw-${round}-${attempt}-${quality}-${practiceThrow}`,
-            type: practiceThrow
-              ? "impact"
-              : caught
-                ? "success"
-                : quality === "miss"
-                  ? "error"
-                  : "impact",
-            label: practiceThrow ? "PRACTICE" : quality.toUpperCase(),
-            value: practiceThrow ? undefined : -removed,
+            id: `capture-flick-${runSeed}-${round}-${attempt}-${quality}`,
+            type: caught ? "success" : quality === "miss" ? "error" : "impact",
+            label: `${metrics.curve ? "CURVE · " : ""}${quality.toUpperCase()}`,
+            value: removed ? -removed : undefined,
             focus: ".poke-capture-resolution",
             particles: caught,
           });
           if (caught) {
-            const nextStreak = streak + 1,
-              multiplier =
-                quality === "excellent" ? 1.45 : quality === "great" ? 1.22 : 1;
+            const nextStreak = streak + 1;
+            const multiplier =
+              quality === "excellent" ? 1.45 : quality === "great" ? 1.22 : 1;
             setScore(
               (value) =>
                 value +
@@ -397,6 +379,11 @@ export function FieldCapture({
               ...items,
               { id: current.id, caught: true, tier },
             ]);
+            setInventory((value) =>
+              (current.id + round) % 2 === 0
+                ? { ...value, berries: value.berries + 1 }
+                : { ...value, advanced: value.advanced + 1 },
+            );
           } else if (escaped) {
             setStreak(0);
             setEncounterLog((items) => [
@@ -406,30 +393,35 @@ export function FieldCapture({
           }
           setFlight("ready");
         },
-        quality === "miss" ? 620 : 1420,
+        quality === "miss" ? 720 : 1450,
       ),
     );
   };
+
   const retry = () => {
     setResult(null);
     setFlight("ready");
-    setDrag({ active: false, start: null, points: [] });
+    resetDrag();
   };
+
   const advance = () => {
     if (!result || (!result.caught && !result.escaped)) return;
     if (round + 1 >= encounters.length) {
       setPhase("summary");
       return;
     }
-    setRound((value) => value + 1);
-    setPrepResult(null);
+    const nextRound = round + 1;
+    const nextTier = captureTierForSpecies(encounters[nextRound]);
+    setRound(nextRound);
+    setAttemptsLeft(maxAttempts);
+    setResistance(TIER_RESISTANCE[nextTier]);
+    setBall("field");
+    setBerry(false);
     setResult(null);
-    setActivePrep(null);
-    setKitReviewed(false);
     setFlight("ready");
-    setScanPos(0);
-    setPhase("prep");
+    resetDrag();
   };
+
   const archive = () =>
     onFinish(
       score,
@@ -440,6 +432,7 @@ export function FieldCapture({
     );
 
   if (!current) return null;
+
   if (phase === "summary") {
     const rarest = [...caughtLog].sort(
       (a, b) => tierRank(b.tier) - tierRank(a.tier),
@@ -447,7 +440,7 @@ export function FieldCapture({
     return (
       <section className="poke-capture-summary">
         <div className="poke-capture-summary-mark">
-          <Radar />
+          <Crosshair />
           <i />
         </div>
         <p className="poke-kicker">FIELD SURVEY ARCHIVED</p>
@@ -526,137 +519,8 @@ export function FieldCapture({
       </section>
     );
   }
-  if (phase === "prep")
-    return (
-      <section className="poke-capture-prep">
-        <RunHud
-          score={score}
-          round={round + 1}
-          total={roundCount}
-          resource={streak}
-          label="STREAK"
-        />
-        <CaptureMissionGuide
-          locale={locale}
-          step={1}
-          scannerDone={!!prepResult}
-        />
-        <header>
-          <div>
-            <p className="poke-kicker">
-              FIELD PREPARATION // {String(round + 1).padStart(2, "0")}
-            </p>
-            <h2>
-              {locale === "de"
-                ? "Scanner auf das Signalfenster stoppen"
-                : "Stop the scanner inside the signal window"}
-            </h2>
-            <p>
-              {locale === "de"
-                ? "Eine saubere Kalibrierung bringt einen taktischen Bonus für die kommende Sichtung."
-                : "A clean calibration earns one tactical bonus for the incoming sighting."}
-            </p>
-          </div>
-          <RewardPreview reward={reward} locale={locale} />
-        </header>
-        <p className="poke-active-instruction">
-          <Zap />
-          <span>
-            <b>
-              {locale === "de"
-                ? "JETZT: Beobachte den Blitz"
-                : "NOW: Watch the bolt"}
-            </b>
-            {locale === "de"
-              ? "Stoppe in einer der drei Zonen: Ball, Beere oder Ringstabilität."
-              : "Stop inside one of three zones: Ball, Berry or Ring Stability."}
-          </span>
-        </p>
-        <div className={`poke-scanner-stop ${prepResult ? "is-stopped" : ""}`}>
-          <div className="poke-scanner-scale">
-            {Array.from({ length: 11 }, (_, index) => (
-              <span key={index}>{index * 10}</span>
-            ))}
-          </div>
-          <div className="poke-scanner-track">
-            <i
-              className="poke-scan-band zone-ball"
-              style={{ left: "0", width: "33.333%" }}
-              data-label="BALL"
-            />
-            <i
-              className="poke-scan-band zone-berry"
-              style={{ left: "33.333%", width: "33.333%" }}
-              data-label="BERRY"
-            />
-            <i
-              className="poke-scan-band zone-steady"
-              style={{ left: "66.666%", width: "33.334%" }}
-              data-label="STABILITY"
-            />
-            <b style={{ left: `${scanPos}%` }}>
-              <Zap />
-            </b>
-          </div>
-          <div className="poke-scanner-readout">
-            <span>
-              POS <b>{scanPos.toFixed(1)}</b>
-            </span>
-            <span>
-              REWARD <b>{rewardName(reward, locale)}</b>
-            </span>
-            <span>
-              SPEED <b>{difficulty.toUpperCase()}</b>
-            </span>
-          </div>
-        </div>
-        {!prepResult ? (
-          <button className="poke-capture-lock" onClick={stopScanner}>
-            <Crosshair />
-            {locale === "de" ? "SIGNAL STOPPEN" : "STOP SIGNAL"}
-            <span>SPACE / TAP</span>
-          </button>
-        ) : (
-          <div
-            className={`poke-prep-result ${prepResult.success ? "is-good" : "is-bad"}`}
-          >
-            {prepResult.success ? <Check /> : <X />}
-            <span>
-              <b>
-                {prepResult.success
-                  ? prepResult.clean
-                    ? locale === "de"
-                      ? "Perfekte Feldkalibrierung"
-                      : "Perfect field calibration"
-                    : locale === "de"
-                      ? "Signalfenster erfasst"
-                      : "Signal window acquired"
-                  : locale === "de"
-                    ? "Signalfenster verpasst"
-                    : "Signal window missed"}
-              </b>
-              <small>
-                {prepResult.success
-                  ? `${rewardName(reward, locale)}${prepResult.clean ? " · +90 SCORE" : ""}`
-                  : locale === "de"
-                    ? "Sichtung startet ohne Bonus."
-                    : "Sighting begins without a bonus."}
-              </small>
-            </span>
-            <button onClick={beginEncounter}>
-              {locale === "de"
-                ? "Zu Schritt 2: Ausrüstung"
-                : "Step 2: inspect gear"}{" "}
-              →
-            </button>
-          </div>
-        )}
-      </section>
-    );
 
-  const terminal = !!result && (result.caught || result.escaped),
-    telemetry = captureTelemetry(tier, ball, berry),
-    fleePressure = maxAttempts - attemptsLeft;
+  const terminal = !!result && (result.caught || result.escaped);
   const tierName = current.mythical
     ? locale === "de"
       ? "MYTHISCH"
@@ -666,11 +530,19 @@ export function FieldCapture({
         ? "LEGENDÄR"
         : "LEGENDARY"
       : tierLabel(tier, locale).toUpperCase();
+  const fleePressure = maxAttempts - attemptsLeft;
   const fleeName = (
     locale === "de"
       ? ["NIEDRIG", "NIEDRIG", "STEIGEND", "HOCH"]
       : ["LOW", "LOW", "RISING", "HIGH"]
   )[Math.min(3, fleePressure)];
+  const ballPosition = drag.current
+    ? {
+        left: `${drag.current.x}px`,
+        top: `${drag.current.y}px`,
+      }
+    : undefined;
+
   return (
     <div className={`poke-capture-game tier-${tier}`}>
       <RunHud
@@ -679,12 +551,6 @@ export function FieldCapture({
         total={roundCount}
         resource={streak}
         label="STREAK"
-      />
-      <CaptureMissionGuide
-        locale={locale}
-        step={kitReviewed ? 3 : 2}
-        scannerDone
-        kitDone={kitReviewed}
       />
       <div className="poke-capture-hud">
         <span>
@@ -702,7 +568,7 @@ export function FieldCapture({
           </b>
         </span>
         <span>
-          {locale === "de" ? "VERSUCHE" : "ATTEMPTS"}{" "}
+          {locale === "de" ? "WÜRFE" : "THROWS"}{" "}
           <b>
             {attemptsLeft}/{maxAttempts}
           </b>
@@ -711,447 +577,280 @@ export function FieldCapture({
           {locale === "de" ? "FLUCHT" : "FLEE"} <b>{fleeName}</b>
         </span>
       </div>
-      <div
-        className="poke-capture-interaction"
-        ref={interactionRef}
+      <section
+        ref={clearingRef}
+        className={`poke-capture-clearing poke-direct-capture ${drag.active ? "is-dragging" : ""}`}
         onPointerDown={beginDrag}
         onPointerMove={moveDrag}
         onPointerUp={releaseDrag}
+        onPointerCancel={cancelDrag}
+        onLostPointerCapture={cancelDrag}
+        onKeyDown={(event) => {
+          if (event.target !== event.currentTarget) return;
+          if (event.key === "ArrowLeft") {
+            event.preventDefault();
+            setAim((value) => Math.max(12, value - 7));
+          } else if (event.key === "ArrowRight") {
+            event.preventDefault();
+            setAim((value) => Math.min(88, value + 7));
+          } else if (event.key === " " || event.key === "Enter") {
+            event.preventDefault();
+            fallbackThrow();
+          }
+        }}
+        tabIndex={0}
+        aria-label={
+          locale === "de"
+            ? "Fangszene. Ball halten, nach oben wischen und loslassen."
+            : "Capture scene. Hold the ball, flick upward and release."
+        }
       >
-        <section className="poke-capture-clearing" ref={clearingRef}>
-          <div className="poke-field-sky" />
-          <div className="poke-field-grass is-back" />
-          <div className="poke-field-grass is-front" />
-          <div
-            className="poke-catch-aperture"
-            style={{
-              width: `${Math.round(220 * ring)}px`,
-              height: `${Math.round(220 * ring)}px`,
+        <div className="poke-field-sky" />
+        <div className="poke-field-grass is-back" />
+        <div className="poke-field-grass is-front" />
+        <header className="poke-capture-specimen">
+          <span>
+            #{String(current.id).padStart(4, "0")} · GEN {current.generation}
+          </span>
+          <h2>{current.name[locale]}</h2>
+          <small>
+            {current.types
+              .map((type) => localizedType(type, locale))
+              .join(" · ")}
+          </small>
+        </header>
+        <p className="poke-direct-instruction">
+          <MousePointer2 />
+          <span>
+            <b>
+              {locale === "de"
+                ? "BALL HALTEN · NACH OBEN WISCHEN"
+                : "HOLD BALL · FLICK UPWARD"}
+            </b>
+            {locale === "de"
+              ? "Im kleinen Ring treffen. Eine seitliche Bewegung gibt Curve-Bonus."
+              : "Hit inside the small ring. Add sideways motion for a curve bonus."}
+          </span>
+        </p>
+        <div
+          className="poke-catch-aperture"
+          style={{
+            width: `${Math.round(220 * ring)}px`,
+            height: `${Math.round(220 * ring)}px`,
+          }}
+        >
+          <i />
+        </div>
+        <div className="poke-capture-reticle" />
+        <PokemonSprite entry={current} size={260} />
+        {!hasThrown && (
+          <div className="poke-flick-ghost" aria-hidden="true">
+            <i />
+            <Wind />
+            <span>{locale === "de" ? "WISCHEN" : "FLICK"}</span>
+          </div>
+        )}
+        {drag.points.length > 1 && (
+          <div className="poke-live-trajectory" aria-hidden="true">
+            {drag.points.map((point, index) => (
+              <i key={index} style={{ left: point.x, top: point.y }} />
+            ))}
+          </div>
+        )}
+        <div className="poke-capture-tools">
+          <button
+            type="button"
+            aria-pressed={ball === "advanced"}
+            disabled={!inventory.advanced || !!result || flight !== "ready"}
+            onClick={(event) => {
+              event.stopPropagation();
+              setBall((value) => (value === "advanced" ? "field" : "advanced"));
             }}
           >
-            <i />
-          </div>
-          <div className="poke-capture-reticle" />
-          <PokemonSprite entry={current} size={260} />
-          <div className="poke-capture-specimen">
+            <ShieldPlus />
             <span>
-              #{String(current.id).padStart(4, "0")} · GEN {current.generation}
+              <b>{locale === "de" ? "Power-Ball" : "Power Ball"}</b>
+              <small>{inventory.advanced} · +1</small>
             </span>
-            <h2>{current.name[locale]}</h2>
-            <small>
-              {current.types
-                .map((type) => localizedType(type, locale))
-                .join(" · ")}
-            </small>
-          </div>
-          {drag.points.length ? (
-            <div className="poke-live-trajectory">
-              {drag.points.map((point, index) => (
-                <i key={index} style={{ left: point.x, top: point.y }} />
-              ))}
-            </div>
-          ) : (
-            <div className="poke-trajectory-preview">
-              {practiceThrow && (
-                <b>
-                  {locale === "de"
-                    ? "RISIKOFREIER ÜBUNGSWURF"
-                    : "RISK-FREE PRACTICE THROW"}
-                </b>
-              )}
-              {Array.from({ length: 7 }, (_, index) => (
-                <i
-                  key={index}
-                  style={{ "--dot": index } as React.CSSProperties}
-                />
-              ))}
-            </div>
-          )}
-          <div
-            className={`poke-ball-flight is-${flight}`}
-            style={{ left: `${impact.x}%`, top: `${impact.y}%` }}
+          </button>
+          <button
+            type="button"
+            aria-pressed={berry}
+            disabled={!inventory.berries || !!result || flight !== "ready"}
+            onClick={(event) => {
+              event.stopPropagation();
+              setBerry((value) => !value);
+            }}
           >
-            <CircleDot />
-          </div>
-        </section>
-        <section className="poke-field-kit">
-          <header>
-            <div>
-              <p className="poke-kicker">
-                {locale === "de" ? "FANG-TELEMETRIE" : "CAPTURE TELEMETRY"}
-              </p>
-              <h3>
-                {kitReviewed
-                  ? locale === "de"
-                    ? "Wurf ausrichten"
-                    : "Line up the throw"
-                  : locale === "de"
-                    ? "Feldkit vorbereiten"
-                    : "Prepare field kit"}
-              </h3>
-            </div>
-            <div className={`poke-catch-forecast is-${telemetry}`}>
-              <Gauge />
-              <span>
-                {locale === "de" ? "FANGSIGNAL" : "CATCH SIGNAL"}
-                <b>{telemetryLabel(telemetry, locale)}</b>
-              </span>
-            </div>
-          </header>
-          {!kitReviewed ? (
-            <p className="poke-active-instruction is-compact">
-              <ShieldPlus />
-              <span>
-                <b>
-                  {locale === "de"
-                    ? "JETZT: Ausrüstung prüfen"
-                    : "NOW: Inspect your gear"}
-                </b>
-                {locale === "de"
-                  ? "Aktiviere Ball oder Beere, falls verfügbar. Jeder Gegenstand wird beim nächsten Wurf verbraucht."
-                  : "Activate a ball or berry if available. Each selected item is consumed by the next throw."}
-              </span>
-            </p>
-          ) : (
-            <p className="poke-active-instruction is-compact">
-              <MousePointer2 />
-              <span>
-                <b>
-                  {locale === "de"
-                    ? "JETZT: Ball nach oben ziehen"
-                    : "NOW: Drag the ball upward"}
-                </b>
-                {locale === "de"
-                  ? "Über dem Pokémon loslassen. Ein kleiner Ring belohnt präzises Timing; seitliche Kurve gibt einen Bonus."
-                  : "Release over the Pokémon. A smaller ring rewards timing; a sideways curve adds a bonus."}
-              </span>
-            </p>
-          )}
-          <div className="poke-modifier-rack">
-            <button
-              aria-pressed={ball === "advanced"}
-              disabled={!inventory.advanced || !!result || kitReviewed}
-              onClick={() =>
-                setBall((value) =>
-                  value === "advanced" ? "field" : "advanced",
-                )
-              }
-            >
-              <ShieldPlus />
-              <span>
-                <b>{locale === "de" ? "Verstärkter Ball" : "Advanced ball"}</b>
-                <small>
-                  {inventory.advanced} {locale === "de" ? "VORRAT" : "STOCK"} ·
-                  1.35×
-                </small>
-              </span>
-            </button>
-            <button
-              aria-pressed={berry}
-              disabled={!inventory.berries || !!result || kitReviewed}
-              onClick={() => setBerry((value) => !value)}
-            >
-              <Apple />
-              <span>
-                <b>{locale === "de" ? "Feldbeere" : "Field berry"}</b>
-                <small>
-                  {inventory.berries} {locale === "de" ? "VORRAT" : "STOCK"} ·
-                  1.24×
-                </small>
-              </span>
-            </button>
-            <span className={activePrep === "steady" ? "is-active" : ""}>
-              <Crosshair />
-              <b>{locale === "de" ? "RINGSTABILITÄT" : "RING STABILITY"}</b>
-              <small>
-                {activePrep === "steady"
-                  ? locale === "de"
-                    ? "AKTIV · LANGSAMER"
-                    : "ACTIVE · SLOWER"
-                  : locale === "de"
-                    ? "NICHT AKTIV"
-                    : "NOT ACTIVE"}
-              </small>
+            <Apple />
+            <span>
+              <b>{locale === "de" ? "Feldbeere" : "Field Berry"}</b>
+              <small>{inventory.berries} · +1</small>
             </span>
-          </div>
-          {!kitReviewed ? (
-            <button
-              className="poke-kit-confirm"
-              onClick={() => setKitReviewed(true)}
-            >
-              <Check />
-              {locale === "de"
-                ? "KIT GEPRÜFT · ZUM WURF"
-                : "KIT CHECKED · CONTINUE TO THROW"}{" "}
-              →
-            </button>
-          ) : (
-            <>
-              <div className="poke-aim-fallback">
-                <div>
-                  <span style={{ left: `${aim}%` }} />
-                  <i />
-                </div>
-                <button
-                  disabled={!!result || flight !== "ready"}
-                  onClick={fallbackThrow}
-                >
-                  <Keyboard />
-                  {locale === "de" ? "AIM-LOCK AUSLÖSEN" : "TRIGGER AIM LOCK"}
-                </button>
-              </div>
-              <div className="poke-throw-cradle">
-                <button
-                  data-capture-cradle
-                  disabled={!!result || flight !== "ready"}
-                  aria-label={
-                    locale === "de"
-                      ? "Ball nach oben zum Pokémon ziehen"
-                      : "Drag ball upward toward the Pokémon"
-                  }
-                >
-                  <CircleDot />
-                </button>
-                <span>
-                  <MousePointer2 />
-                  <b>
-                    {locale === "de" ? "ZIEHEN & LOSLASSEN" : "DRAG & RELEASE"}
-                  </b>
-                  <small>
-                    {locale === "de"
-                      ? "Richtung · Landung · kleiner Ring · Curve"
-                      : "direction · landing · small ring · curve"}
-                  </small>
-                </span>
-                <Wind />
-              </div>
-            </>
-          )}
-        </section>
-      </div>
-      {result && (
-        <div
-          className={`poke-capture-resolution ${result.caught ? "is-caught" : result.escaped ? "is-escaped" : "is-breakout"}`}
+          </button>
+        </div>
+        <button
+          type="button"
+          data-capture-ball
+          className={`poke-direct-ball ${drag.active ? "is-held" : ""} ${flight !== "ready" ? "is-hidden" : ""}`}
+          style={ballPosition}
+          disabled={!!result || flight !== "ready"}
+          aria-label={
+            locale === "de"
+              ? "Ball halten und nach oben werfen"
+              : "Hold ball and flick upward"
+          }
         >
-          {result.caught ? <Check /> : result.escaped ? <X /> : <CircleDot />}
-          <span>
-            <small>
-              {throwLabel(result.quality, result.curve).toUpperCase()}
-            </small>
-            <b>
-              {result.practice
-                ? locale === "de"
-                  ? "Übungswurf ausgewertet – kein Versuch verbraucht"
-                  : "Practice throw scored — no attempt spent"
-                : result.caught
+          <CircleDot />
+        </button>
+        <div
+          className={`poke-ball-flight is-${flight}`}
+          style={
+            {
+              "--throw-start-x": `${flightPath.start.x}%`,
+              "--throw-start-y": `${flightPath.start.y}%`,
+              "--throw-impact-x": `${flightPath.impact.x}%`,
+              "--throw-impact-y": `${flightPath.impact.y}%`,
+            } as React.CSSProperties
+          }
+        >
+          <CircleDot />
+        </div>
+        <div className="poke-keyboard-aim">
+          <button
+            type="button"
+            aria-label={locale === "de" ? "Nach links zielen" : "Aim left"}
+            disabled={!!result || flight !== "ready"}
+            onClick={(event) => {
+              event.stopPropagation();
+              setAim((value) => Math.max(12, value - 7));
+            }}
+          >
+            <ChevronLeft />
+          </button>
+          <div>
+            <i style={{ left: `${aim}%` }} />
+            <span style={{ left: `${aim}%` }} />
+          </div>
+          <button
+            type="button"
+            aria-label={locale === "de" ? "Nach rechts zielen" : "Aim right"}
+            disabled={!!result || flight !== "ready"}
+            onClick={(event) => {
+              event.stopPropagation();
+              setAim((value) => Math.min(88, value + 7));
+            }}
+          >
+            <ChevronRight />
+          </button>
+          <button
+            type="button"
+            disabled={!!result || flight !== "ready"}
+            onClick={(event) => {
+              event.stopPropagation();
+              fallbackThrow();
+            }}
+          >
+            <Keyboard />
+            {locale === "de" ? "WERFEN" : "THROW"}
+          </button>
+        </div>
+        {result && (
+          <div
+            className={`poke-capture-resolution ${result.caught ? "is-caught" : result.escaped ? "is-escaped" : "is-breakout"}`}
+          >
+            {result.caught ? <Check /> : result.escaped ? <X /> : <CircleDot />}
+            <span>
+              <small>
+                {throwLabel(result.quality, result.curve).toUpperCase()}
+              </small>
+              <b>
+                {result.caught
                   ? locale === "de"
-                    ? "Forschungssperre bestätigt"
-                    : "Research lock confirmed"
+                    ? `${current.name.de} gefangen`
+                    : `${current.name.en} caught`
                   : result.escaped
                     ? locale === "de"
-                      ? "Spezies entkommen"
-                      : "Specimen escaped"
+                      ? `${current.name.de} ist entkommen`
+                      : `${current.name.en} escaped`
                     : locale === "de"
-                      ? "Ausgebrochen – neu kalibrieren"
-                      : "Breakout—recalibrate"}
-            </b>
-            <em>
-              {result.practice
-                ? `${throwLabel(result.quality, result.curve)} · ${result.removed} ${locale === "de" ? "Widerstandspips im echten Wurf" : "resistance pips on a real throw"}`
-                : result.caught
-                  ? `${tierLabel(tier, locale)} · +${TIER_SCORE[tier]} ${locale === "de" ? "BASIS" : "BASE"}`
-                  : result.escaped
-                    ? locale === "de"
-                      ? "Sichtung protokolliert"
-                      : "Sighting logged"
-                    : `${result.attemptsLeft} ${locale === "de" ? "Versuche übrig" : "attempts remaining"} · ${locale === "de" ? "Fluchtrisiko" : "flee risk"} ${fleeName}`}
-            </em>
-          </span>
-          <button onClick={terminal ? advance : retry}>
-            {terminal
-              ? round + 1 >= roundCount
-                ? locale === "de"
-                  ? "Zusammenfassung"
-                  : "Summary"
-                : locale === "de"
-                  ? "Nächstes Feld"
-                  : "Next field"
-              : result.practice
-                ? locale === "de"
-                  ? "Jetzt echter Wurf"
-                  : "Take real throw"
+                      ? "Ausgebrochen – noch einmal!"
+                      : "Broke free—try again!"}
+              </b>
+              <em>
+                {result.quality === "miss"
+                  ? locale === "de"
+                    ? "Wische schneller nach oben und ziele auf den Ring."
+                    : "Flick upward faster and aim for the ring."
+                  : `${result.removed} ${locale === "de" ? "Widerstand entfernt" : "resistance removed"} · ${result.attemptsLeft} ${locale === "de" ? "Würfe übrig" : "throws left"}`}
+              </em>
+            </span>
+            <button
+              type="button"
+              onClick={(event) => {
+                event.stopPropagation();
+                terminal ? advance() : retry();
+              }}
+            >
+              {terminal
+                ? round + 1 >= roundCount
+                  ? locale === "de"
+                    ? "Zusammenfassung"
+                    : "Summary"
+                  : locale === "de"
+                    ? "Nächste Sichtung"
+                    : "Next encounter"
                 : locale === "de"
                   ? "Noch einmal werfen"
                   : "Throw again"}{" "}
-            →
-          </button>
-        </div>
-      )}
+              →
+            </button>
+          </div>
+        )}
+      </section>
+      <p className="poke-capture-access-note">
+        <Keyboard />
+        {locale === "de"
+          ? "Tastatur: Pfeile zum Zielen, Leertaste zum Werfen."
+          : "Keyboard: arrows to aim, Space to throw."}
+      </p>
     </div>
   );
 }
 
-function CaptureMissionGuide({
-  locale,
-  step,
-  scannerDone = false,
-  kitDone = false,
-}: {
-  locale: "en" | "de";
-  step: 1 | 2 | 3;
-  scannerDone?: boolean;
-  kitDone?: boolean;
-}) {
-  const items = [
-    {
-      title: { de: "Scanner stoppen", en: "Stop scanner" },
-      copy: { de: "Blitz ins Signalfenster", en: "Bolt inside signal window" },
-    },
-    {
-      title: { de: "Ausrüstung prüfen", en: "Inspect gear" },
-      copy: {
-        de: "Boni bewusst aktivieren",
-        en: "Activate bonuses deliberately",
-      },
-    },
-    {
-      title: { de: "Ball werfen", en: "Throw ball" },
-      copy: { de: "Nach oben ziehen & loslassen", en: "Drag upward & release" },
-    },
-  ];
-  return (
-    <nav
-      className="poke-capture-guide"
-      aria-label={
-        locale === "de"
-          ? "Fangmission in drei Schritten"
-          : "Three-step capture mission"
-      }
-    >
-      {items.map((item, index) => {
-        const number = (index + 1) as 1 | 2 | 3,
-          done = number === 1 ? scannerDone : number === 2 ? kitDone : false,
-          active = number === step && !done;
-        return (
-          <div
-            key={number}
-            className={`${active ? "is-active" : ""} ${done ? "is-done" : ""}`}
-            aria-current={active ? "step" : undefined}
-          >
-            <span>{done ? <Check /> : number}</span>
-            <p>
-              <b>{item.title[locale]}</b>
-              <small>
-                {done
-                  ? locale === "de"
-                    ? "ERLEDIGT"
-                    : "COMPLETE"
-                  : item.copy[locale]}
-              </small>
-            </p>
-          </div>
-        );
-      })}
-    </nav>
-  );
+function signedCurveAmount(points: Point[], start: Point, end: Point) {
+  if (points.length < 3) return 0;
+  const dx = end.x - start.x;
+  const dy = end.y - start.y;
+  const length = Math.hypot(dx, dy) || 1;
+  let strongest = 0;
+  points.forEach((point) => {
+    const distance =
+      (dy * point.x - dx * point.y + end.x * start.y - end.y * start.x) /
+      length;
+    if (Math.abs(distance) > Math.abs(strongest)) strongest = distance;
+  });
+  return strongest;
 }
 
-function RewardPreview({
-  reward,
-  locale,
-}: {
-  reward: PrepReward;
-  locale: "en" | "de";
-}) {
-  return (
-    <aside className="poke-prep-reward">
-      <span>{locale === "de" ? "MÖGLICHER BONUS" : "AVAILABLE BONUS"}</span>
-      <RewardIcon reward={reward} />
-      <b>{rewardName(reward, locale)}</b>
-      <small>{rewardDescription(reward, locale)}</small>
-    </aside>
-  );
-}
-function RewardIcon({ reward }: { reward: PrepReward }) {
-  if (reward === "advanced") return <ShieldPlus />;
-  if (reward === "berry") return <Apple />;
-  if (reward === "steady") return <Crosshair />;
-  return <CircleDot />;
-}
-function rewardName(reward: PrepReward, locale: "en" | "de") {
-  return reward === "advanced"
-    ? locale === "de"
-      ? "Verstärkter Ball"
-      : "Advanced ball"
-    : reward === "berry"
-      ? locale === "de"
-        ? "Feldbeere"
-        : "Field berry"
-      : reward === "steady"
-        ? locale === "de"
-          ? "Stabiler Fangring"
-          : "Steady aperture"
-        : locale === "de"
-          ? "Zusatzversuch"
-          : "Extra attempt";
-}
-function rewardDescription(reward: PrepReward, locale: "en" | "de") {
-  return reward === "advanced"
-    ? locale === "de"
-      ? "Einmalig 1,35× Fangsignal."
-      : "One-use 1.35× catch signal."
-    : reward === "berry"
-      ? locale === "de"
-        ? "Einmalig 1,24× Fangsignal."
-        : "One-use 1.24× catch signal."
-      : reward === "steady"
-        ? locale === "de"
-          ? "Fangring bewegt sich langsamer."
-          : "Catch aperture moves more slowly."
-        : locale === "de"
-          ? "Vier statt drei Würfe."
-          : "Four throws instead of three.";
-}
 function tierLabel(tier: CaptureTier, locale: "en" | "de") {
   const labels = {
     common: { en: "common", de: "häufig" },
     uncommon: { en: "uncommon", de: "ungewöhnlich" },
     rare: { en: "rare", de: "selten" },
     ultra: { en: "ultra-rare", de: "ultra-selten" },
-    legendary: { en: "legendary / mythical", de: "legendär / mythisch" },
+    legendary: {
+      en: "legendary / mythical",
+      de: "legendär / mythisch",
+    },
   };
   return labels[tier][locale];
 }
-function telemetryLabel(value: string, locale: "en" | "de") {
-  return value === "high"
-    ? locale === "de"
-      ? "HOCH"
-      : "HIGH"
-    : value === "steady"
-      ? locale === "de"
-        ? "STABIL"
-        : "STEADY"
-      : locale === "de"
-        ? "NIEDRIG"
-        : "LOW";
-}
+
 function throwLabel(quality: ThrowQuality, curve: boolean) {
   return `${curve ? "Curve " : ""}${quality}`;
 }
+
 function tierRank(tier: CaptureTier) {
   return ["common", "uncommon", "rare", "ultra", "legendary"].indexOf(tier);
-}
-function curveAmount(points: Point[], start: Point, end: Point) {
-  if (points.length < 3) return 0;
-  const dx = end.x - start.x,
-    dy = end.y - start.y,
-    length = Math.hypot(dx, dy) || 1;
-  return Math.max(
-    ...points.map(
-      (point) =>
-        Math.abs(
-          dy * point.x - dx * point.y + end.x * start.y - end.y * start.x,
-        ) / length,
-    ),
-  );
 }

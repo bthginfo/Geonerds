@@ -15,6 +15,7 @@ import {
 import type { ComponentType } from "react";
 import { SPECIES, species } from "@/poke/data";
 import { buildDynamicCase, buildPokeGrid } from "@/poke/fixtures";
+import { localizedType } from "@/poke/type-chart";
 import { seedHash, seededShuffle } from "@/poke/variety";
 import { PokemonSprite } from "../pokemon-sprite";
 import { Feedback, RunHud, type GameProps } from "../gameplay";
@@ -82,7 +83,7 @@ function FieldScannerMission({
       Number(entry.color === target.color) * 2 +
       Number(entry.generation === target.generation) * 2 +
       Math.max(0, 3 - Math.floor(Math.abs(entry.heightM - target.heightM)));
-    const count = difficulty === "easy" ? 7 : difficulty === "medium" ? 9 : 11;
+    const count = difficulty === "easy" ? 4 : difficulty === "medium" ? 6 : 8;
     const distractors = seededShuffle(
       pool.filter((entry) => entry.id !== target.id),
       `${runSeed}:scanner-distractors`,
@@ -91,102 +92,139 @@ function FieldScannerMission({
       .slice(0, count - 1);
     return seededShuffle([target, ...distractors], `${runSeed}:scanner-order`);
   }, [difficulty, pool, runSeed, target]);
-  const hintOptions = [
+  const scanType = target.types[0] ?? "normal";
+  const sizeBand = (height: number) =>
+    height < 0.6
+      ? locale === "de"
+        ? "sehr klein"
+        : "very small"
+      : height < 1.2
+        ? locale === "de"
+          ? "klein"
+          : "small"
+        : height < 2
+          ? locale === "de"
+            ? "mittel"
+            : "medium"
+          : locale === "de"
+            ? "groß"
+            : "large";
+  const scanChannels = [
     {
-      id: "form",
-      cost: 16,
-      text: `${locale === "de" ? "Form" : "Form"}: ${target.color} · ${target.shape}`,
-      test: (id: number) => species(id).color === target.color && species(id).shape === target.shape,
+      id: "type",
+      cost: 160,
+      label: locale === "de" ? "Typ-Signal" : "Type signal",
+      preview:
+        locale === "de" ? "Zeigt den Primärtyp" : "Reveals the primary type",
+      value: localizedType(scanType, locale),
+      test: (id: number) => species(id).types.includes(scanType),
     },
     {
-      id: "biology",
-      cost: 18,
-      text: `${locale === "de" ? "Biologie" : "Biology"}: ${target.types.join(" / ")} · ${target.habitat}`,
-      test: (id: number) => species(id).types.some((type)=>target.types.includes(type)) && species(id).habitat === target.habitat,
+      id: "habitat",
+      cost: 180,
+      label: locale === "de" ? "Habitat-Signal" : "Habitat signal",
+      preview: locale === "de" ? "Zeigt den Lebensraum" : "Reveals the habitat",
+      value: target.habitat,
+      test: (id: number) => species(id).habitat === target.habitat,
     },
     {
-      id: "records",
-      cost: 20,
-      text: `Gen ${target.generation} · ${target.heightM} m · ${target.weightKg} kg`,
-      test: (id: number) => species(id).generation === target.generation && Math.abs(species(id).heightM - target.heightM) < 0.8,
+      id: "profile",
+      cost: 220,
+      label: locale === "de" ? "Profil-Signal" : "Profile signal",
+      preview:
+        locale === "de"
+          ? "Zeigt Generation und Größenklasse"
+          : "Reveals generation and size band",
+      value: `Gen ${target.generation} · ${sizeBand(target.heightM)}`,
+      test: (id: number) =>
+        species(id).generation === target.generation &&
+        sizeBand(species(id).heightM) === sizeBand(target.heightM),
     },
   ];
-  const [hints, setHints] = useState<string[]>([]);
-  const [wrong, setWrong] = useState<number[]>([]);
+  const [scans, setScans] = useState<string[]>([]);
+  const [selectedId, setSelectedId] = useState<number | null>(null);
   const [guess, setGuess] = useState<number | null>(null);
-  const [signal, setSignal] = useState(100);
-  const [locks, setLocks] = useState(
-    difficulty === "easy" ? 3 : difficulty === "medium" ? 2 : 1,
+  const [roundValue, setRoundValue] = useState(1000);
+  const viable = candidates.filter((entry) =>
+    scanChannels
+      .filter((channel) => scans.includes(channel.id))
+      .every((channel) => channel.test(entry.id)),
   );
-  const [eliminationStreak, setEliminationStreak] = useState(0);
-  const matching = candidates.filter((entry) => !wrong.includes(entry.id));
-  const informationYield = (hintId: string) => {
-    const hint = hintOptions.find((item) => item.id === hintId);
-    return hint
-      ? matching.length - matching.filter((entry) => hint.test(entry.id)).length
-      : 0;
-  };
-  const correct = guess === target.id;
-  const buy = (id: string, cost: number) => {
-    if (hints.includes(id) || guess !== null) return;
-    setHints((items) => [...items, id]);
-    setSignal((value) => Math.max(0, value - cost));
+  const scan = (id: string, cost: number) => {
+    if (scans.includes(id) || guess !== null) return;
+    const nextScans = [...scans, id];
+    const nextViable = candidates.filter((entry) =>
+      scanChannels
+        .filter((channel) => nextScans.includes(channel.id))
+        .every((channel) => channel.test(entry.id)),
+    );
+    setScans(nextScans);
+    setRoundValue((value) => Math.max(200, value - cost));
+    if (
+      selectedId !== null &&
+      !scanChannels
+        .filter((channel) => nextScans.includes(channel.id))
+        .every((channel) => channel.test(selectedId))
+    )
+      setSelectedId(null);
     emitGameFeel({
-      id: `scanner-module-${runSeed}-${id}`,
+      id: `scanner-channel-${runSeed}-${id}`,
       type: "scan",
-      label: id.toUpperCase(),
-      focus: ".poke-candidate-film",
+      label:
+        locale === "de"
+          ? `${nextViable.length} MÖGLICH`
+          : `${nextViable.length} POSSIBLE`,
+      focus: ".poke-scanner-candidates",
     });
   };
-  const mark = (id: number) => {
-    if (guess !== null || wrong.includes(id)) return;
-    const contradiction = hintOptions
-      .filter((hint) => hints.includes(hint.id))
-      .find((hint) => !hint.test(id));
-    if (contradiction) {
-      const next = eliminationStreak + 1;
-      setWrong((items) => [...items, id]);
-      setEliminationStreak(next);
-      emitGameFeel({
-        id: `scanner-eliminate-${runSeed}-${id}`,
-        type: next >= 3 ? "combo" : "success",
-        label: next >= 3 ? "DEEP SCAN CHARGED" : "CONTRADICTION",
-      });
-    } else {
-      setLocks((value) => Math.max(0, value - 1));
-      setSignal((value) => Math.max(0, value - 10));
-      setEliminationStreak(0);
-      emitGameFeel({
-        id: `scanner-false-${runSeed}-${id}`,
-        type: "error",
-        label: locale === "de" ? "NOCH MÖGLICH" : "STILL POSSIBLE",
-      });
-    }
-  };
-  const deepScan = () => {
-    const next = hintOptions.find((hint) => !hints.includes(hint.id));
-    if (!next || eliminationStreak < 3) return;
-    setHints((items) => [...items, next.id]);
-    setEliminationStreak(0);
+  const correct = guess === target.id;
+  const confirm = () => {
+    if (selectedId === null || guess !== null) return;
+    setGuess(selectedId);
     emitGameFeel({
-      id: `scanner-deep-${runSeed}-${next.id}`,
-      type: "reveal",
-      label: "FREE DEEP SCAN",
-      focus: ".poke-hint-console",
+      id: `scanner-confirm-${runSeed}-${selectedId}`,
+      type: selectedId === target.id ? "success" : "error",
+      label:
+        selectedId === target.id
+          ? locale === "de"
+            ? "SIGNAL ERKANNT"
+            : "SIGNAL IDENTIFIED"
+          : locale === "de"
+            ? "ANDERES SIGNAL"
+            : "DIFFERENT SIGNAL",
+      focus: ".poke-feedback",
+      particles: selectedId === target.id,
     });
   };
   return (
     <div className="poke-scanner-game">
       <RunHud
-        score={signal * 12}
+        score={roundValue}
         round={guess !== null ? 1 : 0}
         total={1}
-        resource={locks}
-        label={locale === "de" ? "LOCKS" : "LOCKS"}
+        resource={viable.length}
+        label={locale === "de" ? "MÖGLICH" : "POSSIBLE"}
       />
+      <ol
+        className="poke-scanner-steps"
+        aria-label={locale === "de" ? "Drei Schritte" : "Three steps"}
+      >
+        <li className="is-active">
+          <b>1</b>
+          {locale === "de" ? "Silhouette lesen" : "Read the silhouette"}
+        </li>
+        <li className={scans.length ? "is-active" : ""}>
+          <b>2</b>
+          {locale === "de" ? "Bei Bedarf scannen" : "Scan a clue if needed"}
+        </li>
+        <li className={selectedId !== null ? "is-active" : ""}>
+          <b>3</b>
+          {locale === "de" ? "Namen wählen" : "Choose a name"}
+        </li>
+      </ol>
       <div className="poke-scanner-layout">
         <section
-          className={`poke-scanner-window hints-${hints.length} ${guess !== null ? "is-resolved" : ""}`}
+          className={`poke-scanner-window hints-${scans.length} ${guess !== null ? "is-resolved" : ""}`}
         >
           <div className="poke-reticle" />
           <ScanLine />
@@ -194,112 +232,120 @@ function FieldScannerMission({
             entry={target}
             size={250}
             concealed={guess === null}
-            pixelated={guess === null && hints.length < 2}
+            pixelated={guess === null && scans.length === 0}
             label={guess !== null}
           />
           <span>
             {guess !== null
               ? `#${String(target.id).padStart(4, "0")} · ${target.name[locale]}`
-              : "SPECIMEN ID REDACTED"}
+              : locale === "de"
+                ? "UNBEKANNTES SIGNAL"
+                : "UNKNOWN SIGNAL"}
           </span>
-          <small>
-            {matching.length}{" "}
-            {locale === "de"
-              ? "Signaturen passen noch"
-              : "signatures still match"}
+          <small aria-live="polite">
+            {viable.length}{" "}
+            {locale === "de" ? "mögliche Namen" : "possible names"}
           </small>
         </section>
         <aside className="poke-hint-console">
           <p className="poke-kicker">
-            {locale === "de"
-              ? "SIGNAL GEGEN INFORMATION"
-              : "TRADE SIGNAL FOR DATA"}
+            {locale === "de" ? "OPTIONALE SCANS" : "OPTIONAL SCANS"}
           </p>
-          {hintOptions.map((hint) => (
+          <p className="poke-scanner-value">
+            {locale === "de" ? "RUNDENWERT" : "ROUND VALUE"} <b>{roundValue}</b>
+          </p>
+          {scanChannels.map((channel) => (
             <button
-              key={hint.id}
-              onClick={() => buy(hint.id, hint.cost)}
-              disabled={hints.includes(hint.id) || guess !== null}
+              key={channel.id}
+              onClick={() => scan(channel.id, channel.cost)}
+              disabled={scans.includes(channel.id) || guess !== null}
+              className={scans.includes(channel.id) ? "is-revealed" : ""}
             >
-              <CircleHelp />
+              {scans.includes(channel.id) ? <Check /> : <ScanLine />}
               <span>
-                {hints.includes(hint.id) ? (
-                  hint.text
-                ) : (
-                  <>
-                    {hint.id.toUpperCase()} · −{hint.cost}
-                    <small>
-                      {informationYield(hint.id)}{" "}
-                      {locale === "de"
-                        ? "Signaturen würden entfallen"
-                        : "signatures would be eliminated"}
-                    </small>
-                  </>
-                )}
-              </span>
-            </button>
-          ))}
-          <button
-            onClick={deepScan}
-            disabled={
-              eliminationStreak < 3 || hints.length === hintOptions.length
-            }
-          >
-            DEEP SCAN · {eliminationStreak}/3
-          </button>
-        </aside>
-      </div>
-      <div className="poke-candidate-film">
-        {candidates.map((entry) => {
-          const eliminated = wrong.includes(entry.id);
-          return (
-            <button
-              key={entry.id}
-              disabled={guess !== null || eliminated}
-              onClick={() => mark(entry.id)}
-              className={
-                wrong.includes(entry.id)
-                  ? "is-wrong"
-                  : guess === entry.id
-                    ? correct
-                      ? "is-correct"
-                      : "is-wrong"
-                    : ""
-              }
-            >
-              {guess !== null && <PokemonSprite entry={entry} size={76} />}
-              <span>
-                {entry.name[locale]}
+                <b>{channel.label}</b>
                 <small>
-                  {eliminated
-                    ? locale === "de"
-                      ? "AUSGESCHLOSSEN"
-                      : "ELIMINATED"
-                    : locale === "de"
-                      ? "WIDERSPRUCH PRÜFEN"
-                      : "TEST CONTRADICTION"}
+                  {scans.includes(channel.id)
+                    ? channel.value
+                    : `${channel.preview} · −${channel.cost}`}
                 </small>
               </span>
             </button>
-          );
-        })}
-      </div>
-      {guess === null && (
-        <div className="poke-case-lock">
-          {matching.map((entry) => (
-            <button key={entry.id} onClick={() => setGuess(entry.id)}>
-              LOCK · {entry.name[locale]}
-            </button>
           ))}
+        </aside>
+      </div>
+      <section className="poke-scanner-answer">
+        <header>
+          <div>
+            <p className="poke-kicker">
+              {locale === "de" ? "NAMEN ABGLEICHEN" : "MATCH THE NAME"}
+            </p>
+            <h3>
+              {viable.length} {locale === "de" ? "möglich" : "possible"}
+            </h3>
+          </div>
+          <small>
+            {locale === "de"
+              ? "Vor der Auflösung bleiben Bilder verborgen."
+              : "Artwork stays hidden until resolution."}
+          </small>
+        </header>
+        <div
+          className="poke-scanner-candidates"
+          role="radiogroup"
+          aria-label={locale === "de" ? "Mögliche Namen" : "Possible names"}
+        >
+          {candidates.map((entry) => {
+            const possible = viable.some(
+              (candidate) => candidate.id === entry.id,
+            );
+            const selected = selectedId === entry.id;
+            return (
+              <button
+                key={entry.id}
+                type="button"
+                role="radio"
+                aria-checked={selected}
+                disabled={guess !== null || !possible}
+                onClick={() => setSelectedId(entry.id)}
+                className={`${selected ? "is-selected" : ""} ${!possible ? "is-filtered" : ""} ${guess !== null && entry.id === target.id ? "is-correct" : ""} ${guess !== null && guess === entry.id && !correct ? "is-wrong" : ""}`}
+              >
+                {guess !== null && <PokemonSprite entry={entry} size={76} />}
+                <span>{entry.name[locale]}</span>
+                <small>
+                  {!possible
+                    ? locale === "de"
+                      ? "PASST NICHT"
+                      : "NO MATCH"
+                    : selected
+                      ? locale === "de"
+                        ? "AUSGEWÄHLT"
+                        : "SELECTED"
+                      : locale === "de"
+                        ? "AUSWÄHLEN"
+                        : "SELECT"}
+                </small>
+              </button>
+            );
+          })}
         </div>
-      )}
-      {wrong.length > 0 && guess === null && (
-        <p className="poke-ruleset">
-          {locale === "de"
-            ? `${species(wrong.at(-1)!).name.de} passt nicht. ${locks} Scanner-Lock(s) verbleiben.`
-            : `${species(wrong.at(-1)!).name.en} does not match. ${locks} scanner lock(s) remain.`}
-        </p>
-      )}
+        {guess === null && (
+          <button
+            className="poke-scanner-confirm"
+            disabled={selectedId === null}
+            onClick={confirm}
+          >
+            <Search />
+            {selectedId === null
+              ? locale === "de"
+                ? "Zuerst einen Namen wählen"
+                : "Choose a name first"
+              : locale === "de"
+                ? `${species(selectedId).name.de} bestätigen`
+                : `Confirm ${species(selectedId).name.en}`}
+          </button>
+        )}
+      </section>
       {guess !== null && (
         <Feedback good={correct}>
           {correct ? <Check /> : <X />}
@@ -307,26 +353,25 @@ function FieldScannerMission({
             <b>
               {correct
                 ? locale === "de"
-                  ? "Scanner-Lock bestätigt"
-                  : "Scanner lock confirmed"
+                  ? `${target.name.de} erkannt`
+                  : `${target.name.en} identified`
                 : `${locale === "de" ? "Gesucht" : "Target"}: ${target.name[locale]}`}
             </b>
             <small>
               #{target.id} · {target.types.join(" / ")} · Gen{" "}
-              {target.generation} · {100 - signal} signal spent
+              {target.generation} · {scans.length}{" "}
+              {locale === "de" ? "Scans genutzt" : "scans used"} · +
+              {correct ? roundValue : 0}
             </small>
           </span>
           <button
             onClick={() =>
-              onFinish(
-                correct ? signal * 12 : Math.round(signal * 3),
-                correct ? 1 : 0,
-                1,
-                [target.id],
-              )
+              onFinish(correct ? roundValue : 0, correct ? 1 : 0, 1, [
+                target.id,
+              ])
             }
           >
-            {locale === "de" ? "Exemplar archivieren" : "File specimen"} →
+            {locale === "de" ? "Nächste Runde" : "Next round"} →
           </button>
         </Feedback>
       )}

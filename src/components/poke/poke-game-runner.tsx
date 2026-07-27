@@ -105,12 +105,12 @@ const gameSkills: Record<PokeGameId, { en: string[]; de: string[] }> = {
     de: ["Deckbau", "Gegnerabsichten", "Risikorouten"],
   },
   "field-capture": {
-    en: ["Scanner timing", "Gear bonuses", "Skill throws"],
-    de: ["Scanner-Timing", "Ausrüstungsboni", "Präzisionswürfe"],
+    en: ["Flick aim", "Shrinking ring", "Curve throws"],
+    de: ["Wisch-Ziel", "Schrumpfender Ring", "Curve-Würfe"],
   },
   "field-scanner": {
-    en: ["Silhouettes", "Information value", "Ability clues"],
-    de: ["Silhouetten", "Informationswert", "Fähigkeitsspuren"],
+    en: ["Silhouettes", "Optional signals", "Score economy"],
+    de: ["Silhouetten", "Optionale Signale", "Punkteökonomie"],
   },
   "cry-radar": {
     en: ["Audio memory", "Waveform reading", "Signal comparison"],
@@ -211,22 +211,22 @@ const gameHelp: Record<
   },
   "field-capture": {
     prompt: {
-      en: "Stop in one of three reward zones, then take the guided practice throw.",
-      de: "Stoppe in einer von drei Bonuszonen und nutze dann den geführten Übungswurf.",
+      en: "Hold the ball in the encounter, flick upward and release toward the Pokémon.",
+      de: "Halte den Ball in der Fangszene, wische nach oben und lasse Richtung Pokémon los.",
     },
     rule: {
-      en: "Nice, Great and Excellent remove 1, 2 or 3 resistance pips; gear and curves remove more.",
-      de: "Nice, Great und Excellent entfernen 1, 2 oder 3 Widerstandspips; Gear und Curve mehr.",
+      en: "Hit the shrinking ring for Nice, Great or Excellent; sideways motion adds a curve bonus.",
+      de: "Triff den schrumpfenden Ring für Nice, Great oder Excellent; seitliche Bewegung gibt Curve-Bonus.",
     },
   },
   "field-scanner": {
     prompt: {
-      en: "Open scan modules, then manually mark names contradicted by their data.",
-      de: "Öffne Scan-Module und markiere Namen manuell, wenn die Daten ihnen widersprechen.",
+      en: "Read the silhouette, scan a clue if needed, then choose one name and confirm.",
+      de: "Lies die Silhouette, scanne bei Bedarf einen Hinweis und bestätige dann einen Namen.",
     },
     rule: {
-      en: "Three correct marks charge Deep Scan; false marks cost signal. Artwork stays hidden until the lock.",
-      de: "Drei richtige Marken laden Deep Scan; falsche kosten Signal. Artwork bleibt bis zum Lock verborgen.",
+      en: "Each optional scan filters the names automatically but lowers the round's 1000-point value.",
+      de: "Jeder optionale Scan filtert Namen automatisch, senkt aber den Rundenwert von 1000 Punkten.",
     },
   },
   "cry-radar": {
