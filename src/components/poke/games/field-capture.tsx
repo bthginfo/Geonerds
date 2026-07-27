@@ -50,6 +50,21 @@ interface FlightPath {
   start: { x: number; y: number };
   impact: { x: number; y: number };
 }
+interface DragState {
+  active: boolean;
+  pointerId: number | null;
+  start: Point | null;
+  current: Point | null;
+  points: Point[];
+}
+
+const emptyDrag = (): DragState => ({
+  active: false,
+  pointerId: null,
+  start: null,
+  current: null,
+  points: [],
+});
 
 const TIER_SCORE: Record<CaptureTier, number> = {
   common: 420,
@@ -97,19 +112,7 @@ export function FieldCapture({
     start: { x: 50, y: 90 },
     impact: { x: 50, y: 40 },
   });
-  const [drag, setDrag] = useState<{
-    active: boolean;
-    pointerId: number | null;
-    start: Point | null;
-    current: Point | null;
-    points: Point[];
-  }>({
-    active: false,
-    pointerId: null,
-    start: null,
-    current: null,
-    points: [],
-  });
+  const [drag, setDrag] = useState<DragState>(emptyDrag);
   const [result, setResult] = useState<ThrowResult | null>(null);
   const [resistance, setResistance] = useState(
     TIER_RESISTANCE[tier] ?? TIER_RESISTANCE.common,
@@ -123,6 +126,9 @@ export function FieldCapture({
   >([]);
   const clearingRef = useRef<HTMLDivElement>(null);
   const timers = useRef<number[]>([]);
+  const gestureRef = useRef<DragState>(emptyDrag());
+  const resolvingPointerRef = useRef<number | null>(null);
+  const throwPendingRef = useRef(false);
 
   useEffect(() => {
     if (phase !== "encounter" || result || drag.active) return;
@@ -142,10 +148,14 @@ export function FieldCapture({
     return () => window.clearInterval(id);
   }, [difficulty, drag.active, phase, result, round, tier]);
 
-  useEffect(
-    () => () => timers.current.forEach((timer) => window.clearTimeout(timer)),
-    [],
-  );
+  useEffect(() => {
+    return () => {
+      timers.current.forEach((timer) => window.clearTimeout(timer));
+      gestureRef.current = emptyDrag();
+      resolvingPointerRef.current = null;
+      throwPendingRef.current = false;
+    };
+  }, []);
 
   const localPoint = (
     event: React.PointerEvent<HTMLDivElement>,
@@ -159,53 +169,63 @@ export function FieldCapture({
     };
   };
 
-  const resetDrag = () =>
-    setDrag({
-      active: false,
-      pointerId: null,
-      start: null,
-      current: null,
-      points: [],
-    });
+  const resetDrag = () => {
+    gestureRef.current = emptyDrag();
+    resolvingPointerRef.current = null;
+    setDrag(emptyDrag());
+  };
 
   const beginDrag = (event: React.PointerEvent<HTMLDivElement>) => {
     if (
       result ||
       flight !== "ready" ||
+      throwPendingRef.current ||
+      gestureRef.current.active ||
       !(event.target as HTMLElement).closest("[data-capture-ball]")
     )
       return;
     const point = localPoint(event);
     if (!point) return;
     event.preventDefault();
-    event.currentTarget.setPointerCapture(event.pointerId);
-    setHasThrown(true);
-    setDrag({
+    const nextGesture: DragState = {
       active: true,
       pointerId: event.pointerId,
       start: point,
       current: point,
       points: [point],
-    });
+    };
+    gestureRef.current = nextGesture;
+    resolvingPointerRef.current = null;
+    try {
+      event.currentTarget.setPointerCapture(event.pointerId);
+    } catch {
+      // The scene still receives a release while the pointer remains inside it.
+    }
+    setHasThrown(true);
+    setDrag(nextGesture);
   };
 
   const moveDrag = (event: React.PointerEvent<HTMLDivElement>) => {
-    if (!drag.active || drag.pointerId !== event.pointerId) return;
+    const gesture = gestureRef.current;
+    if (!gesture.active || gesture.pointerId !== event.pointerId) return;
     const point = localPoint(event);
     if (!point) return;
     event.preventDefault();
-    setDrag((value) => ({
-      ...value,
+    const nextGesture: DragState = {
+      ...gesture,
       current: point,
-      points: [...value.points.slice(-20), point],
-    }));
+      points: [...gesture.points.slice(-20), point],
+    };
+    gestureRef.current = nextGesture;
+    setDrag(nextGesture);
   };
 
   const releaseDrag = (event: React.PointerEvent<HTMLDivElement>) => {
+    const gesture = gestureRef.current;
     if (
-      !drag.active ||
-      drag.pointerId !== event.pointerId ||
-      !drag.start ||
+      !gesture.active ||
+      gesture.pointerId !== event.pointerId ||
+      !gesture.start ||
       !clearingRef.current
     )
       return;
@@ -215,21 +235,33 @@ export function FieldCapture({
       return;
     }
     event.preventDefault();
+    resolvingPointerRef.current = event.pointerId;
     const rect = clearingRef.current.getBoundingClientRect();
-    const points = [...drag.points, end];
+    const displacement = Math.hypot(
+      end.x - gesture.start.x,
+      end.y - gesture.start.y,
+    );
+    if (displacement < 14) {
+      resetDrag();
+      return;
+    }
+    const points = [...gesture.points, end];
     const recent =
       points.filter((point) => point.t >= end.t - 120).slice(-7).length >= 2
         ? points.filter((point) => point.t >= end.t - 120).slice(-7)
         : points.slice(-3);
-    const first = recent[0] ?? drag.start;
-    const elapsed = Math.max(16, end.t - first.t);
+    const first = recent[0] ?? gesture.start;
+    const elapsed = Math.max(24, end.t - first.t);
+    const clampVelocity = (value: number) =>
+      Math.max(-0.58, Math.min(0.58, value));
     const velocity = {
-      x: (end.x - first.x) / elapsed,
-      y: (end.y - first.y) / elapsed,
+      x: clampVelocity((end.x - first.x) / elapsed),
+      y: clampVelocity((end.y - first.y) / elapsed),
     };
-    const upwardSpeed = Math.max(0, -velocity.y);
-    const projectionMs = Math.max(300, Math.min(650, 320 + upwardSpeed * 250));
-    const curvature = signedCurveAmount(points, drag.start, end);
+    const upwardDisplacement = Math.max(0, gesture.start.y - end.y);
+    const upwardSpeed = Math.max(0, -velocity.y, upwardDisplacement / 320);
+    const projectionMs = Math.max(300, Math.min(520, 320 + upwardSpeed * 250));
+    const curvature = signedCurveAmount(points, gesture.start, end);
     const projected = {
       x: end.x + velocity.x * projectionMs + curvature * 0.42,
       y: end.y + velocity.y * projectionMs,
@@ -247,7 +279,10 @@ export function FieldCapture({
       1,
       Math.max(0, 1 - distance / (targetRadius * 1.55)) + firstThrowAssist,
     );
-    const speed = Math.min(1, Math.hypot(velocity.x, velocity.y) / 1.15);
+    const speed = Math.min(
+      1,
+      Math.max(Math.hypot(velocity.x, velocity.y), displacement / 500) / 1.15,
+    );
     const direction = Math.min(1, upwardSpeed / 0.7);
     const curve = Math.abs(curvature) > Math.max(18, rect.width * 0.055);
     const startPercent = {
@@ -266,7 +301,11 @@ export function FieldCapture({
   };
 
   const cancelDrag = (event: React.PointerEvent<HTMLDivElement>) => {
-    if (drag.pointerId === event.pointerId) resetDrag();
+    if (resolvingPointerRef.current === event.pointerId) {
+      resolvingPointerRef.current = null;
+      return;
+    }
+    if (gestureRef.current.pointerId === event.pointerId) resetDrag();
   };
 
   const fallbackThrow = () => {
@@ -289,7 +328,9 @@ export function FieldCapture({
   };
 
   const performThrow = (metrics: ThrowMetrics, path: FlightPath) => {
-    if (!current || result || flight !== "ready") return;
+    if (!current || result || flight !== "ready" || throwPendingRef.current)
+      return;
+    throwPendingRef.current = true;
     const quality = classifyThrow(metrics);
     const attempt = maxAttempts - attemptsLeft + 1;
     const usedBall = ball;
@@ -399,6 +440,7 @@ export function FieldCapture({
   };
 
   const retry = () => {
+    throwPendingRef.current = false;
     setResult(null);
     setFlight("ready");
     resetDrag();
@@ -406,6 +448,8 @@ export function FieldCapture({
 
   const advance = () => {
     if (!result || (!result.caught && !result.escaped)) return;
+    throwPendingRef.current = false;
+    resetDrag();
     if (round + 1 >= encounters.length) {
       setPhase("summary");
       return;
@@ -419,7 +463,6 @@ export function FieldCapture({
     setBerry(false);
     setResult(null);
     setFlight("ready");
-    resetDrag();
   };
 
   const archive = () =>
