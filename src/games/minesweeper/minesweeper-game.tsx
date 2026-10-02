@@ -13,6 +13,7 @@ import { haptic } from "@/lib/haptics";
 import { sound } from "@/lib/sound";
 import { cn } from "@/lib/utils";
 import { boardNeighbors, generateMinesweeperBoard, layoutMinesweeperBoard } from "./generator";
+import { useGameTimeouts } from "@/games/use-game-timeouts";
 
 type Tool = "reveal" | "mark";
 type Phase = "playing" | "solved" | "failed";
@@ -39,6 +40,8 @@ export function MinesweeperGame({ difficulty, practice, onFinish, onExit }: Play
   const finishRef = useRef(false);
   const actionLockRef = useRef(false);
   const errorsRef = useRef(0);
+  const clickedRef = useRef(new Set<string>());
+  const { schedule, clearTimers } = useGameTimeouts();
 
   const mineSet = useMemo(() => new Set(board.mines), [board]);
   const propertyVisible = difficulty === "easy" || phase !== "playing";
@@ -49,6 +52,8 @@ export function MinesweeperGame({ difficulty, practice, onFinish, onExit }: Play
       : t("mines.property.hidden");
 
   function reset(nextSeed = seed) {
+    clearTimers();
+    clickedRef.current = new Set();
     const nextBoard = generateMinesweeperBoard(nextSeed, difficulty);
     setSeed(nextSeed);
     setRevealed(new Set(nextBoard.initialRevealed));
@@ -64,7 +69,7 @@ export function MinesweeperGame({ difficulty, practice, onFinish, onExit }: Play
     setFeedback(solved ? t("mines.solved") : t("mines.failed"));
     if (solved) { sound.finish(); haptic.success(); }
     else { sound.wrong(); haptic.error(); }
-    window.setTimeout(() => onFinish({
+    schedule(() => onFinish({
       score: practice ? 0 : nextScore,
       correct: solved ? board.mineCount : 0,
       total: board.mineCount,
@@ -86,7 +91,7 @@ export function MinesweeperGame({ difficulty, practice, onFinish, onExit }: Play
   }
 
   function activate(code: string) {
-    if (phase !== "playing") return;
+    if (phase !== "playing" || finishRef.current) return;
     setSelected(code);
     if (revealed.has(code)) { setFeedback(t("mines.alreadyRevealed")); return; }
     if (tool === "mark") {
@@ -100,6 +105,8 @@ export function MinesweeperGame({ difficulty, practice, onFinish, onExit }: Play
       return;
     }
     if (marked.has(code)) { setFeedback(t("mines.unmarkFirst")); return; }
+    if (clickedRef.current.has(code)) return;
+    clickedRef.current.add(code);
     if (mineSet.has(code)) {
       setStruck((current) => new Set(current).add(code));
       setMarked((current) => new Set(current).add(code));
@@ -115,9 +122,9 @@ export function MinesweeperGame({ difficulty, practice, onFinish, onExit }: Play
   }
 
   function checkMarks() {
-    if (phase !== "playing" || marked.size !== board.mineCount || actionLockRef.current) return;
+    if (phase !== "playing" || finishRef.current || marked.size !== board.mineCount || actionLockRef.current) return;
     actionLockRef.current = true;
-    window.setTimeout(() => { actionLockRef.current = false; }, 300);
+    schedule(() => { actionLockRef.current = false; }, 300);
     const correct = [...marked].every((code) => mineSet.has(code));
     if (!correct) { loseLife(t("mines.incorrectMarks")); return; }
     const difficultyBonus = difficulty === "hard" ? 500 : difficulty === "medium" ? 280 : 120;
@@ -133,7 +140,7 @@ export function MinesweeperGame({ difficulty, practice, onFinish, onExit }: Play
     <div className="geo-workbench flex flex-1 flex-col">
       <GameTopBar title={t("games.minesweeper.name")} onExit={onExit}>
         {practice ? <span className="rounded-lg bg-muted px-2 py-1 text-xs font-black">∞</span> : <LivesPill lives={lives} max={STARTING_LIVES[difficulty]} />}
-        <ScorePill value={score} />
+        {!practice && <ScorePill value={score} />}
       </GameTopBar>
       <main className="mx-auto grid w-full max-w-5xl flex-1 content-start gap-4 px-3 pb-[calc(7rem+env(safe-area-inset-bottom))] pt-4 lg:grid-cols-[minmax(0,1fr)_310px] lg:items-center lg:px-5 lg:pb-5">
         <section className="overflow-hidden rounded-3xl border border-cyan-900/20 bg-slate-950 text-white shadow-2xl">

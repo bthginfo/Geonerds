@@ -16,8 +16,9 @@ interface FlagImageProps {
 }
 
 export function FlagImage({ code, alt = "", className, rounded = true }: FlagImageProps) {
-  const ratio = RATIOS[code];
-  const src = `/flags-true/${code}.svg`;
+  const normalizedCode = code.trim().toLowerCase();
+  const ratio = RATIOS[normalizedCode];
+  const src = `/flags-true/${normalizedCode}.svg`;
   return (
     <div
       className={cn(

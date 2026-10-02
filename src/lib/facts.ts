@@ -51,9 +51,10 @@ function populationPhrase(c: Country, locale: Locale): string | null {
   if (c.population >= 1_000_000) {
     const millions = c.population / 1_000_000;
     const val = millions >= 10 ? Math.round(millions) : Math.round(millions * 10) / 10;
+    const formatted = new Intl.NumberFormat(locale === "de" ? "de-DE" : "en-US", { maximumFractionDigits: 1 }).format(val);
     return locale === "de"
-      ? `Heimat von rund ${formatNumber(val, locale)} Millionen Menschen.`
-      : `Home to around ${formatNumber(val, locale)} million people.`;
+      ? `Heimat von rund ${formatted} Millionen Menschen.`
+      : `Home to around ${formatted} million people.`;
   }
   return locale === "de"
     ? `Hat weniger als eine Million Einwohner.`
@@ -70,7 +71,7 @@ function areaPhrase(c: Country, locale: Locale): string | null {
 function bordersPhrase(c: Country, locale: Locale): string {
   const n = c.borders.length;
   if (n === 0) {
-    return locale === "de" ? `Hat keine Landgrenzen (Inselstaat).` : `Has no land borders (an island nation).`;
+    return locale === "de" ? `Hat keine Landgrenzen.` : `Has no land borders.`;
   }
   return locale === "de" ? `Grenzt an ${n} andere Länder.` : `Shares a land border with ${n} other countries.`;
 }
@@ -84,8 +85,8 @@ function hemispherePhrase(c: Country, locale: Locale): string | null {
   if (!c.latlng) return null;
   const north = c.latlng[0] >= 0;
   return locale === "de"
-    ? `Liegt auf der ${north ? "Nordhalbkugel" : "Südhalbkugel"}.`
-    : `Lies in the ${north ? "northern" : "southern"} hemisphere.`;
+    ? `Sein Kartenmittelpunkt liegt auf der ${north ? "Nordhalbkugel" : "Südhalbkugel"}.`
+    : `Its map reference point is in the ${north ? "northern" : "southern"} hemisphere.`;
 }
 
 function languagePhrase(c: Country, locale: Locale): string | null {
@@ -188,8 +189,8 @@ function languagesPhrase(c: Country, locale: Locale): string | null {
   return locale === "de" ? `Hier spricht man ${langs}.` : `People here speak ${langs}.`;
 }
 
-function firstNonNull(gens: Array<() => string | null>): string | null {
-  for (const g of shuffle(gens)) {
+function firstNonNull(gens: Array<() => string | null>, random: () => number): string | null {
+  for (const g of shuffle(gens, random)) {
     const v = g();
     if (v) return v;
   }
@@ -201,7 +202,7 @@ function firstNonNull(gens: Array<() => string | null>): string | null {
  *   1) continent  2) a distinctive stat  3) a culture clue (dish/language/currency)
  *   4) the capital city (near give-away, so the round is always solvable).
  */
-export function triviaClues(c: Country, locale: Locale): string[] {
+export function triviaClues(c: Country, locale: Locale, random: () => number = Math.random): string[] {
   // Each tier picks randomly among several categories for variety, while the
   // overall order escalates from vague (continent) to easy (capital).
   const tier1 = firstNonNull([
@@ -209,7 +210,7 @@ export function triviaClues(c: Country, locale: Locale): string[] {
     () => sizeRankPhrase(c, locale),
     () => hemispherePhrase(c, locale),
     () => islandPhrase(c, locale),
-  ]);
+  ], random);
   const tier2 = firstNonNull([
     () => populationPhrase(c, locale),
     () => areaPhrase(c, locale),
@@ -217,13 +218,13 @@ export function triviaClues(c: Country, locale: Locale): string[] {
     () => landlockedPhrase(c, locale),
     () => densityPhrase(c, locale),
     () => (locale === "de" ? `Region: ${subregionName(c, locale)}.` : `Subregion: ${subregionName(c, locale)}.`),
-  ]);
+  ], random);
   const tier3 = firstNonNull([
     () => foodPhrase(c, locale),
     () => languagesPhrase(c, locale),
     () => currencyPhrase(c, locale),
     () => neighbourPhrase(c, locale),
-  ]);
+  ], random);
   // Build the first three clues, backfilling so we have three distinct ones…
   const core: string[] = [tier1, tier2, tier3].filter((x): x is string => !!x);
   const extras = [
@@ -246,11 +247,11 @@ export function triviaClues(c: Country, locale: Locale): string[] {
 }
 
 /** A single interesting fact for display after a correct answer (may include capital). */
-export function randomFact(c: Country, locale: Locale): string {
+export function randomFact(c: Country, locale: Locale, random: () => number = Math.random): string {
   // Prefer a hand-curated "cool" fact most of the time when one exists.
   const curated = COUNTRY_FACTS[c.cca3];
-  if (curated && curated.length && Math.random() < 0.75) {
-    return pickOne(curated)[locale];
+  if (curated && curated.length && random() < 0.75) {
+    return pickOne(curated, random)[locale];
   }
   const pool = [
     foodPhrase(c, locale),
@@ -264,5 +265,5 @@ export function randomFact(c: Country, locale: Locale): string {
     hemispherePhrase(c, locale),
     locale === "de" ? `Liegt in ${subregionName(c, locale)}.` : `Located in ${subregionName(c, locale)}.`,
   ].filter((x): x is string => !!x);
-  return pool.length ? pickOne(pool) : "";
+  return pool.length ? pickOne(pool, random) : "";
 }

@@ -1,9 +1,11 @@
 "use client";
 
+import { useMemo, useState } from "react";
 import Link from "next/link";
 import { motion } from "framer-motion";
-import { Sparkles, Gamepad2, Grape, ScanLine } from "lucide-react";
+import { Sparkles, Gamepad2, Swords, ArrowUpRight, Search, X } from "lucide-react";
 import { GAMES } from "@/games/registry";
+import { GAME_CATEGORIES } from "@/games/categories";
 import { GameCard } from "@/components/game-card";
 import { DailyCard } from "@/components/daily-card";
 import { WeeklyCard } from "@/components/weekly-card";
@@ -11,7 +13,7 @@ import { SupportCard } from "@/components/support-cta";
 import { Button } from "@/components/ui/button";
 import { useT } from "@/i18n/I18nProvider";
 import { useAllRuns } from "@/hooks/use-scores";
-import { formatNumber } from "@/lib/utils";
+import { cn, formatNumber } from "@/lib/utils";
 import { FieldJournal } from "@/components/field-journal";
 import { useProgression } from "@/store/progression";
 
@@ -19,6 +21,19 @@ export default function Home() {
   const { t, locale } = useT();
   const { runs } = useAllRuns();
   const progression = useProgression();
+  const [category, setCategory] = useState("all");
+  const [query, setQuery] = useState("");
+
+  const sections = useMemo(() => GAME_CATEGORIES.filter((group) => category === "all" || group.id === category).map((group) => ({
+    ...group,
+    entries: group.games.flatMap((id) => {
+      const game = GAMES.find((entry) => entry.id === id);
+      if (!game) return [];
+      const searchText = `${t(`games.${id}.name`)} ${t(`games.${id}.short`)} ${group.name[locale]}`.toLocaleLowerCase(locale);
+      return searchText.includes(query.trim().toLocaleLowerCase(locale)) ? [game] : [];
+    }),
+  })).filter((group) => group.entries.length > 0), [category, query, t, locale]);
+  const visibleCount = sections.reduce((count, group) => count + group.entries.length, 0);
 
   const gamesPlayed = progression.totalRuns || runs?.length || 0;
   const totalPoints = progression.totalScore || runs?.reduce((s, r) => s + r.score, 0) || 0;
@@ -43,11 +58,9 @@ export default function Home() {
             {t("home.heroSubtitle")}
           </p>
           <div className="mt-7">
-            <Link href="#games">
-              <Button size="lg" className="gap-2">
-                <Gamepad2 className="h-5 w-5" />
-                {t("home.cta")}
-              </Button>
+            <Link href="#games" className="inline-flex min-h-14 items-center justify-center gap-2 rounded-lg bg-primary px-7 text-base font-semibold text-primary-foreground shadow-sm shadow-primary/20 transition-all duration-150 hover:brightness-110 active:scale-[0.97] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background">
+              <Gamepad2 aria-hidden="true" className="h-5 w-5" />
+              {t("home.cta")}
             </Link>
           </div>
         </motion.div>
@@ -59,40 +72,62 @@ export default function Home() {
           </div>
         )}
 
+        <Link href="/challenges" className="group mt-8 flex items-center gap-4 rounded-2xl border border-primary/25 bg-card/80 p-4 shadow-sm transition-colors hover:border-primary/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring sm:p-5">
+          <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-primary text-primary-foreground"><Swords className="h-6 w-6" /></span>
+          <div className="min-w-0 flex-1">
+            <p className="text-[10px] font-bold uppercase tracking-widest text-primary">{locale === "de" ? "Ihr zwei. Dieselbe Welt." : "Two players. One world."}</p>
+            <h2 className="mt-1 text-lg font-bold">{locale === "de" ? "Fordere jemanden heraus" : "Challenge a fellow explorer"}</h2>
+            <p className="mt-1 text-sm text-muted-foreground">{locale === "de" ? "Gleiche Fragen, gleiche Regeln. Wer kennt sich besser aus?" : "Same questions, same rules. Who knows the world better?"}</p>
+          </div>
+          <ArrowUpRight className="h-5 w-5 shrink-0 text-primary transition-transform group-hover:-translate-y-0.5 group-hover:translate-x-0.5" />
+        </Link>
+
         <DailyCard />
         <WeeklyCard />
         <FieldJournal />
       </section>
 
       <section id="games" className="mx-auto w-full max-w-5xl scroll-mt-20 px-4 pb-24 pt-4">
-        <h2 className="mb-4 text-sm font-semibold uppercase tracking-wide text-muted-foreground">
-          {t("home.chooseGame")}
-        </h2>
-        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
-          {GAMES.map((game, i) => (
-            <GameCard key={game.id} game={game} index={i} />
-          ))}
+        <div className="flex flex-wrap items-end justify-between gap-3">
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-widest text-primary">{locale === "de" ? "Dein Spielfeld ist die Welt" : "The world is your playground"}</p>
+            <h2 className="mt-2 text-2xl font-extrabold tracking-tight sm:text-3xl">{t("home.chooseGame")}</h2>
+          </div>
+          <p className="text-sm text-muted-foreground">{GAMES.length} {locale === "de" ? "Spiele · 5 Themen" : "games · 5 themes"}</p>
         </div>
 
-        <SupportCard />
-        <div className="mt-7 flex flex-wrap justify-end gap-x-5 gap-y-1">
-          <Link
-            href="/wine-nerds"
-            className="group inline-flex min-h-11 items-center gap-2 px-2 text-xs font-medium text-muted-foreground transition-colors hover:text-foreground"
-          >
-            <Grape className="h-4 w-4 text-rose-700/75" />
-            {locale === "de" ? "Eine andere Art von Geografie: Wine-Nerds" : "A different kind of geography: Wine-Nerds"}
-            <span aria-hidden className="transition-transform group-hover:translate-x-0.5">→</span>
-          </Link>
-          <Link
-            href="/poke-nerds"
-            className="group inline-flex min-h-11 items-center gap-2 px-2 text-xs font-medium text-muted-foreground transition-colors hover:text-foreground"
-          >
-            <ScanLine className="h-4 w-4 text-cyan-600/80" />
-            {locale === "de" ? "Noch ein Forschungsfeld: Poke-Nerds" : "Another field station: Poke-Nerds"}
-            <span aria-hidden className="transition-transform group-hover:translate-x-0.5">→</span>
-          </Link>
+        <div className="mt-6 flex flex-wrap gap-2" aria-label={locale === "de" ? "Spielthemen filtern" : "Filter game themes"}>
+          {[{ id: "all", name: { de: "Alle Spiele", en: "All games" } }, ...GAME_CATEGORIES].map((group) => (
+            <button key={group.id} type="button" aria-pressed={category === group.id} onClick={() => setCategory(group.id)} className={cn("min-h-11 rounded-xl border px-3 py-2 text-xs font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring", category === group.id ? "border-primary bg-primary text-primary-foreground" : "border-border bg-card text-muted-foreground hover:border-primary/50 hover:text-foreground")}>{group.name[locale]}</button>
+          ))}
         </div>
+        <div className="relative mt-3 max-w-md">
+          <label htmlFor="game-search" className="sr-only">{locale === "de" ? "Spiele suchen" : "Search games"}</label>
+          <Search className="pointer-events-none absolute left-3 top-3.5 h-4 w-4 text-muted-foreground" />
+          <input id="game-search" type="search" value={query} onChange={(event) => setQuery(event.target.value)} placeholder={locale === "de" ? "Finde dein nächstes Spiel…" : "Find your next game…"} className="h-11 w-full rounded-xl border border-border bg-card pl-10 pr-11 text-sm outline-none focus:border-primary focus:ring-2 focus:ring-ring/20" />
+          {query && <button type="button" onClick={() => setQuery("")} aria-label={locale === "de" ? "Suche leeren" : "Clear search"} className="absolute right-0 top-0 flex h-11 w-11 items-center justify-center rounded-xl text-muted-foreground hover:text-foreground"><X className="h-4 w-4" /></button>}
+        </div>
+        <p aria-live="polite" className="mt-2 text-xs text-muted-foreground">{visibleCount} {locale === "de" ? "Spiele entdecken" : "games to explore"}</p>
+
+        <div className="mt-8 space-y-10 sm:space-y-12">
+          {sections.map((group) => {
+            const Icon = group.icon;
+            const ordinal = GAME_CATEGORIES.findIndex((entry) => entry.id === group.id) + 1;
+            return <section key={group.id} aria-labelledby={`category-${group.id}`} className="scroll-mt-24">
+              <div className="mb-4 flex items-start gap-3 border-b border-border/70 pb-4">
+                <span className="mt-0.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary"><Icon className="h-5 w-5" /></span>
+                <div className="min-w-0 flex-1">
+                  <div className="flex flex-wrap items-center gap-x-3 gap-y-1"><h3 id={`category-${group.id}`} className="text-lg font-bold sm:text-xl">{group.name[locale]}</h3><span className="rounded-md bg-muted px-2 py-0.5 text-xs font-semibold tabular-nums text-muted-foreground">{group.entries.length}</span></div>
+                  <p className="mt-1 max-w-xl text-sm leading-relaxed text-muted-foreground">{group.description[locale]}</p>
+                </div>
+                <span aria-hidden="true" className="hidden text-3xl font-extrabold tabular-nums text-primary/20 sm:block">0{ordinal}</span>
+              </div>
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">{group.entries.map((game, index) => <GameCard key={game.id} game={game} index={index} />)}</div>
+            </section>;
+          })}
+          {sections.length === 0 && <div className="rounded-2xl border border-dashed border-border bg-card/70 p-8 text-center"><p className="font-semibold">{locale === "de" ? "Noch kein Treffer" : "No games found"}</p><p className="mt-2 text-sm text-muted-foreground">{locale === "de" ? "Versuche ein anderes Wort oder zeige alle Themen." : "Try a different word or explore every theme."}</p><Button variant="outline" className="mt-4" onClick={() => { setQuery(""); setCategory("all"); }}>{locale === "de" ? "Alle Spiele zeigen" : "Show all games"}</Button></div>}
+        </div>
+        <SupportCard />
       </section>
     </div>
   );

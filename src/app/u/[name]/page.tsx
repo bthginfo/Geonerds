@@ -3,17 +3,19 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
-import { ArrowLeft, Loader2, Flame, Gamepad2 } from "lucide-react";
+import { ArrowLeft, Loader2, Flame, Gamepad2, Swords } from "lucide-react";
 import { useT } from "@/i18n/I18nProvider";
 import { apiUserProfile, type PublicProfile } from "@/lib/online";
 import { levelFromXp, rankName } from "@/lib/level";
 import { getGame } from "@/games/registry";
 import { formatNumber } from "@/lib/utils";
+import { useAuth } from "@/store/auth";
 
 export default function PublicProfilePage() {
   const { t, locale } = useT();
   const params = useParams<{ name: string }>();
   const name = decodeURIComponent(params.name);
+  const viewerName = useAuth((state) => state.user?.name);
 
   const [state, setState] = useState<{ loading: boolean; profile: PublicProfile | null; found: boolean }>({
     loading: true,
@@ -62,6 +64,8 @@ export default function PublicProfilePage() {
               </div>
             </div>
           </div>
+
+          {state.profile.name.toLocaleLowerCase() !== viewerName?.toLocaleLowerCase() && <Link href={`/challenges?opponent=${encodeURIComponent(state.profile.name)}`} className="mt-4 inline-flex min-h-11 items-center justify-center gap-2 rounded-xl bg-primary px-4 text-sm font-semibold text-primary-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"><Swords className="h-4 w-4" />{locale === "de" ? `${state.profile.name} herausfordern` : `Challenge ${state.profile.name}`}</Link>}
 
           <div className="mt-4 grid grid-cols-3 gap-3">
             <Tile label={t("home.totalPoints")} value={formatNumber(state.profile.totalScore, locale)} />

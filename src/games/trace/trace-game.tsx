@@ -2,17 +2,18 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { geoMercator, geoPath } from "d3-geo";
-import { Loader2, Eraser, Check, ArrowRight } from "lucide-react";
+import { Eraser, Check, ArrowRight } from "lucide-react";
 import type { PlayHandlers } from "@/components/game/game-shell";
 import { GameTopBar, ScorePill, StreakPill, RoundPill } from "@/components/game/hud";
 import { Compass } from "@/components/map/compass";
 import { Button } from "@/components/ui/button";
 import { loadCountries, type CountryFeature } from "@/lib/geo";
-import { loadWaters, waterLabel, type Water } from "@/lib/waters";
+import { loadWaters, waterLabel, waterPoolForDifficulty, type Water } from "@/lib/waters";
 import { scoreForDrawing } from "@/lib/scoring";
 import { sound } from "@/lib/sound";
 import { sample } from "@/lib/utils";
 import { useT } from "@/i18n/I18nProvider";
+import { GameLoadState } from "@/games/load-state";
 
 const W = 360;
 const H = 300;
@@ -56,10 +57,11 @@ function downsample(pts: Pt[], n: number): Pt[] {
   return out;
 }
 
-export function TraceGame({ difficulty, roundCount, onFinish, onExit }: PlayHandlers) {
+export function TraceGame({ difficulty, roundCount, practice, onFinish, onExit }: PlayHandlers) {
   const { t, locale } = useT();
   const [countries, setCountries] = useState<CountryFeature[] | null>(null);
   const [rivers, setRivers] = useState<Water[] | null>(null);
+  const [loadFailed, setLoadFailed] = useState(false);
   const [idx, setIdx] = useState(0);
   const [score, setScore] = useState(0);
   const [streak, setStreak] = useState(0);
@@ -73,15 +75,20 @@ export function TraceGame({ difficulty, roundCount, onFinish, onExit }: PlayHand
   const drawingRef = useRef(false);
   const startRef = useRef(Date.now());
   const bestRef = useRef(0);
+  const dprRef = useRef(1);
+  const answerLockRef = useRef(false);
+  const nextLockRef = useRef(false);
+  const finishedRef = useRef(false);
+  useEffect(() => { nextLockRef.current = false; }, [idx]);
 
   useEffect(() => {
-    loadCountries("50m").then(setCountries);
-    loadWaters().then((w) => setRivers(w.filter((x) => x.kind === "river")));
+    loadCountries("50m").then(setCountries).catch(() => setLoadFailed(true));
+    loadWaters().then((w) => setRivers(w.filter((x) => x.kind === "river"))).catch(() => setLoadFailed(true));
   }, []);
 
   const targets = useMemo(() => {
     if (!rivers) return [];
-    const pool = difficulty === "easy" ? rivers.filter((_, i) => i % 2 === 0) : rivers;
+    const pool = waterPoolForDifficulty(rivers, difficulty);
     const count = roundCount === 0 ? pool.length : roundCount;
     return sample(pool, Math.min(count, pool.length));
   }, [rivers, difficulty, roundCount]);
@@ -102,6 +109,7 @@ export function TraceGame({ difficulty, roundCount, onFinish, onExit }: PlayHand
   const redraw = useCallback(() => {
     const ctx = canvasRef.current?.getContext("2d");
     if (!ctx) return;
+    ctx.setTransform(dprRef.current, 0, 0, dprRef.current, 0, 0);
     ctx.clearRect(0, 0, W, H);
     if (revealed && targetPx.length > 1) {
       ctx.beginPath();
@@ -125,28 +133,37 @@ export function TraceGame({ difficulty, roundCount, onFinish, onExit }: PlayHand
   }, [revealed, targetPx]);
 
   useEffect(() => {
+    const canvas = canvasRef.current;
+    if (canvas) {
+      dprRef.current = Math.min(3, window.devicePixelRatio || 1);
+      canvas.width = W * dprRef.current;
+      canvas.height = H * dprRef.current;
+    }
     redraw();
-  }, [redraw, idx]);
+  }, [redraw, idx, target]);
+  useEffect(() => { if (targets.length && countries) startRef.current = Date.now(); }, [targets.length, countries]);
 
   function toCanvas(e: React.PointerEvent): Pt {
     const rect = canvasRef.current!.getBoundingClientRect();
     return [((e.clientX - rect.left) / rect.width) * W, ((e.clientY - rect.top) / rect.height) * H];
   }
   function onDown(e: React.PointerEvent) {
-    if (revealed) return;
+    if (finishedRef.current || answerLockRef.current || revealed) return;
     drawingRef.current = true;
     pointsRef.current = [toCanvas(e)];
-    setHasStroke(true);
+    setHasStroke(false);
     canvasRef.current?.setPointerCapture(e.pointerId);
     redraw();
   }
   function onMove(e: React.PointerEvent) {
     if (!drawingRef.current || revealed) return;
     pointsRef.current.push(toCanvas(e));
+    if (pointsRef.current.length >= 2) setHasStroke(true);
     redraw();
   }
-  function onUp() {
+  function onUp(e: React.PointerEvent) {
     drawingRef.current = false;
+    if (canvasRef.current?.hasPointerCapture(e.pointerId)) canvasRef.current.releasePointerCapture(e.pointerId);
   }
   function clear() {
     pointsRef.current = [];
@@ -155,7 +172,9 @@ export function TraceGame({ difficulty, roundCount, onFinish, onExit }: PlayHand
   }
 
   function done() {
-    if (revealed || pointsRef.current.length < 2) return;
+    if (finishedRef.current || answerLockRef.current || revealed || pointsRef.current.length < 2) return;
+    answerLockRef.current = true;
+    drawingRef.current = false;
     const dist = chamfer(downsample(pointsRef.current, 120), downsample(targetPx, 120));
     const overlap = Math.max(0, 1 - dist / (0.16 * W));
     const pct = Math.round(overlap * 100);
@@ -178,7 +197,10 @@ export function TraceGame({ difficulty, roundCount, onFinish, onExit }: PlayHand
   }
 
   function next() {
+    if (finishedRef.current || nextLockRef.current || !revealed) return;
+    nextLockRef.current = true;
     if (idx + 1 >= targets.length) {
+      finishedRef.current = true;
       onFinish({
         score,
         correct,
@@ -192,24 +214,18 @@ export function TraceGame({ difficulty, roundCount, onFinish, onExit }: PlayHand
     pointsRef.current = [];
     setHasStroke(false);
     setRevealed(false);
+    answerLockRef.current = false;
     setMatchPct(0);
-    setIdx((i) => i + 1);
+    setIdx(idx + 1);
   }
 
-  if (!countries || !rivers || !target) {
-    return (
-      <div className="flex flex-1 items-center justify-center text-muted-foreground">
-        <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-        {t("common.loading")}
-      </div>
-    );
-  }
+  if (loadFailed || !countries || !rivers || !target) return <GameLoadState onExit={onExit} failed={loadFailed} empty={!!countries && !!rivers && !target} />;
 
   return (
     <div className="flex flex-1 flex-col">
       <GameTopBar title={t("games.trace.name")} onExit={onExit}>
-        <StreakPill value={streak} />
-        <ScorePill value={score} />
+        {!practice && <StreakPill value={streak} />}
+        {!practice && <ScorePill value={score} />}
         <RoundPill current={idx + 1} total={targets.length} />
       </GameTopBar>
 
@@ -233,6 +249,7 @@ export function TraceGame({ difficulty, roundCount, onFinish, onExit }: PlayHand
             onPointerDown={onDown}
             onPointerMove={onMove}
             onPointerUp={onUp}
+            onPointerCancel={onUp}
           />
           <Compass />
           {revealed && (

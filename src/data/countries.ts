@@ -1,7 +1,11 @@
 import type { Country, Difficulty, Locale } from "@/lib/types";
 import raw from "./countries.json";
 
-export const COUNTRIES = raw as unknown as Country[];
+// The upstream snapshot incorrectly lists a land border across the Palk Strait.
+// Apply corrections in the single shared dataset used by every game and the Dex.
+export const COUNTRIES: Country[] = (raw as unknown as Country[]).map((country) =>
+  country.cca3 === "LKA" ? { ...country, borders: [] } : country,
+);
 
 const byCca3Map = new Map(COUNTRIES.map((c) => [c.cca3, c]));
 const byCcn3Map = new Map(COUNTRIES.filter((c) => c.ccn3).map((c) => [String(c.ccn3), c]));
@@ -12,7 +16,8 @@ export function getCountryByCca3(cca3: string): Country | undefined {
 }
 
 export function getCountryByCcn3(ccn3: string | number): Country | undefined {
-  return byCcn3Map.get(String(ccn3));
+  // TopoJSON producers may emit numeric IDs (4), while ISO uses three digits (004).
+  return byCcn3Map.get(String(ccn3).trim().padStart(3, "0"));
 }
 
 export function getCountryByCca2(cca2: string): Country | undefined {

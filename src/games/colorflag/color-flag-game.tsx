@@ -13,6 +13,8 @@ import { sample, shuffle, cn } from "@/lib/utils";
 import { getCountryByCca2 } from "@/data/countries";
 import { useT } from "@/i18n/I18nProvider";
 import type { Difficulty, Locale } from "@/lib/types";
+import { GameLoadState } from "@/games/load-state";
+import { getFlagPolicyNote } from "@/lib/flag-policy";
 
 interface ColorFlag {
   code: string;
@@ -118,9 +120,26 @@ export function ColorFlagGame({ difficulty, variant, roundCount, timed, practice
   const gameOverRef = useRef(false);
   const finishedRef = useRef(false);
   const hitsRef = useRef<string[]>([]);
+  const flagCorrectRef = useRef(true);
+  const answerLockRef = useRef(false);
+  const advanceLockRef = useRef(false);
+  const pendingRef = useRef(new Set<ReturnType<typeof setTimeout>>());
+
+  function later(callback: () => void, delay: number) {
+    const timer = setTimeout(() => {
+      pendingRef.current.delete(timer);
+      if (!finishedRef.current) callback();
+    }, delay);
+    pendingRef.current.add(timer);
+  }
+  useEffect(() => () => { pendingRef.current.forEach(clearTimeout); }, []);
+  useEffect(() => {
+    answerLockRef.current = false;
+    advanceLockRef.current = false;
+  }, [idx, groupIdx]);
 
   useEffect(() => {
-    if (!timed) return;
+    if (!timed || practice) return;
     const id = setInterval(() => {
       const left = budget - (Date.now() - startRef.current);
       if (left <= 0) {
@@ -132,7 +151,7 @@ export function ColorFlagGame({ difficulty, variant, roundCount, timed, practice
     }, 200);
     return () => clearInterval(id);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [timed]);
+  }, [timed, practice]);
 
   const flag = flags[idx];
   const groups = flag ? flag.colors.length : 0;
@@ -156,11 +175,13 @@ export function ColorFlagGame({ difficulty, variant, roundCount, timed, practice
     return s as CSSProperties;
   }, [groups, fills, groupIdx, answered]);
 
-  if (!flag) return null;
+  if (!flag) return <GameLoadState onExit={onExit} empty />;
 
   function doFinish() {
     if (finishedRef.current) return;
     finishedRef.current = true;
+    pendingRef.current.forEach(clearTimeout);
+    pendingRef.current.clear();
     onFinish({
       score: scoreRef.current,
       correct: correctRef.current,
@@ -181,14 +202,16 @@ export function ColorFlagGame({ difficulty, variant, roundCount, timed, practice
   }
 
   function nextFlag() {
+    if (finishedRef.current) return;
     // The flag just finished — credit its country to the collection.
     const finished = getCountryByCca2(flag.code);
-    if (finished) hitsRef.current.push(finished.cca3);
+    if (finished && flagCorrectRef.current) hitsRef.current.push(finished.cca3);
     if (gameOverRef.current || idx + 1 >= total) {
       doFinish();
       return;
     }
-    setIdx((i) => i + 1);
+    flagCorrectRef.current = true;
+    setIdx(idx + 1);
     setGroupIdx(0);
     setFills([]);
     setAnswered(false);
@@ -197,18 +220,21 @@ export function ColorFlagGame({ difficulty, variant, roundCount, timed, practice
   }
 
   function advanceGroup() {
+    if (finishedRef.current || advanceLockRef.current || !answerLockRef.current) return;
+    advanceLockRef.current = true;
     if (groupIdx + 1 >= groups) {
       nextFlag();
       return;
     }
-    setGroupIdx((r) => r + 1);
+    setGroupIdx(groupIdx + 1);
     setAnswered(false);
     setLastPct(null);
     setPickHex("#888888");
   }
 
   function pickSwatch(hex: string) {
-    if (answered) return;
+    if (finishedRef.current || answerLockRef.current || answered) return;
+    answerLockRef.current = true;
     totalRef.current += 1;
     const ok = hex === target;
     setFill(groupIdx, target);
@@ -223,10 +249,11 @@ export function ColorFlagGame({ difficulty, variant, roundCount, timed, practice
       bestRef.current = Math.max(bestRef.current, ns);
       setStreak(ns);
     } else {
+      flagCorrectRef.current = false;
       sound.wrong();
       setStreak(0);
       setFlashWrong(true);
-      setTimeout(() => setFlashWrong(false), 400);
+      later(() => setFlashWrong(false), 400);
       if (!practice) {
         scoreRef.current = Math.max(0, scoreRef.current - WRONG_PENALTY);
         setScore((s) => Math.max(0, s - WRONG_PENALTY));
@@ -235,14 +262,16 @@ export function ColorFlagGame({ difficulty, variant, roundCount, timed, practice
         if (livesRef.current <= 0) gameOverRef.current = true;
       }
     }
-    setTimeout(() => {
+    later(() => {
+      if (getFlagPolicyNote(flag.code, locale)) return;
       if (gameOverRef.current) doFinish();
       else advanceGroup();
     }, 700);
   }
 
   function confirmPro() {
-    if (answered) return;
+    if (finishedRef.current || answerLockRef.current || answered) return;
+    answerLockRef.current = true;
     totalRef.current += 1;
     const dist = colorDistance(pickHex, target);
     const closeness = Math.max(0, 1 - dist / MAX_DIST);
@@ -257,6 +286,7 @@ export function ColorFlagGame({ difficulty, variant, roundCount, timed, practice
       bestRef.current = Math.max(bestRef.current, ns);
       setStreak(ns);
     } else {
+      flagCorrectRef.current = false;
       sound.tick();
       setStreak(0);
     }
@@ -350,6 +380,10 @@ export function ColorFlagGame({ difficulty, variant, roundCount, timed, practice
             </div>
           )}
         </div>
+        {answered && getFlagPolicyNote(flag.code, locale) && <div className="mt-4 w-full space-y-3">
+          <p className="rounded-xl border border-border bg-muted/50 p-3 text-xs leading-relaxed text-muted-foreground">{getFlagPolicyNote(flag.code, locale)}</p>
+          {!pro && <Button className="w-full gap-2" onClick={() => gameOverRef.current ? doFinish() : advanceGroup()}>{lives === 0 ? t("common.continue") : t("common.next")}<ArrowRight className="h-4 w-4" /></Button>}
+        </div>}
       </div>
     </div>
   );

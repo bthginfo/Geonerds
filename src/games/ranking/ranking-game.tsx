@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { AnimatePresence, Reorder, motion } from "framer-motion";
-import { ArrowRight, Check, GripVertical } from "lucide-react";
+import { ArrowRight, ArrowUp, ArrowDown, Check, GripVertical } from "lucide-react";
 import type { Country } from "@/lib/types";
 import type { PlayHandlers } from "@/components/game/game-shell";
 import { poolForDifficulty, countryName } from "@/data/countries";
@@ -13,6 +13,7 @@ import { BASE_POINTS, DIFFICULTY_MULTIPLIER } from "@/lib/scoring";
 import { sound } from "@/lib/sound";
 import { sample, shuffle, pickOne, formatNumber, cn } from "@/lib/utils";
 import { useT } from "@/i18n/I18nProvider";
+import { GameLoadState } from "@/games/load-state";
 
 type Metric = "population" | "area" | "gdp" | "density" | "neighbors";
 const PER_ROUND_BUDGET_MS = 16000;
@@ -41,7 +42,7 @@ interface RankRound {
   dir: "desc" | "asc";
 }
 
-export function RankingGame({ difficulty, roundCount, timed, scope, onFinish, onExit }: PlayHandlers) {
+export function RankingGame({ difficulty, roundCount, timed, scope, practice, onFinish, onExit }: PlayHandlers) {
   const { t, locale } = useT();
   const n = difficulty === "easy" ? 3 : difficulty === "hard" ? 5 : 4;
 
@@ -89,6 +90,11 @@ export function RankingGame({ difficulty, roundCount, timed, scope, onFinish, on
   const answeredRef = useRef(0);
   const bestRef = useRef(0);
   const finishedRef = useRef(false);
+  const answerLockRef = useRef(false);
+  const nextLockRef = useRef(false);
+  const hitsRef = useRef<string[]>([]);
+
+  useEffect(() => { nextLockRef.current = false; }, [idx]);
 
   const round = rounds[idx];
 
@@ -102,6 +108,7 @@ export function RankingGame({ difficulty, roundCount, timed, scope, onFinish, on
       bestStreak: bestRef.current,
       durationMs: Date.now() - startRef.current,
       mode: "rank",
+      countryHits: hitsRef.current,
     });
   }
 
@@ -119,10 +126,11 @@ export function RankingGame({ difficulty, roundCount, timed, scope, onFinish, on
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [timed]);
 
-  if (!round) return null;
+  if (!round) return <GameLoadState onExit={onExit} empty />;
 
   function submit() {
-    if (answered) return;
+    if (finishedRef.current || answerLockRef.current || answered) return;
+    answerLockRef.current = true;
     setAnswered(true);
     answeredRef.current += 1;
     let correctSpots = 0;
@@ -136,6 +144,7 @@ export function RankingGame({ difficulty, roundCount, timed, scope, onFinish, on
     scoreRef.current += earned;
     setScore((s) => s + earned);
     if (perfect) {
+      hitsRef.current.push(...round.items.map((country) => country.cca3));
       sound.correct();
       correctRef.current += 1;
       const ns = streak + 1;
@@ -148,6 +157,8 @@ export function RankingGame({ difficulty, roundCount, timed, scope, onFinish, on
   }
 
   function next() {
+    if (finishedRef.current || nextLockRef.current || !answered) return;
+    nextLockRef.current = true;
     if (idx + 1 >= total) {
       doFinish();
       return;
@@ -155,7 +166,17 @@ export function RankingGame({ difficulty, roundCount, timed, scope, onFinish, on
     const ni = idx + 1;
     setIdx(ni);
     setArrangement(rounds[ni].items);
+    answerLockRef.current = false;
     setAnswered(false);
+  }
+
+  function moveItem(index: number, direction: -1 | 1) {
+    if (finishedRef.current || answerLockRef.current) return;
+    const destination = index + direction;
+    if (destination < 0 || destination >= arrangement.length) return;
+    const reordered = [...arrangement];
+    [reordered[index], reordered[destination]] = [reordered[destination], reordered[index]];
+    setArrangement(reordered);
   }
 
   const correctSpots = arrangement.filter((c, i) => c.cca3 === round.sorted[i].cca3).length;
@@ -163,8 +184,8 @@ export function RankingGame({ difficulty, roundCount, timed, scope, onFinish, on
   return (
     <div className="flex flex-1 flex-col">
       <GameTopBar title={t("games.ranking.name")} onExit={onExit}>
-        <StreakPill value={streak} />
-        <ScorePill value={score} />
+        {!practice && <StreakPill value={streak} />}
+        {!practice && <ScorePill value={score} />}
         {timed ? <TimerPill ms={timeLeft} danger={timeLeft < 10000} /> : <RoundPill current={idx + 1} total={total} />}
       </GameTopBar>
 
@@ -201,9 +222,13 @@ export function RankingGame({ difficulty, roundCount, timed, scope, onFinish, on
                 <FlagImage code={c.flag} alt="" className="aspect-[4/3] w-9 shrink-0" />
                 <span className="flex-1 font-semibold">{countryName(c, locale)}</span>
                 {answered ? (
-                  <span className="text-sm tabular-nums text-muted-foreground">{fmt(mval(c, round.metric), round.metric, locale)}</span>
+                  <span className="text-right text-xs tabular-nums text-muted-foreground"><span className="block font-bold">#{correctRank + 1}</span>{fmt(mval(c, round.metric), round.metric, locale)}</span>
                 ) : (
-                  <GripVertical className="h-5 w-5 shrink-0 text-muted-foreground" />
+                  <div className="flex shrink-0 items-center gap-1">
+                    <button type="button" disabled={i === 0} onPointerDown={(event) => event.stopPropagation()} onClick={() => moveItem(i, -1)} aria-label={`${countryName(c, locale)}: ${locale === "de" ? "nach oben" : "move up"}`} className="flex h-11 w-9 items-center justify-center rounded-lg hover:bg-muted disabled:opacity-25"><ArrowUp className="h-4 w-4" /></button>
+                    <button type="button" disabled={i === arrangement.length - 1} onPointerDown={(event) => event.stopPropagation()} onClick={() => moveItem(i, 1)} aria-label={`${countryName(c, locale)}: ${locale === "de" ? "nach unten" : "move down"}`} className="flex h-11 w-9 items-center justify-center rounded-lg hover:bg-muted disabled:opacity-25"><ArrowDown className="h-4 w-4" /></button>
+                    <GripVertical className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
+                  </div>
                 )}
               </Reorder.Item>
             );

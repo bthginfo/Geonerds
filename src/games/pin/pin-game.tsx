@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { motion } from "framer-motion";
-import { Crosshair, ArrowRight, RotateCcw, Loader2 } from "lucide-react";
+import { Crosshair, ArrowRight, RotateCcw } from "lucide-react";
 import { geoContains } from "d3-geo";
 import type { Country } from "@/lib/types";
 import type { PlayHandlers } from "@/components/game/game-shell";
@@ -17,6 +17,7 @@ import { BASE_POINTS, DIFFICULTY_MULTIPLIER } from "@/lib/scoring";
 import { sound } from "@/lib/sound";
 import { haversineKm, formatNumber, sample, shuffle } from "@/lib/utils";
 import { useT } from "@/i18n/I18nProvider";
+import { GameLoadState } from "@/games/load-state";
 
 const PER_ROUND_BUDGET_MS = 15000;
 const MAX_DIST = 5000; // km at which points reach zero
@@ -39,17 +40,18 @@ interface PinTarget {
   cca3?: string;
 }
 
-export function PinGame({ difficulty, roundCount, timed, onFinish, onExit }: PlayHandlers) {
+export function PinGame({ difficulty, roundCount, timed, practice, onFinish, onExit }: PlayHandlers) {
   const { t, locale } = useT();
   const [features, setFeatures] = useState<Map<string, CountryFeature> | null>(null);
   const [capitals, setCapitals] = useState<Capital[] | null>(null);
+  const [loadFailed, setLoadFailed] = useState(false);
 
   useEffect(() => {
-    featuresByCcn3("50m").then(setFeatures);
+    featuresByCcn3("50m").then(setFeatures).catch(() => setLoadFailed(true));
     fetch("/geo/capitals.json")
-      .then((r) => r.json())
+      .then((r) => { if (!r.ok) throw new Error("Capital data unavailable"); return r.json(); })
       .then(setCapitals)
-      .catch(() => setCapitals([]));
+      .catch(() => setLoadFailed(true));
   }, []);
 
   const targets = useMemo<PinTarget[]>(() => {
@@ -65,8 +67,8 @@ export function PinGame({ difficulty, roundCount, timed, onFinish, onExit }: Pla
       .map((cap) => ({ label: cap.en, lng: cap.lng, lat: cap.lat, cca3: cap.code }));
     const placePool: PinTarget[] = PLACES.map((p) => ({ label: locale === "de" ? p.de : p.en, lng: p.lng, lat: p.lat }));
 
-    const fullCount = countryPool.length + capitalPool.length + placePool.length;
-    const count = roundCount === 0 ? fullCount : roundCount;
+    if (roundCount === 0) return shuffle([...countryPool, ...capitalPool, ...placePool]);
+    const count = roundCount;
     // Blend ~40% countries, ~30% capitals, ~30% cities/landmarks.
     const capCount = Math.min(capitalPool.length, Math.round(count * 0.3));
     const placeCount = Math.min(placePool.length, Math.round(count * 0.3));
@@ -95,6 +97,10 @@ export function PinGame({ difficulty, roundCount, timed, onFinish, onExit }: Pla
   const bestRef = useRef(0);
   const finishedRef = useRef(false);
   const hitsRef = useRef<string[]>([]);
+  const answerLockRef = useRef(false);
+  const nextLockRef = useRef(false);
+  useEffect(() => { nextLockRef.current = false; }, [idx]);
+  useEffect(() => { if (total) startRef.current = Date.now(); }, [total]);
 
   const target = targets[idx];
   const targetLngLat = target ? ([target.lng, target.lat] as [number, number]) : null;
@@ -114,7 +120,9 @@ export function PinGame({ difficulty, roundCount, timed, onFinish, onExit }: Pla
   }
 
   useEffect(() => {
-    if (!timed) return;
+    if (!timed || !total || !features || !capitals) return;
+    startRef.current = Date.now();
+    setTimeLeft(budget);
     const id = setInterval(() => {
       const left = budget - (Date.now() - startRef.current);
       if (left <= 0) {
@@ -125,20 +133,13 @@ export function PinGame({ difficulty, roundCount, timed, onFinish, onExit }: Pla
     }, 200);
     return () => clearInterval(id);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [timed]);
+  }, [timed, total, features, capitals, budget]);
 
-  if (!features || !capitals) {
-    return (
-      <div className="flex flex-1 items-center justify-center text-muted-foreground">
-        <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-        {t("common.loading")}
-      </div>
-    );
-  }
-  if (!target || !targetLngLat) return null;
+  if (loadFailed || !features || !capitals || !target || !targetLngLat) return <GameLoadState onExit={onExit} failed={loadFailed} empty={!!features && !!capitals && !target} />;
 
   function confirm() {
-    if (revealed || !pin || !targetLngLat) return;
+    if (revealed || answerLockRef.current || finishedRef.current || !pin || !targetLngLat) return;
+    answerLockRef.current = true;
     let dist = haversineKm(pin, targetLngLat);
     // Country targets: a pin anywhere on the country's landmass is a perfect hit.
     if (target.ccn3 && features) {
@@ -167,11 +168,14 @@ export function PinGame({ difficulty, roundCount, timed, onFinish, onExit }: Pla
   }
 
   function next() {
+    if (finishedRef.current || nextLockRef.current || !revealed) return;
+    nextLockRef.current = true;
     if (idx + 1 >= total) {
       doFinish();
       return;
     }
-    setIdx((i) => i + 1);
+    setIdx(idx + 1);
+    answerLockRef.current = false;
     setPin(null);
     setRevealed(false);
     setDistKm(0);
@@ -180,8 +184,8 @@ export function PinGame({ difficulty, roundCount, timed, onFinish, onExit }: Pla
   return (
     <div className="flex flex-1 flex-col">
       <GameTopBar title={t("games.pin.name")} onExit={onExit}>
-        <StreakPill value={streak} />
-        <ScorePill value={score} />
+        {!practice && <StreakPill value={streak} />}
+        {!practice && <ScorePill value={score} />}
         {timed ? <TimerPill ms={timeLeft} danger={timeLeft < 10000} /> : <RoundPill current={idx + 1} total={total} />}
       </GameTopBar>
 

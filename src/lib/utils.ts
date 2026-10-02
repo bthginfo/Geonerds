@@ -18,21 +18,21 @@ export function formatTime(ms: number) {
   return `${s}.${tenths}s`;
 }
 
-export function shuffle<T>(arr: readonly T[]): T[] {
+export function shuffle<T>(arr: readonly T[], random: () => number = Math.random): T[] {
   const a = [...arr];
   for (let i = a.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
+    const j = Math.floor(random() * (i + 1));
     [a[i], a[j]] = [a[j], a[i]];
   }
   return a;
 }
 
-export function sample<T>(arr: readonly T[], n: number): T[] {
-  return shuffle(arr).slice(0, n);
+export function sample<T>(arr: readonly T[], n: number, random: () => number = Math.random): T[] {
+  return shuffle(arr, random).slice(0, Math.max(0, n));
 }
 
-export function pickOne<T>(arr: readonly T[]): T {
-  return arr[Math.floor(Math.random() * arr.length)];
+export function pickOne<T>(arr: readonly T[], random: () => number = Math.random): T {
+  return arr[Math.floor(random() * arr.length)];
 }
 
 export function clamp(value: number, min: number, max: number) {

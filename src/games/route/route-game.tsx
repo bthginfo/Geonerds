@@ -18,6 +18,7 @@ import { DIFFICULTY_MULTIPLIER } from "@/lib/scoring";
 import { sound } from "@/lib/sound";
 import { sample, shuffle, cn } from "@/lib/utils";
 import { useT } from "@/i18n/I18nProvider";
+import { GameLoadState } from "@/games/load-state";
 
 const NO_FLAG = () => undefined;
 const STEP_POINTS = 60;
@@ -32,7 +33,7 @@ interface RouteRound {
 
 const PER_ROUTE_MS = 25000;
 
-export function RouteGame({ difficulty, mode, roundCount, timed, onFinish, onExit }: PlayHandlers) {
+export function RouteGame({ difficulty, mode, roundCount, timed, practice, onFinish, onExit }: PlayHandlers) {
   const { t, locale } = useT();
 
   const rounds = useMemo<RouteRound[]>(() => {
@@ -69,6 +70,9 @@ export function RouteGame({ difficulty, mode, roundCount, timed, onFinish, onExi
   const attemptsRef = useRef(0);
   const bestRef = useRef(0);
   const finishedRef = useRef(false);
+  const stepLockRef = useRef(false);
+  const nextLockRef = useRef(false);
+  const hitsRef = useRef<string[]>([]);
 
   useEffect(() => {
     if (!timed) return;
@@ -87,6 +91,8 @@ export function RouteGame({ difficulty, mode, roundCount, timed, onFinish, onExi
   const round = rounds[idx];
   const bId = round ? String(round.b.ccn3) : "";
   const current = path[path.length - 1];
+  useEffect(() => { stepLockRef.current = false; }, [current, idx]);
+  useEffect(() => { nextLockRef.current = false; }, [idx]);
   const curDist = round ? round.dist.get(current) ?? 0 : 0;
 
   // Progressing neighbours (one step closer to the destination).
@@ -112,17 +118,22 @@ export function RouteGame({ difficulty, mode, roundCount, timed, onFinish, onExi
     onFinish({
       score: scoreRef.current,
       correct: correctRef.current,
-      total: Math.max(attemptsRef.current, correctRef.current),
+      total: Math.max(1, attemptsRef.current, correctRef.current),
       bestStreak: bestRef.current,
       durationMs: Date.now() - startRef.current,
       mode,
+      countryHits: hitsRef.current,
     });
   }
 
   function advance(ccn3: string) {
+    if (finishedRef.current || stepLockRef.current) return;
+    stepLockRef.current = true;
     sound.correct();
     attemptsRef.current += 1;
     correctRef.current += 1;
+    const country = getCountryByCcn3(ccn3);
+    if (country) hitsRef.current.push(country.cca3);
     const earned = Math.round(STEP_POINTS * DIFFICULTY_MULTIPLIER[difficulty]);
     scoreRef.current += earned;
     setScore((s) => s + earned);
@@ -138,12 +149,13 @@ export function RouteGame({ difficulty, mode, roundCount, timed, onFinish, onExi
     sound.wrong();
     attemptsRef.current += 1;
     setStreak(0);
+    if (practice) return;
     scoreRef.current = Math.max(0, scoreRef.current - WRONG_PENALTY);
     setScore((s) => Math.max(0, s - WRONG_PENALTY));
   }
 
   function pickStep(ccn3: string) {
-    if (done) return;
+    if (finishedRef.current || stepLockRef.current || done) return;
     if (nextSteps.includes(ccn3)) advance(ccn3);
     else {
       wrong();
@@ -153,7 +165,7 @@ export function RouteGame({ difficulty, mode, roundCount, timed, onFinish, onExi
   }
 
   function submitTyped() {
-    if (done) return;
+    if (finishedRef.current || stepLockRef.current || done || !input.trim()) return;
     const hit = nextSteps.find((n) => {
       const c = getCountryByCcn3(n);
       return c && matchAnswer(input, countryAccepted(c)).status === "correct";
@@ -168,7 +180,9 @@ export function RouteGame({ difficulty, mode, roundCount, timed, onFinish, onExi
   }
 
   function hint() {
-    if (done || nextSteps.length === 0) return;
+    if (finishedRef.current || stepLockRef.current || done || nextSteps.length === 0) return;
+    stepLockRef.current = true;
+    attemptsRef.current += 1;
     // Reveal a correct next step without points (so you never get stuck).
     sound.tick();
     setStreak(0);
@@ -178,6 +192,8 @@ export function RouteGame({ difficulty, mode, roundCount, timed, onFinish, onExi
   }
 
   function next() {
+    if (finishedRef.current || nextLockRef.current || !done) return;
+    nextLockRef.current = true;
     if (idx + 1 >= total) {
       doFinish();
       return;
@@ -197,15 +213,15 @@ export function RouteGame({ difficulty, mode, roundCount, timed, onFinish, onExi
     return "fill-muted-foreground/20";
   }
 
-  if (!round) return null;
+  if (!round) return <GameLoadState onExit={onExit} empty />;
   const visibleSet = new Set([...path, bId]);
   const currentCountry = getCountryByCcn3(current)!;
 
   return (
     <div className="flex flex-1 flex-col">
       <GameTopBar title={t("games.route.name")} onExit={onExit}>
-        <StreakPill value={streak} />
-        <ScorePill value={score} />
+        {!practice && <StreakPill value={streak} />}
+        {!practice && <ScorePill value={score} />}
         {timed ? <TimerPill ms={timeLeft} danger={timeLeft < 12000} /> : <RoundPill current={idx + 1} total={total} />}
       </GameTopBar>
 
@@ -285,7 +301,7 @@ export function RouteGame({ difficulty, mode, roundCount, timed, onFinish, onExi
                   spellCheck={false}
                   placeholder={t("type.placeholder")}
                   className={cn(
-                    "h-12 flex-1 rounded-xl border-2 bg-card px-4 text-base outline-none focus:border-primary",
+                    "h-12 min-w-0 flex-1 rounded-xl border-2 bg-card px-4 text-base outline-none focus:border-primary",
                     shake ? "animate-shake border-danger" : "border-border"
                   )}
                 />

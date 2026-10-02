@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { geoMercator } from "d3-geo";
-import { Loader2, Eraser, Check, ArrowRight } from "lucide-react";
+import { Eraser, Check, ArrowRight } from "lucide-react";
 import type { Country } from "@/lib/types";
 import type { PlayHandlers } from "@/components/game/game-shell";
 import { poolForDifficulty, countryName } from "@/data/countries";
@@ -15,6 +15,7 @@ import { GameTopBar, ScorePill, StreakPill, RoundPill } from "@/components/game/
 import { Button } from "@/components/ui/button";
 import { sound } from "@/lib/sound";
 import { useT } from "@/i18n/I18nProvider";
+import { GameLoadState } from "@/games/load-state";
 import { haptic } from "@/lib/haptics";
 
 const R = 360;
@@ -68,9 +69,10 @@ function largestPolygonFeature(geometry: GeoJSON.Geometry): GeoJSON.Feature<GeoJ
   };
 }
 
-export function DrawGame({ difficulty, roundCount, onFinish, onExit }: PlayHandlers) {
+export function DrawGame({ difficulty, roundCount, practice, onFinish, onExit }: PlayHandlers) {
   const { t, locale } = useT();
   const [features, setFeatures] = useState<Map<string, CountryFeature> | null>(null);
+  const [loadFailed, setLoadFailed] = useState(false);
   const [targets, setTargets] = useState<Country[]>([]);
   const [idx, setIdx] = useState(0);
   const [score, setScore] = useState(0);
@@ -88,6 +90,10 @@ export function DrawGame({ difficulty, roundCount, onFinish, onExit }: PlayHandl
   const startRef = useRef(Date.now());
   const dprRef = useRef(1);
   const hitsRef = useRef<string[]>([]);
+  const answerLockRef = useRef(false);
+  const nextLockRef = useRef(false);
+  const finishedRef = useRef(false);
+  useEffect(() => { nextLockRef.current = false; }, [idx]);
 
   useEffect(() => {
     featuresByCcn3("10m").then((feats) => {
@@ -101,7 +107,8 @@ export function DrawGame({ difficulty, roundCount, onFinish, onExit }: PlayHandl
       setFeatures(feats);
       const count = roundCount === 0 ? pool.length : roundCount;
       setTargets(pickQuestions(pool, count));
-    });
+      startRef.current = Date.now();
+    }).catch(() => setLoadFailed(true));
   }, [difficulty, roundCount]);
 
   const target = targets[idx];
@@ -191,10 +198,10 @@ export function DrawGame({ difficulty, roundCount, onFinish, onExit }: PlayHandl
   }
 
   function onDown(e: React.PointerEvent) {
-    if (revealed) return;
+    if (finishedRef.current || answerLockRef.current || revealed) return;
     drawingRef.current = true;
     pointsRef.current = [toCanvas(e)];
-    setHasStroke(true);
+    setHasStroke(false);
     canvasRef.current?.setPointerCapture(e.pointerId);
     redraw();
   }
@@ -203,6 +210,7 @@ export function DrawGame({ difficulty, roundCount, onFinish, onExit }: PlayHandl
     const point = toCanvas(e);
     const previous = pointsRef.current.at(-1);
     if (!previous || Math.hypot(point[0] - previous[0], point[1] - previous[1]) >= 1.5) pointsRef.current.push(point);
+    if (pointsRef.current.length >= 3) setHasStroke(true);
     redraw();
   }
   function onUp(e?: React.PointerEvent) {
@@ -218,7 +226,9 @@ export function DrawGame({ difficulty, roundCount, onFinish, onExit }: PlayHandl
   }
 
   function done() {
-    if (revealed || pointsRef.current.length < 3) return;
+    if (finishedRef.current || answerLockRef.current || revealed || pointsRef.current.length < 3) return;
+    answerLockRef.current = true;
+    drawingRef.current = false;
     const overlap = shapeOverlap(targetRing, pointsRef.current);
     const pct = Math.round(overlap * 100);
     const closed = closurePercent(pointsRef.current);
@@ -246,7 +256,10 @@ export function DrawGame({ difficulty, roundCount, onFinish, onExit }: PlayHandl
   }
 
   function next() {
+    if (finishedRef.current || nextLockRef.current || !revealed) return;
+    nextLockRef.current = true;
     if (idx + 1 >= targets.length) {
+      finishedRef.current = true;
       onFinish({
         score,
         correct,
@@ -261,25 +274,19 @@ export function DrawGame({ difficulty, roundCount, onFinish, onExit }: PlayHandl
     pointsRef.current = [];
     setHasStroke(false);
     setRevealed(false);
+    answerLockRef.current = false;
     setMatchPct(0);
     setClosurePct(0);
-    setIdx((i) => i + 1);
+    setIdx(idx + 1);
   }
 
-  if (!features || !target) {
-    return (
-      <div className="flex flex-1 items-center justify-center text-muted-foreground">
-        <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-        {t("common.loading")}
-      </div>
-    );
-  }
+  if (loadFailed || !features || !target) return <GameLoadState onExit={onExit} failed={loadFailed} empty={!!features && !target} />;
 
   return (
     <div className="flex flex-1 flex-col">
       <GameTopBar title={t("games.draw.name")} onExit={onExit}>
-        <StreakPill value={streak} />
-        <ScorePill value={score} />
+        {!practice && <StreakPill value={streak} />}
+        {!practice && <ScorePill value={score} />}
         <RoundPill current={idx + 1} total={targets.length} />
       </GameTopBar>
 

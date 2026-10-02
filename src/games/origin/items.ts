@@ -1,3 +1,5 @@
+import { LANDMARKS } from "@/data/landmarks";
+
 export type ItemCategory =
   | "animal"
   | "food"
@@ -15,10 +17,11 @@ export interface OriginItem {
   category: ItemCategory;
   /** 1 = well-known, 2 = medium, 3 = obscure/tricky. */
   tier: 1 | 2 | 3;
+  source?: string;
 }
 
 /** Iconic animals, dishes, symbols, sports, inventions, drinks and music tied to one country. */
-export const ITEMS: OriginItem[] = [
+const LEGACY_ITEMS: OriginItem[] = [
   // ── Animals ────────────────────────────────────────────────
   { en: "Giant Panda", de: "Großer Panda", emoji: "🐼", cca3: "CHN", category: "animal", tier: 1 },
   { en: "Kangaroo", de: "Känguru", emoji: "🦘", cca3: "AUS", category: "animal", tier: 1 },
@@ -85,7 +88,7 @@ export const ITEMS: OriginItem[] = [
   { en: "Sake", de: "Sake", emoji: "🍶", cca3: "JPN", category: "drink", tier: 2 },
   { en: "Vodka", de: "Wodka", emoji: "🍸", cca3: "RUS", category: "drink", tier: 1 },
   { en: "Tequila", de: "Tequila", emoji: "🥃", cca3: "MEX", category: "drink", tier: 1 },
-  { en: "Whisky", de: "Whisky", emoji: "🥃", cca3: "GBR", category: "drink", tier: 2 },
+  { en: "Scotch Whisky", de: "Scotch Whisky", emoji: "🥃", cca3: "GBR", category: "drink", tier: 2 },
   { en: "Port Wine", de: "Portwein", emoji: "🍷", cca3: "PRT", category: "drink", tier: 3 },
   { en: "Ouzo", de: "Ouzo", emoji: "🥂", cca3: "GRC", category: "drink", tier: 3 },
   { en: "Rooibos Tea", de: "Rooibos-Tee", emoji: "🍵", cca3: "ZAF", category: "drink", tier: 3 },
@@ -101,7 +104,7 @@ export const ITEMS: OriginItem[] = [
   { en: "Hurling", de: "Hurling", emoji: "🏑", cca3: "IRL", category: "sport", tier: 3 },
 
   // ── Inventions ─────────────────────────────────────────────
-  { en: "Printing Press", de: "Buchdruck", emoji: "🖨️", cca3: "DEU", category: "invention", tier: 2 },
+  { en: "Gutenberg's Printing Press", de: "Gutenbergs Druckerpresse", emoji: "🖨️", cca3: "DEU", category: "invention", tier: 2 },
   { en: "Sauna", de: "Sauna", emoji: "🧖", cca3: "FIN", category: "invention", tier: 2 },
   { en: "Origami", de: "Origami", emoji: "🎎", cca3: "JPN", category: "invention", tier: 2 },
   { en: "Lego", de: "Lego", emoji: "🧱", cca3: "DNK", category: "invention", tier: 2 },
@@ -128,7 +131,7 @@ export const ITEMS: OriginItem[] = [
   { en: "Clogs", de: "Holzschuhe", emoji: "🥿", cca3: "NLD", category: "symbol", tier: 3 },
   { en: "Yoga", de: "Yoga", emoji: "🧘", cca3: "IND", category: "invention", tier: 2 },
   { en: "Karate", de: "Karate", emoji: "🥋", cca3: "JPN", category: "sport", tier: 2 },
-  { en: "Rugby (Haka)", de: "Rugby (Haka)", emoji: "🏉", cca3: "NZL", category: "sport", tier: 2 },
+  { en: "All Blacks Haka", de: "Haka der All Blacks", emoji: "🏉", cca3: "NZL", category: "sport", tier: 2 },
 
   // ── Batch 3 ──
   // Animals
@@ -213,6 +216,29 @@ export const ITEMS: OriginItem[] = [
   { en: "Rai Music", de: "Raï", emoji: "🎶", cca3: "DZA", category: "music", tier: 3 },
   { en: "Mbira", de: "Mbira", emoji: "🎵", cca3: "ZWE", category: "music", tier: 3 },
   { en: "Morin Khuur", de: "Pferdekopfgeige", emoji: "🎻", cca3: "MNG", category: "music", tier: 3 },
+];
+
+// A familiar association is not a unique origin. These legacy labels have
+// multiple defensible countries (or previously named the wrong birthplace).
+// Do not silently mark another valid cultural/natural answer as incorrect.
+const AMBIGUOUS_ITEMS = new Set([
+  "Kangaroo", "Beaver", "Bald Eagle", "Bengal Tiger", "Elephant", "Springbok",
+  "Llama", "Jaguar", "Reindeer", "Bull", "Elk", "Horse", "Water Buffalo",
+  "Lion", "Quetzal", "Sloth", "Dragon (Bhutan)", "Tulip", "Wristwatch",
+  "Fairytale Castle", "Maple Leaf", "Windmill", "Pyramids", "Cedar Tree",
+  "Edelweiss", "Dumplings", "Falafel", "Waffle", "Curry", "Feta & Olives",
+  "Biltong", "Mate", "Vodka", "Ice Hockey", "Cricket", "Bullfighting",
+  "Bagpipes", "Yodeling", "Hamburger", "Boomerang", "Clogs", "Polar Bear",
+  "Camel", "Orangutan", "Penguin", "Gorilla", "Hummus", "Churros",
+  "Cherry Blossom", "Viking Ship", "Pisco", "Skiing", "Tango", "Markhor",
+  "Snow Leopard", "Cheetah", "Toucan", "Saiga Antelope", "Andean Condor",
+  "Injera", "Plov", "Cevapi", "Lutefisk", "Stave Church", "Chimney Cones",
+  "Tango Bandoneon", "Aquavit", "Kabaddi", "Sepak Takraw", "Buzkashi", "Pelota",
+]);
+
+export const ITEMS: OriginItem[] = [
+  ...LEGACY_ITEMS.filter((item) => !AMBIGUOUS_ITEMS.has(item.en)),
+  ...LANDMARKS.map((place): OriginItem => ({ ...place, category: "symbol", emoji: "🏛️" })),
 ];
 
 /** Item difficulty tiers permitted at each game difficulty. */

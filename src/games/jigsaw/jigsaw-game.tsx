@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { geoMercator, geoPath } from "d3-geo";
 import { AnimatePresence, motion } from "framer-motion";
-import { CheckCircle2, Compass, GripVertical, Lightbulb, Loader2, Puzzle, RefreshCw } from "lucide-react";
+import { CheckCircle2, Compass, GripVertical, Lightbulb, Puzzle, RefreshCw } from "lucide-react";
 import type { PlayHandlers } from "@/components/game/game-shell";
 import { GameTopBar, ProgressBar, ScorePill, StreakPill } from "@/components/game/hud";
 import { Button } from "@/components/ui/button";
@@ -14,6 +14,8 @@ import { prepareOutlineGeometry } from "@/lib/geometry";
 import { haptic } from "@/lib/haptics";
 import { sound } from "@/lib/sound";
 import type { Country } from "@/lib/types";
+import { GameLoadState } from "@/games/load-state";
+import { useGameTimeouts } from "@/games/use-game-timeouts";
 import { cn } from "@/lib/utils";
 import {
   JIGSAW_PRESENTATION,
@@ -59,7 +61,7 @@ function trayPath(feature: CountryFeature): string {
 }
 
 function requestedPuzzleCount(difficulty: PlayHandlers["difficulty"], roundCount: number): number {
-  if (roundCount === 0) return difficulty === "hard" ? 2 : 3;
+  if (roundCount === 0) return Infinity;
   // Three is the setup default; hard neighborhoods contain many more pieces.
   if (difficulty === "hard" && roundCount === 3) return 2;
   return roundCount;
@@ -90,6 +92,8 @@ export function JigsawGame({ difficulty, roundCount, practice, onFinish, onExit 
   const startRef = useRef(Date.now());
   const finishedRef = useRef(false);
   const feedbackTimerRef = useRef<number | null>(null);
+  const placedRef = useRef(new Set<string>());
+  const { schedule, clearTimers } = useGameTimeouts();
 
   useEffect(() => {
     featuresByCcn3("10m").then(setFeatures).catch(() => setLoadError(true));
@@ -152,6 +156,7 @@ export function JigsawGame({ difficulty, roundCount, practice, onFinish, onExit 
     if (!puzzle) return;
     setSelectedCode(null);
     setPlaced([]);
+    placedRef.current = new Set();
     setRoundMistakes(0);
     setHintSector(null);
     setLastPlacedCode(null);
@@ -165,6 +170,8 @@ export function JigsawGame({ difficulty, roundCount, practice, onFinish, onExit 
   }
 
   function resetGame() {
+    clearTimers();
+    placedRef.current = new Set();
     if (loadError) {
       setLoadError(false);
       setFeatures(null);
@@ -181,14 +188,14 @@ export function JigsawGame({ difficulty, roundCount, practice, onFinish, onExit 
     setMistakes((value) => value + 1);
     setRoundMistakes((value) => value + 1);
     setStreak(0);
-    setScore((value) => Math.max(0, value - (difficulty === "hard" ? 24 : difficulty === "medium" ? 16 : 10)));
+    if (!practice) setScore((value) => Math.max(0, value - (difficulty === "hard" ? 24 : difficulty === "medium" ? 16 : 10)));
     showFeedback("wrong");
   }
 
   function finishRun(nextScore: number, nextBest: number) {
     if (finishedRef.current) return;
     finishedRef.current = true;
-    window.setTimeout(() => onFinish({
+    schedule(() => onFinish({
       score: nextScore,
       correct: totalPieces,
       total: totalPieces,
@@ -200,11 +207,12 @@ export function JigsawGame({ difficulty, roundCount, practice, onFinish, onExit 
   }
 
   function placeAt(point: { x: number; y: number }, code = selectedCode) {
-    if (!puzzle || !code || placed.includes(code)) return;
+    if (finishedRef.current || !puzzle || !code || placedRef.current.has(code)) return;
     const placingPiece = puzzle.neighbors.find((country) => country.cca3 === code);
     if (!placingPiece) return;
     const target = board.neighbors.get(placingPiece.cca3);
     if (!target || !dropMatchesTarget(point, target, difficulty)) { miss(); return; }
+    placedRef.current.add(code);
 
     sound.correct(); haptic.success();
     const nextStreak = streak + 1;
@@ -218,7 +226,7 @@ export function JigsawGame({ difficulty, roundCount, practice, onFinish, onExit 
     if (nextPlaced.length !== puzzle.neighbors.length) return;
     if (roundIndex + 1 < puzzles.length) {
       showFeedback("round", 1000);
-      window.setTimeout(() => setRoundIndex((value) => value + 1), 1050);
+      schedule(() => setRoundIndex(roundIndex + 1), 1050);
     } else {
       finishRun(nextScore, nextBest);
     }
@@ -240,7 +248,7 @@ export function JigsawGame({ difficulty, roundCount, practice, onFinish, onExit 
     const target = board.neighbors.get(active.cca3);
     if (!target) return;
     setHintSector(compassSector(board.anchor, target));
-    setScore((value) => Math.max(0, value - 70));
+    if (!practice) setScore((value) => Math.max(0, value - 70));
     haptic.tap(); showFeedback("hint", 2400);
   }
 
@@ -267,7 +275,7 @@ export function JigsawGame({ difficulty, roundCount, practice, onFinish, onExit 
     }
   }
 
-  if (!features && !loadError) return <div className="flex flex-1 items-center justify-center text-muted-foreground"><Loader2 className="mr-2 h-5 w-5 animate-spin" />{t("common.loading")}</div>;
+  if (!features && !loadError) return <GameLoadState onExit={onExit} />;
   if (loadError || !puzzle || !board.anchor || board.neighbors.size !== puzzle.neighbors.length) return (
     <div className="flex flex-1 flex-col items-center justify-center gap-4 px-5 text-center"><Puzzle className="h-9 w-9 text-primary" /><p className="max-w-sm text-sm text-muted-foreground">{t("jigsaw.loadError")}</p><Button variant="outline" onClick={resetGame}><RefreshCw className="h-4 w-4" />{t("jigsaw.newPuzzle")}</Button></div>
   );
@@ -276,7 +284,7 @@ export function JigsawGame({ difficulty, roundCount, practice, onFinish, onExit 
   const lastPlaced = puzzle.neighbors.find((country) => country.cca3 === lastPlacedCode) ?? null;
   return (
     <div className="geo-workbench flex flex-1 flex-col">
-      <GameTopBar title={t("games.jigsaw.name")} onExit={onExit}><StreakPill value={streak} /><ScorePill value={score} /></GameTopBar>
+      <GameTopBar title={t("games.jigsaw.name")} onExit={onExit}>{!practice && <StreakPill value={streak} />}{!practice && <ScorePill value={score} />}</GameTopBar>
       <ProgressBar value={totalPieces ? completedPieces / totalPieces : 0} />
       <main className="mx-auto grid w-full max-w-6xl flex-1 content-start gap-4 px-3 pb-[calc(6rem+env(safe-area-inset-bottom))] pt-4 lg:grid-cols-[minmax(0,1fr)_310px] lg:items-center lg:px-5 lg:pb-5">
         <div className="min-w-0">

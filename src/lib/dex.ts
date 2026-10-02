@@ -10,25 +10,29 @@ export const UNLOCK_TOTAL = 10;
 export const MASTER_TOTAL = 20;
 export const MASTER_GAMES = 4;
 
+function validHits(count: number): number {
+  return Number.isFinite(count) ? Math.max(0, Math.floor(count)) : 0;
+}
+
 /** Progress toward unlocking a country: each game contributes at most PER_GAME_CAP. */
 export function dexScore(per?: Record<string, number>): number {
   if (!per) return 0;
-  return Object.values(per).reduce((s, n) => s + Math.min(n, PER_GAME_CAP), 0);
+  return Object.values(per).reduce((s, n) => s + Math.min(validHits(n), PER_GAME_CAP), 0);
 }
 export function dexProgress(per?: Record<string, number>): number {
   return Math.min(1, dexScore(per) / UNLOCK_TOTAL);
 }
 export function dexGameCount(per?: Record<string, number>): number {
-  return per ? Object.values(per).filter((count) => count > 0).length : 0;
+  return per ? Object.values(per).filter((count) => validHits(count) > 0).length : 0;
 }
 export function dexRawHits(per?: Record<string, number>): number {
-  return per ? Object.values(per).reduce((sum, count) => sum + Math.max(0, count), 0) : 0;
+  return per ? Object.values(per).reduce((sum, count) => sum + validHits(count), 0) : 0;
 }
 export type DexState = "locked" | "discovered" | "researched" | "unlocked" | "mastered";
 export function dexStateOf(per?: Record<string, number>): DexState {
   const s = dexScore(per);
   if (s <= 0) return "locked";
-  if (dexRawHits(per) >= MASTER_TOTAL && dexGameCount(per) >= MASTER_GAMES) return "mastered";
+  if (s >= UNLOCK_TOTAL && dexRawHits(per) >= MASTER_TOTAL && dexGameCount(per) >= MASTER_GAMES) return "mastered";
   if (s >= UNLOCK_TOTAL) return "unlocked";
   if (s >= RESEARCH_TOTAL) return "researched";
   return "discovered";

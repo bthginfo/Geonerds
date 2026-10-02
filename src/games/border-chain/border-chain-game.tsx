@@ -21,14 +21,14 @@ function neighborsOf(c: Country): Country[] {
   return c.borders.map((b) => getCountryByCca3(b)).filter((x): x is Country => !!x);
 }
 
-export function BorderChainGame({ difficulty, mode, roundCount, timed, onFinish, onExit }: PlayHandlers) {
+export function BorderChainGame({ difficulty, mode, roundCount, timed, practice, onFinish, onExit }: PlayHandlers) {
   const { t, locale } = useT();
 
   const starts = useMemo(
     () => poolForDifficulty(difficulty).filter((c) => neighborsOf(c).length > 0),
     [difficulty]
   );
-  const targetCountries = roundCount === 0 ? 20 : roundCount;
+  const targetCountries = roundCount === 0 ? starts.length : Math.min(roundCount, starts.length);
 
   const [current, setCurrent] = useState<Country>(() => pickOne(starts));
   const [found, setFound] = useState<Set<string>>(new Set());
@@ -48,6 +48,11 @@ export function BorderChainGame({ difficulty, mode, roundCount, timed, onFinish,
   const correctRef = useRef(0);
   const attemptsRef = useRef(0);
   const bestRef = useRef(0);
+  const hitsRef = useRef<string[]>([]);
+  const foundRef = useRef(new Set<string>());
+  const transitionRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => () => { if (transitionRef.current) clearTimeout(transitionRef.current); }, []);
 
   const neighbors = useMemo(() => neighborsOf(current), [current]);
 
@@ -93,6 +98,7 @@ export function BorderChainGame({ difficulty, mode, roundCount, timed, onFinish,
       bestStreak: bestRef.current,
       durationMs: Date.now() - startRef.current,
       mode: timed ? "timed" : mode,
+      countryHits: hitsRef.current,
     });
   }
 
@@ -109,13 +115,17 @@ export function BorderChainGame({ difficulty, mode, roundCount, timed, onFinish,
     const nextCountry =
       candidates.length > 0
         ? pickOne(candidates)
-        : pickOne(starts.filter((c) => !visited.has(c.cca3)) ?? starts) ?? pickOne(starts);
+        : pickOne(starts.filter((c) => c.cca3 !== current.cca3 && !visited.has(c.cca3))) ?? pickOne(starts.filter((c) => c.cca3 !== current.cca3)) ?? current;
     setVisited((v) => new Set(v).add(current.cca3));
     setCurrent(nextCountry);
     setFound(new Set());
+    foundRef.current = new Set();
   }
 
   function markFound(hit: Country) {
+    if (finishedRef.current || foundRef.current.has(hit.cca3) || foundRef.current.size === neighbors.length) return;
+    foundRef.current.add(hit.cca3);
+    hitsRef.current.push(hit.cca3);
     sound.correct();
     const ns = streak + 1;
     const earned = scoreForAnswer({ correct: true, difficulty });
@@ -125,10 +135,10 @@ export function BorderChainGame({ difficulty, mode, roundCount, timed, onFinish,
     attemptsRef.current += 1;
     bestRef.current = Math.max(bestRef.current, ns);
     setStreak(ns);
-    const newFound = new Set(found).add(hit.cca3);
+    const newFound = new Set(foundRef.current);
     setFound(newFound);
     if (newFound.size >= neighbors.length) {
-      setTimeout(() => chainNext(newFound), 500);
+      transitionRef.current = setTimeout(() => { if (!finishedRef.current) chainNext(newFound); }, 500);
     }
   }
 
@@ -136,12 +146,14 @@ export function BorderChainGame({ difficulty, mode, roundCount, timed, onFinish,
     sound.wrong();
     attemptsRef.current += 1;
     setStreak(0);
-    scoreRef.current = Math.max(0, scoreRef.current - 10);
-    setScore((s) => Math.max(0, s - 10));
+    if (!practice) {
+      scoreRef.current = Math.max(0, scoreRef.current - 10);
+      setScore((s) => Math.max(0, s - 10));
+    }
   }
 
   function submit() {
-    if (finishedRef.current) return;
+    if (finishedRef.current || foundRef.current.size === neighbors.length) return;
     const guess = input.trim();
     if (!guess) return;
     setInput("");
@@ -158,7 +170,7 @@ export function BorderChainGame({ difficulty, mode, roundCount, timed, onFinish,
   }
 
   function pickChoice(country: Country) {
-    if (finishedRef.current || found.has(country.cca3)) return;
+    if (finishedRef.current || foundRef.current.size >= neighbors.length || foundRef.current.has(country.cca3)) return;
     const isNeighbor = neighbors.some((n) => n.cca3 === country.cca3);
     if (isNeighbor) {
       markFound(country);
@@ -172,8 +184,8 @@ export function BorderChainGame({ difficulty, mode, roundCount, timed, onFinish,
   return (
     <div className="flex flex-1 flex-col">
       <GameTopBar title={t("games.border-chain.name")} onExit={onExit}>
-        <StreakPill value={streak} />
-        <ScorePill value={score} />
+        {!practice && <StreakPill value={streak} />}
+        {!practice && <ScorePill value={score} />}
         {timed ? (
           <TimerPill ms={timeLeft} danger={timeLeft < 10000} />
         ) : (
@@ -255,7 +267,7 @@ export function BorderChainGame({ difficulty, mode, roundCount, timed, onFinish,
                   spellCheck={false}
                   placeholder={t("type.placeholder")}
                   className={cn(
-                    "h-12 flex-1 rounded-xl border-2 bg-card px-4 text-base outline-none focus:border-primary",
+                    "h-12 min-w-0 flex-1 rounded-xl border-2 bg-card px-4 text-base outline-none focus:border-primary",
                     flashWrong ? "animate-shake border-danger" : "border-border"
                   )}
                 />

@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Home, Flame, Trophy, Award, User, Settings } from "lucide-react";
+import { Home, Flame, Trophy, Swords, User, Settings } from "lucide-react";
 import { useT } from "@/i18n/I18nProvider";
 import { cn } from "@/lib/utils";
 
@@ -10,18 +10,18 @@ const ITEMS = [
   { href: "/", key: "nav.home", icon: Home },
   { href: "/daily", key: "nav.daily", icon: Flame },
   { href: "/leaderboard", key: "nav.leaderboard", icon: Trophy },
-  { href: "/badges", key: "nav.badges", icon: Award },
+  { href: "/challenges", key: "challenges", icon: Swords },
   { href: "/profile", key: "nav.profile", icon: User },
   { href: "/settings", key: "nav.settings", icon: Settings },
 ] as const;
 
 export function BottomNav() {
-  const { t } = useT();
+  const { t, locale } = useT();
   const pathname = usePathname();
   if (pathname.startsWith("/play/") || pathname.startsWith("/wine-nerds") || pathname.startsWith("/poke-nerds")) return null;
 
   return (
-    <nav className="sticky bottom-0 z-40 border-t border-border/60 bg-background/90 backdrop-blur-md sm:hidden">
+    <nav aria-label={locale === "de" ? "Hauptnavigation" : "Main navigation"} className="sticky bottom-0 z-40 border-t border-border/60 bg-background/90 backdrop-blur-md md:hidden">
       <div className="mx-auto flex max-w-md items-stretch justify-around px-2 pb-[env(safe-area-inset-bottom)]">
         {ITEMS.map(({ href, key, icon: Icon }) => {
           const active = pathname === href;
@@ -29,13 +29,14 @@ export function BottomNav() {
             <Link
               key={href}
               href={href}
+              aria-current={active ? "page" : undefined}
               className={cn(
-                "flex flex-1 flex-col items-center gap-0.5 py-2 text-[11px] font-medium transition-colors",
+                "flex min-h-14 min-w-0 flex-1 flex-col items-center gap-0.5 py-2 text-[10px] font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
                 active ? "text-primary" : "text-muted-foreground"
               )}
             >
               <Icon className="h-5 w-5" />
-              {t(key)}
+              {href === "/challenges" ? (locale === "de" ? "Duelle" : "Challenges") : t(key)}
             </Link>
           );
         })}

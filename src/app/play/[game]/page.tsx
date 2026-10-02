@@ -1,7 +1,9 @@
 "use client";
 
 import { useParams } from "next/navigation";
+import dynamic from "next/dynamic";
 import Link from "next/link";
+import { Loader2 } from "lucide-react";
 import type { GameId } from "@/lib/types";
 import { getGame } from "@/games/registry";
 import { GameShell, type PlayHandlers } from "@/components/game/game-shell";
@@ -25,13 +27,31 @@ import { TraceGame } from "@/games/trace/trace-game";
 import { OriginGame } from "@/games/origin/origin-game";
 import { NameAllGame } from "@/games/nameall/name-all-game";
 import { MountainsGame } from "@/games/mountains/mountains-game";
-import { ColorFlagGame } from "@/games/colorflag/color-flag-game";
 import { GeoNerdGame } from "@/games/geonerd/geonerd-game";
 import { JigsawGame } from "@/games/jigsaw/jigsaw-game";
 import { ConnectionsGame } from "@/games/connections/connections-game";
 import { ExpeditionGame } from "@/games/expedition/expedition-game";
 import { GridGame } from "@/games/grid/grid-game";
 import { MinesweeperGame } from "@/games/minesweeper/minesweeper-game";
+import { FlagPieGame } from "@/games/flag-pie/flag-pie-game";
+import { CityCompassGame } from "@/games/city-compass/city-compass-game";
+import { FlagMosaicGame } from "@/games/flag-mosaic/flag-mosaic-game";
+import { CountryRadarGame } from "@/games/country-radar/country-radar-game";
+
+function ColorFlagLoading() {
+  const { t } = useT();
+  return (
+    <div role="status" aria-live="polite" aria-busy="true" className="flex flex-1 items-center justify-center gap-2 px-4 py-12 text-sm text-muted-foreground">
+      <Loader2 className="h-5 w-5 animate-spin" aria-hidden="true" />
+      <span>{t("common.loading")}</span>
+    </div>
+  );
+}
+
+const ColorFlagGame = dynamic(
+  () => import("@/games/colorflag/color-flag-game").then((module) => module.ColorFlagGame),
+  { loading: ColorFlagLoading },
+);
 
 const COMPONENTS: Partial<Record<GameId, (h: PlayHandlers) => React.ReactNode>> = {
   expedition: (h) => <ExpeditionGame {...h} />,
@@ -59,6 +79,10 @@ const COMPONENTS: Partial<Record<GameId, (h: PlayHandlers) => React.ReactNode>> 
   mountains: (h) => <MountainsGame {...h} />,
   colorflag: (h) => <ColorFlagGame {...h} />,
   millionaire: (h) => <GeoNerdGame {...h} />,
+  "flag-pie": (h) => <FlagPieGame {...h} />,
+  "city-compass": (h) => <CityCompassGame {...h} />,
+  "flag-mosaic": (h) => <FlagMosaicGame {...h} />,
+  "country-radar": (h) => <CountryRadarGame {...h} />,
 };
 
 export default function PlayPage() {

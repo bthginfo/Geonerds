@@ -11,6 +11,7 @@ import { makeChoices, pickQuestions } from "@/games/round-utils";
 import { CITIES, CITY_COUNTRY_CODES, type CityEntry } from "./cities";
 import { sample, shuffle, pickOne } from "@/lib/utils";
 import { useT } from "@/i18n/I18nProvider";
+import { createSeededRandom } from "@/lib/random";
 
 function cityLabel(c: CityEntry, locale: Locale): string {
   return locale === "de" && c.de ? c.de : c.en;
@@ -19,30 +20,32 @@ function cityAccepted(c: CityEntry): string[] {
   return [c.en, c.de].filter(Boolean) as string[];
 }
 
-export function CapitalsGame({ difficulty, mode, variant, scope, roundCount, timed, practice, onFinish, onExit }: PlayHandlers) {
+export function CapitalsGame({ difficulty, mode, variant, scope, roundCount, timed, practice, seed, challenge, onFinish, onExit }: PlayHandlers) {
   const { t, locale } = useT();
   const cityMode = variant === "cities";
 
   const rounds = useMemo<QuizRound[]>(() => {
+    const random = seed ? createSeededRandom(seed) : Math.random;
     if (cityMode) {
       const source = scope ? COUNTRIES.filter((c) => c.region === scope) : poolForDifficulty(difficulty);
       const pool = source.filter((c) => CITY_COUNTRY_CODES.has(c.cca3));
       const count = roundCount === 0 ? pool.length : roundCount;
-      const questions = pickQuestions(pool, count);
+      const questions = pickQuestions(pool, count, random);
       // Flat list of (city, country) for distractors.
       const allCities = pool.flatMap((c) => CITIES[c.cca3].map((city) => ({ city, cca3: c.cca3 })));
 
       return questions.map((answer) => {
-        const city = pickOne(CITIES[answer.cca3]);
+        const city = pickOne(CITIES[answer.cca3], random);
         const answerText = cityLabel(city, locale);
         const distractors = sample(
           allCities.filter((x) => x.cca3 !== answer.cca3 && cityLabel(x.city, locale) !== answerText),
-          3
+          3,
+          random
         );
         const options = shuffle([
           { id: answer.cca3, label: answerText },
           ...distractors.map((d) => ({ id: `${d.cca3}-${d.city.en}`, label: cityLabel(d.city, locale) })),
-        ]);
+        ], random);
         return {
           key: answer.cca3,
           prompt: (
@@ -64,9 +67,9 @@ export function CapitalsGame({ difficulty, mode, variant, scope, roundCount, tim
     const source = scope ? COUNTRIES.filter((c) => c.region === scope) : poolForDifficulty(difficulty);
     const pool = withCapital(source);
     const count = roundCount === 0 ? pool.length : roundCount;
-    const questions = pickQuestions(pool, count);
+    const questions = pickQuestions(pool, count, random);
     return questions.map((answer) => {
-      const choices = makeChoices(answer, pool, difficulty);
+      const choices = makeChoices(answer, pool, difficulty, 4, random);
       return {
         key: answer.cca3,
         prompt: (
@@ -83,7 +86,7 @@ export function CapitalsGame({ difficulty, mode, variant, scope, roundCount, tim
       };
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [difficulty, roundCount, cityMode, locale, scope]);
+  }, [difficulty, roundCount, cityMode, locale, scope, seed]);
 
   return (
     <QuizGame
@@ -93,6 +96,7 @@ export function CapitalsGame({ difficulty, mode, variant, scope, roundCount, tim
       difficulty={difficulty}
       timed={timed}
       practice={practice}
+      challenge={challenge}
       onFinish={onFinish}
       onExit={onExit}
       typePlaceholderKey={cityMode ? "type.placeholderCity" : "type.placeholderCapital"}

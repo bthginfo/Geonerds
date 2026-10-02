@@ -7,6 +7,7 @@ import { zoom, zoomIdentity, type ZoomBehavior } from "d3-zoom";
 import { Plus, Minus } from "lucide-react";
 import { loadCountries, type CountryFeature } from "@/lib/geo";
 import { geometryAreaScore, largestPolygonGeometry } from "@/lib/geometry";
+import { useT } from "@/i18n/I18nProvider";
 
 const W = 980;
 const H = 500;
@@ -65,15 +66,22 @@ export function WorldMap({
   fitToCcn3?: string[];
   resetSignal?: number;
 }) {
+  const { locale } = useT();
   const [features, setFeatures] = useState<CountryFeature[] | null>(null);
+  const [loadFailed, setLoadFailed] = useState(false);
+  const [loadAttempt, setLoadAttempt] = useState(0);
   const [t, setT] = useState({ k: 1, x: 0, y: 0 });
   const svgRef = useRef<SVGSVGElement>(null);
   const zoomRef = useRef<ZoomBehavior<SVGSVGElement, unknown> | null>(null);
   const tapRef = useRef<{ x: number; y: number; time: number } | null>(null);
 
   useEffect(() => {
-    loadCountries("50m").then(setFeatures);
-  }, []);
+    let active = true;
+    loadCountries("50m")
+      .then((loaded) => { if (active) setFeatures(loaded); })
+      .catch(() => { if (active) setLoadFailed(true); });
+    return () => { active = false; };
+  }, [loadAttempt]);
 
   const projection = useMemo<GeoProjection | null>(() => {
     if (!features) return null;
@@ -228,7 +236,7 @@ export function WorldMap({
         onPointerDown={onPointerDown}
         onPointerUp={onPointerUp}
         role="application"
-        aria-label="World map"
+        aria-label={locale === "de" ? "Weltkarte" : "World map"}
       >
         <rect x={0} y={0} width={W} height={H} className="fill-transparent" />
         <g transform={`translate(${t.x},${t.y}) scale(${t.k})`}>
@@ -295,12 +303,12 @@ export function WorldMap({
             return (
               <image
                 key={`f-${ccn3}`}
-                href={`/flags/${code}.svg`}
+                href={`/flags-true/${code}.svg`}
                 x={p[0] - markerW / 2}
                 y={p[1] - markerH / 2}
                 width={markerW}
                 height={markerH}
-                preserveAspectRatio="xMidYMid slice"
+                preserveAspectRatio="xMidYMid meet"
                 style={{ pointerEvents: "none" }}
                 className="drop-shadow"
               />
@@ -309,10 +317,18 @@ export function WorldMap({
         </g>
       </svg>
 
+      {loadFailed && <div role="alert" className="absolute inset-0 z-20 flex flex-col items-center justify-center gap-3 bg-card/95 p-4 text-center text-sm">
+        <p>{locale === "de" ? "Die Karte konnte nicht geladen werden." : "The map could not be loaded."}</p>
+        <button type="button" onClick={() => { setLoadFailed(false); setLoadAttempt((attempt) => attempt + 1); }}
+          className="min-h-11 rounded-lg border border-primary/40 bg-primary/10 px-4 py-2 font-semibold text-primary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary">
+          {locale === "de" ? "Erneut versuchen" : "Try again"}
+        </button>
+      </div>}
+
       <div className="absolute bottom-3 right-3 z-10 flex flex-col overflow-hidden rounded-xl border border-border bg-card/90 shadow-md backdrop-blur">
         <button
           onClick={() => zoomBy(2)}
-          aria-label="Zoom in"
+          aria-label={locale === "de" ? "Vergrößern" : "Zoom in"}
           className="flex h-10 w-10 items-center justify-center text-foreground hover:bg-muted active:scale-95"
         >
           <Plus className="h-5 w-5" />
@@ -320,7 +336,7 @@ export function WorldMap({
         <div className="h-px bg-border" />
         <button
           onClick={() => zoomBy(0.5)}
-          aria-label="Zoom out"
+          aria-label={locale === "de" ? "Verkleinern" : "Zoom out"}
           className="flex h-10 w-10 items-center justify-center text-foreground hover:bg-muted active:scale-95"
         >
           <Minus className="h-5 w-5" />

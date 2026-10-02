@@ -1,9 +1,9 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { motion } from "framer-motion";
-import { RotateCcw, Home, Share2, Trophy, Check, Sparkles, ArrowUpCircle, Crown } from "lucide-react";
+import { RotateCcw, Home, Share2, Trophy, Check, Sparkles, ArrowUpCircle, Crown, Swords } from "lucide-react";
 import type { RunResult } from "@/lib/types";
 import { useT } from "@/i18n/I18nProvider";
 import { Button } from "@/components/ui/button";
@@ -14,6 +14,7 @@ import { FlagImage } from "@/components/flag-image";
 import { getCountryByCca3, countryName } from "@/data/countries";
 import { SupportLink } from "@/components/support-cta";
 import { formatNumber, formatTime } from "@/lib/utils";
+import { ChallengeResultPanel, type ChallengeResultState } from "@/components/challenges/challenge-result";
 
 export function ResultScreen({
   result,
@@ -22,25 +23,30 @@ export function ResultScreen({
   newCountries = { discovered: [], researched: [], unlocked: [], mastered: [] },
   levelUp = null,
   onReplay,
+  challenge,
 }: {
   result: RunResult;
   isRecord: boolean;
   newBadges?: string[];
   newCountries?: { discovered: string[]; researched: string[]; unlocked: string[]; mastered: string[] };
   levelUp?: number | null;
-  onReplay: () => void;
+  onReplay?: () => void;
+  challenge?: ChallengeResultState;
 }) {
   const { t, locale } = useT();
   const [copied, setCopied] = useState(false);
+  const soundPlayed = useRef(false);
+  const celebrated = useRef(false);
 
   const collectCount = new Set([...newCountries.discovered, ...newCountries.researched, ...newCountries.unlocked, ...newCountries.mastered]).size;
 
   useEffect(() => {
-    sound.finish();
-    if (isRecord || newBadges.length > 0 || levelUp || collectCount > 0) {
+    if (!soundPlayed.current) { sound.finish(); soundPlayed.current = true; }
+    if (!celebrated.current && (isRecord || newBadges.length > 0 || levelUp || collectCount > 0)) {
+      celebrated.current = true;
       import("canvas-confetti").then(({ default: confetti }) => {
         confetti({ particleCount: 120, spread: 75, origin: { y: 0.35 } });
-      });
+      }).catch(() => undefined);
     }
   }, [isRecord, newBadges.length, levelUp, collectCount]);
 
@@ -75,6 +81,7 @@ export function ResultScreen({
         transition={{ type: "spring", stiffness: 260, damping: 24 }}
         className="w-full max-w-sm rounded-3xl border border-border bg-card p-6 text-center shadow-xl"
       >
+        {challenge && <ChallengeResultPanel {...challenge} />}
         {isRecord && (
           <div className="mx-auto mb-3 inline-flex items-center gap-1.5 rounded-full bg-warning/15 px-3 py-1 text-sm font-bold text-warning">
             <Trophy className="h-4 w-4" />
@@ -180,21 +187,22 @@ export function ResultScreen({
         )}
 
         <div className="mt-6 flex flex-col gap-2">
-          <Button size="lg" onClick={onReplay} className="gap-2">
+          {!challenge && onReplay && <Button size="lg" onClick={onReplay} className="gap-2">
             <RotateCcw className="h-5 w-5" />
             {t("common.restart")}
-          </Button>
+          </Button>}
+          {challenge && <Link href="/challenges" className="inline-flex min-h-14 items-center justify-center gap-2 rounded-lg bg-primary px-4 text-base font-semibold text-primary-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"><Swords className="h-5 w-5" />{locale === "de" ? "Deine Herausforderungen" : "Your challenges"}</Link>}
           <div className="flex gap-2">
             <Button variant="outline" className="flex-1 gap-2" onClick={share}>
               {copied ? <Check className="h-4 w-4" /> : <Share2 className="h-4 w-4" />}
               {copied ? t("result.copied") : t("result.share")}
             </Button>
-            <Link href="/leaderboard" className="flex-1">
+            {!challenge && <Link href="/leaderboard" className="flex-1">
               <Button variant="outline" className="w-full gap-2">
                 <Trophy className="h-4 w-4" />
                 {t("leaderboard.title")}
               </Button>
-            </Link>
+            </Link>}
           </div>
           <Link href="/">
             <Button variant="ghost" className="w-full gap-2">

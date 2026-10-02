@@ -82,11 +82,10 @@ const builders: Record<string, Builder> = {
     if (withLang.length < 4) return null;
     const c = pickOne(withLang);
     const correct = c.languages[0];
-    const distract = sample(
-      withLang.filter((x) => !x.languages.includes(correct)),
-      3
-    ).map((x) => x.languages[0]);
-    if (distract.length < 3 || distract.includes(correct)) return null;
+    const candidates = [...new Set(withLang.flatMap((country) => country.languages))]
+      .filter((language) => !c.languages.includes(language));
+    const distract = sample(candidates, 3);
+    if (distract.length < 3) return null;
     const { options, correctIndex } = build([correct, ...distract], correct);
     return { text: translate(locale, "gn.q.language", { c: countryName(c, locale) }), options, correctIndex, factCca3: c.cca3 };
   },
@@ -128,7 +127,7 @@ const builders: Record<string, Builder> = {
   neighbor(pool, locale) {
     const c = pickOne(pool.filter((x) => x.borders.length));
     if (!c) return null;
-    const nb = c.borders.map((b) => COUNTRIES.find((x) => x.cca3 === b)).find(Boolean);
+    const nb = pickOne(c.borders.map((b) => getCountryByCca3(b)).filter((country): country is Country => Boolean(country)));
     if (!nb) return null;
     const nonNeighbors = COUNTRIES.filter((x) => x.cca3 !== c.cca3 && !c.borders.includes(x.cca3));
     const distract = sample(nonNeighbors, 3).map((x) => countryName(x, locale));
@@ -238,7 +237,7 @@ function allowedBuilders(round: number): string[] {
   return ["countryByCapital", "currency", "language", "neighbor", "landlocked", "capital", "smallestPop", "southern", "mostNeighbours", "borderCount", "highestDensity", "largestGdp", "northernmost", "factTrivia"];
 }
 
-export function generateQuestion(round: number, locale: Locale): GnQuestion {
+export function generateQuestion(round: number, locale: Locale, seen: ReadonlySet<string> = new Set()): GnQuestion {
   // The more questions you clear, the harder and more obscure the countries get.
   const maxTier = Math.min(4, 1 + Math.floor(round / 2));
   // From the mid-game on, also drop the easiest countries so it stays challenging.
@@ -250,7 +249,7 @@ export function generateQuestion(round: number, locale: Locale): GnQuestion {
   const names = allowedBuilders(round);
   for (let i = 0; i < 30; i++) {
     const q = builders[pickOne(names)](pool, locale, maxFactTier);
-    if (q) return { ...q, points };
+    if (q && !seen.has(q.text)) return { ...q, points };
   }
   // Fallback: capital from the whole world.
   const q = builders.capital(COUNTRIES, locale, maxFactTier)!;

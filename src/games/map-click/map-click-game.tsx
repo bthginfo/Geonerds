@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { Loader2, RotateCcw, SkipForward } from "lucide-react";
+import { RotateCcw, SkipForward } from "lucide-react";
 import type { Country } from "@/lib/types";
 import type { PlayHandlers } from "@/components/game/game-shell";
 import { WorldMap, type MapDot } from "@/components/map/world-map";
@@ -17,6 +17,7 @@ import { useT } from "@/i18n/I18nProvider";
 import { Button } from "@/components/ui/button";
 import { haptic } from "@/lib/haptics";
 import { haversineKm } from "@/lib/utils";
+import { GameLoadState } from "@/games/load-state";
 
 const DOT_THRESHOLD_KM2 = 25_000;
 const MAX_WRONG = 3;
@@ -34,6 +35,7 @@ const DOT_SET = new Set(DOTS.map((d) => d.ccn3));
 export function MapClickGame({ difficulty, roundCount, timed, variant, practice, onFinish, onExit }: PlayHandlers) {
   const { t, locale } = useT();
   const [ready, setReady] = useState(false);
+  const [loadFailed, setLoadFailed] = useState(false);
   const [targets, setTargets] = useState<Country[]>([]);
   const [idx, setIdx] = useState(0);
   const [score, setScore] = useState(0);
@@ -54,6 +56,17 @@ export function MapClickGame({ difficulty, roundCount, timed, variant, practice,
   const bestRef = useRef(0);
   const finishedRef = useRef(false);
   const hitsRef = useRef<string[]>([]);
+  const wrongCountRef = useRef(0);
+  const pendingRef = useRef(new Set<ReturnType<typeof setTimeout>>());
+
+  function later(callback: () => void, delay: number) {
+    const timer = setTimeout(() => {
+      pendingRef.current.delete(timer);
+      if (!finishedRef.current) callback();
+    }, delay);
+    pendingRef.current.add(timer);
+  }
+  useEffect(() => () => { pendingRef.current.forEach(clearTimeout); }, []);
 
   useEffect(() => {
     featuresByCcn3("50m").then((feats) => {
@@ -70,7 +83,7 @@ export function MapClickGame({ difficulty, roundCount, timed, variant, practice,
       setTargets(picked);
       setTimeLeft(picked.length * TIME_PER_TARGET_MS);
       setReady(true);
-    });
+    }).catch(() => setLoadFailed(true));
   }, [difficulty, roundCount, variant]);
 
   const target = targets[idx];
@@ -96,6 +109,9 @@ export function MapClickGame({ difficulty, roundCount, timed, variant, practice,
   function finishGame() {
     if (finishedRef.current) return;
     finishedRef.current = true;
+    lockRef.current = true;
+    pendingRef.current.forEach(clearTimeout);
+    pendingRef.current.clear();
     onFinish({
       score: scoreRef.current,
       correct: correctRef.current,
@@ -108,29 +124,32 @@ export function MapClickGame({ difficulty, roundCount, timed, variant, practice,
   }
 
   function advance() {
+    if (finishedRef.current) return;
     if (idx + 1 >= targets.length) {
       finishGame();
       return;
     }
-    setIdx((i) => i + 1);
+    setIdx(idx + 1);
     setWrongCount(0);
+    wrongCountRef.current = 0;
     setProximity(null);
     qStartRef.current = Date.now();
     lockRef.current = false;
   }
 
   function reveal(ccn3: string, ok: boolean, delay: number) {
+    if (finishedRef.current) return;
     answeredRef.current += 1;
     setFlash({ ccn3, ok });
     setFound((f) => new Set(f).add(ccn3));
-    setTimeout(() => {
+    later(() => {
       setFlash(null);
       advance();
     }, delay);
   }
 
   function skip() {
-    if (lockRef.current || !target) return;
+    if (finishedRef.current || lockRef.current || !target) return;
     lockRef.current = true;
     sound.wrong();
     haptic.error();
@@ -139,7 +158,7 @@ export function MapClickGame({ difficulty, roundCount, timed, variant, practice,
   }
 
   function handlePick(ccn3: string) {
-    if (lockRef.current || !target) return;
+    if (finishedRef.current || lockRef.current || !target) return;
     if (ccn3 === String(target.ccn3)) {
       lockRef.current = true;
       sound.correct();
@@ -159,7 +178,7 @@ export function MapClickGame({ difficulty, roundCount, timed, variant, practice,
       haptic.error();
       setStreak(0);
       setFlash({ ccn3, ok: false });
-      setTimeout(() => setFlash((cur) => (cur?.ccn3 === ccn3 ? null : cur)), 450);
+      later(() => setFlash((cur) => (cur?.ccn3 === ccn3 ? null : cur)), 450);
       const picked = getCountryByCcn3(ccn3);
       if (picked?.latlng && target.latlng) {
         const distance = haversineKm(
@@ -172,23 +191,16 @@ export function MapClickGame({ difficulty, roundCount, timed, variant, practice,
       if (practice) return;
       scoreRef.current = Math.max(0, scoreRef.current - WRONG_PENALTY);
       setScore((s) => Math.max(0, s - WRONG_PENALTY));
-      const nextWrong = wrongCount + 1;
+      const nextWrong = ++wrongCountRef.current;
       setWrongCount(nextWrong);
       if (nextWrong >= MAX_WRONG) {
         lockRef.current = true;
-        setTimeout(() => reveal(String(target.ccn3), false, 750), 250);
+        later(() => reveal(String(target.ccn3), false, 750), 250);
       }
     }
   }
 
-  if (!ready || !target) {
-    return (
-      <div className="flex flex-1 items-center justify-center text-muted-foreground">
-        <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-        {t("common.loading")}
-      </div>
-    );
-  }
+  if (loadFailed || !ready || !target) return <GameLoadState onExit={onExit} failed={loadFailed} empty={ready && !target} />;
 
   return (
     <div className="flex flex-1 flex-col">

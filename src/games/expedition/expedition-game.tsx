@@ -18,7 +18,7 @@ import { RankingGame } from "@/games/ranking/ranking-game";
 import { LanguagesGame } from "@/games/languages/languages-game";
 import { NeighborsGame } from "@/games/neighbors/neighbors-game";
 import { EXPEDITION_ROUTES, energyLossForAccuracy, getExpeditionRoute, normalizedStageScore, starsForAccuracy, type ExpeditionRoute, type ExpeditionRouteId, type ExpeditionStage, type ExpeditionStageGame } from "./routes";
-import { isValidExpeditionRun, useExpedition, type ExpeditionRunState } from "@/store/expedition";
+import { isValidExpeditionRun, newExpeditionRun, useExpedition, type ExpeditionRunState } from "@/store/expedition";
 
 type Phase = "select" | "resume" | "journal" | "stage" | "debrief" | "complete" | "failed";
 
@@ -40,9 +40,11 @@ interface Debrief {
   total: number;
 }
 
-export function ExpeditionGame({ onFinish, onExit }: PlayHandlers) {
+export function ExpeditionGame({ practice, onFinish, onExit }: PlayHandlers) {
   const { t } = useT();
-  const active = useExpedition((state) => state.active);
+  const savedActive = useExpedition((state) => state.active);
+  const [practiceActive, setPracticeActive] = useState<ExpeditionRunState | null>(null);
+  const active = practice ? practiceActive : savedActive;
   const records = useExpedition((state) => state.records);
   const [phase, setPhase] = useState<Phase>("select");
   const [selectedStage, setSelectedStage] = useState<ExpeditionStage | null>(null);
@@ -50,49 +52,61 @@ export function ExpeditionGame({ onFinish, onExit }: PlayHandlers) {
   const [finalRun, setFinalRun] = useState<ExpeditionRunState | null>(null);
   const [attempt, setAttempt] = useState(0);
   const stageFinishedRef = useRef(false);
+  const debriefDoneRef = useRef(false);
+  const journeyFinishedRef = useRef(false);
+
+  const getRun = () => practice ? practiceActive : useExpedition.getState().active;
+  const setRun = (run: ExpeditionRunState | null) => practice ? setPracticeActive(run) : useExpedition.getState().setActive(run);
 
   useEffect(() => {
+    if (practice) return;
     const stored = useExpedition.getState().active;
     if (stored && !isValidExpeditionRun(stored)) {
       useExpedition.getState().setActive(null);
       setPhase("select");
     } else if (stored) setPhase("resume");
-  }, []);
+  }, [practice]);
 
   const route = useMemo(() => getExpeditionRoute(active?.routeId ?? finalRun?.routeId), [active?.routeId, finalRun?.routeId]);
 
   function startRoute(routeId: ExpeditionRouteId) {
-    useExpedition.getState().start(routeId);
+    setRun(newExpeditionRun(routeId));
+    journeyFinishedRef.current = false;
     setSelectedStage(null); setDebrief(null); setFinalRun(null); setAttempt((value) => value + 1); setPhase("journal");
     haptic.tap();
   }
 
   function resume() {
-    if (!isValidExpeditionRun(useExpedition.getState().active)) return setPhase("select");
-    setPhase("journal"); haptic.tap();
+    const stored = getRun();
+    if (!isValidExpeditionRun(stored)) return setPhase("select");
+    if (stored.energy <= 0 || stored.checkpointIndex >= 6) {
+      setFinalRun(stored);
+      setPhase(stored.energy <= 0 ? "failed" : "complete");
+    } else setPhase("journal");
+    haptic.tap();
   }
 
   function startOver() {
     if (!confirm(t("expedition.startOverConfirm"))) return;
-    useExpedition.getState().setActive(null); setPhase("select");
+    setRun(null); setPhase("select");
   }
 
   function chooseStage(stage: ExpeditionStage) {
-    const run = useExpedition.getState().active;
+    const run = getRun();
     if (!run || run.energy <= 0 || run.checkpointIndex >= 6) return;
     const next = { ...run, branches: { ...run.branches, [run.checkpointIndex]: stage.id } };
-    useExpedition.getState().setActive(next);
+    setRun(next);
     stageFinishedRef.current = false; setSelectedStage(stage); setAttempt((value) => value + 1); setPhase("stage"); haptic.tap();
   }
 
   function handleStageFinish(result: PlayResult) {
     if (stageFinishedRef.current) return;
     stageFinishedRef.current = true;
-    const run = useExpedition.getState().active;
+    const run = getRun();
     if (!run || !selectedStage) return;
     const stars = starsForAccuracy(result.correct, result.total);
-    const energyLoss = energyLossForAccuracy(result.correct, result.total);
-    const gained = normalizedStageScore(result.correct, result.total, stars);
+    const energyLoss = practice ? 0 : energyLossForAccuracy(result.correct, result.total);
+    const gained = practice ? 0 : normalizedStageScore(result.correct, result.total, stars);
     const next: ExpeditionRunState = {
       ...run,
       checkpointIndex: run.checkpointIndex + 1,
@@ -105,26 +119,30 @@ export function ExpeditionGame({ onFinish, onExit }: PlayHandlers) {
       stars: [...run.stars, stars],
       countryHits: [...new Set([...run.countryHits, ...(result.countryHits ?? [])])],
     };
-    useExpedition.getState().setActive(next);
+    setRun(next);
+    debriefDoneRef.current = false;
     setDebrief({ stars, energyLoss, gained, correct: result.correct, total: result.total });
     setPhase("debrief");
     if (energyLoss) { sound.wrong(); haptic.error(); } else { sound.correct(); haptic.success(); }
   }
 
   function continueFromDebrief() {
-    const run = useExpedition.getState().active;
+    if (debriefDoneRef.current) return;
+    debriefDoneRef.current = true;
+    const run = getRun();
     if (!run) return setPhase("select");
     if (run.energy <= 0) { setFinalRun(run); setPhase("failed"); }
     else if (run.checkpointIndex >= 6) {
-      const completed = { ...run, score: run.score + 1500 + run.energy * 300 };
-      useExpedition.getState().setActive(completed); setFinalRun(completed); setPhase("complete"); sound.finish(); haptic.success();
+      const completed = { ...run, score: practice ? 0 : run.score + 1500 + run.energy * 300 };
+      setRun(completed); setFinalRun(completed); setPhase("complete"); sound.finish(); haptic.success();
     } else { setSelectedStage(null); setDebrief(null); setPhase("journal"); }
   }
 
   function finishJourney(completed: boolean) {
-    const run = finalRun ?? useExpedition.getState().active;
-    if (!run) return;
-    if (completed) useExpedition.getState().finish(run); else useExpedition.getState().setActive(null);
+    const run = finalRun ?? getRun();
+    if (!run || journeyFinishedRef.current) return;
+    journeyFinishedRef.current = true;
+    if (completed && !practice) useExpedition.getState().finish(run); else setRun(null);
     onFinish({ score: run.score, correct: run.correct, total: run.total, bestStreak: run.bestStreak, durationMs: run.durationMs, mode: run.routeId, countryHits: run.countryHits });
   }
 
@@ -136,7 +154,7 @@ export function ExpeditionGame({ onFinish, onExit }: PlayHandlers) {
     const StageComponent = CHILDREN[selectedStage.gameId];
     const handlers: PlayHandlers = {
       difficulty: selectedStage.difficulty, mode: selectedStage.mode, roundCount: 3, timed: false,
-      variant: selectedStage.variant ?? "world", scope: route.scope, practice: false,
+      variant: selectedStage.variant ?? "world", scope: route.scope, practice,
       onFinish: handleStageFinish, onExit,
     };
     return <div className="flex flex-1 flex-col bg-background">

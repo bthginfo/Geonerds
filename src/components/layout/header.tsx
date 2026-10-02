@@ -10,14 +10,14 @@ import { cn } from "@/lib/utils";
 const NAV = [
   { href: "/", key: "nav.home" },
   { href: "/daily", key: "nav.daily" },
+  { href: "/challenges", key: "challenges" },
   { href: "/leaderboard", key: "nav.leaderboard" },
-  { href: "/badges", key: "nav.badges" },
   { href: "/profile", key: "nav.profile" },
   { href: "/how-to", key: "nav.howto" },
 ] as const;
 
 export function Header() {
-  const { t } = useT();
+  const { t, locale } = useT();
   const pathname = usePathname();
   // Hide global chrome inside an active game for a focused experience.
   if (pathname.startsWith("/play/") || pathname.startsWith("/wine-nerds") || pathname.startsWith("/poke-nerds")) return null;
@@ -31,11 +31,12 @@ export function Header() {
           <span className="text-lg">{t("app.name")}</span>
         </Link>
 
-        <nav className="hidden items-center gap-1 sm:flex">
+        <nav aria-label={locale === "de" ? "Hauptnavigation" : "Main navigation"} className="hidden items-center gap-1 md:flex">
           {NAV.map((item) => (
             <Link
               key={item.href}
               href={item.href}
+              aria-current={pathname === item.href ? "page" : undefined}
               className={cn(
                 "rounded-lg px-3 py-2 text-sm font-medium transition-colors",
                 pathname === item.href
@@ -43,7 +44,7 @@ export function Header() {
                   : "text-muted-foreground hover:bg-muted hover:text-foreground"
               )}
             >
-              {t(item.key)}
+              {item.href === "/challenges" ? (locale === "de" ? "Duelle" : "Challenges") : t(item.key)}
             </Link>
           ))}
         </nav>

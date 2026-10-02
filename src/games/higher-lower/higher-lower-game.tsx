@@ -86,7 +86,7 @@ function nextPair(prev?: Country): Pair {
   return { a, b, metric };
 }
 
-export function HigherLowerGame({ onFinish, onExit }: PlayHandlers) {
+export function HigherLowerGame({ practice, onFinish, onExit }: PlayHandlers) {
   const { t, locale } = useT();
   const [pair, setPair] = useState<Pair>(() => nextPair());
   const [score, setScore] = useState(0);
@@ -100,6 +100,7 @@ export function HigherLowerGame({ onFinish, onExit }: PlayHandlers) {
   const startRef = useRef(Date.now());
   const transitionTimerRef = useRef<number | null>(null);
   const hitsRef = useRef<string[]>([]);
+  const answerLockRef = useRef(false);
 
   useEffect(
     () => () => {
@@ -112,7 +113,8 @@ export function HigherLowerGame({ onFinish, onExit }: PlayHandlers) {
   const bVal = metricValue(pair.b, pair.metric);
 
   function guess(higher: boolean) {
-    if (revealed) return;
+    if (revealed || answerLockRef.current) return;
+    answerLockRef.current = true;
     const isHigher = bVal > aVal;
     const isCorrect = higher === isHigher;
     setRevealed(true);
@@ -133,11 +135,11 @@ export function HigherLowerGame({ onFinish, onExit }: PlayHandlers) {
     } else {
       sound.wrong();
       setStreak(0);
-      setLives((l) => l - 1);
+      if (!practice) setLives((l) => l - 1);
     }
 
     transitionTimerRef.current = window.setTimeout(() => {
-      const livesLeft = lives - (isCorrect ? 0 : 1);
+      const livesLeft = lives - (isCorrect || practice ? 0 : 1);
       if (livesLeft <= 0) {
         onFinish({
           score: score + (isCorrect ? scoreForAnswer({ correct: true, difficulty: "medium" }) : 0),
@@ -152,6 +154,7 @@ export function HigherLowerGame({ onFinish, onExit }: PlayHandlers) {
       }
       setPair(nextPair(pair.b));
       setRevealed(false);
+      answerLockRef.current = false;
     }, 1200);
   }
 
@@ -160,9 +163,9 @@ export function HigherLowerGame({ onFinish, onExit }: PlayHandlers) {
   return (
     <div className="flex flex-1 flex-col">
       <GameTopBar title={t("games.higher-lower.name")} onExit={onExit}>
-        <StreakPill value={streak} />
-        <ScorePill value={score} />
-        <LivesPill lives={lives} max={MAX_LIVES} />
+        {!practice && <StreakPill value={streak} />}
+        {!practice && <ScorePill value={score} />}
+        {!practice && <LivesPill lives={lives} max={MAX_LIVES} />}
       </GameTopBar>
 
       <div className="mx-auto flex w-full max-w-md flex-1 flex-col px-4 py-4">

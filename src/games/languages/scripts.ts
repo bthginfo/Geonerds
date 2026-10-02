@@ -9,6 +9,35 @@ export interface ScriptSample {
 
 /** Keyed by the language's English name as it appears in the dataset. */
 export const SCRIPT_SAMPLES: Record<string, ScriptSample> = {
+  // Autonyms from Unicode CLDR language display names (stable writing samples):
+  // https://github.com/unicode-org/cldr/tree/main/common/main
+  English: { text: "English", font: "" },
+  French: { text: "français", font: "" },
+  German: { text: "Deutsch", font: "" },
+  Spanish: { text: "español", font: "" },
+  Portuguese: { text: "português", font: "" },
+  Italian: { text: "italiano", font: "" },
+  Dutch: { text: "Nederlands", font: "" },
+  Polish: { text: "polski", font: "" },
+  Czech: { text: "čeština", font: "" },
+  Slovak: { text: "slovenčina", font: "" },
+  Slovenian: { text: "slovenščina", font: "" },
+  Croatian: { text: "hrvatski", font: "" },
+  Bosnian: { text: "bosanski", font: "" },
+  Albanian: { text: "shqip", font: "" },
+  Romanian: { text: "română", font: "" },
+  Hungarian: { text: "magyar", font: "" },
+  Finnish: { text: "suomi", font: "" },
+  Swedish: { text: "svenska", font: "" },
+  Danish: { text: "dansk", font: "" },
+  Norwegian: { text: "norsk", font: "" },
+  Icelandic: { text: "íslenska", font: "" },
+  Estonian: { text: "eesti", font: "" },
+  Latvian: { text: "latviešu", font: "" },
+  Lithuanian: { text: "lietuvių", font: "" },
+  Swahili: { text: "Kiswahili", font: "" },
+  Indonesian: { text: "Bahasa Indonesia", font: "" },
+  Malay: { text: "Bahasa Melayu", font: "" },
   Arabic: { text: "العربية", font: "Noto Sans Arabic" },
   "Persian (Farsi)": { text: "فارسی", font: "Noto Sans Arabic" },
   Persian: { text: "فارسی", font: "Noto Sans Arabic" },
@@ -56,11 +85,11 @@ export const SCRIPT_SAMPLES: Record<string, ScriptSample> = {
 };
 
 /** First language of a country that has a script sample. */
-export function findScript(c: Country): { language: string; sample: ScriptSample } | null {
-  for (const lang of c.languages) {
-    if (SCRIPT_SAMPLES[lang]) return { language: lang, sample: SCRIPT_SAMPLES[lang] };
-  }
-  return null;
+export function findScript(c: Country, random?: () => number): { language: string; sample: ScriptSample } | null {
+  const languages = c.languages.filter((language) => SCRIPT_SAMPLES[language]);
+  if (!languages.length) return null;
+  const language = languages[random ? Math.floor(random() * languages.length) : 0];
+  return { language, sample: SCRIPT_SAMPLES[language] };
 }
 
 const FONT_FAMILIES = [

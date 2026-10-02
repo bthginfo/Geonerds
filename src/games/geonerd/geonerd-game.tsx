@@ -16,7 +16,7 @@ import { cn, sample } from "@/lib/utils";
 
 const MAX_LIVES = 3;
 
-export function GeoNerdGame({ onFinish, onExit }: PlayHandlers) {
+export function GeoNerdGame({ practice, onFinish, onExit }: PlayHandlers) {
   const { t, locale } = useT();
   const [round, setRound] = useState(0);
   const [q, setQ] = useState<GnQuestion>(() => generateQuestion(0, locale));
@@ -35,10 +35,15 @@ export function GeoNerdGame({ onFinish, onExit }: PlayHandlers) {
   const bestRef = useRef(0);
   const lockRef = useRef(false);
   const hitsRef = useRef<string[]>([]);
+  const attemptsRef = useRef(0);
+  const finishedRef = useRef(false);
+  const seenRef = useRef(new Set([q.text]));
 
   function goNext(nr: number) {
     setRound(nr);
-    setQ(generateQuestion(nr, locale));
+    const nextQuestion = generateQuestion(nr, locale, seenRef.current);
+    seenRef.current.add(nextQuestion.text);
+    setQ(nextQuestion);
     setAnswered(false);
     setSelected(null);
     setRemoved([]);
@@ -67,6 +72,7 @@ export function GeoNerdGame({ onFinish, onExit }: PlayHandlers) {
     setSelected(idx);
     setAnswered(true);
     const isCorrect = idx === q.correctIndex;
+    attemptsRef.current += 1;
     if (isCorrect) {
       sound.correct();
       if (q.factCca3) hitsRef.current.push(q.factCca3);
@@ -80,7 +86,7 @@ export function GeoNerdGame({ onFinish, onExit }: PlayHandlers) {
     } else {
       sound.wrong();
       setStreak(0);
-      setLives((l) => l - 1);
+      if (!practice) setLives((l) => l - 1);
     }
     // Show a fun fact about the country in question (if we have one).
     const fc = q.factCca3 ? getCountryByCca3(q.factCca3) : null;
@@ -91,11 +97,13 @@ export function GeoNerdGame({ onFinish, onExit }: PlayHandlers) {
   const factCountry = answered && q.factCca3 ? getCountryByCca3(q.factCca3) : null;
 
   function proceed() {
+    if (finishedRef.current) return;
     if (gameOver) {
+      finishedRef.current = true;
       onFinish({
         score,
         correct,
-        total: round + 1,
+        total: attemptsRef.current,
         bestStreak: bestRef.current,
         durationMs: Date.now() - startRef.current,
         mode: "survival",
@@ -109,9 +117,9 @@ export function GeoNerdGame({ onFinish, onExit }: PlayHandlers) {
   return (
     <div className="flex flex-1 flex-col">
       <GameTopBar title={t("games.millionaire.name")} onExit={onExit}>
-        <StreakPill value={streak} />
-        <ScorePill value={score} />
-        <LivesPill lives={lives} max={MAX_LIVES} />
+        {!practice && <StreakPill value={streak} />}
+        {!practice && <ScorePill value={score} />}
+        {!practice && <LivesPill lives={lives} max={MAX_LIVES} />}
       </GameTopBar>
 
       <div className="mx-auto flex w-full max-w-md flex-1 flex-col px-4 py-5">

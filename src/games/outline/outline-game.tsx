@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { Loader2 } from "lucide-react";
 import type { PlayHandlers } from "@/components/game/game-shell";
 import { QuizGame, type QuizRound } from "@/games/quiz-core";
 import { CountrySilhouette } from "@/components/map/country-silhouette";
@@ -11,17 +10,21 @@ import { makeChoices, pickQuestions } from "@/games/round-utils";
 import { featuresByCcn3, type CountryFeature } from "@/lib/geo";
 import { isRecognizableOutline } from "@/lib/geometry";
 import { useT } from "@/i18n/I18nProvider";
+import { createSeededRandom } from "@/lib/random";
+import { GameLoadState } from "@/games/load-state";
 
-export function OutlineGame({ difficulty, mode, roundCount, timed, scope, practice, onFinish, onExit }: PlayHandlers) {
+export function OutlineGame({ difficulty, mode, roundCount, timed, scope, practice, seed, challenge, onFinish, onExit }: PlayHandlers) {
   const { t, locale } = useT();
   const [features, setFeatures] = useState<Map<string, CountryFeature> | null>(null);
+  const [loadFailed, setLoadFailed] = useState(false);
 
   useEffect(() => {
-    featuresByCcn3("10m").then(setFeatures);
+    featuresByCcn3("10m").then(setFeatures).catch(() => setLoadFailed(true));
   }, []);
 
   const rounds = useMemo<QuizRound[]>(() => {
     if (!features) return [];
+    const random = seed ? createSeededRandom(seed) : Math.random;
     const pool = poolForDifficulty(difficulty, { requireGeometry: true }).filter(
       (country) => {
         if (scope && country.region !== scope) return false;
@@ -31,9 +34,9 @@ export function OutlineGame({ difficulty, mode, roundCount, timed, scope, practi
       }
     );
     const count = roundCount === 0 ? pool.length : roundCount;
-    const questions = pickQuestions(pool, count);
+    const questions = pickQuestions(pool, count, random);
     return questions.map((answer) => {
-      const choices = makeChoices(answer, pool, difficulty);
+      const choices = makeChoices(answer, pool, difficulty, 4, random);
       const feat = features.get(String(answer.ccn3))!;
       return {
         key: answer.cca3,
@@ -54,16 +57,9 @@ export function OutlineGame({ difficulty, mode, roundCount, timed, scope, practi
       };
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [features, difficulty, roundCount, scope]);
+  }, [features, difficulty, roundCount, scope, locale, seed]);
 
-  if (!features || rounds.length === 0) {
-    return (
-      <div className="flex flex-1 items-center justify-center text-muted-foreground">
-        <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-        {t("common.loading")}
-      </div>
-    );
-  }
+  if (loadFailed || !features || rounds.length === 0) return <GameLoadState onExit={onExit} failed={loadFailed} empty={!!features && !rounds.length} />;
 
   return (
     <QuizGame
@@ -73,6 +69,7 @@ export function OutlineGame({ difficulty, mode, roundCount, timed, scope, practi
       difficulty={difficulty}
       timed={timed}
       practice={practice}
+      challenge={challenge}
       onFinish={onFinish}
       onExit={onExit}
     />

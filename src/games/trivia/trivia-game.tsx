@@ -17,6 +17,8 @@ import { scoreForTrivia } from "@/lib/scoring";
 import { matchAnswer } from "@/lib/fuzzy";
 import { sound } from "@/lib/sound";
 import { useT } from "@/i18n/I18nProvider";
+import { createSeededRandom } from "@/lib/random";
+import { GameLoadState } from "@/games/load-state";
 
 const MAX_CLUES = 4;
 const PER_ROUND_BUDGET_MS = 15000;
@@ -28,24 +30,25 @@ interface TriviaRound {
   accepted: string[];
 }
 
-export function TriviaGame({ difficulty, mode, roundCount, timed, scope, onFinish, onExit }: PlayHandlers) {
+export function TriviaGame({ difficulty, mode, roundCount, timed, scope, practice, seed, onFinish, onExit }: PlayHandlers) {
   const { t, locale } = useT();
 
   const rounds = useMemo<TriviaRound[]>(() => {
+    const random = seed ? createSeededRandom(seed) : Math.random;
     const pool = poolForDifficulty(difficulty).filter((country) => !scope || country.region === scope);
     const count = roundCount === 0 ? pool.length : roundCount;
-    return pickQuestions(pool, count).map((answer) => {
+    return pickQuestions(pool, count, random).map((answer) => {
       // Cross-region distractors so the early clues (continent, hemisphere…) help.
-      const distractors = sample(pool.filter((c) => c.cca3 !== answer.cca3), 3);
-      const options = shuffle([answer, ...distractors]).map((c) => ({ id: c.cca3, label: countryName(c, locale) }));
+      const distractors = sample(pool.filter((c) => c.cca3 !== answer.cca3), 3, random);
+      const options = shuffle([answer, ...distractors], random).map((c) => ({ id: c.cca3, label: countryName(c, locale) }));
       return {
         answer,
-        clues: triviaClues(answer, locale).slice(0, MAX_CLUES),
+        clues: triviaClues(answer, locale, random).slice(0, MAX_CLUES),
         options,
         accepted: countryAccepted(answer),
       };
     });
-  }, [difficulty, roundCount, locale, scope]);
+  }, [difficulty, roundCount, locale, scope, seed]);
 
   const total = rounds.length;
   const budget = total * PER_ROUND_BUDGET_MS;
@@ -59,6 +62,7 @@ export function TriviaGame({ difficulty, mode, roundCount, timed, scope, onFinis
   const [score, setScore] = useState(0);
   const [streak, setStreak] = useState(0);
   const [timeLeft, setTimeLeft] = useState(budget);
+  const [fact, setFact] = useState("");
 
   const startRef = useRef(Date.now());
   const scoreRef = useRef(0);
@@ -66,6 +70,7 @@ export function TriviaGame({ difficulty, mode, roundCount, timed, scope, onFinis
   const bestRef = useRef(0);
   const finishedRef = useRef(false);
   const hitsRef = useRef<string[]>([]);
+  const answerLockRef = useRef(false);
 
   const round = rounds[idx];
   const maxClues = round ? Math.min(MAX_CLUES, round.clues.length) : MAX_CLUES;
@@ -101,6 +106,9 @@ export function TriviaGame({ difficulty, mode, roundCount, timed, scope, onFinis
   }, [timed]);
 
   function commit(correct: boolean) {
+    if (answerLockRef.current || finishedRef.current || !round) return;
+    answerLockRef.current = true;
+    setFact(randomFact(round.answer, locale));
     setAnswered(true);
     setLastCorrect(correct);
     if (correct) {
@@ -127,7 +135,7 @@ export function TriviaGame({ difficulty, mode, roundCount, timed, scope, onFinis
   }
 
   function submitTyped() {
-    if (answered) return;
+    if (answered || finishedRef.current || answerLockRef.current || !typed.trim()) return;
     const res = matchAnswer(typed, round.accepted);
     if (res.status === "near" && res.suggestion) {
       setHint(t("type.almost", { guess: res.suggestion }));
@@ -137,24 +145,26 @@ export function TriviaGame({ difficulty, mode, roundCount, timed, scope, onFinis
   }
 
   function next() {
+    if (finishedRef.current || !answered) return;
     if (idx + 1 >= total) {
       doFinish();
       return;
     }
-    setIdx((i) => i + 1);
+    setIdx(idx + 1);
+    answerLockRef.current = false;
     setRevealed(1);
     setAnswered(false);
     setTyped("");
     setHint(null);
   }
 
-  if (!round) return null;
+  if (!round) return <GameLoadState onExit={onExit} empty />;
 
   return (
     <div className="flex flex-1 flex-col">
       <GameTopBar title={t("games.trivia.name")} onExit={onExit}>
-        <StreakPill value={streak} />
-        <ScorePill value={score} />
+        {!practice && <StreakPill value={streak} />}
+        {!practice && <ScorePill value={score} />}
         {timed ? <TimerPill ms={timeLeft} danger={timeLeft < 10000} /> : <RoundPill current={idx + 1} total={total} />}
       </GameTopBar>
 
@@ -196,6 +206,8 @@ export function TriviaGame({ difficulty, mode, roundCount, timed, scope, onFinis
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               className="flex items-center gap-3 rounded-xl border border-border bg-muted/40 p-3"
+              role="status"
+              aria-live="polite"
             >
               <FlagImage code={round.answer.flag} alt="" className="aspect-[4/3] w-12 shadow" />
               <div className="min-w-0">
@@ -209,7 +221,7 @@ export function TriviaGame({ difficulty, mode, roundCount, timed, scope, onFinis
                 </div>
                 <div className="flex items-start gap-1 text-xs text-muted-foreground">
                   <Lightbulb className="mt-0.5 h-3.5 w-3.5 shrink-0 text-accent" />
-                  {randomFact(round.answer, locale)}
+                  {fact}
                 </div>
               </div>
             </motion.div>
@@ -246,7 +258,7 @@ export function TriviaGame({ difficulty, mode, roundCount, timed, scope, onFinis
                   autoCapitalize="words"
                   spellCheck={false}
                   placeholder={t("type.placeholder")}
-                  className="h-12 flex-1 rounded-xl border-2 border-border bg-card px-4 text-base outline-none focus:border-primary"
+                  className="h-12 min-w-0 flex-1 rounded-xl border-2 border-border bg-card px-4 text-base outline-none focus:border-primary"
                 />
                 <Button size="lg" className="px-4" onClick={submitTyped} aria-label={t("type.submit")}>
                   <CornerDownLeft className="h-5 w-5" />

@@ -14,18 +14,20 @@ import { scoreForAnswer } from "@/lib/scoring";
 import { sound } from "@/lib/sound";
 import { sample, shuffle, cn } from "@/lib/utils";
 import { useT } from "@/i18n/I18nProvider";
+import { createSeededRandom } from "@/lib/random";
+import { GameLoadState } from "@/games/load-state";
 
 const TIME_LIMIT_MS = 12000;
 const MAX_LIVES = 3;
 
-export function MountainsGame({ difficulty, mode, roundCount, timed, onFinish, onExit }: PlayHandlers) {
+export function MountainsGame({ difficulty, mode, roundCount, timed, practice, seed, challenge, onFinish, onExit }: PlayHandlers) {
   const { t, locale } = useT();
 
   const peaks = useMemo<Peak[]>(() => {
     const pool = PEAKS.filter((p) => p.tier <= PEAK_MAX_TIER[difficulty]);
     const count = roundCount === 0 ? pool.length : roundCount;
-    return sample(pool, Math.min(count, pool.length));
-  }, [difficulty, roundCount]);
+    return sample(pool, Math.min(count, pool.length), seed ? createSeededRandom(seed) : Math.random);
+  }, [difficulty, roundCount, seed]);
 
   const total = peaks.length;
   const [idx, setIdx] = useState(0);
@@ -48,15 +50,18 @@ export function MountainsGame({ difficulty, mode, roundCount, timed, onFinish, o
   const livesRef = useRef(MAX_LIVES);
   const gameOverRef = useRef(false);
   const finishedRef = useRef(false);
+  const answerLockRef = useRef(false);
+  const nextLockRef = useRef(false);
+  useEffect(() => { nextLockRef.current = false; }, [idx]);
 
   const peak = peaks[idx];
 
   const options = useMemo(() => {
     if (mode !== "choice" || !peak) return [] as Peak[];
-    const distractors = sample(PEAKS.filter((p) => p.en !== peak.en), 3);
-    return shuffle([peak, ...distractors]);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [idx, mode]);
+    const random = seed ? createSeededRandom(`${seed}:options:${peak.en}`) : Math.random;
+    const distractors = sample(PEAKS.filter((p) => p.en !== peak.en), 3, random);
+    return shuffle([peak, ...distractors], random);
+  }, [peak, mode, seed]);
 
   // Per-question countdown (timed mode); running out costs a life.
   useEffect(() => {
@@ -77,17 +82,19 @@ export function MountainsGame({ difficulty, mode, roundCount, timed, onFinish, o
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [timed, idx, answered]);
 
-  if (!peak) return null;
+  if (!peak) return <GameLoadState onExit={onExit} empty />;
   const peakLngLat = [peak.lng, peak.lat] as [number, number];
 
   function loseLife() {
+    if (practice || challenge) return;
     livesRef.current = Math.max(0, livesRef.current - 1);
     setLives(livesRef.current);
     if (livesRef.current <= 0) gameOverRef.current = true;
   }
 
   function commit(correct: boolean) {
-    if (answered) return;
+    if (answerLockRef.current || finishedRef.current) return;
+    answerLockRef.current = true;
     answeredRef.current += 1;
     const timeMs = Date.now() - qStartRef.current;
     const earned = scoreForAnswer({ correct, difficulty, timed, timeMs, timeLimitMs: TIME_LIMIT_MS });
@@ -114,7 +121,7 @@ export function MountainsGame({ difficulty, mode, roundCount, timed, onFinish, o
     commit(p.en === peak.en);
   }
   function submitTyped() {
-    if (answered) return;
+    if (finishedRef.current || answerLockRef.current || answered || !input.trim()) return;
     const ok = matchAnswer(input, peakAccepted(peak)).status === "correct";
     if (!ok && matchAnswer(input, peakAccepted(peak)).status === "near") {
       setShake(true);
@@ -138,11 +145,14 @@ export function MountainsGame({ difficulty, mode, roundCount, timed, onFinish, o
   }
 
   function next() {
+    if (finishedRef.current || nextLockRef.current || !answered) return;
+    nextLockRef.current = true;
     if (gameOverRef.current || idx + 1 >= total) {
       doFinish();
       return;
     }
-    setIdx((i) => i + 1);
+    setIdx(idx + 1);
+    answerLockRef.current = false;
     setAnswered(false);
     setSelected(null);
     setInput("");
@@ -152,9 +162,9 @@ export function MountainsGame({ difficulty, mode, roundCount, timed, onFinish, o
   return (
     <div className="flex flex-1 flex-col">
       <GameTopBar title={t("games.mountains.name")} onExit={onExit}>
-        <StreakPill value={streak} />
-        <LivesPill lives={lives} max={MAX_LIVES} />
-        <ScorePill value={score} />
+        {!practice && <StreakPill value={streak} />}
+        {!practice && !challenge && <LivesPill lives={lives} max={MAX_LIVES} />}
+        {!practice && <ScorePill value={score} />}
         {timed ? <TimerPill ms={timeLeft} danger={timeLeft < 4000} /> : <RoundPill current={idx + 1} total={total} />}
       </GameTopBar>
 
@@ -175,7 +185,7 @@ export function MountainsGame({ difficulty, mode, roundCount, timed, onFinish, o
 
       <div className="mx-auto w-full max-w-md px-4 py-3">
         {answered ? (
-          <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className="flex items-center justify-between gap-3">
+          <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className="flex items-center justify-between gap-3" role="status" aria-live="polite">
             <div className="flex flex-col text-sm font-semibold">
               {lastCorrect ? (
                 <span className="flex items-center gap-1 text-success">
@@ -187,7 +197,8 @@ export function MountainsGame({ difficulty, mode, roundCount, timed, onFinish, o
                     <X className="h-5 w-5" /> {t("common.wrong")}
                   </span>
                   <span className="text-xs font-normal text-muted-foreground">
-                    {gameOverRef.current ? t("common.gameOver") : t("common.theAnswerWas", { answer: peakName(peak, locale) })}
+                    {t("common.theAnswerWas", { answer: peakName(peak, locale) })}
+                    {gameOverRef.current && ` · ${t("common.gameOver")}`}
                   </span>
                 </span>
               )}
@@ -224,7 +235,7 @@ export function MountainsGame({ difficulty, mode, roundCount, timed, onFinish, o
               spellCheck={false}
               placeholder={t("type.placeholder")}
               className={cn(
-                "h-12 flex-1 rounded-xl border-2 bg-card px-4 text-base outline-none focus:border-primary",
+                "h-12 min-w-0 flex-1 rounded-xl border-2 bg-card px-4 text-base outline-none focus:border-primary",
                 shake ? "animate-shake border-danger" : "border-border"
               )}
             />

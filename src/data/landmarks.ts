@@ -1,0 +1,92 @@
+/** Stable, single-country places checked against UNESCO's World Heritage List.
+ * Keep transnational properties out: a country quiz must have one valid answer.
+ * https://whc.unesco.org/en/list/ (reviewed 2026-10-02)
+ */
+export interface Landmark {
+  en: string;
+  de: string;
+  cca3: string;
+  tier: 1 | 2 | 3;
+  source: string;
+}
+
+const places: Omit<Landmark, "source">[] = [
+  { en: "Sydney Opera House", de: "Opernhaus von Sydney", cca3: "AUS", tier: 1 },
+  { en: "Uluru-Kata Tjuta National Park", de: "Nationalpark Uluru-Kata Tjuta", cca3: "AUS", tier: 1 },
+  { en: "Schönbrunn Palace", de: "Schloss Schönbrunn", cca3: "AUT", tier: 2 },
+  { en: "Historic Centre of Bruges", de: "Historisches Zentrum von Brügge", cca3: "BEL", tier: 2 },
+  { en: "Belize Barrier Reef", de: "Belize-Barriereriff", cca3: "BLZ", tier: 2 },
+  { en: "Royal Palaces of Abomey", de: "Königspaläste von Abomey", cca3: "BEN", tier: 3 },
+  { en: "Tiwanaku", de: "Tiwanaku", cca3: "BOL", tier: 3 },
+  { en: "Old Bridge of Mostar", de: "Alte Brücke von Mostar", cca3: "BIH", tier: 2 },
+  { en: "Okavango Delta", de: "Okavangodelta", cca3: "BWA", tier: 2 },
+  { en: "Historic Town of Ouro Preto", de: "Historische Stadt Ouro Preto", cca3: "BRA", tier: 3 },
+  { en: "Rila Monastery", de: "Kloster Rila", cca3: "BGR", tier: 3 },
+  { en: "Rock-Hewn Churches of Lalibela", de: "Felsenkirchen von Lalibela", cca3: "ETH", tier: 2 },
+  { en: "Ha Long Bay", de: "Ha-Long-Bucht", cca3: "VNM", tier: 1 },
+  { en: "Grand-Place in Brussels", de: "Grand-Place in Brüssel", cca3: "BEL", tier: 1 },
+  { en: "Medina of Marrakesh", de: "Medina von Marrakesch", cca3: "MAR", tier: 1 },
+  { en: "Historic Centre of Québec", de: "Altstadt von Québec", cca3: "CAN", tier: 2 },
+  { en: "L'Anse aux Meadows", de: "L'Anse aux Meadows", cca3: "CAN", tier: 3 },
+  { en: "Yellowstone National Park", de: "Yellowstone-Nationalpark", cca3: "USA", tier: 1 },
+  { en: "Grand Canyon National Park", de: "Grand-Canyon-Nationalpark", cca3: "USA", tier: 1 },
+  { en: "Historic Centre of Cartagena", de: "Historisches Zentrum von Cartagena", cca3: "COL", tier: 2 },
+  { en: "Cocos Island National Park", de: "Nationalpark auf der Kokosinsel", cca3: "CRI", tier: 3 },
+  { en: "Old City of Dubrovnik", de: "Altstadt von Dubrovnik", cca3: "HRV", tier: 1 },
+  { en: "Plitvice Lakes National Park", de: "Nationalpark Plitvicer Seen", cca3: "HRV", tier: 2 },
+  { en: "Old Havana", de: "Altstadt von Havanna", cca3: "CUB", tier: 1 },
+  { en: "Kronborg Castle", de: "Schloss Kronborg", cca3: "DNK", tier: 3 },
+  { en: "Galápagos Islands", de: "Galápagosinseln", cca3: "ECU", tier: 1 },
+  { en: "Abu Simbel Temples", de: "Tempel von Abu Simbel", cca3: "EGY", tier: 2 },
+  { en: "Suomenlinna Fortress", de: "Festung Suomenlinna", cca3: "FIN", tier: 3 },
+  { en: "Mont-Saint-Michel", de: "Mont-Saint-Michel", cca3: "FRA", tier: 1 },
+  { en: "Palace of Versailles", de: "Schloss Versailles", cca3: "FRA", tier: 1 },
+  { en: "Gelati Monastery", de: "Kloster Gelati", cca3: "GEO", tier: 3 },
+  { en: "Cologne Cathedral", de: "Kölner Dom", cca3: "DEU", tier: 1 },
+  { en: "Acropolis of Athens", de: "Akropolis von Athen", cca3: "GRC", tier: 1 },
+  { en: "Tikal National Park", de: "Nationalpark Tikal", cca3: "GTM", tier: 2 },
+  { en: "Sigiriya", de: "Sigiriya", cca3: "LKA", tier: 2 },
+  { en: "Þingvellir National Park", de: "Nationalpark Þingvellir", cca3: "ISL", tier: 2 },
+  { en: "Hampi", de: "Hampi", cca3: "IND", tier: 2 },
+  { en: "Borobudur Temple", de: "Tempel von Borobudur", cca3: "IDN", tier: 2 },
+  { en: "Persepolis", de: "Persepolis", cca3: "IRN", tier: 2 },
+  { en: "Newgrange in Brú na Bóinne", de: "Newgrange in Brú na Bóinne", cca3: "IRL", tier: 2 },
+  { en: "Pompeii", de: "Pompeji", cca3: "ITA", tier: 1 },
+  { en: "Himeji Castle", de: "Burg Himeji", cca3: "JPN", tier: 2 },
+  { en: "Lamu Old Town", de: "Altstadt von Lamu", cca3: "KEN", tier: 3 },
+  { en: "Luang Prabang", de: "Luang Prabang", cca3: "LAO", tier: 2 },
+  { en: "Baalbek", de: "Baalbek", cca3: "LBN", tier: 2 },
+  { en: "Tsingy de Bemaraha", de: "Tsingy de Bemaraha", cca3: "MDG", tier: 3 },
+  { en: "Ħal Saflieni Hypogeum", de: "Hypogäum von Ħal Saflieni", cca3: "MLT", tier: 3 },
+  { en: "Chichén Itzá", de: "Chichén Itzá", cca3: "MEX", tier: 1 },
+  { en: "Bagan", de: "Bagan", cca3: "MMR", tier: 2 },
+  { en: "Namib Sand Sea", de: "Namib-Sandmeer", cca3: "NAM", tier: 2 },
+  { en: "Tongariro National Park", de: "Nationalpark Tongariro", cca3: "NZL", tier: 2 },
+  { en: "Bryggen in Bergen", de: "Bryggen in Bergen", cca3: "NOR", tier: 2 },
+  { en: "Historic Centre of Kraków", de: "Historisches Zentrum von Krakau", cca3: "POL", tier: 1 },
+  { en: "Sintra's Cultural Landscape", de: "Kulturlandschaft Sintra", cca3: "PRT", tier: 2 },
+  { en: "Alhambra", de: "Alhambra", cca3: "ESP", tier: 1 },
+  { en: "Angkor", de: "Angkor", cca3: "KHM", tier: 1 },
+  { en: "Great Zimbabwe", de: "Groß-Simbabwe", cca3: "ZWE", tier: 2 },
+  { en: "Robben Island", de: "Robben Island", cca3: "ZAF", tier: 2 },
+  { en: "Serengeti National Park", de: "Serengeti-Nationalpark", cca3: "TZA", tier: 1 },
+  { en: "Great Mosque of Djenné", de: "Große Moschee von Djenné", cca3: "MLI", tier: 2 },
+  { en: "Le Morne Cultural Landscape", de: "Kulturlandschaft Le Morne", cca3: "MUS", tier: 3 },
+  { en: "Nan Madol", de: "Nan Madol", cca3: "FSM", tier: 3 },
+  { en: "Levuka Historical Port Town", de: "Historische Hafenstadt Levuka", cca3: "FJI", tier: 3 },
+  { en: "Chief Roi Mata's Domain", de: "Herrschaftsgebiet von Häuptling Roi Mata", cca3: "VUT", tier: 3 },
+  { en: "Royal Hill of Ambohimanga", de: "Königshügel von Ambohimanga", cca3: "MDG", tier: 3 },
+  { en: "Bwindi Impenetrable National Park", de: "Bwindi-Impenetrable-Nationalpark", cca3: "UGA", tier: 3 },
+  { en: "Takht-i-Bahi Buddhist Ruins", de: "Buddhistische Ruinen von Takht-i-Bahi", cca3: "PAK", tier: 3 },
+  { en: "Old Walled City of Shibam", de: "Ummauerte Altstadt von Shibam", cca3: "YEM", tier: 3 },
+  { en: "City of Valletta", de: "Stadt Valletta", cca3: "MLT", tier: 2 },
+  { en: "Durmitor National Park", de: "Durmitor-Nationalpark", cca3: "MNE", tier: 3 },
+  { en: "Skellig Michael", de: "Skellig Michael", cca3: "IRL", tier: 3 },
+  { en: "Kotor's Old Town", de: "Altstadt von Kotor", cca3: "MNE", tier: 2 },
+  { en: "Chiribiquete National Park", de: "Chiribiquete-Nationalpark", cca3: "COL", tier: 3 },
+];
+
+export const LANDMARKS: Landmark[] = places.map((place) => ({
+  ...place,
+  source: "https://whc.unesco.org/en/list/",
+}));

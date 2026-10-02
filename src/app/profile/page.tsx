@@ -2,7 +2,7 @@
 
 import { useMemo } from "react";
 import Link from "next/link";
-import { Flame, Award, ChevronRight, Gamepad2, Sparkles } from "lucide-react";
+import { Flame, Award, ChevronRight, Gamepad2, Sparkles, Swords } from "lucide-react";
 import { useT } from "@/i18n/I18nProvider";
 import { useAllRuns } from "@/hooks/use-scores";
 import { useAuth } from "@/store/auth";
@@ -81,6 +81,8 @@ export default function ProfilePage() {
           </div>
         </div>
       </div>
+
+      <Link href="/challenges" className="mt-4 flex min-h-16 items-center gap-3 rounded-2xl border border-primary/25 bg-primary/5 p-4 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"><Swords className="h-5 w-5 shrink-0 text-primary" /><div className="min-w-0 flex-1"><p className="font-semibold">{locale === "de" ? "Deine Herausforderungen" : "Your challenges"}</p><p className="mt-0.5 text-xs text-muted-foreground">{locale === "de" ? "Einladungen, offene Duelle und Ergebnisse" : "Invitations, active encounters and results"}</p></div><ChevronRight className="h-4 w-4 text-primary" /></Link>
 
       {/* Stat tiles */}
       <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3">

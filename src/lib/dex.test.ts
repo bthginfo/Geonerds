@@ -16,4 +16,13 @@ describe("Geo-Dex mastery", () => {
   it("preserves the capped unlock score", () => {
     expect(dexScore({ flags: 99 })).toBe(5);
   });
+
+  it("cannot skip the full unlock requirement by farming one game", () => {
+    expect(dexStateOf({ flags: 99, capitals: 1, trivia: 1, outline: 1 })).toBe("researched");
+  });
+
+  it("ignores corrupted or negative persisted hit counts", () => {
+    expect(dexScore({ flags: NaN, capitals: Infinity, trivia: -5 })).toBe(0);
+    expect(dexStateOf({ flags: NaN, capitals: Infinity, trivia: -5 })).toBe("locked");
+  });
 });

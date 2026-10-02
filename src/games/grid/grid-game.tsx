@@ -14,6 +14,7 @@ import { haptic } from "@/lib/haptics";
 import { sound } from "@/lib/sound";
 import type { GridConstraint } from "./generator";
 import { generateGrid, validateGridEntry } from "./generator";
+import { useGameTimeouts } from "@/games/use-game-timeouts";
 
 const MAX_LIVES = { easy: 4, medium: 3, hard: 2 } as const;
 
@@ -40,12 +41,17 @@ export function GridGame({ difficulty, practice, onFinish, onExit }: PlayHandler
   const [locked, setLocked] = useState(false);
   const startedAt = useRef(Date.now());
   const errors = useRef(0);
+  const actionLockRef = useRef(false);
+  const finishRef = useRef(false);
+  const { schedule, clearTimers } = useGameTimeouts();
   const correct = Object.keys(answers).length;
 
   function finish(nextAnswers: Record<number, string>, nextScore: number) {
+    if (finishRef.current) return;
+    finishRef.current = true;
     setLocked(true);
     sound.finish();
-    window.setTimeout(() => onFinish({
+    schedule(() => onFinish({
       score: practice ? 0 : Math.max(0, nextScore), correct: Object.keys(nextAnswers).length, total: 9,
       bestStreak: Object.keys(nextAnswers).length, durationMs: Date.now() - startedAt.current,
       mode: `seed:${seed}${Object.keys(nextAnswers).length === 9 && errors.current === 0 ? ";flawless" : ""}`, countryHits: Object.values(nextAnswers),
@@ -53,7 +59,9 @@ export function GridGame({ difficulty, practice, onFinish, onExit }: PlayHandler
   }
 
   function submit(cca3: string) {
-    if (selected === null || locked) return;
+    if (selected === null || locked || finishRef.current || actionLockRef.current) return;
+    actionLockRef.current = true;
+    schedule(() => { actionLockRef.current = false; }, 0);
     const used = new Set(Object.values(answers));
     const result = validateGridEntry(puzzle, COUNTRIES, Math.floor(selected / 3), selected % 3, cca3, used, new Set(Object.keys(answers).map(Number)));
     setSelected(null);
@@ -88,6 +96,10 @@ export function GridGame({ difficulty, practice, onFinish, onExit }: PlayHandler
   }
 
   function newBoard() {
+    clearTimers();
+    finishRef.current = false;
+    actionLockRef.current = false;
+    setSelected(null);
     const next = crypto.getRandomValues(new Uint32Array(1))[0];
     const url = new URL(window.location.href); url.searchParams.set("seed", String(next));
     window.history.replaceState(null, "", url);
@@ -105,7 +117,7 @@ export function GridGame({ difficulty, practice, onFinish, onExit }: PlayHandler
         <button onClick={copyBoard} className="flex h-11 w-11 items-center justify-center rounded-lg text-muted-foreground hover:bg-muted" aria-label={t("grid.copy")}><Copy className="h-4 w-4" /></button>
         <button onClick={newBoard} className="flex h-11 w-11 items-center justify-center rounded-lg text-muted-foreground hover:bg-muted" aria-label={t("grid.newBoard")}><Dices className="h-4 w-4" /></button>
         {!practice && <LivesPill lives={lives} max={MAX_LIVES[difficulty]} />}
-        <ScorePill value={score} />
+        {!practice && <ScorePill value={score} />}
       </GameTopBar>
       <ProgressBar value={correct / 9} />
 

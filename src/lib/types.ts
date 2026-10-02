@@ -50,7 +50,11 @@ export type GameId =
   | "millionaire"
   | "expedition"
   | "jigsaw"
-  | "connections";
+  | "connections"
+  | "flag-pie"
+  | "city-compass"
+  | "flag-mosaic"
+  | "country-radar";
 
 export type Difficulty = "easy" | "medium" | "hard";
 

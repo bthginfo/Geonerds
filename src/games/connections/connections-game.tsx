@@ -13,6 +13,7 @@ import { sound } from "@/lib/sound";
 import { haptic } from "@/lib/haptics";
 import { cn } from "@/lib/utils";
 import { buildConnectionPuzzle, type ConnectionRelation } from "./generator";
+import { useGameTimeouts } from "@/games/use-game-timeouts";
 
 const RELATION_ICON = {
   border: Map,
@@ -38,12 +39,20 @@ export function ConnectionsGame({ difficulty, practice, onFinish, onExit }: Play
   const [feedback, setFeedback] = useState<string | null>(null);
   const [locked, setLocked] = useState(false);
   const startRef = useRef(Date.now());
+  const answerLockRef = useRef(false);
+  const finishRef = useRef(false);
+  const wrongRef = useRef(new Set<string>());
+  const { schedule, clearTimers } = useGameTimeouts();
 
   useEffect(() => {
     if (puzzle) setChain([puzzle.start]);
   }, [puzzle]);
 
   function regenerate() {
+    clearTimers();
+    answerLockRef.current = false;
+    finishRef.current = false;
+    wrongRef.current = new Set();
     setGeneration((value) => value + 1);
     setStepIndex(0);
     setScore(0);
@@ -72,6 +81,8 @@ export function ConnectionsGame({ difficulty, practice, onFinish, onExit }: Play
   const RelationIcon = RELATION_ICON[step.relation];
 
   function finish(nextScore: number, completed: number, hits = chain.slice(1).map((country) => country.cca3), runBest = bestStreak) {
+    if (finishRef.current) return;
+    finishRef.current = true;
     onFinish({
       score: nextScore,
       correct: completed,
@@ -84,11 +95,12 @@ export function ConnectionsGame({ difficulty, practice, onFinish, onExit }: Play
   }
 
   function choose(candidateCode: string) {
-    if (locked || wrong.has(candidateCode)) return;
+    if (finishRef.current || answerLockRef.current || locked || wrongRef.current.has(candidateCode)) return;
     const candidate = step.candidates.find((country) => country.cca3 === candidateCode);
     if (!candidate) return;
 
     if (candidate.cca3 !== step.answer.cca3) {
+      wrongRef.current.add(candidateCode);
       sound.wrong();
       haptic.error();
       setWrong((current) => new Set(current).add(candidate.cca3));
@@ -98,13 +110,15 @@ export function ConnectionsGame({ difficulty, practice, onFinish, onExit }: Play
         const nextEnergy = energy - 1;
         setEnergy(nextEnergy);
         if (nextEnergy <= 0) {
+          answerLockRef.current = true;
           setLocked(true);
-          window.setTimeout(() => finish(score, stepIndex), 700);
+          schedule(() => finish(score, stepIndex), 700);
         }
       }
       return;
     }
 
+    answerLockRef.current = true;
     setLocked(true);
     sound.correct();
     haptic.success();
@@ -119,12 +133,14 @@ export function ConnectionsGame({ difficulty, practice, onFinish, onExit }: Play
     setBestStreak(nextBest);
     setFeedback(t(`connections.correct.${step.relation}`, { value: step.evidence }));
 
-    window.setTimeout(() => {
+    schedule(() => {
       if (stepIndex + 1 >= puzzle!.steps.length) {
         finish(nextScore, puzzle!.steps.length, nextChain.slice(1).map((country) => country.cca3), nextBest);
         return;
       }
-      setStepIndex((index) => index + 1);
+      setStepIndex(stepIndex + 1);
+      answerLockRef.current = false;
+      wrongRef.current = new Set();
       setWrong(new Set());
       setFeedback(null);
       setLocked(false);
@@ -135,8 +151,8 @@ export function ConnectionsGame({ difficulty, practice, onFinish, onExit }: Play
     <div className="geo-workbench flex flex-1 flex-col">
       <GameTopBar title={t("games.connections.name")} onExit={onExit} compactMobileTitle>
         {!practice && <LivesPill lives={energy} max={3} />}
-        <StreakPill value={streak} />
-        <ScorePill value={score} />
+        {!practice && <StreakPill value={streak} />}
+        {!practice && <ScorePill value={score} />}
       </GameTopBar>
       <ProgressBar value={stepIndex / puzzle.steps.length} />
 

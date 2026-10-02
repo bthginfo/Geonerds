@@ -18,6 +18,8 @@ import { matchAnswer } from "@/lib/fuzzy";
 import { sound } from "@/lib/sound";
 import { sample, shuffle, formatNumber } from "@/lib/utils";
 import { useT } from "@/i18n/I18nProvider";
+import { createSeededRandom } from "@/lib/random";
+import { GameLoadState } from "@/games/load-state";
 
 const PER_ROUND_BUDGET_MS = 15000;
 
@@ -42,15 +44,16 @@ function roundPeople(n: number): string {
   return String(n);
 }
 
-export function NeighborsGame({ difficulty, mode, roundCount, timed, scope, onFinish, onExit }: PlayHandlers) {
+export function NeighborsGame({ difficulty, mode, roundCount, timed, scope, practice, seed, onFinish, onExit }: PlayHandlers) {
   const { t, locale } = useT();
 
   const rounds = useMemo<Round[]>(() => {
+    const random = seed ? createSeededRandom(seed) : Math.random;
     const pool = poolForDifficulty(difficulty).filter((country) => !scope || country.region === scope);
     const candidates = pool.filter((c) => c.region && (c.languages.length > 0 || c.currencies.length > 0));
     const count = roundCount === 0 ? candidates.length : roundCount;
 
-    return pickQuestions(candidates, count).map((answer) => {
+    return pickQuestions(candidates, count, random).map((answer) => {
       const nbs = neighborsOf(answer);
       // Ordered from vague → revealing, so each extra clue helps more.
       const clues: Clue[] = [];
@@ -89,13 +92,13 @@ export function NeighborsGame({ difficulty, mode, roundCount, timed, scope, onFi
         difficulty === "hard"
           ? pool.filter((c) => c.cca3 !== answer.cca3 && c.region === answer.region)
           : pool.filter((c) => c.cca3 !== answer.cca3);
-      const distractors = sample(distractorPool.length >= 3 ? distractorPool : pool.filter((c) => c.cca3 !== answer.cca3), 3);
-      const options = shuffle([answer, ...distractors]).map((c) => ({ id: c.cca3, label: countryName(c, locale) }));
+      const distractors = sample(distractorPool.length >= 3 ? distractorPool : pool.filter((c) => c.cca3 !== answer.cca3), 3, random);
+      const options = shuffle([answer, ...distractors], random).map((c) => ({ id: c.cca3, label: countryName(c, locale) }));
 
       return { answer, clues, options, accepted: countryAccepted(answer) };
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [difficulty, roundCount, locale, scope]);
+  }, [difficulty, roundCount, locale, scope, seed]);
 
   const total = rounds.length;
   const budget = total * PER_ROUND_BUDGET_MS;
@@ -109,6 +112,7 @@ export function NeighborsGame({ difficulty, mode, roundCount, timed, scope, onFi
   const [score, setScore] = useState(0);
   const [streak, setStreak] = useState(0);
   const [timeLeft, setTimeLeft] = useState(budget);
+  const [fact, setFact] = useState("");
 
   const startRef = useRef(Date.now());
   const scoreRef = useRef(0);
@@ -116,6 +120,7 @@ export function NeighborsGame({ difficulty, mode, roundCount, timed, scope, onFi
   const bestRef = useRef(0);
   const finishedRef = useRef(false);
   const hitsRef = useRef<string[]>([]);
+  const answerLockRef = useRef(false);
 
   const round = rounds[idx];
   const maxClues = round ? round.clues.length : 0;
@@ -135,6 +140,9 @@ export function NeighborsGame({ difficulty, mode, roundCount, timed, scope, onFi
   }
 
   function commit(correct: boolean) {
+    if (answerLockRef.current || finishedRef.current || !round) return;
+    answerLockRef.current = true;
+    setFact(randomFact(round.answer, locale));
     setAnswered(true);
     setLastCorrect(correct);
     if (correct) {
@@ -160,7 +168,7 @@ export function NeighborsGame({ difficulty, mode, roundCount, timed, scope, onFi
     commit(id === round.answer.cca3);
   }
   function submitTyped() {
-    if (answered) return;
+    if (answered || finishedRef.current || answerLockRef.current || !typed.trim()) return;
     const res = matchAnswer(typed, round.accepted);
     if (res.status === "near" && res.suggestion) {
       setHint(t("type.almost", { guess: res.suggestion }));
@@ -169,11 +177,13 @@ export function NeighborsGame({ difficulty, mode, roundCount, timed, scope, onFi
     commit(res.status === "correct");
   }
   function next() {
+    if (finishedRef.current || !answered) return;
     if (idx + 1 >= total) {
       doFinish();
       return;
     }
-    setIdx((i) => i + 1);
+    setIdx(idx + 1);
+    answerLockRef.current = false;
     setRevealed(1);
     setAnswered(false);
     setTyped("");
@@ -183,13 +193,13 @@ export function NeighborsGame({ difficulty, mode, roundCount, timed, scope, onFi
   // Timer
   useTimer(timed, budget, startRef, setTimeLeft, doFinish);
 
-  if (!round) return null;
+  if (!round) return <GameLoadState onExit={onExit} empty />;
 
   return (
     <div className="flex flex-1 flex-col">
       <GameTopBar title={t("games.neighbors.name")} onExit={onExit}>
-        <StreakPill value={streak} />
-        <ScorePill value={score} />
+        {!practice && <StreakPill value={streak} />}
+        {!practice && <ScorePill value={score} />}
         {timed ? <TimerPill ms={timeLeft} danger={timeLeft < 10000} /> : <RoundPill current={idx + 1} total={total} />}
       </GameTopBar>
 
@@ -235,6 +245,8 @@ export function NeighborsGame({ difficulty, mode, roundCount, timed, scope, onFi
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               className="flex items-center gap-3 rounded-xl border border-border bg-muted/40 p-3"
+              role="status"
+              aria-live="polite"
             >
               <FlagImage code={round.answer.flag} alt="" className="aspect-[4/3] w-12 shadow" />
               <div className="min-w-0">
@@ -244,7 +256,7 @@ export function NeighborsGame({ difficulty, mode, roundCount, timed, scope, onFi
                 </div>
                 <div className="flex items-start gap-1 text-xs text-muted-foreground">
                   <Lightbulb className="mt-0.5 h-3.5 w-3.5 shrink-0 text-accent" />
-                  {randomFact(round.answer, locale)}
+                  {fact}
                 </div>
               </div>
             </motion.div>
@@ -281,7 +293,7 @@ export function NeighborsGame({ difficulty, mode, roundCount, timed, scope, onFi
                   autoCapitalize="words"
                   spellCheck={false}
                   placeholder={t("type.placeholder")}
-                  className="h-12 flex-1 rounded-xl border-2 border-border bg-card px-4 text-base outline-none focus:border-primary"
+                  className="h-12 min-w-0 flex-1 rounded-xl border-2 border-border bg-card px-4 text-base outline-none focus:border-primary"
                 />
                 <Button size="lg" className="px-4" onClick={submitTyped} aria-label={t("type.submit")}>
                   <CornerDownLeft className="h-5 w-5" />

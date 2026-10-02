@@ -15,6 +15,7 @@ import { DIFFICULTY_MULTIPLIER } from "@/lib/scoring";
 import { sound } from "@/lib/sound";
 import { sample, shuffle, cn } from "@/lib/utils";
 import { useT } from "@/i18n/I18nProvider";
+import { GameLoadState } from "@/games/load-state";
 
 const STEP_POINTS = 40;
 const WRONG_PENALTY = 20;
@@ -25,7 +26,7 @@ export function NameAllGame({ difficulty, mode, roundCount, timed, practice, onF
   const clickMode = (mode ?? "choice") === "choice";
 
   const themes = useMemo(() => {
-    const count = roundCount === 0 ? 8 : roundCount;
+    const count = roundCount === 0 ? Infinity : roundCount;
     return generateThemes(difficulty, locale, count, clickMode ? "choice" : "type");
   }, [difficulty, roundCount, locale, clickMode]);
 
@@ -48,6 +49,10 @@ export function NameAllGame({ difficulty, mode, roundCount, timed, practice, onF
   const bestRef = useRef(0);
   const finishedRef = useRef(false);
   const hitsRef = useRef<string[]>([]);
+  const foundRef = useRef(new Set<string>());
+  const nextLockRef = useRef(false);
+
+  useEffect(() => { nextLockRef.current = false; }, [idx]);
 
   useEffect(() => {
     if (!timed) return;
@@ -78,7 +83,7 @@ export function NameAllGame({ difficulty, mode, roundCount, timed, practice, onF
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [clickMode, idx, difficulty]);
 
-  if (!theme) return null;
+  if (!theme) return <GameLoadState onExit={onExit} empty />;
   const remaining = theme.targets.length - found.size;
 
   function award() {
@@ -92,11 +97,14 @@ export function NameAllGame({ difficulty, mode, roundCount, timed, practice, onF
   }
   function penalize() {
     setStreak(0);
+    if (practice) return;
     scoreRef.current = Math.max(0, scoreRef.current - WRONG_PENALTY);
     setScore((s) => Math.max(0, s - WRONG_PENALTY));
   }
 
   function addFound(cca3: string) {
+    if (finishedRef.current || revealed || foundRef.current.has(cca3)) return;
+    foundRef.current.add(cca3);
     sound.correct();
     award();
     hitsRef.current.push(cca3);
@@ -104,7 +112,7 @@ export function NameAllGame({ difficulty, mode, roundCount, timed, practice, onF
   }
 
   function pickChip(cca3: string) {
-    if (revealed || found.has(cca3)) return;
+    if (finishedRef.current || revealed || foundRef.current.has(cca3)) return;
     if (targetSet.has(cca3)) {
       addFound(cca3);
     } else {
@@ -116,9 +124,9 @@ export function NameAllGame({ difficulty, mode, roundCount, timed, practice, onF
   }
 
   function submitTyped() {
-    if (revealed) return;
+    if (finishedRef.current || revealed || !input.trim()) return;
     const hit = theme.targets.find((code) => {
-      if (found.has(code)) return false;
+      if (foundRef.current.has(code)) return false;
       const c = getCountryByCca3(code);
       return c && matchAnswer(input, countryAccepted(c)).status === "correct";
     });
@@ -147,11 +155,14 @@ export function NameAllGame({ difficulty, mode, roundCount, timed, practice, onF
   }
 
   function next() {
+    if (finishedRef.current || nextLockRef.current) return;
+    nextLockRef.current = true;
     if (idx + 1 >= total) {
       doFinish();
       return;
     }
-    setIdx((i) => i + 1);
+    setIdx(idx + 1);
+    foundRef.current = new Set();
     setFound(new Set());
     setRevealed(false);
     setInput("");
@@ -246,7 +257,7 @@ export function NameAllGame({ difficulty, mode, roundCount, timed, practice, onF
                 spellCheck={false}
                 placeholder={t("type.placeholder")}
                 className={cn(
-                  "h-12 flex-1 rounded-xl border-2 bg-card px-4 text-base outline-none focus:border-primary disabled:opacity-60",
+                  "h-12 min-w-0 flex-1 rounded-xl border-2 bg-card px-4 text-base outline-none focus:border-primary disabled:opacity-60",
                   shake ? "animate-shake border-danger" : "border-border"
                 )}
               />

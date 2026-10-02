@@ -6,6 +6,8 @@ import { Check, X, ArrowRight, CornerDownLeft, Lightbulb } from "lucide-react";
 import type { AnswerMode, Country, Difficulty, GameId } from "@/lib/types";
 import type { PlayResult } from "@/components/game/game-shell";
 import { useT } from "@/i18n/I18nProvider";
+import { GameLoadState } from "@/games/load-state";
+import { getFlagPolicyNote } from "@/lib/flag-policy";
 import { GameTopBar, ScorePill, StreakPill, RoundPill, TimerPill, LivesPill, ProgressBar } from "@/components/game/hud";
 import { Button } from "@/components/ui/button";
 import { scoreForAnswer } from "@/lib/scoring";
@@ -42,6 +44,7 @@ export function QuizGame({
   difficulty,
   timed = false,
   practice = false,
+  challenge = false,
   onFinish,
   onExit,
   typePlaceholderKey = "type.placeholder",
@@ -52,6 +55,7 @@ export function QuizGame({
   difficulty: Difficulty;
   timed?: boolean;
   practice?: boolean;
+  challenge?: boolean;
   onFinish: (r: PlayResult) => void;
   onExit: () => void;
   typePlaceholderKey?: string;
@@ -81,11 +85,18 @@ export function QuizGame({
   const livesRef = useRef(MAX_LIVES);
   const gameOverRef = useRef(false);
   const finishedRef = useRef(false);
+  const answerLockRef = useRef(false);
+  const advanceLockRef = useRef(false);
   const marksRef = useRef<boolean[]>([]);
   const hitsRef = useRef<string[]>([]);
 
   const round = rounds[idx];
   const inputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    advanceLockRef.current = false;
+    if (mode === "type") inputRef.current?.focus();
+  }, [idx, mode]);
 
   function doFinish() {
     if (finishedRef.current) return;
@@ -125,14 +136,15 @@ export function QuizGame({
   }, [timed, idx, answered]);
 
   function loseLife() {
-    if (practice) return; // practice: never run out of lives
+    if (practice || challenge) return; // fair challenges always play the same full set
     livesRef.current = Math.max(0, livesRef.current - 1);
     setLives(livesRef.current);
     if (livesRef.current <= 0) gameOverRef.current = true;
   }
 
   function commit(correct: boolean, didTimeOut = false) {
-    if (answered) return;
+    if (answerLockRef.current || !round || finishedRef.current) return;
+    answerLockRef.current = true;
     const timeMs = Date.now() - qStartRef.current;
     const earned = scoreForAnswer({ correct, difficulty, timed, timeMs, timeLimitMs: TIME_LIMIT_MS });
     setAnswered(true);
@@ -164,11 +176,14 @@ export function QuizGame({
   }
 
   function next() {
+    if (!answered || advanceLockRef.current) return;
+    advanceLockRef.current = true;
     if (gameOverRef.current || idx + 1 >= total) {
       doFinish();
       return;
     }
-    setIdx((i) => i + 1);
+    setIdx(idx + 1);
+    answerLockRef.current = false;
     setAnswered(false);
     setSelectedId(null);
     setTyped("");
@@ -199,11 +214,15 @@ export function QuizGame({
   // progress fraction 0..1
   const progress = (idx + (answered ? 1 : 0)) / total;
 
+  if (!round) {
+    return <GameLoadState onExit={onExit} empty />;
+  }
+
   return (
     <div className="flex flex-1 flex-col">
       <GameTopBar title={t(`games.${gameId}.name`)} onExit={onExit}>
         {!practice && <StreakPill value={streak} />}
-        {!practice && <LivesPill lives={lives} max={MAX_LIVES} />}
+        {!practice && !challenge && <LivesPill lives={lives} max={MAX_LIVES} />}
         {!practice && <ScorePill value={score} />}
         {timed ? <TimerPill ms={timeLeft} danger={timeLeft < 4000} /> : <RoundPill current={idx + 1} total={total} />}
       </GameTopBar>
@@ -284,7 +303,7 @@ export function QuizGame({
                     autoCapitalize="words"
                     spellCheck={false}
                     placeholder={t(typePlaceholderKey)}
-                    className="h-12 flex-1 rounded-xl border-2 border-border bg-card px-4 text-base outline-none focus:border-primary disabled:opacity-60"
+                    className="h-12 min-w-0 flex-1 rounded-xl border-2 border-border bg-card px-4 text-base outline-none focus:border-primary disabled:opacity-60"
                   />
                   {!answered && (
                     <Button
@@ -311,6 +330,8 @@ export function QuizGame({
                     initial={{ opacity: 0, y: 8 }}
                     animate={{ opacity: 1, y: 0 }}
                     className="space-y-2"
+                    role="status"
+                    aria-live="polite"
                   >
                     <div className="flex items-center justify-between gap-3">
                       <div className="flex items-center gap-2 text-sm font-semibold">
@@ -324,9 +345,8 @@ export function QuizGame({
                               <X className="h-5 w-5" /> {timedOut ? t("common.timeUp") : t("common.wrong")}
                             </span>
                             <span className="text-xs font-normal text-muted-foreground">
-                              {gameOverRef.current
-                                ? t("common.gameOver")
-                                : t("common.theAnswerWas", { answer: round.answerLabel })}
+                              {t("common.theAnswerWas", { answer: round.answerLabel })}
+                              {gameOverRef.current && ` · ${t("common.gameOver")}`}
                             </span>
                           </span>
                         )}
@@ -344,6 +364,9 @@ export function QuizGame({
                           {fact}
                         </span>
                       </div>
+                    )}
+                    {gameId === "flags" && getFlagPolicyNote(round.factCountry?.flag, locale) && (
+                      <p className="rounded-xl border border-border bg-muted/50 p-3 text-xs leading-relaxed text-muted-foreground">{getFlagPolicyNote(round.factCountry?.flag, locale)}</p>
                     )}
                   </motion.div>
                 )}

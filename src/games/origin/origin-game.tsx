@@ -8,18 +8,20 @@ import { countryAccepted } from "@/games/aliases";
 import { sample, shuffle } from "@/lib/utils";
 import { ITEMS, ITEM_MAX_TIER } from "./items";
 import { useT } from "@/i18n/I18nProvider";
+import { createSeededRandom } from "@/lib/random";
 
-export function OriginGame({ difficulty, mode, roundCount, timed, practice, onFinish, onExit }: PlayHandlers) {
+export function OriginGame({ difficulty, mode, roundCount, timed, practice, seed, challenge, onFinish, onExit }: PlayHandlers) {
   const { t, locale } = useT();
 
   // Drop any trailing "(…)" hint (e.g. "Dragon (Bhutan)") so it never gives the answer away.
   const cleanLabel = (s: string) => s.replace(/\s*\([^)]*\)\s*$/, "").trim();
 
   const rounds = useMemo<QuizRound[]>(() => {
+    const random = seed ? createSeededRandom(seed) : Math.random;
     const maxTier = ITEM_MAX_TIER[difficulty];
     const usable = ITEMS.filter((it) => it.tier <= maxTier && getCountryByCca3(it.cca3));
     const count = roundCount === 0 ? usable.length : roundCount;
-    return sample(usable, Math.min(count, usable.length)).map((item) => {
+    return sample(usable, Math.min(count, usable.length), random).map((item) => {
       const answer = getCountryByCca3(item.cca3)!;
       // On hard, draw plausible distractors from the same region.
       const samePool = COUNTRIES.filter((c) => c.cca3 !== answer.cca3 && c.region === answer.region);
@@ -27,8 +29,8 @@ export function OriginGame({ difficulty, mode, roundCount, timed, practice, onFi
         difficulty === "hard" && samePool.length >= 3
           ? samePool
           : COUNTRIES.filter((c) => c.cca3 !== answer.cca3);
-      const distractors = sample(distractorPool, 3);
-      const options = shuffle([answer, ...distractors]).map((c) => ({ id: c.cca3, label: countryName(c, locale) }));
+      const distractors = sample(distractorPool, 3, random);
+      const options = shuffle([answer, ...distractors], random).map((c) => ({ id: c.cca3, label: countryName(c, locale) }));
       return {
         key: `${item.category}-${item.en}`,
         prompt: (
@@ -48,9 +50,9 @@ export function OriginGame({ difficulty, mode, roundCount, timed, practice, onFi
       };
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [roundCount, locale, difficulty]);
+  }, [roundCount, locale, difficulty, seed]);
 
   return (
-    <QuizGame gameId="origin" rounds={rounds} mode={mode} difficulty={difficulty} timed={timed} practice={practice} onFinish={onFinish} onExit={onExit} />
+    <QuizGame gameId="origin" rounds={rounds} mode={mode} difficulty={difficulty} timed={timed} practice={practice} challenge={challenge} onFinish={onFinish} onExit={onExit} />
   );
 }

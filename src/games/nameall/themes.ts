@@ -1,5 +1,6 @@
 import type { Country, Difficulty, Locale } from "@/lib/types";
-import { COUNTRIES, poolForDifficulty, getCountryByCca3, countryName } from "@/data/countries";
+import { COUNTRIES, getCountryByCca3, countryName } from "@/data/countries";
+import { capitalLabel } from "@/games/aliases";
 import { sample, shuffle } from "@/lib/utils";
 
 export interface Theme {
@@ -31,7 +32,9 @@ function t(locale: Locale, en: string, de: string): string {
  *  `mode` matters: country-name letter themes are trivial in choice mode (you just
  *  read the first letter off the chips), so they're typing-only. */
 export function generateThemes(difficulty: Difficulty, locale: Locale, count: number, mode: "choice" | "type" = "choice"): Theme[] {
-  const pool = poolForDifficulty(difficulty);
+  // Difficulty limits the size of a complete answer set, never its truth.
+  // A valid neighbour/language answer must not disappear because it is obscure.
+  const pool = COUNTRIES;
   const poolSet = new Set(pool.map((c) => c.cca3));
   const maxTargets = difficulty === "hard" ? 16 : difficulty === "medium" ? 12 : 9;
   const minTargets = 4;
@@ -63,7 +66,7 @@ export function generateThemes(difficulty: Difficulty, locale: Locale, count: nu
     const byCapLetter = new Map<string, string[]>();
     for (const c of pool) {
       if (!c.capital) continue;
-      const L = c.capital.charAt(0).toUpperCase();
+      const L = capitalLabel(c, locale).charAt(0).toUpperCase();
       if (!/[A-ZÄÖÜ]/.test(L)) continue;
       byCapLetter.set(L, [...(byCapLetter.get(L) ?? []), c.cca3]);
     }
@@ -106,9 +109,9 @@ export function generateThemes(difficulty: Difficulty, locale: Locale, count: nu
     add(`lang-${lang}`, t(locale, `Countries where ${en} is official`, `Länder mit Amtssprache ${de}`), codes);
   }
 
-  // Superlatives (computed over all UN members; always famous).
+  // Superlatives use the full playable country universe (including microstates).
   const ranked = (key: (c: Country) => number, n: number) =>
-    [...COUNTRIES].filter((c) => c.unMember && key(c) > 0).sort((a, b) => key(b) - key(a)).slice(0, n).map((c) => c.cca3);
+    [...COUNTRIES].filter((c) => key(c) > 0).sort((a, b) => key(b) - key(a)).slice(0, n).map((c) => c.cca3);
   const big = ranked((c) => c.area, 10);
   if (big.length >= minTargets) candidates.push({ id: "largest", title: t(locale, "The 10 largest countries by area", "Die 10 größten Länder nach Fläche"), targets: big });
   const populous = ranked((c) => c.population, 10);
@@ -117,8 +120,8 @@ export function generateThemes(difficulty: Difficulty, locale: Locale, count: nu
   if (richest.length >= minTargets) candidates.push({ id: "gdp", title: t(locale, "The 10 largest economies (GDP)", "Die 10 größten Volkswirtschaften (BIP)"), targets: richest });
   const dense = ranked((c) => (c.area > 0 ? c.population / c.area : 0), 10);
   if (dense.length >= minTargets) candidates.push({ id: "dense", title: t(locale, "The 10 most densely populated countries", "Die 10 am dichtesten besiedelten Länder"), targets: dense });
-  const mostBorders = ranked((c) => c.borders.length, 10);
-  if (mostBorders.length >= minTargets) candidates.push({ id: "mostborders", title: t(locale, "The 10 countries with the most neighbours", "Die 10 Länder mit den meisten Nachbarn"), targets: mostBorders });
+  // A threshold avoids arbitrarily excluding countries tied for tenth place.
+  add("mostborders", t(locale, "Countries with 8+ land borders", "Länder mit mindestens 8 Landgrenzen"), pool.filter((c) => c.borders.length >= 8).map((c) => c.cca3));
 
   // Name-pattern & attribute themes.
   const stans = pool.filter((c) => /stan$/i.test(countryName(c, "en"))).map((c) => c.cca3);
@@ -136,7 +139,7 @@ export function generateThemes(difficulty: Difficulty, locale: Locale, count: nu
   // Harder knowledge themes — well suited to choice mode too (you must *know* them).
   if (difficulty !== "easy") {
     const smallest = [...COUNTRIES]
-      .filter((c) => c.unMember && c.area > 0)
+      .filter((c) => c.area > 0)
       .sort((a, b) => a.area - b.area)
       .slice(0, 10)
       .map((c) => c.cca3);

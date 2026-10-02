@@ -11,15 +11,15 @@ export interface Fact {
 
 export const COUNTRY_FACTS: Record<string, Fact[]> = {
   FRA: [
-    { en: "France is the most visited country on Earth — about 90 million tourists a year.", de: "Frankreich ist das meistbesuchte Land der Welt – rund 90 Mio. Touristen pro Jahr." },
+    { en: "France's Palace and Park of Versailles are a UNESCO World Heritage site.", de: "Frankreichs Schloss und Park von Versailles gehören zum UNESCO-Welterbe." },
     { en: "The Eiffel Tower grows up to 15 cm taller in summer as its iron expands in the heat.", de: "Der Eiffelturm wird im Sommer bis zu 15 cm höher, weil sich das Eisen in der Hitze ausdehnt." },
   ],
   ITA: [
-    { en: "Italy has more UNESCO World Heritage sites than any other country.", de: "Italien hat mehr UNESCO-Welterbestätten als jedes andere Land." },
+    { en: "Venice and its lagoon are a UNESCO World Heritage site in Italy.", de: "Venedig und seine Lagune sind eine UNESCO-Welterbestätte in Italien." },
     { en: "Rome is older than Italy itself — the city is over 2,700 years old.", de: "Rom ist älter als Italien selbst – die Stadt ist über 2.700 Jahre alt." },
   ],
   ESP: [
-    { en: "Spain's Sagrada Família has been under construction since 1882 and still isn't finished.", de: "Spaniens Sagrada Família wird seit 1882 gebaut und ist noch immer nicht fertig." },
+    { en: "Construction of Barcelona's Sagrada Família began in 1882.", de: "Der Bau der Sagrada Família in Barcelona begann 1882." },
     { en: "Spanish is the world's second-most spoken native language.", de: "Spanisch ist die weltweit am zweithäufigsten gesprochene Muttersprache." },
   ],
   DEU: [
@@ -43,8 +43,8 @@ export const COUNTRY_FACTS: Record<string, Fact[]> = {
     { en: "It has four official languages: German, French, Italian and Romansh.", de: "Sie hat vier Amtssprachen: Deutsch, Französisch, Italienisch und Rätoromanisch." },
   ],
   AUT: [
-    { en: "The croissant was invented in Vienna, not in France.", de: "Das Croissant wurde in Wien erfunden, nicht in Frankreich." },
-    { en: "Austria gave the world the snow globe and the sewing machine.", de: "Österreich schenkte der Welt die Schneekugel und die Nähmaschine." },
+    { en: "Schönbrunn Palace and its gardens are a UNESCO World Heritage site in Vienna.", de: "Schloss Schönbrunn und seine Gärten in Wien gehören zum UNESCO-Welterbe." },
+    { en: "Austria's Hallstatt-Dachstein region is a UNESCO-listed cultural landscape.", de: "Österreichs Region Hallstatt-Dachstein ist eine UNESCO-Kulturlandschaft." },
   ],
   NOR: [
     { en: "Norway introduced salmon sushi to Japan in the 1980s.", de: "Norwegen brachte Japan in den 1980ern das Lachs-Sushi." },
@@ -56,11 +56,11 @@ export const COUNTRY_FACTS: Record<string, Fact[]> = {
   ],
   FIN: [
     { en: "Finland has around 3 million saunas — almost one per household.", de: "Finnland hat rund 3 Mio. Saunen – fast eine pro Haushalt." },
-    { en: "It's been ranked the world's happiest country for years running.", de: "Es wurde jahrelang in Folge zum glücklichsten Land der Welt gekürt." },
+    { en: "The sea fortress of Suomenlinna is a UNESCO World Heritage site near Helsinki.", de: "Die Seefestung Suomenlinna bei Helsinki gehört zum UNESCO-Welterbe." },
   ],
   ISL: [
     { en: "Iceland runs almost entirely on renewable geothermal and hydro power.", de: "Island läuft fast vollständig mit erneuerbarer Erdwärme und Wasserkraft." },
-    { en: "It has no mosquitoes.", de: "Es gibt dort keine Mücken." },
+    { en: "Iceland's Þingvellir National Park is a UNESCO World Heritage site.", de: "Islands Nationalpark Þingvellir gehört zum UNESCO-Welterbe." },
   ],
   PRT: [
     { en: "Portugal is home to the oldest bookshop in the world (Lisbon, 1732).", de: "In Portugal steht die älteste Buchhandlung der Welt (Lissabon, 1732)." },
@@ -71,7 +71,7 @@ export const COUNTRY_FACTS: Record<string, Fact[]> = {
     { en: "The Olympic Games began in ancient Olympia in 776 BC.", de: "Die Olympischen Spiele begannen 776 v. Chr. im antiken Olympia." },
   ],
   RUS: [
-    { en: "Russia spans 11 time zones — more than any other country.", de: "Russland erstreckt sich über 11 Zeitzonen – mehr als jedes andere Land." },
+    { en: "Russia's vast landmass stretches across both Europe and Asia.", de: "Russlands große Landmasse erstreckt sich über Europa und Asien." },
     { en: "Lake Baikal holds about 20% of the world's unfrozen fresh water.", de: "Der Baikalsee enthält rund 20 % des ungefrorenen Süßwassers der Erde." },
   ],
   POL: [
@@ -83,27 +83,28 @@ export const COUNTRY_FACTS: Record<string, Fact[]> = {
     { en: "The word 'robot' comes from a 1920 Czech play.", de: "Das Wort „Roboter“ stammt aus einem tschechischen Theaterstück von 1920." },
   ],
   USA: [
-    { en: "The US has no official national language at the federal level.", de: "Die USA haben auf Bundesebene keine offizielle Landessprache." },
+    // Primary reference: White House executive order, 2025-03-01.
+    { en: "A March 2025 executive order designated English as the official language of the United States.", de: "Eine Präsidialverordnung vom März 2025 bestimmte Englisch zur Amtssprache der Vereinigten Staaten." },
     { en: "Alaska has both the easternmost and westernmost points of the US.", de: "Alaska hat sowohl den östlichsten als auch den westlichsten Punkt der USA." },
   ],
   CAN: [
-    { en: "Canada has more lakes than the rest of the world combined.", de: "Kanada hat mehr Seen als der Rest der Welt zusammen." },
+    { en: "Canada's Rocky Mountain Parks World Heritage site includes Banff and Jasper.", de: "Kanadas Welterbestätte der Rocky-Mountain-Parks umfasst Banff und Jasper." },
     { en: "Its coastline is the longest of any country on Earth.", de: "Seine Küste ist die längste aller Länder der Welt." },
   ],
   MEX: [
     { en: "Mexico City is slowly sinking — up to 50 cm a year in places.", de: "Mexiko-Stadt sinkt langsam ab – stellenweise bis zu 50 cm pro Jahr." },
-    { en: "Chocolate, chillies and corn were all first cultivated in Mexico.", de: "Schokolade, Chili und Mais wurden zuerst in Mexiko kultiviert." },
+    { en: "Chichén Itzá is a UNESCO-listed Maya city on Mexico's Yucatán Peninsula.", de: "Chichén Itzá ist eine UNESCO-gelistete Maya-Stadt auf Mexikos Halbinsel Yucatán." },
   ],
   BRA: [
-    { en: "The Amazon in Brazil produces around 20% of the world's oxygen.", de: "Der Amazonas in Brasilien erzeugt rund 20 % des Sauerstoffs der Welt." },
-    { en: "Brazil has won the football World Cup a record five times.", de: "Brasilien gewann die Fußball-WM rekordverdächtige fünf Mal." },
+    { en: "Brazil's Central Amazon Conservation Complex is a UNESCO World Heritage site.", de: "Brasiliens Schutzgebietskomplex Zentralamazonien gehört zum UNESCO-Welterbe." },
+    { en: "Brazil won its fifth men's football World Cup in 2002.", de: "Brasilien gewann 2002 seine fünfte Fußball-Weltmeisterschaft der Männer." },
   ],
   ARG: [
-    { en: "Argentina has the world's southernmost city, Ushuaia.", de: "Argentinien hat die südlichste Stadt der Welt, Ushuaia." },
-    { en: "The tango was born in the streets of Buenos Aires.", de: "Der Tango entstand in den Straßen von Buenos Aires." },
+    { en: "Los Glaciares National Park is a UNESCO World Heritage site in Argentine Patagonia.", de: "Der Nationalpark Los Glaciares in Argentiniens Patagonien gehört zum UNESCO-Welterbe." },
+    { en: "Tango developed in the Río de la Plata communities of Buenos Aires and Montevideo.", de: "Der Tango entwickelte sich in den Gemeinschaften am Río de la Plata in Buenos Aires und Montevideo." },
   ],
   CHL: [
-    { en: "Chile's Atacama Desert is the driest place on Earth.", de: "Chiles Atacama-Wüste ist der trockenste Ort der Erde." },
+    { en: "Chile's Rapa Nui National Park protects Easter Island's famous moai statues.", de: "Chiles Nationalpark Rapa Nui schützt die berühmten Moai-Statuen der Osterinsel." },
     { en: "The country stretches over 4,300 km from north to south.", de: "Das Land erstreckt sich über 4.300 km von Nord nach Süd." },
   ],
   PER: [
@@ -112,7 +113,7 @@ export const COUNTRY_FACTS: Record<string, Fact[]> = {
   ],
   BOL: [
     { en: "Bolivia's Salar de Uyuni is the world's largest salt flat.", de: "Boliviens Salar de Uyuni ist die größte Salzwüste der Welt." },
-    { en: "It has two capitals: Sucre and La Paz.", de: "Es hat zwei Hauptstädte: Sucre und La Paz." },
+    { en: "Sucre is Bolivia's constitutional capital; La Paz is its seat of government.", de: "Sucre ist Boliviens verfassungsmäßige Hauptstadt; La Paz ist der Regierungssitz." },
   ],
   COL: [
     { en: "Colombia is the world's second-most biodiverse country.", de: "Kolumbien ist das artenreichste Land nach Brasilien." },
@@ -127,7 +128,7 @@ export const COUNTRY_FACTS: Record<string, Fact[]> = {
     { en: "It's made up of over 14,000 islands.", de: "Es besteht aus über 14.000 Inseln." },
   ],
   KOR: [
-    { en: "South Korea has the world's fastest average internet speeds.", de: "Südkorea hat im Schnitt die schnellsten Internetgeschwindigkeiten der Welt." },
+    { en: "Jeju Volcanic Island and Lava Tubes are a UNESCO World Heritage site in South Korea.", de: "Jejus Vulkaninsel und Lavatunnel in Südkorea gehören zum UNESCO-Welterbe." },
     { en: "Korean age tradition once counted everyone as 1 at birth.", de: "Nach koreanischer Tradition galt jeder bei der Geburt als 1 Jahr alt." },
   ],
   IND: [
@@ -155,12 +156,12 @@ export const COUNTRY_FACTS: Record<string, Fact[]> = {
     { en: "Around 80% of UAE residents are foreign-born.", de: "Rund 80 % der Bewohner der VAE sind im Ausland geboren." },
   ],
   TUR: [
-    { en: "Istanbul is the only major city spanning two continents.", de: "Istanbul ist die einzige Großstadt auf zwei Kontinenten." },
-    { en: "Tulips originated in Turkey before becoming famous in the Netherlands.", de: "Tulpen stammen aus der Türkei, bevor sie in den Niederlanden berühmt wurden." },
+    { en: "Istanbul spans Europe and Asia on opposite sides of the Bosporus.", de: "Istanbul erstreckt sich auf beiden Seiten des Bosporus über Europa und Asien." },
+    { en: "The Historic Areas of Istanbul, including Hagia Sophia, are UNESCO-listed.", de: "Die historischen Bereiche Istanbuls mit der Hagia Sophia gehören zum UNESCO-Welterbe." },
   ],
   ISR: [
     { en: "The Dead Sea shore is the lowest land on Earth, ~430 m below sea level.", de: "Das Ufer des Toten Meeres ist der tiefste Landpunkt der Erde, ~430 m unter dem Meer." },
-    { en: "Cherry tomatoes were developed in Israel.", de: "Cherrytomaten wurden in Israel entwickelt." },
+    { en: "The ancient fortress of Masada is a UNESCO World Heritage site.", de: "Die antike Festung Masada gehört zum UNESCO-Welterbe." },
   ],
   EGY: [
     { en: "The Great Pyramid stood as the tallest human structure for ~3,800 years.", de: "Die Cheops-Pyramide war ~3.800 Jahre lang das höchste Bauwerk der Menschheit." },
@@ -212,7 +213,7 @@ export const COUNTRY_FACTS: Record<string, Fact[]> = {
     { en: "Monaco is the most densely populated country on Earth.", de: "Monaco ist das am dichtesten besiedelte Land der Erde." },
   ],
   CUB: [
-    { en: "Cuba has two currencies and famously classic 1950s American cars.", de: "Kuba hatte zwei Währungen und ist bekannt für klassische US-Autos der 1950er." },
+    { en: "Old Havana and its fortifications are a UNESCO World Heritage site in Cuba.", de: "Die Altstadt von Havanna und ihre Festungsanlagen in Kuba gehören zum UNESCO-Welterbe." },
   ],
   JAM: [
     { en: "Jamaica gave the world reggae and sprinter Usain Bolt.", de: "Jamaika schenkte der Welt Reggae und den Sprinter Usain Bolt." },
@@ -229,7 +230,6 @@ export const COUNTRY_FACTS: Record<string, Fact[]> = {
   ],
   BTN: [
     { en: "Bhutan measures progress by 'Gross National Happiness'.", de: "Bhutan misst Fortschritt am „Bruttonationalglück“." },
-    { en: "It's the world's only carbon-negative country.", de: "Es ist das einzige CO₂-negative Land der Welt." },
   ],
   LUX: [
     { en: "Luxembourg made all public transport free nationwide in 2020.", de: "Luxemburg machte 2020 als erstes Land den ÖPNV landesweit kostenlos." },
@@ -273,7 +273,7 @@ export const COUNTRY_FACTS: Record<string, Fact[]> = {
   KHM: [{ en: "Cambodia's Angkor Wat is the largest religious monument on Earth.", de: "Kambodschas Angkor Wat ist das größte religiöse Bauwerk der Erde." }],
   MYS: [{ en: "Malaysia's Petronas Towers were the world's tallest until 2004.", de: "Malaysias Petronas Towers waren bis 2004 die höchsten Gebäude der Welt." }],
   PHL: [{ en: "The Philippines is made up of more than 7,600 islands.", de: "Die Philippinen bestehen aus mehr als 7.600 Inseln." }],
-  PRK: [{ en: "North Korea uses its own calendar counting from Kim Il-sung's birth.", de: "Nordkorea nutzt einen eigenen Kalender ab Kim Il-sungs Geburtsjahr." }],
+  PRK: [{ en: "The Complex of Koguryo Tombs in North Korea is a UNESCO World Heritage site.", de: "Der Komplex der Koguryo-Gräber in Nordkorea gehört zum UNESCO-Welterbe." }],
   IRN: [{ en: "Iran (Persia) was home to one of the world's first empires.", de: "Iran (Persien) beheimatete eines der ersten Großreiche der Welt." }],
   IRQ: [{ en: "Iraq covers ancient Mesopotamia, the 'cradle of civilisation'.", de: "Der Irak umfasst das antike Mesopotamien, die „Wiege der Zivilisation“." }],
   JOR: [{ en: "Jordan's Petra was carved into rose-red cliffs over 2,000 years ago.", de: "Jordaniens Petra wurde vor über 2.000 Jahren in rosarote Felsen gehauen." }],
@@ -286,7 +286,7 @@ export const COUNTRY_FACTS: Record<string, Fact[]> = {
   // ── Africa ──
   DZA: [{ en: "Algeria is the largest country in Africa.", de: "Algerien ist das größte Land Afrikas." }],
   TUN: [{ en: "Tunisia's Sahara stood in for Tatooine in Star Wars.", de: "Tunesiens Sahara diente in Star Wars als Tatooine." }],
-  GHA: [{ en: "Ghana was the first sub-Saharan country to gain independence (1957).", de: "Ghana war das erste Land südlich der Sahara, das unabhängig wurde (1957)." }],
+  GHA: [{ en: "Ghana's Asante Traditional Buildings are a UNESCO World Heritage site.", de: "Ghanas traditionelle Aschanti-Bauten gehören zum UNESCO-Welterbe." }],
   SEN: [{ en: "Senegal's Lake Retba is naturally pink from algae.", de: "Senegals Lac Rose ist durch Algen natürlich rosa." }],
   TZA: [{ en: "Tanzania has both Africa's highest peak and its largest lake share.", de: "Tansania hat Afrikas höchsten Gipfel und großen Anteil am größten See." }],
   MDG: [{ en: "About 90% of Madagascar's wildlife exists nowhere else.", de: "Rund 90 % der Tierwelt Madagaskars gibt es nirgendwo sonst." }],

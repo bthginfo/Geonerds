@@ -142,7 +142,7 @@ const builders: Builder[] = [
   },
   // Which has more people?
   (a, pool, rng, locale) => {
-    const other = sampleWith(pool.filter((c) => c.cca3 !== a.cca3 && c.population > 0), 1, rng)[0];
+    const other = sampleWith(pool.filter((c) => c.cca3 !== a.cca3 && c.population > 0 && c.population !== a.population), 1, rng)[0];
     if (!other || a.population <= 0) return null;
     const bigger = a.population >= other.population ? a : other;
     return {
@@ -195,7 +195,7 @@ const builders: Builder[] = [
     const correct = a.languages[0];
     const distract = Array.from(
       new Set(
-        pool.filter((c) => c.cca3 !== a.cca3 && c.languages.length && !c.languages.includes(correct)).map((c) => c.languages[0])
+        pool.flatMap((country) => country.languages).filter((language) => !a.languages.includes(language))
       )
     );
     if (distract.length < 3) return null;
@@ -215,7 +215,7 @@ const builders: Builder[] = [
   // Which borders this country?
   (a, pool, rng, locale) => {
     if (!a.borders.length) return null;
-    const nb = a.borders.map((b) => getCountryByCca3(b)).find(Boolean);
+    const nb = sampleWith(a.borders.map((b) => getCountryByCca3(b)).filter((country): country is Country => Boolean(country)), 1, rng)[0];
     if (!nb) return null;
     const distract = sampleWith(
       pool.filter((c) => c.cca3 !== a.cca3 && c.cca3 !== nb.cca3 && !a.borders.includes(c.cca3)),

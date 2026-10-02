@@ -55,6 +55,52 @@ async function ensureSchema(sql: ReturnType<typeof postgres>) {
   await sql`CREATE INDEX IF NOT EXISTS gn_scores_game_score_idx ON gn_scores (game_id, score DESC)`;
   await sql`CREATE INDEX IF NOT EXISTS gn_scores_score_idx ON gn_scores (score DESC)`;
   await sql`
+    CREATE TABLE IF NOT EXISTS gn_challenges (
+      id text PRIMARY KEY,
+      challenger_id text NOT NULL REFERENCES gn_users(id) ON DELETE CASCADE,
+      opponent_id text NOT NULL REFERENCES gn_users(id) ON DELETE CASCADE,
+      game_id text NOT NULL,
+      difficulty text NOT NULL CHECK (difficulty IN ('easy', 'medium', 'hard')),
+      mode text NOT NULL CHECK (mode IN ('choice', 'type')),
+      rounds integer NOT NULL CHECK (rounds IN (10, 25, 50)),
+      timed boolean NOT NULL DEFAULT false,
+      variant text NOT NULL DEFAULT '',
+      seed text NOT NULL,
+      status text NOT NULL DEFAULT 'pending' CHECK (status IN ('pending', 'active', 'resolved', 'declined', 'cancelled', 'expired')),
+      winner_id text REFERENCES gn_users(id) ON DELETE SET NULL,
+      expires_at timestamptz NOT NULL,
+      accepted_at timestamptz,
+      resolved_at timestamptz,
+      created_at timestamptz NOT NULL DEFAULT now(),
+      updated_at timestamptz NOT NULL DEFAULT now(),
+      CHECK (challenger_id <> opponent_id)
+    )
+  `;
+  await sql`
+    CREATE TABLE IF NOT EXISTS gn_challenge_starts (
+      challenge_id text NOT NULL REFERENCES gn_challenges(id) ON DELETE CASCADE,
+      user_id text NOT NULL REFERENCES gn_users(id) ON DELETE CASCADE,
+      token text NOT NULL,
+      started_at timestamptz NOT NULL DEFAULT now(),
+      PRIMARY KEY (challenge_id, user_id)
+    )
+  `;
+  await sql`
+    CREATE TABLE IF NOT EXISTS gn_challenge_attempts (
+      challenge_id text NOT NULL REFERENCES gn_challenges(id) ON DELETE CASCADE,
+      user_id text NOT NULL REFERENCES gn_users(id) ON DELETE CASCADE,
+      score integer NOT NULL CHECK (score >= 0),
+      correct integer NOT NULL CHECK (correct >= 0),
+      total integer NOT NULL CHECK (total > 0 AND correct <= total),
+      best_streak integer NOT NULL CHECK (best_streak >= 0 AND best_streak <= correct),
+      duration_ms integer NOT NULL CHECK (duration_ms >= 500),
+      created_at timestamptz NOT NULL DEFAULT now(),
+      PRIMARY KEY (challenge_id, user_id)
+    )
+  `;
+  await sql`CREATE INDEX IF NOT EXISTS gn_challenges_inbox_idx ON gn_challenges (opponent_id, status, created_at DESC)`;
+  await sql`CREATE INDEX IF NOT EXISTS gn_challenges_sent_idx ON gn_challenges (challenger_id, status, created_at DESC)`;
+  await sql`
     CREATE TABLE IF NOT EXISTS wn_scores (
       id text PRIMARY KEY,
       user_id text NOT NULL REFERENCES gn_users(id) ON DELETE CASCADE,
@@ -191,7 +237,11 @@ async function ensureSchema(sql: ReturnType<typeof postgres>) {
 /** Returns the SQL client, lazily creating the schema once. */
 export async function getDb() {
   const sql = client();
-  if (!schemaReady) schemaReady = ensureSchema(sql);
+  if (!schemaReady) schemaReady = ensureSchema(sql).catch((error) => {
+    // A transient database failure must not poison every later request.
+    schemaReady = null;
+    throw error;
+  });
   await schemaReady;
   return sql;
 }

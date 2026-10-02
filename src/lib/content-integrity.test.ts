@@ -14,13 +14,13 @@ describe("content pool integrity", () => {
   it("keeps healthy finite pools above their regression floors", () => {
     const waters = JSON.parse(readFileSync(resolve(process.cwd(), "public/geo/waters.json"), "utf8")) as unknown[];
     const cityEntries = Object.values(CITIES).flat();
-    expect(FACT_QUESTIONS.length).toBeGreaterThanOrEqual(47);
-    expect(cityEntries.length).toBeGreaterThanOrEqual(160);
-    expect(PLACES.length).toBeGreaterThanOrEqual(100);
-    expect(PEAKS.length).toBeGreaterThanOrEqual(70);
-    expect(ITEMS.length).toBeGreaterThanOrEqual(160);
-    expect(colorFlags.length).toBeGreaterThanOrEqual(130);
-    expect(waters.length).toBeGreaterThanOrEqual(115);
+    expect(FACT_QUESTIONS.length).toBeGreaterThanOrEqual(120);
+    expect(cityEntries.length).toBeGreaterThanOrEqual(166);
+    expect(PLACES.length).toBeGreaterThanOrEqual(112);
+    expect(PEAKS.length).toBeGreaterThanOrEqual(72);
+    expect(ITEMS.length).toBeGreaterThanOrEqual(165);
+    expect(colorFlags.length).toBeGreaterThanOrEqual(196);
+    expect(waters.length).toBeGreaterThanOrEqual(118);
     expect(GN_BUILDER_COUNT).toBeGreaterThanOrEqual(19);
     expect(COUNTRIES.length).toBeGreaterThanOrEqual(190);
   });

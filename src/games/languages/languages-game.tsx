@@ -10,8 +10,9 @@ import { sample, shuffle, pickOne } from "@/lib/utils";
 import { simplifyCurrency } from "@/lib/currency";
 import { findScript, loadScriptFonts } from "./scripts";
 import { useT } from "@/i18n/I18nProvider";
+import { createSeededRandom } from "@/lib/random";
 
-export function LanguagesGame({ difficulty, roundCount, timed, scope, practice, onFinish, onExit }: PlayHandlers) {
+export function LanguagesGame({ difficulty, roundCount, timed, scope, practice, seed, challenge, onFinish, onExit }: PlayHandlers) {
   const { t, locale } = useT();
 
   useEffect(() => {
@@ -19,20 +20,22 @@ export function LanguagesGame({ difficulty, roundCount, timed, scope, practice, 
   }, []);
 
   const rounds = useMemo<QuizRound[]>(() => {
+    const random = seed ? createSeededRandom(seed) : Math.random;
     const pool = poolForDifficulty(difficulty).filter((c) => (!scope || c.region === scope) && (c.currencies.length > 0 || findScript(c)));
-    const count = roundCount === 0 ? pool.length : roundCount;
+    const count = roundCount === 0 ? pool.length : Math.min(roundCount, pool.length);
     // Bias toward script-capable countries so language clues show up often.
     const scriptCountries = pool.filter((c) => findScript(c));
     const scriptShare = Math.min(scriptCountries.length, Math.round(count * 0.6));
-    const chosen = sample(scriptCountries, scriptShare);
+    const chosen = sample(scriptCountries, scriptShare, random);
     const rest = sample(
       pool.filter((c) => !chosen.includes(c)),
-      Math.max(0, count - chosen.length)
+      Math.max(0, count - chosen.length),
+      random
     );
-    const questions = shuffle([...chosen, ...rest]);
+    const questions = shuffle([...chosen, ...rest], random);
 
     return questions.map((answer) => {
-      const script = findScript(answer);
+      const script = findScript(answer, random);
       // Always use the script clue when available (otherwise fall back to currency).
       const useScript = !!script;
 
@@ -57,10 +60,11 @@ export function LanguagesGame({ difficulty, roundCount, timed, scope, practice, 
         const lang = script.language;
         distractors = sample(
           pool.filter((c) => c.cca3 !== answer.cca3 && !c.languages.includes(lang)),
-          3
+          3,
+          random
         );
       } else {
-        const currency = pickOne(answer.currencies);
+        const currency = pickOne(answer.currencies, random);
         const simple = simplifyCurrency(currency);
         // Options must not share the simplified unit, so there's one answer.
         let candidates = pool.filter(
@@ -80,10 +84,10 @@ export function LanguagesGame({ difficulty, roundCount, timed, scope, practice, 
             <span className="text-3xl font-bold">{display}</span>
           </div>
         );
-        distractors = sample(candidates, 3);
+        distractors = sample(candidates, 3, random);
       }
 
-      const options = shuffle([answer, ...distractors]).map((c) => ({ id: c.cca3, label: countryName(c, locale) }));
+      const options = shuffle([answer, ...distractors], random).map((c) => ({ id: c.cca3, label: countryName(c, locale) }));
 
       return {
         key: answer.cca3,
@@ -96,7 +100,7 @@ export function LanguagesGame({ difficulty, roundCount, timed, scope, practice, 
       };
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [difficulty, roundCount, scope]);
+  }, [difficulty, roundCount, scope, locale, seed]);
 
   return (
     <QuizGame
@@ -106,6 +110,7 @@ export function LanguagesGame({ difficulty, roundCount, timed, scope, practice, 
       difficulty={difficulty}
       timed={timed}
       practice={practice}
+      challenge={challenge}
       onFinish={onFinish}
       onExit={onExit}
     />
