@@ -2,7 +2,7 @@
 
 import { useEffect, useId, useRef, useState } from "react";
 import Link from "next/link";
-import { ArrowUpRight, Check, Loader2, Send } from "lucide-react";
+import { ArrowUpRight, Check, Loader2, MessageCircleHeart, Send } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Modal } from "@/components/ui/modal";
 import { useT } from "@/i18n/I18nProvider";
@@ -75,10 +75,18 @@ export function FeedbackCallout() {
 
   return (
     <>
-      <section aria-labelledby="feedback-callout-title" className="mx-auto mb-5 flex min-h-11 w-full max-w-2xl flex-wrap items-center gap-x-3 gap-y-1 rounded-lg border border-border/60 bg-card/40 px-3 py-1 sm:mb-7">
-        <p id="feedback-callout-title" className="mr-auto text-[11px] font-medium text-muted-foreground">{locale === "de" ? "Ideen & Verbesserungen" : "Ideas & improvements"}</p>
-        <Button type="button" variant="ghost" size="sm" onClick={() => setOpen(true)} className="h-8 shrink-0 rounded-md border border-primary/20 bg-primary/5 px-2.5 text-xs font-semibold text-primary hover:bg-primary/10">{locale === "de" ? "Idee teilen" : "Share an idea"}</Button>
-        {isCreator && <Link href="/admin/feedback" className="ml-auto inline-flex min-h-8 items-center gap-1 rounded-md text-[11px] font-semibold text-primary hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">{locale === "de" ? "Einsendungen ansehen" : "View submissions"}<ArrowUpRight aria-hidden="true" className="h-3.5 w-3.5" /></Link>}
+      <section aria-labelledby="feedback-callout-title" className="mx-auto mb-5 grid w-full max-w-2xl grid-cols-[2.25rem_minmax(0,1fr)] items-start gap-x-3 gap-y-2 rounded-2xl border border-accent/25 bg-accent/5 px-3 py-3 sm:mb-7 sm:grid-cols-[2.25rem_minmax(0,1fr)_auto] sm:items-center sm:px-4 sm:py-3.5 dark:border-accent/20 dark:bg-accent/8">
+        <span aria-hidden="true" className="flex h-9 w-9 items-center justify-center rounded-xl bg-accent/15 text-accent-foreground dark:text-accent">
+          <MessageCircleHeart className="h-[18px] w-[18px]" />
+        </span>
+        <div className="min-w-0">
+          <h2 id="feedback-callout-title" className="text-sm font-semibold leading-5 text-foreground">{locale === "de" ? "Deine Ideen machen GeoNerds besser" : "Your ideas make GeoNerds better"}</h2>
+          <p className="mt-1 text-xs leading-5 text-muted-foreground">{locale === "de" ? "Ein neues Spiel, ein Wunsch oder eine kleine Verbesserung? Erzähl uns davon – jede Idee hilft." : "A new game, a wish or a small improvement? Tell us about it — every idea helps."}</p>
+        </div>
+        <div className="col-start-2 flex min-w-0 flex-col items-start gap-1 sm:col-start-3 sm:row-start-1 sm:items-end">
+          <Button type="button" variant="ghost" size="sm" onClick={() => setOpen(true)} className="h-11 shrink-0 whitespace-nowrap rounded-lg border border-accent/25 bg-accent/15 px-3.5 text-xs font-semibold text-accent-foreground hover:bg-accent/25 dark:text-accent">{locale === "de" ? "Idee teilen" : "Share an idea"}</Button>
+          {isCreator && <Link href="/admin/feedback" className="inline-flex min-h-8 max-w-full items-center gap-1 rounded-md text-[11px] leading-4 text-muted-foreground hover:text-foreground hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"><span className="min-w-0">{locale === "de" ? "Einsendungen ansehen" : "View submissions"}</span><ArrowUpRight aria-hidden="true" className="h-3.5 w-3.5 shrink-0" /></Link>}
+        </div>
       </section>
 
       <Modal open={open} onClose={() => setOpen(false)} title={locale === "de" ? "Deine Idee für GeoNerds" : "Your idea for GeoNerds"}>
