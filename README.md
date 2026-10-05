@@ -54,6 +54,13 @@ Signed in as **TheCreator**, open `/admin/feedback` (or **View submissions** on
 Home) to read all messages and mark them new/reviewed. This account is checked
 against its signed session UID and database record on every admin request.
 
+On `/challenges`, enter an opponent's username directly or open the searchable
+player list. It includes all registered accounts, even those without scores,
+and excludes your own account. The signed-in-only `/api/challenges/users` endpoint
+returns public names in alphabetical pages of 20, with case-insensitive literal
+search and keyset pagination. No account IDs or private data are exposed; manual
+entry remains available if browsing is temporarily unavailable.
+
 The **Duels** tab on `/leaderboard` ranks completed Geo challenges: 3 points per
 win, 1 per draw and 0 per loss, followed by win rate and wins for tie-breaking.
 Equal standings share a rank. Filter by game or the current calendar month;
