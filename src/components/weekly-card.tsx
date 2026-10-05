@@ -18,13 +18,13 @@ export function WeeklyCard() {
   return (
     <Link
       href="/weekly"
-      className="group mx-auto mt-3 flex w-full max-w-md items-center gap-4 rounded-2xl border border-violet-500/25 bg-gradient-to-br from-violet-500/10 to-fuchsia-500/10 p-4 transition-all hover:border-violet-500/50"
+      className="group flex w-full items-center gap-3 rounded-xl border border-border bg-card/70 px-4 py-3 transition-colors hover:border-primary/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
     >
-      <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-violet-500 to-fuchsia-600 text-white shadow">
-        <Swords className="h-6 w-6" />
+      <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
+        <Swords aria-hidden="true" className="h-5 w-5" />
       </span>
       <div className="min-w-0 flex-1">
-        <div className="font-bold">{t("weekly.title")}</div>
+        <div className="text-sm font-bold">{t("weekly.title")}</div>
         <div className="text-xs text-muted-foreground">
           {done ? (
             <span className="inline-flex items-center gap-1 text-success">

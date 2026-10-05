@@ -45,6 +45,25 @@ Flags whose lettering would reveal the country (e.g. the Central-American coats 
 arms, Bolivia, Brazil's motto) have that text region blurred in quiz mode — see
 `FLAG_OBSCURE` in `src/components/flag-image.tsx`.
 
+## Community ideas and duels
+
+The compact Home feedback callout accepts game ideas, improvements and bug reports
+from signed-in players or anonymous guests. Submissions are stored in Postgres;
+failed sends retain the draft, and identical retries do not create duplicates.
+Signed in as **TheCreator**, open `/admin/feedback` (or **View submissions** on
+Home) to read all messages and mark them new/reviewed. This account is checked
+against its signed session UID and database record on every admin request.
+
+The **Duels** tab on `/leaderboard` ranks completed Geo challenges: 3 points per
+win, 1 per draw and 0 per loss, followed by win rate and wins for tie-breaking.
+Equal standings share a rank. Filter by game or the current calendar month;
+monthly results use completion time. Both attempts must exist, and unfinished,
+cancelled or expired challenges never count. Public standings expose aggregates,
+not private invitations or opponents' unfinished results.
+
+These features use the existing database/auth configuration below; additive
+tables and indexes are created automatically. Wine/Poke routes are unaffected.
+
 ## Getting started
 
 ```bash

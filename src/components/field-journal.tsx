@@ -1,7 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { Award, BookOpen, Check, ChevronRight, Stamp, Target } from "lucide-react";
+import { useId, useState } from "react";
+import { Award, BookOpen, Check, ChevronDown, ChevronRight, Stamp, Target } from "lucide-react";
 import { useT } from "@/i18n/I18nProvider";
 import { useProgression } from "@/store/progression";
 import { dailyMissions, recentActivity, weeklyMission } from "@/lib/progression";
@@ -14,6 +15,8 @@ import { BADGES, badgeName, badgeProgress, badgeTier, computeStats } from "@/lib
 
 export function FieldJournal() {
   const { locale } = useT();
+  const [expanded, setExpanded] = useState(false);
+  const contentId = useId();
   const progression = useProgression();
   const hits = useDex((state) => state.hits);
   const { runs } = useAllRuns();
@@ -32,12 +35,13 @@ export function FieldJournal() {
     .sort((a, b) => (b.progress!.current / b.progress!.target) - (a.progress!.current / a.progress!.target) || a.badge.id.localeCompare(b.badge.id))[0];
 
   return (
-    <section className="mx-auto mt-5 w-full max-w-2xl overflow-hidden rounded-3xl border border-cyan-500/25 bg-slate-950 text-slate-50 shadow-lg">
-      <div className="flex items-center gap-3 border-b border-white/10 px-4 py-3">
-        <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-cyan-400/15 text-cyan-300"><BookOpen className="h-5 w-5" /></span>
-        <div className="min-w-0 flex-1"><h2 className="font-extrabold">{L("Field Journal", "Feldjournal")}</h2><p className="text-xs text-slate-400">{L("Today’s expeditions and lasting mastery", "Heutige Expeditionen und dauerhafte Meisterschaft")}</p></div>
-        <Link href="/badges" aria-label={L("Open badges", "Badges öffnen")} className="flex min-h-11 min-w-11 items-center justify-center rounded-xl text-cyan-300 hover:bg-white/10"><ChevronRight className="h-5 w-5" /></Link>
-      </div>
+    <section className="mx-auto mt-3 w-full max-w-2xl overflow-hidden rounded-xl border border-border bg-card/70">
+      <button type="button" aria-expanded={expanded} aria-controls={contentId} onClick={() => setExpanded((value) => !value)} className="flex min-h-16 w-full items-center gap-3 px-4 py-3 text-left transition-colors hover:bg-muted/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring">
+        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary"><BookOpen aria-hidden="true" className="h-5 w-5" /></span>
+        <div className="min-w-0 flex-1"><h2 className="text-sm font-bold">{L("Field Journal", "Feldjournal")}</h2><p className="mt-0.5 text-xs text-muted-foreground">{daily.filter((mission) => mission.complete).length}/3 {L("daily missions", "Tagesmissionen")} · {Math.min(weekly.current, weekly.target)}/{weekly.target} {L("this week", "diese Woche")}</p></div>
+        <ChevronDown aria-hidden="true" className={cn("h-4 w-4 shrink-0 text-muted-foreground transition-transform", expanded && "rotate-180")} />
+      </button>
+      <div id={contentId} hidden={!expanded} className="border-t border-border bg-slate-950 text-slate-50">
       <div className="grid gap-4 p-4 sm:grid-cols-[1fr_.85fr]">
         <div>
           <div className="mb-2 flex items-center justify-between text-[11px] font-black uppercase tracking-widest text-slate-400"><span>{L("Daily missions", "Tagesmissionen")}</span><span>{daily.filter((m) => m.complete).length}/3</span></div>
@@ -54,6 +58,8 @@ export function FieldJournal() {
           {closest && <Link href="/collection" className="mt-3 block rounded-xl border border-amber-400/20 bg-amber-400/10 p-3 hover:border-amber-400/40"><div className="text-[10px] font-black uppercase tracking-widest text-amber-300">{L("Closest mastery", "Nächste Meisterschaft")}</div><div className="mt-1 truncate text-sm font-bold">{countryName(closest.country, locale)}</div><div className="mt-1 text-[11px] text-slate-400">{closest.score}/{MASTER_TOTAL} · {closest.games}/{MASTER_GAMES} {L("games", "Spiele")}</div></Link>}
           {progression.stamps.length > 0 && <div className="mt-2 text-[11px] text-slate-400">{progression.stamps.length} {L("passport stamps", "Passstempel")}</div>}
         </div>
+      </div>
+      <Link href="/badges" className="mx-4 mb-4 inline-flex min-h-11 items-center gap-1.5 rounded-lg px-2 text-xs font-semibold text-cyan-300 hover:bg-white/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-300">{L("Open badges", "Badges öffnen")}<ChevronRight aria-hidden="true" className="h-4 w-4" /></Link>
       </div>
     </section>
   );

@@ -16,6 +16,7 @@ import { useAllRuns } from "@/hooks/use-scores";
 import { cn, formatNumber } from "@/lib/utils";
 import { FieldJournal } from "@/components/field-journal";
 import { useProgression } from "@/store/progression";
+import { FeedbackCallout } from "@/components/community/feedback-callout";
 
 export default function Home() {
   const { t, locale } = useT();
@@ -72,19 +73,19 @@ export default function Home() {
           </div>
         )}
 
-        <Link href="/challenges" className="group mt-8 flex items-center gap-4 rounded-2xl border border-primary/25 bg-card/80 p-4 shadow-sm transition-colors hover:border-primary/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring sm:p-5">
-          <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-primary text-primary-foreground"><Swords className="h-6 w-6" /></span>
+        <div className="mx-auto mt-6 w-full max-w-2xl">
+        <Link href="/challenges" className="group flex items-center gap-3 rounded-xl border border-border bg-card/70 px-4 py-3 transition-colors hover:border-primary/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
+          <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary"><Swords aria-hidden="true" className="h-5 w-5" /></span>
           <div className="min-w-0 flex-1">
-            <p className="text-[10px] font-bold uppercase tracking-widest text-primary">{locale === "de" ? "Ihr zwei. Dieselbe Welt." : "Two players. One world."}</p>
-            <h2 className="mt-1 text-lg font-bold">{locale === "de" ? "Fordere jemanden heraus" : "Challenge a fellow explorer"}</h2>
-            <p className="mt-1 text-sm text-muted-foreground">{locale === "de" ? "Gleiche Fragen, gleiche Regeln. Wer kennt sich besser aus?" : "Same questions, same rules. Who knows the world better?"}</p>
+            <h2 className="text-sm font-bold">{locale === "de" ? "Fordere jemanden heraus" : "Challenge a fellow explorer"}</h2>
+            <p className="mt-0.5 text-xs text-muted-foreground">{locale === "de" ? "Gleiche Fragen. Ihr spielt in eurem Tempo." : "Same questions. Play at your own pace."}</p>
           </div>
           <ArrowUpRight className="h-5 w-5 shrink-0 text-primary transition-transform group-hover:-translate-y-0.5 group-hover:translate-x-0.5" />
         </Link>
 
-        <DailyCard />
-        <WeeklyCard />
+        <div className="mt-3 grid gap-3 sm:grid-cols-2"><DailyCard /><WeeklyCard /></div>
         <FieldJournal />
+        </div>
       </section>
 
       <section id="games" className="mx-auto w-full max-w-5xl scroll-mt-20 px-4 pb-24 pt-4">
@@ -96,9 +97,9 @@ export default function Home() {
           <p className="text-sm text-muted-foreground">{GAMES.length} {locale === "de" ? "Spiele · 5 Themen" : "games · 5 themes"}</p>
         </div>
 
-        <div className="mt-6 flex flex-wrap gap-2" aria-label={locale === "de" ? "Spielthemen filtern" : "Filter game themes"}>
+        <div className="mt-4 flex flex-wrap gap-1.5" aria-label={locale === "de" ? "Spielthemen filtern" : "Filter game themes"}>
           {[{ id: "all", name: { de: "Alle Spiele", en: "All games" } }, ...GAME_CATEGORIES].map((group) => (
-            <button key={group.id} type="button" aria-pressed={category === group.id} onClick={() => setCategory(group.id)} className={cn("min-h-11 rounded-xl border px-3 py-2 text-xs font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring", category === group.id ? "border-primary bg-primary text-primary-foreground" : "border-border bg-card text-muted-foreground hover:border-primary/50 hover:text-foreground")}>{group.name[locale]}</button>
+            <button key={group.id} type="button" aria-pressed={category === group.id} onClick={() => setCategory(group.id)} className={cn("min-h-11 rounded-lg border px-2.5 py-1.5 text-[11px] font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring", category === group.id ? "border-primary/40 bg-primary/10 text-primary" : "border-border/70 bg-card/50 text-muted-foreground hover:border-primary/50 hover:text-foreground")}>{group.name[locale]}</button>
           ))}
         </div>
         <div className="relative mt-3 max-w-md">
@@ -127,6 +128,7 @@ export default function Home() {
           })}
           {sections.length === 0 && <div className="rounded-2xl border border-dashed border-border bg-card/70 p-8 text-center"><p className="font-semibold">{locale === "de" ? "Noch kein Treffer" : "No games found"}</p><p className="mt-2 text-sm text-muted-foreground">{locale === "de" ? "Versuche ein anderes Wort oder zeige alle Themen." : "Try a different word or explore every theme."}</p><Button variant="outline" className="mt-4" onClick={() => { setQuery(""); setCategory("all"); }}>{locale === "de" ? "Alle Spiele zeigen" : "Show all games"}</Button></div>}
         </div>
+        <FeedbackCallout />
         <SupportCard />
       </section>
     </div>

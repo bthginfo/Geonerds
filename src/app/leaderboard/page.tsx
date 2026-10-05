@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import { Trophy, Loader2, Globe2, Smartphone, Crown, CalendarDays, Gamepad2, ChevronDown } from "lucide-react";
+import { Trophy, Loader2, Globe2, Smartphone, Crown, CalendarDays, Gamepad2, ChevronDown, Swords } from "lucide-react";
 import { GAMES } from "@/games/registry";
 import { useT } from "@/i18n/I18nProvider";
 import { useAllRuns } from "@/hooks/use-scores";
@@ -12,32 +12,38 @@ import { scoreStore } from "@/lib/leaderboard/local";
 import { apiTopScores, type OnlineScore } from "@/lib/online";
 import { formatNumber, formatTime, cn } from "@/lib/utils";
 import type { GameId } from "@/lib/types";
+import { CHALLENGE_GAME_IDS, type GeoChallengeGameId } from "@/lib/challenges";
+import { DuelBoard } from "@/components/community/duel-board";
 
-type Scope = "device" | "global";
+type Scope = "device" | "global" | "duels";
 type Period = "all" | "month";
 
 export default function LeaderboardPage() {
   const { t, locale } = useT();
   const { runs, refresh } = useAllRuns();
   const user = useAuth((s) => s.user);
-  const [scope, setScope] = useState<Scope>("global");
-  const [period, setPeriod] = useState<Period>("all");
-  const [filter, setFilter] = useState<GameId | "all">("all");
-  const [page, setPage] = useState(0);
+  const [query, setQuery] = useState<{ scope: Scope; period: Period; filter: GameId | "all"; page: number }>({ scope: "global", period: "all", filter: "all", page: 0 });
+  const { scope, period, filter, page } = query;
 
   const [online, setOnline] = useState<{ configured: boolean; scores: OnlineScore[] } | null>(null);
   const [loadingOnline, setLoadingOnline] = useState(false);
 
-  // Reset to the first page whenever the filters change.
-  useEffect(() => setPage(0), [scope, filter, period]);
+  function switchScope(next: Scope) {
+    setQuery((current) => ({ ...current, scope: next, page: 0, filter: next === "duels" && !CHALLENGE_GAME_IDS.some((id) => id === current.filter) ? "all" : current.filter }));
+  }
+  const setPage = (next: number) => setQuery((current) => ({ ...current, page: next }));
 
   useEffect(() => {
     if (scope !== "global") return;
+    let active = true;
     setLoadingOnline(true);
+    setOnline(null);
     apiTopScores(filter, period, page).then((res) => {
+      if (!active) return;
       setOnline(res);
       setLoadingOnline(false);
     });
+    return () => { active = false; };
   }, [scope, filter, period, page]);
 
   const deviceRanked = useMemo(() => {
@@ -56,25 +62,28 @@ export default function LeaderboardPage() {
         <Trophy className="h-6 w-6 text-warning" />
         <h1 className="text-2xl font-bold">{t("leaderboard.title")}</h1>
       </div>
-      <p className="mb-4 text-sm text-muted-foreground">{t("leaderboard.subtitle")}</p>
+      <p className="mb-5 text-sm text-muted-foreground">{locale === "de" ? "Deine besten Runden und Begegnungen – weltweit oder auf diesem Gerät." : "Your best runs and encounters, worldwide or on this device."}</p>
 
       {/* Scope toggle */}
-      <div className="mb-4 inline-flex rounded-xl border border-border bg-card p-0.5">
-        <ScopeButton active={scope === "global"} onClick={() => setScope("global")} icon={<Globe2 className="h-4 w-4" />}>
+      <div className="mb-3 grid grid-cols-3 rounded-xl border border-border bg-card p-0.5" aria-label={locale === "de" ? "Bestenliste auswählen" : "Choose leaderboard"}>
+        <ScopeButton active={scope === "global"} onClick={() => switchScope("global")} icon={<Globe2 aria-hidden="true" className="h-4 w-4 shrink-0" />}>
           {t("leaderboard.global")}
         </ScopeButton>
-        <ScopeButton active={scope === "device"} onClick={() => setScope("device")} icon={<Smartphone className="h-4 w-4" />}>
+        <ScopeButton active={scope === "device"} onClick={() => switchScope("device")} icon={<Smartphone aria-hidden="true" className="h-4 w-4 shrink-0" />}>
           {t("leaderboard.device")}
+        </ScopeButton>
+        <ScopeButton active={scope === "duels"} onClick={() => switchScope("duels")} icon={<Swords aria-hidden="true" className="h-4 w-4 shrink-0" />}>
+          {locale === "de" ? "Duelle" : "Duels"}
         </ScopeButton>
       </div>
 
-      {/* Period toggle (global only) */}
-      {scope === "global" && (
-        <div className="mb-4 ml-2 inline-flex rounded-xl border border-border bg-card p-0.5 sm:ml-3">
-          <ScopeButton active={period === "all"} onClick={() => setPeriod("all")} icon={<Trophy className="h-4 w-4" />}>
+      {/* Online boards share the calendar-period filter. */}
+      {scope !== "device" && (
+        <div className="mb-4 grid grid-cols-2 rounded-xl border border-border bg-card p-0.5 sm:inline-grid" aria-label={locale === "de" ? "Zeitraum auswählen" : "Choose period"}>
+          <ScopeButton active={period === "all"} onClick={() => setQuery((current) => ({ ...current, period: "all", page: 0 }))} icon={<Trophy aria-hidden="true" className="h-4 w-4" />}>
             {t("leaderboard.overall")}
           </ScopeButton>
-          <ScopeButton active={period === "month"} onClick={() => setPeriod("month")} icon={<CalendarDays className="h-4 w-4" />}>
+          <ScopeButton active={period === "month"} onClick={() => setQuery((current) => ({ ...current, period: "month", page: 0 }))} icon={<CalendarDays aria-hidden="true" className="h-4 w-4" />}>
             {t("leaderboard.month")}
           </ScopeButton>
         </div>
@@ -85,12 +94,12 @@ export default function LeaderboardPage() {
         <Gamepad2 className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
         <select
           value={filter}
-          onChange={(e) => setFilter(e.target.value as GameId | "all")}
-          aria-label={t("leaderboard.all")}
-          className="w-full appearance-none rounded-xl border border-border bg-card py-2.5 pl-9 pr-9 text-sm font-semibold text-foreground outline-none transition-colors hover:border-primary/50 focus:border-primary"
+          onChange={(e) => setQuery((current) => ({ ...current, filter: e.target.value as GameId | "all", page: 0 }))}
+          aria-label={locale === "de" ? "Bestenliste nach Spiel filtern" : "Filter leaderboard by game"}
+          className="min-h-11 w-full appearance-none rounded-xl border border-border bg-card py-2.5 pl-9 pr-9 text-sm font-semibold text-foreground outline-none transition-colors hover:border-primary/50 focus:border-primary focus:ring-2 focus:ring-ring/20"
         >
           <option value="all">{t("leaderboard.all")}</option>
-          {GAMES.map((g) => (
+          {GAMES.filter((game) => scope !== "duels" || CHALLENGE_GAME_IDS.some((id) => id === game.id)).map((g) => (
             <option key={g.id} value={g.id}>
               {t(`games.${g.id}.name`)}
             </option>
@@ -111,6 +120,8 @@ export default function LeaderboardPage() {
           locale={locale}
           t={t}
         />
+      ) : scope === "duels" ? (
+        <DuelBoard game={filter as GeoChallengeGameId | "all"} period={period} page={page} onPage={setPage} />
       ) : (
         <>
           {deviceRanked.length === 0 ? (
@@ -305,9 +316,11 @@ function ScopeButton({
 }) {
   return (
     <button
+      type="button"
+      aria-pressed={active}
       onClick={onClick}
       className={cn(
-        "inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm font-semibold transition-colors",
+        "inline-flex min-h-11 min-w-0 items-center justify-center gap-1.5 rounded-lg px-2 py-2 text-xs font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring sm:px-3 sm:text-sm",
         active ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground"
       )}
     >

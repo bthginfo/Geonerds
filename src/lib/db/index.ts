@@ -100,6 +100,20 @@ async function ensureSchema(sql: ReturnType<typeof postgres>) {
   `;
   await sql`CREATE INDEX IF NOT EXISTS gn_challenges_inbox_idx ON gn_challenges (opponent_id, status, created_at DESC)`;
   await sql`CREATE INDEX IF NOT EXISTS gn_challenges_sent_idx ON gn_challenges (challenger_id, status, created_at DESC)`;
+  await sql`CREATE INDEX IF NOT EXISTS gn_challenges_resolved_idx ON gn_challenges (resolved_at DESC, game_id) WHERE status='resolved'`;
+  await sql`
+    CREATE TABLE IF NOT EXISTS gn_feedback (
+      id text PRIMARY KEY,
+      user_id text REFERENCES gn_users(id) ON DELETE SET NULL,
+      author_name text,
+      message text NOT NULL CHECK (char_length(message) BETWEEN 1 AND 4000),
+      status text NOT NULL DEFAULT 'new' CHECK (status IN ('new', 'reviewed')),
+      created_at timestamptz NOT NULL DEFAULT now(),
+      reviewed_at timestamptz
+    )
+  `;
+  await sql`CREATE INDEX IF NOT EXISTS gn_feedback_created_idx ON gn_feedback (created_at DESC, id)`;
+  await sql`CREATE INDEX IF NOT EXISTS gn_feedback_status_idx ON gn_feedback (status, created_at DESC)`;
   await sql`
     CREATE TABLE IF NOT EXISTS wn_scores (
       id text PRIMARY KEY,

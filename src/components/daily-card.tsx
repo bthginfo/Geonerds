@@ -20,13 +20,13 @@ export function DailyCard() {
   return (
     <Link
       href="/daily"
-      className="group mx-auto mt-8 flex w-full max-w-md items-center gap-4 rounded-2xl border border-orange-500/25 bg-gradient-to-br from-orange-500/10 to-rose-500/10 p-4 transition-all hover:border-orange-500/50"
+      className="group flex w-full items-center gap-3 rounded-xl border border-border bg-card/70 px-4 py-3 transition-colors hover:border-orange-500/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
     >
-      <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-orange-500 to-rose-500 text-white shadow">
-        <CalendarDays className="h-6 w-6" />
+      <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-orange-500/10 text-orange-700 dark:text-orange-300">
+        <CalendarDays aria-hidden="true" className="h-5 w-5" />
       </span>
       <div className="min-w-0 flex-1">
-        <div className="flex items-center gap-2 font-bold">
+        <div className="flex flex-wrap items-center gap-2 text-sm font-bold">
           {t("daily.title")}
           {streak > 0 && (
             <span className="inline-flex items-center gap-0.5 text-xs font-bold text-orange-500">
