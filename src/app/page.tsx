@@ -18,6 +18,15 @@ import { FieldJournal } from "@/components/field-journal";
 import { useProgression } from "@/store/progression";
 import { FeedbackCallout } from "@/components/community/feedback-callout";
 
+const CATEGORY_LABELS: Record<string, { de: string; en: string }> = {
+  all: { de: "Alle", en: "All" },
+  flags: { de: "Flaggen", en: "Flags" },
+  maps: { de: "Karten", en: "Maps" },
+  logic: { de: "Logik", en: "Logic" },
+  knowledge: { de: "Wissen", en: "Knowledge" },
+  expeditions: { de: "Routen", en: "Routes" },
+};
+
 export default function Home() {
   const { t, locale } = useT();
   const { runs } = useAllRuns();
@@ -41,7 +50,8 @@ export default function Home() {
 
   return (
     <div className="geo-aurora flex flex-1 flex-col">
-      <section className="mx-auto w-full max-w-5xl px-4 pt-10 pb-6 sm:pt-16">
+      <section className="mx-auto w-full max-w-5xl px-4 pt-3 pb-6 sm:pt-5">
+        <FeedbackCallout />
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -97,9 +107,9 @@ export default function Home() {
           <p className="text-sm text-muted-foreground">{GAMES.length} {locale === "de" ? "Spiele · 5 Themen" : "games · 5 themes"}</p>
         </div>
 
-        <div className="mt-4 flex flex-wrap gap-1.5" aria-label={locale === "de" ? "Spielthemen filtern" : "Filter game themes"}>
+        <div className="mt-4 flex flex-wrap gap-2" aria-label={locale === "de" ? "Spielthemen filtern" : "Filter game themes"}>
           {[{ id: "all", name: { de: "Alle Spiele", en: "All games" } }, ...GAME_CATEGORIES].map((group) => (
-            <button key={group.id} type="button" aria-pressed={category === group.id} onClick={() => setCategory(group.id)} className={cn("min-h-11 rounded-lg border px-2.5 py-1.5 text-[11px] font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring", category === group.id ? "border-primary/40 bg-primary/10 text-primary" : "border-border/70 bg-card/50 text-muted-foreground hover:border-primary/50 hover:text-foreground")}>{group.name[locale]}</button>
+            <button key={group.id} type="button" aria-label={group.name[locale]} title={group.name[locale]} aria-pressed={category === group.id} onClick={() => setCategory(group.id)} className={cn("h-8 whitespace-nowrap rounded-full border px-2 text-xs font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background", category === group.id ? "border-primary/40 bg-primary/10 text-primary" : "border-border/60 bg-card/40 text-muted-foreground hover:border-primary/50 hover:text-foreground")}>{CATEGORY_LABELS[group.id]?.[locale] ?? group.name[locale]}</button>
           ))}
         </div>
         <div className="relative mt-3 max-w-md">
@@ -128,7 +138,6 @@ export default function Home() {
           })}
           {sections.length === 0 && <div className="rounded-2xl border border-dashed border-border bg-card/70 p-8 text-center"><p className="font-semibold">{locale === "de" ? "Noch kein Treffer" : "No games found"}</p><p className="mt-2 text-sm text-muted-foreground">{locale === "de" ? "Versuche ein anderes Wort oder zeige alle Themen." : "Try a different word or explore every theme."}</p><Button variant="outline" className="mt-4" onClick={() => { setQuery(""); setCategory("all"); }}>{locale === "de" ? "Alle Spiele zeigen" : "Show all games"}</Button></div>}
         </div>
-        <FeedbackCallout />
         <SupportCard />
       </section>
     </div>

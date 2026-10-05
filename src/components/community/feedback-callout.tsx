@@ -2,7 +2,7 @@
 
 import { useEffect, useId, useRef, useState } from "react";
 import Link from "next/link";
-import { ArrowUpRight, Check, Lightbulb, Loader2, Send } from "lucide-react";
+import { ArrowUpRight, Check, Loader2, Send } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Modal } from "@/components/ui/modal";
 import { useT } from "@/i18n/I18nProvider";
@@ -75,18 +75,10 @@ export function FeedbackCallout() {
 
   return (
     <>
-      <section aria-labelledby="feedback-callout-title" className="mx-auto mt-8 max-w-2xl rounded-xl border border-dashed border-border bg-card/50 p-4">
-        <div className="flex items-start gap-3 sm:gap-4">
-          <span className="flex h-8 w-8 shrink-0 items-center justify-center text-primary"><Lightbulb aria-hidden="true" className="h-5 w-5" /></span>
-          <div className="min-w-0 flex-1">
-            <h3 id="feedback-callout-title" className="text-sm font-bold">{locale === "de" ? "Eine Idee für die nächste Entdeckung?" : "An idea for the next discovery?"}</h3>
-            <p className="mt-1 text-xs leading-relaxed text-muted-foreground">{locale === "de" ? "Ideen, Verbesserungen oder ein Spiel, das du dir wünschst? Gestalte GeoNerds mit." : "Ideas, improvements or a game you'd love? Help shape GeoNerds."}</p>
-            <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-1">
-              <Button type="button" variant="outline" onClick={() => setOpen(true)} className="gap-2 px-4"><Lightbulb aria-hidden="true" className="h-4 w-4" />{locale === "de" ? "Idee teilen" : "Share an idea"}</Button>
-              {isCreator && <Link href="/admin/feedback" className="inline-flex min-h-11 items-center gap-1 text-xs font-semibold text-primary hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">{locale === "de" ? "Einsendungen ansehen" : "View submissions"}<ArrowUpRight aria-hidden="true" className="h-3.5 w-3.5" /></Link>}
-            </div>
-          </div>
-        </div>
+      <section aria-labelledby="feedback-callout-title" className="mx-auto mb-5 flex min-h-11 w-full max-w-2xl flex-wrap items-center gap-x-3 gap-y-1 rounded-lg border border-border/60 bg-card/40 px-3 py-1 sm:mb-7">
+        <p id="feedback-callout-title" className="mr-auto text-[11px] font-medium text-muted-foreground">{locale === "de" ? "Ideen & Verbesserungen" : "Ideas & improvements"}</p>
+        <Button type="button" variant="ghost" size="sm" onClick={() => setOpen(true)} className="h-8 shrink-0 rounded-md border border-primary/20 bg-primary/5 px-2.5 text-xs font-semibold text-primary hover:bg-primary/10">{locale === "de" ? "Idee teilen" : "Share an idea"}</Button>
+        {isCreator && <Link href="/admin/feedback" className="ml-auto inline-flex min-h-8 items-center gap-1 rounded-md text-[11px] font-semibold text-primary hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">{locale === "de" ? "Einsendungen ansehen" : "View submissions"}<ArrowUpRight aria-hidden="true" className="h-3.5 w-3.5" /></Link>}
       </section>
 
       <Modal open={open} onClose={() => setOpen(false)} title={locale === "de" ? "Deine Idee für GeoNerds" : "Your idea for GeoNerds"}>
