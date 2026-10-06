@@ -37,6 +37,7 @@ import { FlagPieGame } from "@/games/flag-pie/flag-pie-game";
 import { CityCompassGame } from "@/games/city-compass/city-compass-game";
 import { FlagMosaicGame } from "@/games/flag-mosaic/flag-mosaic-game";
 import { CountryRadarGame } from "@/games/country-radar/country-radar-game";
+import { AdastraGame } from "@/games/adastra/adastra-game";
 
 function ColorFlagLoading() {
   const { t } = useT();
@@ -83,6 +84,7 @@ const COMPONENTS: Partial<Record<GameId, (h: PlayHandlers) => React.ReactNode>> 
   "city-compass": (h) => <CityCompassGame {...h} />,
   "flag-mosaic": (h) => <FlagMosaicGame {...h} />,
   "country-radar": (h) => <CountryRadarGame {...h} />,
+  adastra: (h) => <AdastraGame {...h} />,
 };
 
 export default function PlayPage() {

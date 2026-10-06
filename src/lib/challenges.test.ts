@@ -8,7 +8,7 @@ const result = { gameId: "flags", difficulty: "medium", mode: "choice", score: 9
 
 describe("Geo challenge settings", () => {
   it("accepts only registered, seed-supported games", () => {
-    expect(CHALLENGE_GAME_IDS.length).toBe(13);
+    expect(CHALLENGE_GAME_IDS.length).toBe(14);
     for (const gameId of CHALLENGE_GAME_IDS) {
       const variants = gameId === "flags" ? "world" : gameId === "capitals" ? "capitals" : "";
       // New game defaults are covered by their own registry tests.
@@ -33,6 +33,8 @@ describe("Geo challenge settings", () => {
   });
   it("does not enable typed or timed modes unsupported by a game", () => {
     expect(parseGeoChallengeConfig({ ...config, gameId: "languages", variant: "", mode: "type", opponentName: "Explorer" })).toBeNull();
+    expect(parseGeoChallengeConfig({ ...config, gameId: "adastra", variant: "", timed: true, opponentName: "Explorer" })).toBeNull();
+    expect(parseGeoChallengeConfig({ ...config, gameId: "adastra", variant: "", mode: "type", opponentName: "Explorer" })).not.toBeNull();
   });
 });
 

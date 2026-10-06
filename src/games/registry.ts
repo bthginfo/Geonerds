@@ -28,6 +28,7 @@ import {
   Compass,
   Scan,
   Radar,
+  Telescope,
   type LucideIcon,
 } from "lucide-react";
 import type { AnswerMode, GameId } from "@/lib/types";
@@ -309,6 +310,16 @@ export const GAMES: GameConfig[] = [
     modes: ["type"],
     countOptions: [3, 5, 10, 0],
     setupNoteKey: "countryradar.centersNote",
+  },
+  {
+    id: "adastra",
+    icon: Telescope,
+    gradient: "from-slate-900 via-sky-900 to-amber-700",
+    supportsDifficulty: true,
+    modes: ["choice", "type"],
+    countOptions: [10, 25, 50, 0],
+    supportsTimed: false,
+    setupNoteKey: "adastra.setupNote",
   },
 ];
 

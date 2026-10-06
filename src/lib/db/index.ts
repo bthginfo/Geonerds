@@ -1,4 +1,5 @@
 import postgres from "postgres";
+import { ensureCommunityRewards } from "@/lib/community-rewards-schema";
 
 const CONNECTION =
   process.env.DATABASE_URL ||
@@ -246,6 +247,7 @@ async function ensureSchema(sql: ReturnType<typeof postgres>) {
       reset_at timestamptz NOT NULL
     )
   `;
+  await ensureCommunityRewards(sql);
 }
 
 /** Returns the SQL client, lazily creating the schema once. */

@@ -8,16 +8,18 @@ import { useDex } from "@/store/dex";
 import { BADGES, computeStats, badgeName, badgeDesc, badgeCategory, badgeTier, badgeProgress, type BadgeCategory } from "@/lib/badges";
 import { cn } from "@/lib/utils";
 import { useProgression } from "@/store/progression";
+import { useCommunityRewards } from "@/hooks/use-community-rewards";
 
 export default function BadgesPage() {
   const { t, locale } = useT();
   const { runs } = useAllRuns();
   const dexHits = useDex((s) => s.hits);
   const progression = useProgression();
+  const community = useCommunityRewards();
   const [category, setCategory] = useState<"all" | BadgeCategory>("all");
   const L = (en: string, de: string) => locale === "de" ? de : en;
 
-  const stats = useMemo(() => computeStats(runs ?? [], dexHits, progression), [runs, dexHits, progression]);
+  const stats = useMemo(() => computeStats(runs ?? [], dexHits, progression, community.badgeIds), [runs, dexHits, progression, community.badgeIds]);
   const earnedCount = useMemo(() => BADGES.filter((b) => b.earned(stats)).length, [stats]);
   const shown = useMemo(() => BADGES.filter((b) => category === "all" || badgeCategory(b) === category).sort((a, b) => Number(b.earned(stats)) - Number(a.earned(stats)) || badgeName(a, locale).localeCompare(badgeName(b, locale))), [category, stats, locale]);
   const closest = useMemo(() => BADGES.map((badge) => ({ badge, progress: badgeProgress(badge, stats) })).filter((item) => !item.badge.earned(stats) && item.progress && item.progress.target > 0).sort((a,b) => (b.progress!.current / b.progress!.target) - (a.progress!.current / a.progress!.target)).slice(0, 3), [stats]);

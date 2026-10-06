@@ -71,6 +71,40 @@ not private invitations or opponents' unfinished results.
 These features use the existing database/auth configuration below; additive
 tables and indexes are created automatically. Wine/Poke routes are unaffected.
 
+## Adastra — cities after dark
+
+Inspired by **Adastra1995**'s community suggestion, Adastra asks players to
+identify cities from real ISS night photographs: street grids, coastlines,
+rivers and the glow of neighbouring settlements are the clues. The initial
+reviewed library contains **107 distinct photographs of 64 cities in 33 countries**.
+Cloud-obscured or spacecraft-obstructed frames are excluded rather than counted
+as extra content. Runs balance different cities before revisiting one, never
+reuse a photograph within a run, and share a reproducible seed in challenges.
+
+Play 10, 25, 50 or all photos, with multiple choice or EN/DE typed city names.
+There is no timer. Each optional hint removes 25% of the original round's base
+points; Easy includes a free regional hint. The viewer supports zoom, native
+touch scrolling and mouse panning, plus keyboard controls. The answer reveals
+the photo's source record, date, city and geographic explanation.
+
+Images are served locally from `public/images/adastra/`, unchanged from their
+reviewed NASA/JSC sources. `src/data/adastra-catalog.json` retains each source
+record and attribution. Image courtesy of the Earth Science and Remote Sensing
+Unit, NASA Johnson Space Center. See the [NASA/JSC image conditions](https://eol.jsc.nasa.gov/FAQ/)
+and [NASA media guidance](https://www.nasa.gov/nasa-brand-center/images-and-media/).
+No endorsement by NASA is implied. The import utility
+`scripts/import-adastra-photos.mjs` accepts a manually reviewed candidate JSON
+and a temporary contact-sheet directory; it rejects duplicate image bytes,
+unapproved hosts, inadequate resolutions and visually excluded frames. Its
+returned catalogue is reviewed before being applied to the repository.
+
+On publication, the additive community-reward migration resolves the matching
+signed-in submission's account, grants **Game Creator** once and creates one
+in-app publication notification. These are account-owned, not derived from
+local XP or a display-name check in the browser. Notification reads require the
+owner's authenticated session. Offline localhost preview has no production DB
+connection and does not grant rewards or send notifications.
+
 ## Getting started
 
 ```bash

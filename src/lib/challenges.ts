@@ -4,7 +4,7 @@ import { validateName } from "@/lib/validate";
 
 export const CHALLENGE_GAME_IDS = [
   "flags", "capitals", "outline", "trivia", "waters", "neighbors", "origin", "mountains", "languages",
-  "flag-pie", "city-compass", "flag-mosaic", "country-radar",
+  "flag-pie", "city-compass", "flag-mosaic", "country-radar", "adastra",
 ] as const;
 export const CHALLENGE_ROUND_COUNTS = [10, 25, 50] as const;
 export type GeoChallengeGameId = (typeof CHALLENGE_GAME_IDS)[number];

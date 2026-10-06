@@ -10,12 +10,14 @@ import type { ScoreEntry } from "./leaderboard/types";
 import { CONTINENTS, DEX_POOL, dexStateOf } from "./dex";
 import { GAMES } from "@/games/registry";
 import type { ProgressionData } from "./progression";
+import { GAME_CREATOR_BADGE_ID } from "./community-rewards";
 
 export type BadgeCategory = "journey" | "skill" | "mastery" | "collection" | "challenge";
 export type BadgeTier = "bronze" | "silver" | "gold" | "mythic";
 export interface BadgeProgress { current: number; target: number }
 
 export interface Stats {
+  accountAwardIds: readonly string[];
   totalRuns: number;
   totalScore: number;
   maxScoreRun: number;
@@ -49,7 +51,8 @@ export interface Stats {
 export function computeStats(
   runs: ScoreEntry[],
   dexHits: Record<string, Record<string, number>> = {},
-  progression?: ProgressionData
+  progression?: ProgressionData,
+  accountAwardIds: readonly string[] = [],
 ): Stats {
   const correctByGame: Record<string, number> = {};
   const bestStreakByGame: Record<string, number> = {};
@@ -144,6 +147,7 @@ export function computeStats(
     }
   }
   return {
+    accountAwardIds,
     totalRuns: lifetime?.totalRuns ?? runs.length,
     totalScore: lifetime?.totalScore ?? totalScore,
     maxScoreRun,
@@ -189,6 +193,10 @@ export interface Badge {
 const g = (s: Stats, id: string) => s.correctByGame[id] ?? 0;
 
 export const BADGES: Badge[] = [
+  { id: GAME_CREATOR_BADGE_ID, icon: Lightbulb, name: { en: "Game Creator", de: "Game Creator" },
+    desc: { en: "Your community idea became a GeoNerds game. Awarded to your account, across devices.", de: "Deine Community-Idee wurde ein GeoNerds-Spiel. Mit deinem Konto auf allen Geräten verknüpft." },
+    earned: (s) => s.accountAwardIds?.includes(GAME_CREATOR_BADGE_ID) ?? false,
+    category: "journey", tier: "gold" },
   // ── Volume ──────────────────────────────────────────────
   { id: "first", icon: Footprints, name: { en: "First Steps", de: "Erste Schritte" }, desc: { en: "Play your first game", de: "Spiele deine erste Runde" }, earned: (s) => s.totalRuns >= 1 },
   { id: "ten", icon: Medal, name: { en: "Getting Warm", de: "Warmgelaufen" }, desc: { en: "Play 10 games", de: "Spiele 10 Runden" }, earned: (s) => s.totalRuns >= 10 },

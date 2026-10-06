@@ -25,6 +25,7 @@ import type { GeoChallenge } from "@/lib/challenges";
 import { apiGeoChallenge, apiStartGeoChallenge, apiSubmitGeoChallengeAttempt } from "@/lib/challenge-online";
 import { AccountPanel } from "@/components/account/account-panel";
 import { ChallengeRules, ChallengeSummary } from "@/components/challenges/challenge-summary";
+import { AdastraSetupPhoto } from "@/components/community/adastra-feature";
 import { attemptStorageKey, challengeError, challengePlayBlock, readSavedAttempt, writeSavedAttempt, type SavedChallengeAttempt } from "@/components/challenges/challenge-ui";
 
 export interface PlayResult {
@@ -408,6 +409,8 @@ function GameShellContent({
           </button>
         </motion.div>
 
+        {gameId === "adastra" && <AdastraSetupPhoto />}
+
         {config.setupNoteKey && (
           <div className="mt-5 flex items-start gap-2 rounded-xl border border-primary/30 bg-primary/5 p-3 text-xs leading-relaxed text-muted-foreground">
             <Info className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
@@ -451,7 +454,7 @@ function GameShellContent({
                     key={d}
                     active={difficulty === d}
                     title={t(`difficulty.${d}`)}
-                    desc={t(`difficulty.${d}.desc`)}
+                    desc={t(gameId === "adastra" ? `adastra.difficulty.${d}` : `difficulty.${d}.desc`)}
                     onClick={() => setDifficulty(d)}
                   />
                 ))}
@@ -521,7 +524,7 @@ function GameShellContent({
                         : "border-border bg-card text-muted-foreground hover:bg-muted/40"
                     )}
                   >
-                    {n === 0 ? t("setup.all") : n}
+                    {n === 0 ? t(gameId === "adastra" ? "adastra.allPhotos" : "setup.all") : n}
                   </button>
                 ))}
               </div>

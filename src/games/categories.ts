@@ -1,4 +1,4 @@
-import { Flag, Shapes, Network, Globe2, Compass, type LucideIcon } from "lucide-react";
+import { Flag, Shapes, Network, Globe2, Compass, Sparkles, type LucideIcon } from "lucide-react";
 import type { GameId, Locale } from "@/lib/types";
 
 export interface GameCategory {
@@ -11,6 +11,13 @@ export interface GameCategory {
 
 /** Editorial ordering is deliberately independent of registry insertion order. */
 export const GAME_CATEGORIES: GameCategory[] = [
+  {
+    id: "new",
+    name: { de: "Neue Spiele", en: "New games" },
+    description: { de: "Frische Perspektiven, inspiriert von unserer Community.", en: "Fresh perspectives, inspired by our community." },
+    icon: Sparkles,
+    games: ["adastra"],
+  },
   {
     id: "flags",
     name: { de: "Flaggen & Farben", en: "Flags & colors" },

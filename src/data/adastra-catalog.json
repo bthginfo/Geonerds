@@ -1,0 +1,2812 @@
+{
+  "cities": [
+    {
+      "id": "london",
+      "name": {
+        "en": "London",
+        "de": "London"
+      },
+      "aliases": [
+        "London"
+      ],
+      "cca3": "GBR",
+      "region": "Europe",
+      "regionHint": {
+        "en": "Northwestern Europe",
+        "de": "Nordwesteuropa"
+      },
+      "clue": {
+        "en": "Look for a winding river cutting through a wide, densely lit urban area.",
+        "de": "Achte auf einen gewundenen Fluss in einem weit ausgedehnten, dicht beleuchteten Stadtgebiet."
+      },
+      "latlng": [
+        51.51,
+        -0.13
+      ],
+      "explanation": {
+        "en": "London is the city in this NASA photograph. Look for a winding river cutting through a wide, densely lit urban area. These are historical photographs: lighting and urban growth change over time, and north is not necessarily at the top.",
+        "de": "London ist die Stadt in diesem NASA-Foto. Achte auf einen gewundenen Fluss in einem weit ausgedehnten, dicht beleuchteten Stadtgebiet. Es sind historische Aufnahmen: Beleuchtung und Bebauung verändern sich, und Norden liegt nicht unbedingt oben."
+      }
+    },
+    {
+      "id": "paris",
+      "name": {
+        "en": "Paris",
+        "de": "Paris"
+      },
+      "aliases": [
+        "Paris"
+      ],
+      "cca3": "FRA",
+      "region": "Europe",
+      "regionHint": {
+        "en": "Western Europe",
+        "de": "Westeuropa"
+      },
+      "clue": {
+        "en": "A dense central glow and roads radiating into the suburbs are useful clues.",
+        "de": "Ein dichter heller Stadtkern und strahlenförmige Straßen in die Vororte sind hilfreiche Hinweise."
+      },
+      "latlng": [
+        48.86,
+        2.35
+      ],
+      "explanation": {
+        "en": "Paris is the city in this NASA photograph. A dense central glow and roads radiating into the suburbs are useful clues. These are historical photographs: lighting and urban growth change over time, and north is not necessarily at the top.",
+        "de": "Paris ist die Stadt in diesem NASA-Foto. Ein dichter heller Stadtkern und strahlenförmige Straßen in die Vororte sind hilfreiche Hinweise. Es sind historische Aufnahmen: Beleuchtung und Bebauung verändern sich, und Norden liegt nicht unbedingt oben."
+      }
+    },
+    {
+      "id": "moscow",
+      "name": {
+        "en": "Moscow",
+        "de": "Moskau"
+      },
+      "aliases": [
+        "Moscow",
+        "Moskau"
+      ],
+      "cca3": "RUS",
+      "region": "Europe",
+      "regionHint": {
+        "en": "Eastern Europe",
+        "de": "Osteuropa"
+      },
+      "clue": {
+        "en": "Compare the rings and spoke-like road corridors around the city centre.",
+        "de": "Vergleiche die Ringstraßen und speichenförmigen Straßenkorridore um das Stadtzentrum."
+      },
+      "latlng": [
+        55.75,
+        37.62
+      ],
+      "explanation": {
+        "en": "Moscow is the city in this NASA photograph. Compare the rings and spoke-like road corridors around the city centre. These are historical photographs: lighting and urban growth change over time, and north is not necessarily at the top.",
+        "de": "Moskau ist die Stadt in diesem NASA-Foto. Vergleiche die Ringstraßen und speichenförmigen Straßenkorridore um das Stadtzentrum. Es sind historische Aufnahmen: Beleuchtung und Bebauung verändern sich, und Norden liegt nicht unbedingt oben."
+      }
+    },
+    {
+      "id": "new-york-city",
+      "name": {
+        "en": "New York City",
+        "de": "New York City"
+      },
+      "aliases": [
+        "New York City",
+        "New York",
+        "NYC"
+      ],
+      "cca3": "USA",
+      "region": "North America",
+      "regionHint": {
+        "en": "Northeastern North America",
+        "de": "Nordöstliches Nordamerika"
+      },
+      "clue": {
+        "en": "Look for long illuminated islands and the dark water separating them.",
+        "de": "Achte auf längliche beleuchtete Inseln und die dunklen Gewässer dazwischen."
+      },
+      "latlng": [
+        40.71,
+        -74.01
+      ],
+      "explanation": {
+        "en": "New York City is the city in this NASA photograph. Look for long illuminated islands and the dark water separating them. These are historical photographs: lighting and urban growth change over time, and north is not necessarily at the top.",
+        "de": "New York City ist die Stadt in diesem NASA-Foto. Achte auf längliche beleuchtete Inseln und die dunklen Gewässer dazwischen. Es sind historische Aufnahmen: Beleuchtung und Bebauung verändern sich, und Norden liegt nicht unbedingt oben."
+      }
+    },
+    {
+      "id": "chicago",
+      "name": {
+        "en": "Chicago",
+        "de": "Chicago"
+      },
+      "aliases": [
+        "Chicago"
+      ],
+      "cca3": "USA",
+      "region": "North America",
+      "regionHint": {
+        "en": "Midwest North America / Great Lakes",
+        "de": "Mittlerer Westen Nordamerikas / Große Seen"
+      },
+      "clue": {
+        "en": "A large dark lake beside an extensive street grid is a strong clue.",
+        "de": "Ein großer dunkler See neben einem ausgedehnten Straßenraster ist ein starker Hinweis."
+      },
+      "latlng": [
+        41.88,
+        -87.63
+      ],
+      "explanation": {
+        "en": "Chicago is the city in this NASA photograph. A large dark lake beside an extensive street grid is a strong clue. These are historical photographs: lighting and urban growth change over time, and north is not necessarily at the top.",
+        "de": "Chicago ist die Stadt in diesem NASA-Foto. Ein großer dunkler See neben einem ausgedehnten Straßenraster ist ein starker Hinweis. Es sind historische Aufnahmen: Beleuchtung und Bebauung verändern sich, und Norden liegt nicht unbedingt oben."
+      }
+    },
+    {
+      "id": "los-angeles",
+      "name": {
+        "en": "Los Angeles",
+        "de": "Los Angeles"
+      },
+      "aliases": [
+        "Los Angeles",
+        "LA"
+      ],
+      "cca3": "USA",
+      "region": "North America",
+      "regionHint": {
+        "en": "Southwestern North America / Pacific coast",
+        "de": "Südwestliches Nordamerika / Pazifikküste"
+      },
+      "clue": {
+        "en": "Notice the enormous spread of illuminated suburbs and the Pacific coastline.",
+        "de": "Achte auf die enorme Ausdehnung der beleuchteten Vororte und die Pazifikküste."
+      },
+      "latlng": [
+        34.05,
+        -118.24
+      ],
+      "explanation": {
+        "en": "Los Angeles is the city in this NASA photograph. Notice the enormous spread of illuminated suburbs and the Pacific coastline. These are historical photographs: lighting and urban growth change over time, and north is not necessarily at the top.",
+        "de": "Los Angeles ist die Stadt in diesem NASA-Foto. Achte auf die enorme Ausdehnung der beleuchteten Vororte und die Pazifikküste. Es sind historische Aufnahmen: Beleuchtung und Bebauung verändern sich, und Norden liegt nicht unbedingt oben."
+      }
+    },
+    {
+      "id": "houston",
+      "name": {
+        "en": "Houston",
+        "de": "Houston"
+      },
+      "aliases": [
+        "Houston"
+      ],
+      "cca3": "USA",
+      "region": "North America",
+      "regionHint": {
+        "en": "Southern North America / Texas",
+        "de": "Südliches Nordamerika / Texas"
+      },
+      "clue": {
+        "en": "A broad inland city, ring roads and a dense network of highways can help.",
+        "de": "Eine weitläufige Stadt im Landesinneren, Ringstraßen und ein dichtes Autobahnnetz helfen."
+      },
+      "latlng": [
+        29.76,
+        -95.37
+      ],
+      "explanation": {
+        "en": "Houston is the city in this NASA photograph. A broad inland city, ring roads and a dense network of highways can help. These are historical photographs: lighting and urban growth change over time, and north is not necessarily at the top.",
+        "de": "Houston ist die Stadt in diesem NASA-Foto. Eine weitläufige Stadt im Landesinneren, Ringstraßen und ein dichtes Autobahnnetz helfen. Es sind historische Aufnahmen: Beleuchtung und Bebauung verändern sich, und Norden liegt nicht unbedingt oben."
+      }
+    },
+    {
+      "id": "dallas",
+      "name": {
+        "en": "Dallas",
+        "de": "Dallas"
+      },
+      "aliases": [
+        "Dallas"
+      ],
+      "cca3": "USA",
+      "region": "North America",
+      "regionHint": {
+        "en": "Southern North America / Texas",
+        "de": "Südliches Nordamerika / Texas"
+      },
+      "clue": {
+        "en": "Look for a sprawling inland metropolis rather than a coast or a single bright island.",
+        "de": "Achte auf eine weitläufige Metropole im Landesinneren statt auf eine Küste oder eine einzelne helle Insel."
+      },
+      "latlng": [
+        32.78,
+        -96.8
+      ],
+      "explanation": {
+        "en": "Dallas is the city in this NASA photograph. Look for a sprawling inland metropolis rather than a coast or a single bright island. These are historical photographs: lighting and urban growth change over time, and north is not necessarily at the top.",
+        "de": "Dallas ist die Stadt in diesem NASA-Foto. Achte auf eine weitläufige Metropole im Landesinneren statt auf eine Küste oder eine einzelne helle Insel. Es sind historische Aufnahmen: Beleuchtung und Bebauung verändern sich, und Norden liegt nicht unbedingt oben."
+      }
+    },
+    {
+      "id": "phoenix",
+      "name": {
+        "en": "Phoenix",
+        "de": "Phoenix"
+      },
+      "aliases": [
+        "Phoenix"
+      ],
+      "cca3": "USA",
+      "region": "North America",
+      "regionHint": {
+        "en": "Southwestern North America",
+        "de": "Südwestliches Nordamerika"
+      },
+      "clue": {
+        "en": "A regular rectangular street grid contrasts with the dark surrounding desert.",
+        "de": "Ein regelmäßiges rechteckiges Straßenraster hebt sich von der dunklen umgebenden Wüste ab."
+      },
+      "latlng": [
+        33.45,
+        -112.07
+      ],
+      "explanation": {
+        "en": "Phoenix is the city in this NASA photograph. A regular rectangular street grid contrasts with the dark surrounding desert. These are historical photographs: lighting and urban growth change over time, and north is not necessarily at the top.",
+        "de": "Phoenix ist die Stadt in diesem NASA-Foto. Ein regelmäßiges rechteckiges Straßenraster hebt sich von der dunklen umgebenden Wüste ab. Es sind historische Aufnahmen: Beleuchtung und Bebauung verändern sich, und Norden liegt nicht unbedingt oben."
+      }
+    },
+    {
+      "id": "salt-lake-city",
+      "name": {
+        "en": "Salt Lake City",
+        "de": "Salt Lake City"
+      },
+      "aliases": [
+        "Salt Lake City"
+      ],
+      "cca3": "USA",
+      "region": "North America",
+      "regionHint": {
+        "en": "Western North America / Utah",
+        "de": "Westliches Nordamerika / Utah"
+      },
+      "clue": {
+        "en": "A long lit urban corridor lies between a large lake and mountain terrain.",
+        "de": "Ein langer beleuchteter Stadtkorridor liegt zwischen einem großen See und bergigem Gelände."
+      },
+      "latlng": [
+        40.76,
+        -111.89
+      ],
+      "explanation": {
+        "en": "Salt Lake City is the city in this NASA photograph. A long lit urban corridor lies between a large lake and mountain terrain. These are historical photographs: lighting and urban growth change over time, and north is not necessarily at the top.",
+        "de": "Salt Lake City ist die Stadt in diesem NASA-Foto. Ein langer beleuchteter Stadtkorridor liegt zwischen einem großen See und bergigem Gelände. Es sind historische Aufnahmen: Beleuchtung und Bebauung verändern sich, und Norden liegt nicht unbedingt oben."
+      }
+    },
+    {
+      "id": "reno",
+      "name": {
+        "en": "Reno",
+        "de": "Reno"
+      },
+      "aliases": [
+        "Reno"
+      ],
+      "cca3": "USA",
+      "region": "North America",
+      "regionHint": {
+        "en": "Western North America / Nevada",
+        "de": "Westliches Nordamerika / Nevada"
+      },
+      "clue": {
+        "en": "Look for a compact illuminated valley surrounded by much darker mountain terrain.",
+        "de": "Achte auf ein kompakt beleuchtetes Tal, das von deutlich dunkleren Bergen umgeben ist."
+      },
+      "latlng": [
+        39.53,
+        -119.81
+      ],
+      "explanation": {
+        "en": "Reno is the city in this NASA photograph. Look for a compact illuminated valley surrounded by much darker mountain terrain. These are historical photographs: lighting and urban growth change over time, and north is not necessarily at the top.",
+        "de": "Reno ist die Stadt in diesem NASA-Foto. Achte auf ein kompakt beleuchtetes Tal, das von deutlich dunkleren Bergen umgeben ist. Es sind historische Aufnahmen: Beleuchtung und Bebauung verändern sich, und Norden liegt nicht unbedingt oben."
+      }
+    },
+    {
+      "id": "baltimore",
+      "name": {
+        "en": "Baltimore",
+        "de": "Baltimore"
+      },
+      "aliases": [
+        "Baltimore"
+      ],
+      "cca3": "USA",
+      "region": "North America",
+      "regionHint": {
+        "en": "Northeastern North America / Chesapeake Bay",
+        "de": "Nordöstliches Nordamerika / Chesapeake Bay"
+      },
+      "clue": {
+        "en": "The dark, branching Chesapeake shoreline helps distinguish this coastal urban area.",
+        "de": "Die dunkle, verzweigte Küstenlinie der Chesapeake Bay hilft, dieses Stadtgebiet zu erkennen."
+      },
+      "latlng": [
+        39.29,
+        -76.61
+      ],
+      "explanation": {
+        "en": "Baltimore is the city in this NASA photograph. The dark, branching Chesapeake shoreline helps distinguish this coastal urban area. These are historical photographs: lighting and urban growth change over time, and north is not necessarily at the top.",
+        "de": "Baltimore ist die Stadt in diesem NASA-Foto. Die dunkle, verzweigte Küstenlinie der Chesapeake Bay hilft, dieses Stadtgebiet zu erkennen. Es sind historische Aufnahmen: Beleuchtung und Bebauung verändern sich, und Norden liegt nicht unbedingt oben."
+      }
+    },
+    {
+      "id": "galveston",
+      "name": {
+        "en": "Galveston",
+        "de": "Galveston"
+      },
+      "aliases": [
+        "Galveston"
+      ],
+      "cca3": "USA",
+      "region": "North America",
+      "regionHint": {
+        "en": "Southern North America / Gulf coast",
+        "de": "Südliches Nordamerika / Golfküste"
+      },
+      "clue": {
+        "en": "Look for a narrow illuminated barrier island beside a bay.",
+        "de": "Achte auf eine schmale beleuchtete Barriereinsel neben einer Bucht."
+      },
+      "latlng": [
+        29.3,
+        -94.8
+      ],
+      "explanation": {
+        "en": "Galveston is the city in this NASA photograph. Look for a narrow illuminated barrier island beside a bay. These are historical photographs: lighting and urban growth change over time, and north is not necessarily at the top.",
+        "de": "Galveston ist die Stadt in diesem NASA-Foto. Achte auf eine schmale beleuchtete Barriereinsel neben einer Bucht. Es sind historische Aufnahmen: Beleuchtung und Bebauung verändern sich, und Norden liegt nicht unbedingt oben."
+      }
+    },
+    {
+      "id": "quebec-city",
+      "name": {
+        "en": "Quebec City",
+        "de": "Québec"
+      },
+      "aliases": [
+        "Quebec City",
+        "Québec",
+        "Quebec",
+        "Québec City"
+      ],
+      "cca3": "CAN",
+      "region": "North America",
+      "regionHint": {
+        "en": "Northeastern North America / St. Lawrence River",
+        "de": "Nordöstliches Nordamerika / Sankt-Lorenz-Strom"
+      },
+      "clue": {
+        "en": "A wide river separates light clusters along its banks.",
+        "de": "Ein breiter Fluss trennt die Lichtgruppen an seinen Ufern."
+      },
+      "latlng": [
+        46.81,
+        -71.21
+      ],
+      "explanation": {
+        "en": "Quebec City is the city in this NASA photograph. A wide river separates light clusters along its banks. These are historical photographs: lighting and urban growth change over time, and north is not necessarily at the top.",
+        "de": "Québec ist die Stadt in diesem NASA-Foto. Ein breiter Fluss trennt die Lichtgruppen an seinen Ufern. Es sind historische Aufnahmen: Beleuchtung und Bebauung verändern sich, und Norden liegt nicht unbedingt oben."
+      }
+    },
+    {
+      "id": "mexico-city",
+      "name": {
+        "en": "Mexico City",
+        "de": "Mexiko-Stadt"
+      },
+      "aliases": [
+        "Mexico City",
+        "Mexiko-Stadt",
+        "Ciudad de Mexico",
+        "Ciudad de México"
+      ],
+      "cca3": "MEX",
+      "region": "North America",
+      "regionHint": {
+        "en": "Central Mexico / North America",
+        "de": "Zentralmexiko / Nordamerika"
+      },
+      "clue": {
+        "en": "An enormous highland urban basin glows without an adjacent ocean coast.",
+        "de": "Ein riesiges Stadtgebiet in einem Hochlandbecken leuchtet ohne angrenzende Meeresküste."
+      },
+      "latlng": [
+        19.43,
+        -99.13
+      ],
+      "explanation": {
+        "en": "Mexico City is the city in this NASA photograph. An enormous highland urban basin glows without an adjacent ocean coast. These are historical photographs: lighting and urban growth change over time, and north is not necessarily at the top.",
+        "de": "Mexiko-Stadt ist die Stadt in diesem NASA-Foto. Ein riesiges Stadtgebiet in einem Hochlandbecken leuchtet ohne angrenzende Meeresküste. Es sind historische Aufnahmen: Beleuchtung und Bebauung verändern sich, und Norden liegt nicht unbedingt oben."
+      }
+    },
+    {
+      "id": "tokyo",
+      "name": {
+        "en": "Tokyo",
+        "de": "Tokio"
+      },
+      "aliases": [
+        "Tokyo",
+        "Tokio"
+      ],
+      "cca3": "JPN",
+      "region": "Asia",
+      "regionHint": {
+        "en": "East Asia / Japan",
+        "de": "Ostasien / Japan"
+      },
+      "clue": {
+        "en": "A vast coastal urban area wraps around a large bay.",
+        "de": "Ein riesiges Küstenstadtgebiet zieht sich um eine große Bucht."
+      },
+      "latlng": [
+        35.68,
+        139.69
+      ],
+      "explanation": {
+        "en": "Tokyo is the city in this NASA photograph. A vast coastal urban area wraps around a large bay. These are historical photographs: lighting and urban growth change over time, and north is not necessarily at the top.",
+        "de": "Tokio ist die Stadt in diesem NASA-Foto. Ein riesiges Küstenstadtgebiet zieht sich um eine große Bucht. Es sind historische Aufnahmen: Beleuchtung und Bebauung verändern sich, und Norden liegt nicht unbedingt oben."
+      }
+    },
+    {
+      "id": "seoul",
+      "name": {
+        "en": "Seoul",
+        "de": "Seoul"
+      },
+      "aliases": [
+        "Seoul"
+      ],
+      "cca3": "KOR",
+      "region": "Asia",
+      "regionHint": {
+        "en": "East Asia / Korean peninsula",
+        "de": "Ostasien / Koreanische Halbinsel"
+      },
+      "clue": {
+        "en": "A dark river meanders through the densely illuminated metropolitan area.",
+        "de": "Ein dunkler Fluss schlängelt sich durch das dicht beleuchtete Ballungsgebiet."
+      },
+      "latlng": [
+        37.57,
+        126.98
+      ],
+      "explanation": {
+        "en": "Seoul is the city in this NASA photograph. A dark river meanders through the densely illuminated metropolitan area. These are historical photographs: lighting and urban growth change over time, and north is not necessarily at the top.",
+        "de": "Seoul ist die Stadt in diesem NASA-Foto. Ein dunkler Fluss schlängelt sich durch das dicht beleuchtete Ballungsgebiet. Es sind historische Aufnahmen: Beleuchtung und Bebauung verändern sich, und Norden liegt nicht unbedingt oben."
+      }
+    },
+    {
+      "id": "busan",
+      "name": {
+        "en": "Busan",
+        "de": "Busan"
+      },
+      "aliases": [
+        "Busan",
+        "Pusan"
+      ],
+      "cca3": "KOR",
+      "region": "Asia",
+      "regionHint": {
+        "en": "East Asia / Korean peninsula",
+        "de": "Ostasien / Koreanische Halbinsel"
+      },
+      "clue": {
+        "en": "Lit coastal neighbourhoods and harbour areas follow a hilly coastline.",
+        "de": "Beleuchtete Küstenviertel und Hafengebiete folgen einer hügeligen Küste."
+      },
+      "latlng": [
+        35.18,
+        129.08
+      ],
+      "explanation": {
+        "en": "Busan is the city in this NASA photograph. Lit coastal neighbourhoods and harbour areas follow a hilly coastline. These are historical photographs: lighting and urban growth change over time, and north is not necessarily at the top.",
+        "de": "Busan ist die Stadt in diesem NASA-Foto. Beleuchtete Küstenviertel und Hafengebiete folgen einer hügeligen Küste. Es sind historische Aufnahmen: Beleuchtung und Bebauung verändern sich, und Norden liegt nicht unbedingt oben."
+      }
+    },
+    {
+      "id": "sendai",
+      "name": {
+        "en": "Sendai",
+        "de": "Sendai"
+      },
+      "aliases": [
+        "Sendai"
+      ],
+      "cca3": "JPN",
+      "region": "Asia",
+      "regionHint": {
+        "en": "East Asia / Northeastern Japan",
+        "de": "Ostasien / Nordostjapan"
+      },
+      "clue": {
+        "en": "Compare the compact city and the nearby Pacific coastal plain.",
+        "de": "Vergleiche die kompakte Stadt mit der nahegelegenen Küstenebene am Pazifik."
+      },
+      "latlng": [
+        38.27,
+        140.87
+      ],
+      "explanation": {
+        "en": "Sendai is the city in this NASA photograph. Compare the compact city and the nearby Pacific coastal plain. These are historical photographs: lighting and urban growth change over time, and north is not necessarily at the top.",
+        "de": "Sendai ist die Stadt in diesem NASA-Foto. Vergleiche die kompakte Stadt mit der nahegelegenen Küstenebene am Pazifik. Es sind historische Aufnahmen: Beleuchtung und Bebauung verändern sich, und Norden liegt nicht unbedingt oben."
+      }
+    },
+    {
+      "id": "shanghai",
+      "name": {
+        "en": "Shanghai",
+        "de": "Shanghai"
+      },
+      "aliases": [
+        "Shanghai"
+      ],
+      "cca3": "CHN",
+      "region": "Asia",
+      "regionHint": {
+        "en": "East Asia / China's east coast",
+        "de": "Ostasien / Chinas Ostküste"
+      },
+      "clue": {
+        "en": "Dense lights meet a river estuary and coastal shipping waters.",
+        "de": "Dichte Lichter treffen auf eine Flussmündung und Küstengewässer."
+      },
+      "latlng": [
+        31.23,
+        121.47
+      ],
+      "explanation": {
+        "en": "Shanghai is the city in this NASA photograph. Dense lights meet a river estuary and coastal shipping waters. These are historical photographs: lighting and urban growth change over time, and north is not necessarily at the top.",
+        "de": "Shanghai ist die Stadt in diesem NASA-Foto. Dichte Lichter treffen auf eine Flussmündung und Küstengewässer. Es sind historische Aufnahmen: Beleuchtung und Bebauung verändern sich, und Norden liegt nicht unbedingt oben."
+      }
+    },
+    {
+      "id": "hangzhou",
+      "name": {
+        "en": "Hangzhou",
+        "de": "Hangzhou"
+      },
+      "aliases": [
+        "Hangzhou"
+      ],
+      "cca3": "CHN",
+      "region": "Asia",
+      "regionHint": {
+        "en": "East Asia / Eastern China",
+        "de": "Ostasien / Ostchina"
+      },
+      "clue": {
+        "en": "A broad river and darker water surfaces interrupt the urban lights.",
+        "de": "Ein breiter Fluss und dunklere Wasserflächen unterbrechen die Stadtlichter."
+      },
+      "latlng": [
+        30.27,
+        120.15
+      ],
+      "explanation": {
+        "en": "Hangzhou is the city in this NASA photograph. A broad river and darker water surfaces interrupt the urban lights. These are historical photographs: lighting and urban growth change over time, and north is not necessarily at the top.",
+        "de": "Hangzhou ist die Stadt in diesem NASA-Foto. Ein breiter Fluss und dunklere Wasserflächen unterbrechen die Stadtlichter. Es sind historische Aufnahmen: Beleuchtung und Bebauung verändern sich, und Norden liegt nicht unbedingt oben."
+      }
+    },
+    {
+      "id": "quanzhou",
+      "name": {
+        "en": "Quanzhou",
+        "de": "Quanzhou"
+      },
+      "aliases": [
+        "Quanzhou"
+      ],
+      "cca3": "CHN",
+      "region": "Asia",
+      "regionHint": {
+        "en": "East Asia / China's southeastern coast",
+        "de": "Ostasien / Chinas Südostküste"
+      },
+      "clue": {
+        "en": "Notice the coastal bays and the separate light clusters around them.",
+        "de": "Achte auf die Küstenbuchten und die getrennten Lichtgruppen darum herum."
+      },
+      "latlng": [
+        24.87,
+        118.68
+      ],
+      "explanation": {
+        "en": "Quanzhou is the city in this NASA photograph. Notice the coastal bays and the separate light clusters around them. These are historical photographs: lighting and urban growth change over time, and north is not necessarily at the top.",
+        "de": "Quanzhou ist die Stadt in diesem NASA-Foto. Achte auf die Küstenbuchten und die getrennten Lichtgruppen darum herum. Es sind historische Aufnahmen: Beleuchtung und Bebauung verändern sich, und Norden liegt nicht unbedingt oben."
+      }
+    },
+    {
+      "id": "xiamen",
+      "name": {
+        "en": "Xiamen",
+        "de": "Xiamen"
+      },
+      "aliases": [
+        "Xiamen",
+        "Amoy"
+      ],
+      "cca3": "CHN",
+      "region": "Asia",
+      "regionHint": {
+        "en": "East Asia / China's southeastern coast",
+        "de": "Ostasien / Chinas Südostküste"
+      },
+      "clue": {
+        "en": "An illuminated island and surrounding coastal districts are useful clues.",
+        "de": "Eine beleuchtete Insel und die umliegenden Küstenviertel sind hilfreiche Hinweise."
+      },
+      "latlng": [
+        24.48,
+        118.09
+      ],
+      "explanation": {
+        "en": "Xiamen is the city in this NASA photograph. An illuminated island and surrounding coastal districts are useful clues. These are historical photographs: lighting and urban growth change over time, and north is not necessarily at the top.",
+        "de": "Xiamen ist die Stadt in diesem NASA-Foto. Eine beleuchtete Insel und die umliegenden Küstenviertel sind hilfreiche Hinweise. Es sind historische Aufnahmen: Beleuchtung und Bebauung verändern sich, und Norden liegt nicht unbedingt oben."
+      }
+    },
+    {
+      "id": "new-delhi",
+      "name": {
+        "en": "New Delhi",
+        "de": "Neu-Delhi"
+      },
+      "aliases": [
+        "New Delhi",
+        "Neu-Delhi",
+        "Delhi",
+        "Neu Delhi"
+      ],
+      "cca3": "IND",
+      "region": "Asia",
+      "regionHint": {
+        "en": "South Asia / Northern India",
+        "de": "Südasien / Nordindien"
+      },
+      "clue": {
+        "en": "A vast inland light cluster sits on the densely populated northern Indian plain.",
+        "de": "Eine riesige Lichtgruppe im Landesinneren liegt in der dicht besiedelten nordindischen Ebene."
+      },
+      "latlng": [
+        28.61,
+        77.21
+      ],
+      "explanation": {
+        "en": "New Delhi is the city in this NASA photograph. A vast inland light cluster sits on the densely populated northern Indian plain. These are historical photographs: lighting and urban growth change over time, and north is not necessarily at the top.",
+        "de": "Neu-Delhi ist die Stadt in diesem NASA-Foto. Eine riesige Lichtgruppe im Landesinneren liegt in der dicht besiedelten nordindischen Ebene. Es sind historische Aufnahmen: Beleuchtung und Bebauung verändern sich, und Norden liegt nicht unbedingt oben."
+      }
+    },
+    {
+      "id": "karachi",
+      "name": {
+        "en": "Karachi",
+        "de": "Karatschi"
+      },
+      "aliases": [
+        "Karachi",
+        "Karatschi"
+      ],
+      "cca3": "PAK",
+      "region": "Asia",
+      "regionHint": {
+        "en": "South Asia / Arabian Sea coast",
+        "de": "Südasien / Küste des Arabischen Meeres"
+      },
+      "clue": {
+        "en": "A large urban area meets the coast of the Arabian Sea.",
+        "de": "Ein großes Stadtgebiet trifft auf die Küste des Arabischen Meeres."
+      },
+      "latlng": [
+        24.86,
+        67.01
+      ],
+      "explanation": {
+        "en": "Karachi is the city in this NASA photograph. A large urban area meets the coast of the Arabian Sea. These are historical photographs: lighting and urban growth change over time, and north is not necessarily at the top.",
+        "de": "Karatschi ist die Stadt in diesem NASA-Foto. Ein großes Stadtgebiet trifft auf die Küste des Arabischen Meeres. Es sind historische Aufnahmen: Beleuchtung und Bebauung verändern sich, und Norden liegt nicht unbedingt oben."
+      }
+    },
+    {
+      "id": "ashgabat",
+      "name": {
+        "en": "Ashgabat",
+        "de": "Aschgabat"
+      },
+      "aliases": [
+        "Ashgabat",
+        "Aschgabat",
+        "Ashkhabad"
+      ],
+      "cca3": "TKM",
+      "region": "Asia",
+      "regionHint": {
+        "en": "Central Asia",
+        "de": "Zentralasien"
+      },
+      "clue": {
+        "en": "Bright, planned urban districts lie beside a dark mountain front.",
+        "de": "Helle, geplante Stadtviertel liegen neben einem dunklen Gebirgsrand."
+      },
+      "latlng": [
+        37.96,
+        58.33
+      ],
+      "explanation": {
+        "en": "Ashgabat is the city in this NASA photograph. Bright, planned urban districts lie beside a dark mountain front. These are historical photographs: lighting and urban growth change over time, and north is not necessarily at the top.",
+        "de": "Aschgabat ist die Stadt in diesem NASA-Foto. Helle, geplante Stadtviertel liegen neben einem dunklen Gebirgsrand. Es sind historische Aufnahmen: Beleuchtung und Bebauung verändern sich, und Norden liegt nicht unbedingt oben."
+      }
+    },
+    {
+      "id": "almaty",
+      "name": {
+        "en": "Almaty",
+        "de": "Almaty"
+      },
+      "aliases": [
+        "Almaty",
+        "Alma Ata",
+        "Alma-Ata"
+      ],
+      "cca3": "KAZ",
+      "region": "Asia",
+      "regionHint": {
+        "en": "Central Asia",
+        "de": "Zentralasien"
+      },
+      "clue": {
+        "en": "Look for a compact inland street network beside the dark northern foothills of a mountain range.",
+        "de": "Achte auf ein kompaktes Straßennetz im Landesinneren neben dunklen Gebirgsausläufern."
+      },
+      "latlng": [
+        43.24,
+        76.89
+      ],
+      "explanation": {
+        "en": "Almaty is the city in this NASA photograph. Look for a compact inland street network beside the dark northern foothills of a mountain range. These are historical photographs: lighting and urban growth change over time, and north is not necessarily at the top.",
+        "de": "Almaty ist die Stadt in diesem NASA-Foto. Achte auf ein kompaktes Straßennetz im Landesinneren neben dunklen Gebirgsausläufern. Es sind historische Aufnahmen: Beleuchtung und Bebauung verändern sich, und Norden liegt nicht unbedingt oben."
+      }
+    },
+    {
+      "id": "mashhad",
+      "name": {
+        "en": "Mashhad",
+        "de": "Maschhad"
+      },
+      "aliases": [
+        "Mashhad",
+        "Maschhad"
+      ],
+      "cca3": "IRN",
+      "region": "Asia",
+      "regionHint": {
+        "en": "Western Asia / Northeastern Iran",
+        "de": "Westasien / Nordostiran"
+      },
+      "clue": {
+        "en": "An elongated inland city sits within a valley rather than along the sea.",
+        "de": "Eine längliche Stadt im Landesinneren liegt in einem Tal statt am Meer."
+      },
+      "latlng": [
+        36.3,
+        59.6
+      ],
+      "explanation": {
+        "en": "Mashhad is the city in this NASA photograph. An elongated inland city sits within a valley rather than along the sea. These are historical photographs: lighting and urban growth change over time, and north is not necessarily at the top.",
+        "de": "Maschhad ist die Stadt in diesem NASA-Foto. Eine längliche Stadt im Landesinneren liegt in einem Tal statt am Meer. Es sind historische Aufnahmen: Beleuchtung und Bebauung verändern sich, und Norden liegt nicht unbedingt oben."
+      }
+    },
+    {
+      "id": "dubai",
+      "name": {
+        "en": "Dubai",
+        "de": "Dubai"
+      },
+      "aliases": [
+        "Dubai"
+      ],
+      "cca3": "ARE",
+      "region": "Asia",
+      "regionHint": {
+        "en": "Western Asia / Persian Gulf",
+        "de": "Westasien / Persischer Golf"
+      },
+      "clue": {
+        "en": "Compare the bright coastal corridor and offshore engineered islands when visible.",
+        "de": "Vergleiche den hellen Küstenkorridor und die künstlichen Inseln, falls sie sichtbar sind."
+      },
+      "latlng": [
+        25.2,
+        55.27
+      ],
+      "explanation": {
+        "en": "Dubai is the city in this NASA photograph. Compare the bright coastal corridor and offshore engineered islands when visible. These are historical photographs: lighting and urban growth change over time, and north is not necessarily at the top.",
+        "de": "Dubai ist die Stadt in diesem NASA-Foto. Vergleiche den hellen Küstenkorridor und die künstlichen Inseln, falls sie sichtbar sind. Es sind historische Aufnahmen: Beleuchtung und Bebauung verändern sich, und Norden liegt nicht unbedingt oben."
+      }
+    },
+    {
+      "id": "kuwait-city",
+      "name": {
+        "en": "Kuwait City",
+        "de": "Kuwait-Stadt"
+      },
+      "aliases": [
+        "Kuwait City",
+        "Kuwait-Stadt",
+        "Kuwait"
+      ],
+      "cca3": "KWT",
+      "region": "Asia",
+      "regionHint": {
+        "en": "Western Asia / Persian Gulf",
+        "de": "Westasien / Persischer Golf"
+      },
+      "clue": {
+        "en": "A large bay and a curved coastal urban strip help identify this Gulf capital.",
+        "de": "Eine große Bucht und ein gekrümmter Küstenstadtstreifen helfen, diese Golf-Hauptstadt zu erkennen."
+      },
+      "latlng": [
+        29.38,
+        47.98
+      ],
+      "explanation": {
+        "en": "Kuwait City is the city in this NASA photograph. A large bay and a curved coastal urban strip help identify this Gulf capital. These are historical photographs: lighting and urban growth change over time, and north is not necessarily at the top.",
+        "de": "Kuwait-Stadt ist die Stadt in diesem NASA-Foto. Eine große Bucht und ein gekrümmter Küstenstadtstreifen helfen, diese Golf-Hauptstadt zu erkennen. Es sind historische Aufnahmen: Beleuchtung und Bebauung verändern sich, und Norden liegt nicht unbedingt oben."
+      }
+    },
+    {
+      "id": "doha",
+      "name": {
+        "en": "Doha",
+        "de": "Doha"
+      },
+      "aliases": [
+        "Doha"
+      ],
+      "cca3": "QAT",
+      "region": "Asia",
+      "regionHint": {
+        "en": "Western Asia / Persian Gulf",
+        "de": "Westasien / Persischer Golf"
+      },
+      "clue": {
+        "en": "An illuminated peninsula coast curves around a compact bay.",
+        "de": "Eine beleuchtete Halbinselküste zieht sich um eine kompakte Bucht."
+      },
+      "latlng": [
+        25.29,
+        51.53
+      ],
+      "explanation": {
+        "en": "Doha is the city in this NASA photograph. An illuminated peninsula coast curves around a compact bay. These are historical photographs: lighting and urban growth change over time, and north is not necessarily at the top.",
+        "de": "Doha ist die Stadt in diesem NASA-Foto. Eine beleuchtete Halbinselküste zieht sich um eine kompakte Bucht. Es sind historische Aufnahmen: Beleuchtung und Bebauung verändern sich, und Norden liegt nicht unbedingt oben."
+      }
+    },
+    {
+      "id": "riyadh",
+      "name": {
+        "en": "Riyadh",
+        "de": "Riad"
+      },
+      "aliases": [
+        "Riyadh",
+        "Riad"
+      ],
+      "cca3": "SAU",
+      "region": "Asia",
+      "regionHint": {
+        "en": "Western Asia / Arabian peninsula",
+        "de": "Westasien / Arabische Halbinsel"
+      },
+      "clue": {
+        "en": "A large, regular inland street network glows within dark desert terrain.",
+        "de": "Ein großes regelmäßiges Straßennetz im Landesinneren leuchtet in dunklem Wüstengelände."
+      },
+      "latlng": [
+        24.71,
+        46.68
+      ],
+      "explanation": {
+        "en": "Riyadh is the city in this NASA photograph. A large, regular inland street network glows within dark desert terrain. These are historical photographs: lighting and urban growth change over time, and north is not necessarily at the top.",
+        "de": "Riad ist die Stadt in diesem NASA-Foto. Ein großes regelmäßiges Straßennetz im Landesinneren leuchtet in dunklem Wüstengelände. Es sind historische Aufnahmen: Beleuchtung und Bebauung verändern sich, und Norden liegt nicht unbedingt oben."
+      }
+    },
+    {
+      "id": "dammam",
+      "name": {
+        "en": "Dammam",
+        "de": "Dammam"
+      },
+      "aliases": [
+        "Dammam"
+      ],
+      "cca3": "SAU",
+      "region": "Asia",
+      "regionHint": {
+        "en": "Western Asia / Persian Gulf",
+        "de": "Westasien / Persischer Golf"
+      },
+      "clue": {
+        "en": "Coastal lights run beside the Persian Gulf and connect neighbouring urban areas.",
+        "de": "Küstenlichter verlaufen am Persischen Golf und verbinden benachbarte Stadtgebiete."
+      },
+      "latlng": [
+        26.43,
+        50.1
+      ],
+      "explanation": {
+        "en": "Dammam is the city in this NASA photograph. Coastal lights run beside the Persian Gulf and connect neighbouring urban areas. These are historical photographs: lighting and urban growth change over time, and north is not necessarily at the top.",
+        "de": "Dammam ist die Stadt in diesem NASA-Foto. Küstenlichter verlaufen am Persischen Golf und verbinden benachbarte Stadtgebiete. Es sind historische Aufnahmen: Beleuchtung und Bebauung verändern sich, und Norden liegt nicht unbedingt oben."
+      }
+    },
+    {
+      "id": "jubail",
+      "name": {
+        "en": "Jubail",
+        "de": "Dschubail"
+      },
+      "aliases": [
+        "Jubail",
+        "Dschubail",
+        "Al Jubayl",
+        "Al Jubail",
+        "Jubayl"
+      ],
+      "cca3": "SAU",
+      "region": "Asia",
+      "regionHint": {
+        "en": "Western Asia / Persian Gulf",
+        "de": "Westasien / Persischer Golf"
+      },
+      "clue": {
+        "en": "Regular industrial districts and port areas border the Gulf coast.",
+        "de": "Regelmäßige Industrieviertel und Hafengebiete liegen an der Golfküste."
+      },
+      "latlng": [
+        27.02,
+        49.66
+      ],
+      "explanation": {
+        "en": "Jubail is the city in this NASA photograph. Regular industrial districts and port areas border the Gulf coast. These are historical photographs: lighting and urban growth change over time, and north is not necessarily at the top.",
+        "de": "Dschubail ist die Stadt in diesem NASA-Foto. Regelmäßige Industrieviertel und Hafengebiete liegen an der Golfküste. Es sind historische Aufnahmen: Beleuchtung und Bebauung verändern sich, und Norden liegt nicht unbedingt oben."
+      }
+    },
+    {
+      "id": "jeddah",
+      "name": {
+        "en": "Jeddah",
+        "de": "Dschidda"
+      },
+      "aliases": [
+        "Jeddah",
+        "Dschidda",
+        "Jidda"
+      ],
+      "cca3": "SAU",
+      "region": "Asia",
+      "regionHint": {
+        "en": "Western Asia / Red Sea coast",
+        "de": "Westasien / Küste des Roten Meeres"
+      },
+      "clue": {
+        "en": "An extended strip of urban lights follows the Red Sea shoreline.",
+        "de": "Ein langgezogener Streifen von Stadtlichtern folgt der Küste des Roten Meeres."
+      },
+      "latlng": [
+        21.49,
+        39.19
+      ],
+      "explanation": {
+        "en": "Jeddah is the city in this NASA photograph. An extended strip of urban lights follows the Red Sea shoreline. These are historical photographs: lighting and urban growth change over time, and north is not necessarily at the top.",
+        "de": "Dschidda ist die Stadt in diesem NASA-Foto. Ein langgezogener Streifen von Stadtlichtern folgt der Küste des Roten Meeres. Es sind historische Aufnahmen: Beleuchtung und Bebauung verändern sich, und Norden liegt nicht unbedingt oben."
+      }
+    },
+    {
+      "id": "jazan",
+      "name": {
+        "en": "Jazan",
+        "de": "Dschāzān"
+      },
+      "aliases": [
+        "Jazan",
+        "Dschāzān",
+        "Jizan",
+        "Gizan"
+      ],
+      "cca3": "SAU",
+      "region": "Asia",
+      "regionHint": {
+        "en": "Western Asia / Southern Red Sea",
+        "de": "Westasien / Südliches Rotes Meer"
+      },
+      "clue": {
+        "en": "Look for a comparatively compact coastal city and the surrounding dark Red Sea waters.",
+        "de": "Achte auf eine vergleichsweise kompakte Küstenstadt und die dunklen Gewässer des Roten Meeres."
+      },
+      "latlng": [
+        16.89,
+        42.55
+      ],
+      "explanation": {
+        "en": "Jazan is the city in this NASA photograph. Look for a comparatively compact coastal city and the surrounding dark Red Sea waters. These are historical photographs: lighting and urban growth change over time, and north is not necessarily at the top.",
+        "de": "Dschāzān ist die Stadt in diesem NASA-Foto. Achte auf eine vergleichsweise kompakte Küstenstadt und die dunklen Gewässer des Roten Meeres. Es sind historische Aufnahmen: Beleuchtung und Bebauung verändern sich, und Norden liegt nicht unbedingt oben."
+      }
+    },
+    {
+      "id": "baghdad",
+      "name": {
+        "en": "Baghdad",
+        "de": "Bagdad"
+      },
+      "aliases": [
+        "Baghdad",
+        "Bagdad"
+      ],
+      "cca3": "IRQ",
+      "region": "Asia",
+      "regionHint": {
+        "en": "Western Asia / Mesopotamia",
+        "de": "Westasien / Mesopotamien"
+      },
+      "clue": {
+        "en": "The winding Tigris breaks up an extensive inland urban glow.",
+        "de": "Der gewundene Tigris unterbricht das weitläufige Leuchten einer Stadt im Landesinneren."
+      },
+      "latlng": [
+        33.32,
+        44.37
+      ],
+      "explanation": {
+        "en": "Baghdad is the city in this NASA photograph. The winding Tigris breaks up an extensive inland urban glow. These are historical photographs: lighting and urban growth change over time, and north is not necessarily at the top.",
+        "de": "Bagdad ist die Stadt in diesem NASA-Foto. Der gewundene Tigris unterbricht das weitläufige Leuchten einer Stadt im Landesinneren. Es sind historische Aufnahmen: Beleuchtung und Bebauung verändern sich, und Norden liegt nicht unbedingt oben."
+      }
+    },
+    {
+      "id": "basra",
+      "name": {
+        "en": "Basra",
+        "de": "Basra"
+      },
+      "aliases": [
+        "Basra",
+        "Basrah"
+      ],
+      "cca3": "IRQ",
+      "region": "Asia",
+      "regionHint": {
+        "en": "Western Asia / Southern Mesopotamia",
+        "de": "Westasien / Südliches Mesopotamien"
+      },
+      "clue": {
+        "en": "Urban lights follow the waterways near the head of the Persian Gulf.",
+        "de": "Stadtlichter folgen den Wasserwegen nahe dem nördlichen Ende des Persischen Golfs."
+      },
+      "latlng": [
+        30.51,
+        47.78
+      ],
+      "explanation": {
+        "en": "Basra is the city in this NASA photograph. Urban lights follow the waterways near the head of the Persian Gulf. These are historical photographs: lighting and urban growth change over time, and north is not necessarily at the top.",
+        "de": "Basra ist die Stadt in diesem NASA-Foto. Stadtlichter folgen den Wasserwegen nahe dem nördlichen Ende des Persischen Golfs. Es sind historische Aufnahmen: Beleuchtung und Bebauung verändern sich, und Norden liegt nicht unbedingt oben."
+      }
+    },
+    {
+      "id": "baku",
+      "name": {
+        "en": "Baku",
+        "de": "Baku"
+      },
+      "aliases": [
+        "Baku"
+      ],
+      "cca3": "AZE",
+      "region": "Asia",
+      "regionHint": {
+        "en": "Caucasus / Caspian Sea",
+        "de": "Kaukasus / Kaspisches Meer"
+      },
+      "clue": {
+        "en": "A distinctive peninsula and coastal light clusters meet the Caspian Sea.",
+        "de": "Eine markante Halbinsel und Küstenlichtgruppen treffen auf das Kaspische Meer."
+      },
+      "latlng": [
+        40.41,
+        49.87
+      ],
+      "explanation": {
+        "en": "Baku is the city in this NASA photograph. A distinctive peninsula and coastal light clusters meet the Caspian Sea. These are historical photographs: lighting and urban growth change over time, and north is not necessarily at the top.",
+        "de": "Baku ist die Stadt in diesem NASA-Foto. Eine markante Halbinsel und Küstenlichtgruppen treffen auf das Kaspische Meer. Es sind historische Aufnahmen: Beleuchtung und Bebauung verändern sich, und Norden liegt nicht unbedingt oben."
+      }
+    },
+    {
+      "id": "istanbul",
+      "name": {
+        "en": "Istanbul",
+        "de": "Istanbul"
+      },
+      "aliases": [
+        "Istanbul"
+      ],
+      "cca3": "TUR",
+      "region": "Europe",
+      "regionHint": {
+        "en": "Southeastern Europe / Northwestern Asia",
+        "de": "Südosteuropa / Nordwestasien"
+      },
+      "clue": {
+        "en": "A narrow dark strait divides two extensive urban light fields.",
+        "de": "Eine schmale dunkle Meerenge trennt zwei ausgedehnte Felder von Stadtlichtern."
+      },
+      "latlng": [
+        41.01,
+        28.98
+      ],
+      "explanation": {
+        "en": "Istanbul is the city in this NASA photograph. A narrow dark strait divides two extensive urban light fields. These are historical photographs: lighting and urban growth change over time, and north is not necessarily at the top.",
+        "de": "Istanbul ist die Stadt in diesem NASA-Foto. Eine schmale dunkle Meerenge trennt zwei ausgedehnte Felder von Stadtlichtern. Es sind historische Aufnahmen: Beleuchtung und Bebauung verändern sich, und Norden liegt nicht unbedingt oben."
+      }
+    },
+    {
+      "id": "milan",
+      "name": {
+        "en": "Milan",
+        "de": "Mailand"
+      },
+      "aliases": [
+        "Milan",
+        "Mailand",
+        "Milano"
+      ],
+      "cca3": "ITA",
+      "region": "Europe",
+      "regionHint": {
+        "en": "Southern Europe / Northern Italy",
+        "de": "Südeuropa / Norditalien"
+      },
+      "clue": {
+        "en": "Roads radiate from a dense urban core into the heavily settled Po Valley.",
+        "de": "Straßen führen strahlenförmig aus einem dichten Stadtkern in die stark besiedelte Poebene."
+      },
+      "latlng": [
+        45.46,
+        9.19
+      ],
+      "explanation": {
+        "en": "Milan is the city in this NASA photograph. Roads radiate from a dense urban core into the heavily settled Po Valley. These are historical photographs: lighting and urban growth change over time, and north is not necessarily at the top.",
+        "de": "Mailand ist die Stadt in diesem NASA-Foto. Straßen führen strahlenförmig aus einem dichten Stadtkern in die stark besiedelte Poebene. Es sind historische Aufnahmen: Beleuchtung und Bebauung verändern sich, und Norden liegt nicht unbedingt oben."
+      }
+    },
+    {
+      "id": "minsk",
+      "name": {
+        "en": "Minsk",
+        "de": "Minsk"
+      },
+      "aliases": [
+        "Minsk"
+      ],
+      "cca3": "BLR",
+      "region": "Europe",
+      "regionHint": {
+        "en": "Eastern Europe",
+        "de": "Osteuropa"
+      },
+      "clue": {
+        "en": "An inland city's roads fan outward from a concentrated centre.",
+        "de": "Die Straßen einer Stadt im Landesinneren führen fächerförmig aus einem konzentrierten Zentrum."
+      },
+      "latlng": [
+        53.9,
+        27.56
+      ],
+      "explanation": {
+        "en": "Minsk is the city in this NASA photograph. An inland city's roads fan outward from a concentrated centre. These are historical photographs: lighting and urban growth change over time, and north is not necessarily at the top.",
+        "de": "Minsk ist die Stadt in diesem NASA-Foto. Die Straßen einer Stadt im Landesinneren führen fächerförmig aus einem konzentrierten Zentrum. Es sind historische Aufnahmen: Beleuchtung und Bebauung verändern sich, und Norden liegt nicht unbedingt oben."
+      }
+    },
+    {
+      "id": "barcelona",
+      "name": {
+        "en": "Barcelona",
+        "de": "Barcelona"
+      },
+      "aliases": [
+        "Barcelona"
+      ],
+      "cca3": "ESP",
+      "region": "Europe",
+      "regionHint": {
+        "en": "Southern Europe / Western Mediterranean",
+        "de": "Südeuropa / Westliches Mittelmeer"
+      },
+      "clue": {
+        "en": "A dense rectangular street grid borders a relatively straight Mediterranean coastline.",
+        "de": "Ein dichtes rechteckiges Straßenraster grenzt an eine relativ gerade Mittelmeerküste."
+      },
+      "latlng": [
+        41.39,
+        2.17
+      ],
+      "explanation": {
+        "en": "Barcelona is the city in this NASA photograph. A dense rectangular street grid borders a relatively straight Mediterranean coastline. These are historical photographs: lighting and urban growth change over time, and north is not necessarily at the top.",
+        "de": "Barcelona ist die Stadt in diesem NASA-Foto. Ein dichtes rechteckiges Straßenraster grenzt an eine relativ gerade Mittelmeerküste. Es sind historische Aufnahmen: Beleuchtung und Bebauung verändern sich, und Norden liegt nicht unbedingt oben."
+      }
+    },
+    {
+      "id": "valencia",
+      "name": {
+        "en": "Valencia",
+        "de": "Valencia"
+      },
+      "aliases": [
+        "Valencia",
+        "València"
+      ],
+      "cca3": "ESP",
+      "region": "Europe",
+      "regionHint": {
+        "en": "Southern Europe / Western Mediterranean",
+        "de": "Südeuropa / Westliches Mittelmeer"
+      },
+      "clue": {
+        "en": "Compare a compact coastal core and roads stretching into the surrounding plain.",
+        "de": "Vergleiche einen kompakten Küstenstadtkern mit Straßen in die umgebende Ebene."
+      },
+      "latlng": [
+        39.47,
+        -0.38
+      ],
+      "explanation": {
+        "en": "Valencia is the city in this NASA photograph. Compare a compact coastal core and roads stretching into the surrounding plain. These are historical photographs: lighting and urban growth change over time, and north is not necessarily at the top.",
+        "de": "Valencia ist die Stadt in diesem NASA-Foto. Vergleiche einen kompakten Küstenstadtkern mit Straßen in die umgebende Ebene. Es sind historische Aufnahmen: Beleuchtung und Bebauung verändern sich, und Norden liegt nicht unbedingt oben."
+      }
+    },
+    {
+      "id": "sochi",
+      "name": {
+        "en": "Sochi",
+        "de": "Sotschi"
+      },
+      "aliases": [
+        "Sochi",
+        "Sotschi"
+      ],
+      "cca3": "RUS",
+      "region": "Europe",
+      "regionHint": {
+        "en": "Eastern Europe / Black Sea coast",
+        "de": "Osteuropa / Schwarzmeerküste"
+      },
+      "clue": {
+        "en": "A narrow line of coastal development is constrained by dark mountains.",
+        "de": "Eine schmale Linie von Küstenbebauung wird von dunklen Bergen begrenzt."
+      },
+      "latlng": [
+        43.6,
+        39.73
+      ],
+      "explanation": {
+        "en": "Sochi is the city in this NASA photograph. A narrow line of coastal development is constrained by dark mountains. These are historical photographs: lighting and urban growth change over time, and north is not necessarily at the top.",
+        "de": "Sotschi ist die Stadt in diesem NASA-Foto. Eine schmale Linie von Küstenbebauung wird von dunklen Bergen begrenzt. Es sind historische Aufnahmen: Beleuchtung und Bebauung verändern sich, und Norden liegt nicht unbedingt oben."
+      }
+    },
+    {
+      "id": "brasilia",
+      "name": {
+        "en": "Brasilia",
+        "de": "Brasília"
+      },
+      "aliases": [
+        "Brasilia",
+        "Brasília"
+      ],
+      "cca3": "BRA",
+      "region": "South America",
+      "regionHint": {
+        "en": "Central South America / Brazilian highlands",
+        "de": "Zentrales Südamerika / Brasilianisches Hochland"
+      },
+      "clue": {
+        "en": "A highly planned central city has a distinctive curved-wing layout.",
+        "de": "Ein stark geplanter Stadtkern hat einen markanten Grundriss mit gebogenen Flügeln."
+      },
+      "latlng": [
+        -15.79,
+        -47.88
+      ],
+      "explanation": {
+        "en": "Brasilia is the city in this NASA photograph. A highly planned central city has a distinctive curved-wing layout. These are historical photographs: lighting and urban growth change over time, and north is not necessarily at the top.",
+        "de": "Brasília ist die Stadt in diesem NASA-Foto. Ein stark geplanter Stadtkern hat einen markanten Grundriss mit gebogenen Flügeln. Es sind historische Aufnahmen: Beleuchtung und Bebauung verändern sich, und Norden liegt nicht unbedingt oben."
+      }
+    },
+    {
+      "id": "curitiba",
+      "name": {
+        "en": "Curitiba",
+        "de": "Curitiba"
+      },
+      "aliases": [
+        "Curitiba"
+      ],
+      "cca3": "BRA",
+      "region": "South America",
+      "regionHint": {
+        "en": "Southern South America / Southern Brazil",
+        "de": "Südliches Südamerika / Südbrasilien"
+      },
+      "clue": {
+        "en": "An inland urban light network spreads across a highland plateau.",
+        "de": "Ein städtisches Lichtnetz im Landesinneren breitet sich auf einem Hochlandplateau aus."
+      },
+      "latlng": [
+        -25.43,
+        -49.27
+      ],
+      "explanation": {
+        "en": "Curitiba is the city in this NASA photograph. An inland urban light network spreads across a highland plateau. These are historical photographs: lighting and urban growth change over time, and north is not necessarily at the top.",
+        "de": "Curitiba ist die Stadt in diesem NASA-Foto. Ein städtisches Lichtnetz im Landesinneren breitet sich auf einem Hochlandplateau aus. Es sind historische Aufnahmen: Beleuchtung und Bebauung verändern sich, und Norden liegt nicht unbedingt oben."
+      }
+    },
+    {
+      "id": "rio-de-janeiro",
+      "name": {
+        "en": "Rio de Janeiro",
+        "de": "Rio de Janeiro"
+      },
+      "aliases": [
+        "Rio de Janeiro",
+        "Rio"
+      ],
+      "cca3": "BRA",
+      "region": "South America",
+      "regionHint": {
+        "en": "Eastern South America / Atlantic coast",
+        "de": "Östliches Südamerika / Atlantikküste"
+      },
+      "clue": {
+        "en": "Irregular dark hills and bays split up the coastal city lights.",
+        "de": "Unregelmäßige dunkle Hügel und Buchten gliedern die Lichter der Küstenstadt."
+      },
+      "latlng": [
+        -22.91,
+        -43.17
+      ],
+      "explanation": {
+        "en": "Rio de Janeiro is the city in this NASA photograph. Irregular dark hills and bays split up the coastal city lights. These are historical photographs: lighting and urban growth change over time, and north is not necessarily at the top.",
+        "de": "Rio de Janeiro ist die Stadt in diesem NASA-Foto. Unregelmäßige dunkle Hügel und Buchten gliedern die Lichter der Küstenstadt. Es sind historische Aufnahmen: Beleuchtung und Bebauung verändern sich, und Norden liegt nicht unbedingt oben."
+      }
+    },
+    {
+      "id": "santiago",
+      "name": {
+        "en": "Santiago",
+        "de": "Santiago de Chile"
+      },
+      "aliases": [
+        "Santiago",
+        "Santiago de Chile"
+      ],
+      "cca3": "CHL",
+      "region": "South America",
+      "regionHint": {
+        "en": "Western South America / Central Chile",
+        "de": "Westliches Südamerika / Zentralchile"
+      },
+      "clue": {
+        "en": "A broad inland urban basin lies beside the dark Andes.",
+        "de": "Ein breites Stadtbecken im Landesinneren liegt neben den dunklen Anden."
+      },
+      "latlng": [
+        -33.45,
+        -70.67
+      ],
+      "explanation": {
+        "en": "Santiago is the city in this NASA photograph. A broad inland urban basin lies beside the dark Andes. These are historical photographs: lighting and urban growth change over time, and north is not necessarily at the top.",
+        "de": "Santiago de Chile ist die Stadt in diesem NASA-Foto. Ein breites Stadtbecken im Landesinneren liegt neben den dunklen Anden. Es sind historische Aufnahmen: Beleuchtung und Bebauung verändern sich, und Norden liegt nicht unbedingt oben."
+      }
+    },
+    {
+      "id": "perth",
+      "name": {
+        "en": "Perth",
+        "de": "Perth"
+      },
+      "aliases": [
+        "Perth"
+      ],
+      "cca3": "AUS",
+      "region": "Oceania",
+      "regionHint": {
+        "en": "Oceania / Western Australia",
+        "de": "Ozeanien / Westaustralien"
+      },
+      "clue": {
+        "en": "The Swan River and the Indian Ocean divide the coastal light pattern.",
+        "de": "Der Swan River und der Indische Ozean gliedern das Küsten-Lichtmuster."
+      },
+      "latlng": [
+        -31.95,
+        115.86
+      ],
+      "explanation": {
+        "en": "Perth is the city in this NASA photograph. The Swan River and the Indian Ocean divide the coastal light pattern. These are historical photographs: lighting and urban growth change over time, and north is not necessarily at the top.",
+        "de": "Perth ist die Stadt in diesem NASA-Foto. Der Swan River und der Indische Ozean gliedern das Küsten-Lichtmuster. Es sind historische Aufnahmen: Beleuchtung und Bebauung verändern sich, und Norden liegt nicht unbedingt oben."
+      }
+    },
+    {
+      "id": "dar-es-salaam",
+      "name": {
+        "en": "Dar es Salaam",
+        "de": "Daressalam"
+      },
+      "aliases": [
+        "Dar es Salaam",
+        "Daressalam",
+        "Dar-es-Salaam"
+      ],
+      "cca3": "TZA",
+      "region": "Africa",
+      "regionHint": {
+        "en": "Eastern Africa / Indian Ocean coast",
+        "de": "Ostafrika / Küste des Indischen Ozeans"
+      },
+      "clue": {
+        "en": "A coastal city and its harbour glow beside the dark Indian Ocean.",
+        "de": "Eine Küstenstadt und ihr Hafen leuchten am dunklen Indischen Ozean."
+      },
+      "latlng": [
+        -6.79,
+        39.21
+      ],
+      "explanation": {
+        "en": "Dar es Salaam is the city in this NASA photograph. A coastal city and its harbour glow beside the dark Indian Ocean. These are historical photographs: lighting and urban growth change over time, and north is not necessarily at the top.",
+        "de": "Daressalam ist die Stadt in diesem NASA-Foto. Eine Küstenstadt und ihr Hafen leuchten am dunklen Indischen Ozean. Es sind historische Aufnahmen: Beleuchtung und Bebauung verändern sich, und Norden liegt nicht unbedingt oben."
+      }
+    },
+    {
+      "id": "bangkok",
+      "name": {
+        "en": "Bangkok",
+        "de": "Bangkok"
+      },
+      "aliases": [
+        "Bangkok"
+      ],
+      "cca3": "THA",
+      "region": "Asia",
+      "regionHint": {
+        "en": "Southeast Asia / Mainland Thailand",
+        "de": "Südostasien / Thailändisches Festland"
+      },
+      "clue": {
+        "en": "The winding Chao Phraya River interrupts an extensive lowland urban area.",
+        "de": "Der gewundene Chao-Phraya-Fluss unterbricht ein ausgedehntes Stadtgebiet in einer Tiefebene."
+      },
+      "latlng": [
+        13.76,
+        100.5
+      ],
+      "explanation": {
+        "en": "Bangkok is the city in this NASA photograph. The winding Chao Phraya River interrupts an extensive lowland urban area. These are historical photographs: lighting and urban growth change over time, and north is not necessarily at the top.",
+        "de": "Bangkok ist die Stadt in diesem NASA-Foto. Der gewundene Chao-Phraya-Fluss unterbricht ein ausgedehntes Stadtgebiet in einer Tiefebene. Es sind historische Aufnahmen: Beleuchtung und Bebauung verändern sich, und Norden liegt nicht unbedingt oben."
+      }
+    },
+    {
+      "id": "vancouver",
+      "name": {
+        "en": "Vancouver",
+        "de": "Vancouver"
+      },
+      "aliases": [
+        "Vancouver"
+      ],
+      "cca3": "CAN",
+      "region": "North America",
+      "regionHint": {
+        "en": "Northwestern North America / Pacific coast",
+        "de": "Nordwestliches Nordamerika / Pazifikküste"
+      },
+      "clue": {
+        "en": "Inlets, a harbour and dark mountain terrain constrain the illuminated city.",
+        "de": "Meeresarme, ein Hafen und dunkle Berge begrenzen die beleuchtete Stadt."
+      },
+      "latlng": [
+        49.28,
+        -123.12
+      ],
+      "explanation": {
+        "en": "Vancouver is the city in this NASA photograph. Inlets, a harbour and dark mountain terrain constrain the illuminated city. These are historical photographs: lighting and urban growth change over time, and north is not necessarily at the top.",
+        "de": "Vancouver ist die Stadt in diesem NASA-Foto. Meeresarme, ein Hafen und dunkle Berge begrenzen die beleuchtete Stadt. Es sind historische Aufnahmen: Beleuchtung und Bebauung verändern sich, und Norden liegt nicht unbedingt oben."
+      }
+    },
+    {
+      "id": "calgary",
+      "name": {
+        "en": "Calgary",
+        "de": "Calgary"
+      },
+      "aliases": [
+        "Calgary"
+      ],
+      "cca3": "CAN",
+      "region": "North America",
+      "regionHint": {
+        "en": "Western North America / Canadian prairies",
+        "de": "Westliches Nordamerika / Kanadische Prärie"
+      },
+      "clue": {
+        "en": "A regular inland street network spreads beside a winding river.",
+        "de": "Ein regelmäßiges Straßennetz im Landesinneren breitet sich neben einem gewundenen Fluss aus."
+      },
+      "latlng": [
+        51.04,
+        -114.07
+      ],
+      "explanation": {
+        "en": "Calgary is the city in this NASA photograph. A regular inland street network spreads beside a winding river. These are historical photographs: lighting and urban growth change over time, and north is not necessarily at the top.",
+        "de": "Calgary ist die Stadt in diesem NASA-Foto. Ein regelmäßiges Straßennetz im Landesinneren breitet sich neben einem gewundenen Fluss aus. Es sind historische Aufnahmen: Beleuchtung und Bebauung verändern sich, und Norden liegt nicht unbedingt oben."
+      }
+    },
+    {
+      "id": "atlanta",
+      "name": {
+        "en": "Atlanta",
+        "de": "Atlanta"
+      },
+      "aliases": [
+        "Atlanta"
+      ],
+      "cca3": "USA",
+      "region": "North America",
+      "regionHint": {
+        "en": "Southeastern North America",
+        "de": "Südöstliches Nordamerika"
+      },
+      "clue": {
+        "en": "Compare radiating highway corridors with the city's prominent ring road.",
+        "de": "Vergleiche strahlenförmige Autobahnkorridore mit der markanten Ringautobahn."
+      },
+      "latlng": [
+        33.75,
+        -84.39
+      ],
+      "explanation": {
+        "en": "Atlanta is the city in this NASA photograph. Compare radiating highway corridors with the city's prominent ring road. These are historical photographs: lighting and urban growth change over time, and north is not necessarily at the top.",
+        "de": "Atlanta ist die Stadt in diesem NASA-Foto. Vergleiche strahlenförmige Autobahnkorridore mit der markanten Ringautobahn. Es sind historische Aufnahmen: Beleuchtung und Bebauung verändern sich, und Norden liegt nicht unbedingt oben."
+      }
+    },
+    {
+      "id": "boston",
+      "name": {
+        "en": "Boston",
+        "de": "Boston"
+      },
+      "aliases": [
+        "Boston"
+      ],
+      "cca3": "USA",
+      "region": "North America",
+      "regionHint": {
+        "en": "Northeastern North America / Atlantic coast",
+        "de": "Nordöstliches Nordamerika / Atlantikküste"
+      },
+      "clue": {
+        "en": "An irregular harbour and dense, older street patterns distinguish the coastal core.",
+        "de": "Ein unregelmäßiger Hafen und dichte ältere Straßenmuster zeichnen den Küstenstadtkern aus."
+      },
+      "latlng": [
+        42.36,
+        -71.06
+      ],
+      "explanation": {
+        "en": "Boston is the city in this NASA photograph. An irregular harbour and dense, older street patterns distinguish the coastal core. These are historical photographs: lighting and urban growth change over time, and north is not necessarily at the top.",
+        "de": "Boston ist die Stadt in diesem NASA-Foto. Ein unregelmäßiger Hafen und dichte ältere Straßenmuster zeichnen den Küstenstadtkern aus. Es sind historische Aufnahmen: Beleuchtung und Bebauung verändern sich, und Norden liegt nicht unbedingt oben."
+      }
+    },
+    {
+      "id": "vienna",
+      "name": {
+        "en": "Vienna",
+        "de": "Wien"
+      },
+      "aliases": [
+        "Vienna",
+        "Wien"
+      ],
+      "cca3": "AUT",
+      "region": "Europe",
+      "regionHint": {
+        "en": "Central Europe / Danube",
+        "de": "Mitteleuropa / Donau"
+      },
+      "clue": {
+        "en": "A broad river corridor lies beside a compact, densely illuminated city.",
+        "de": "Ein breiter Flusskorridor liegt neben einer kompakten, dicht beleuchteten Stadt."
+      },
+      "latlng": [
+        48.21,
+        16.37
+      ],
+      "explanation": {
+        "en": "Vienna is the city in this NASA photograph. A broad river corridor lies beside a compact, densely illuminated city. These are historical photographs: lighting and urban growth change over time, and north is not necessarily at the top.",
+        "de": "Wien ist die Stadt in diesem NASA-Foto. Ein breiter Flusskorridor liegt neben einer kompakten, dicht beleuchteten Stadt. Es sind historische Aufnahmen: Beleuchtung und Bebauung verändern sich, und Norden liegt nicht unbedingt oben."
+      }
+    },
+    {
+      "id": "las-vegas",
+      "name": {
+        "en": "Las Vegas",
+        "de": "Las Vegas"
+      },
+      "aliases": [
+        "Las Vegas"
+      ],
+      "cca3": "USA",
+      "region": "North America",
+      "regionHint": {
+        "en": "Southwestern North America / Nevada desert",
+        "de": "Südwestliches Nordamerika / Wüste von Nevada"
+      },
+      "clue": {
+        "en": "An exceptionally bright central strip cuts across a grid surrounded by dark desert.",
+        "de": "Ein außergewöhnlich heller zentraler Streifen durchzieht ein Raster inmitten dunkler Wüste."
+      },
+      "latlng": [
+        36.17,
+        -115.14
+      ],
+      "explanation": {
+        "en": "Las Vegas is the city in this NASA photograph. An exceptionally bright central strip cuts across a grid surrounded by dark desert. These are historical photographs: lighting and urban growth change over time, and north is not necessarily at the top.",
+        "de": "Las Vegas ist die Stadt in diesem NASA-Foto. Ein außergewöhnlich heller zentraler Streifen durchzieht ein Raster inmitten dunkler Wüste. Es sind historische Aufnahmen: Beleuchtung und Bebauung verändern sich, und Norden liegt nicht unbedingt oben."
+      }
+    },
+    {
+      "id": "cairo",
+      "name": {
+        "en": "Cairo",
+        "de": "Kairo"
+      },
+      "aliases": [
+        "Cairo",
+        "Kairo"
+      ],
+      "cca3": "EGY",
+      "region": "Africa",
+      "regionHint": {
+        "en": "Northeastern Africa / Nile",
+        "de": "Nordostafrika / Nil"
+      },
+      "clue": {
+        "en": "Dense lights follow the Nile and spread into the delta beyond the city.",
+        "de": "Dichte Lichter folgen dem Nil und breiten sich jenseits der Stadt im Delta aus."
+      },
+      "latlng": [
+        30.04,
+        31.24
+      ],
+      "explanation": {
+        "en": "Cairo is the city in this NASA photograph. Dense lights follow the Nile and spread into the delta beyond the city. These are historical photographs: lighting and urban growth change over time, and north is not necessarily at the top.",
+        "de": "Kairo ist die Stadt in diesem NASA-Foto. Dichte Lichter folgen dem Nil und breiten sich jenseits der Stadt im Delta aus. Es sind historische Aufnahmen: Beleuchtung und Bebauung verändern sich, und Norden liegt nicht unbedingt oben."
+      }
+    },
+    {
+      "id": "haifa",
+      "name": {
+        "en": "Haifa",
+        "de": "Haifa"
+      },
+      "aliases": [
+        "Haifa"
+      ],
+      "cca3": "ISR",
+      "region": "Asia",
+      "regionHint": {
+        "en": "Western Asia / Eastern Mediterranean",
+        "de": "Westasien / Östliches Mittelmeer"
+      },
+      "clue": {
+        "en": "A bay, harbour and hill slopes shape the coastal light pattern.",
+        "de": "Eine Bucht, ein Hafen und Berghänge formen das Küsten-Lichtmuster."
+      },
+      "latlng": [
+        32.79,
+        34.99
+      ],
+      "explanation": {
+        "en": "Haifa is the city in this NASA photograph. A bay, harbour and hill slopes shape the coastal light pattern. These are historical photographs: lighting and urban growth change over time, and north is not necessarily at the top.",
+        "de": "Haifa ist die Stadt in diesem NASA-Foto. Eine Bucht, ein Hafen und Berghänge formen das Küsten-Lichtmuster. Es sind historische Aufnahmen: Beleuchtung und Bebauung verändern sich, und Norden liegt nicht unbedingt oben."
+      }
+    },
+    {
+      "id": "naples",
+      "name": {
+        "en": "Naples",
+        "de": "Neapel"
+      },
+      "aliases": [
+        "Naples",
+        "Neapel",
+        "Napoli"
+      ],
+      "cca3": "ITA",
+      "region": "Europe",
+      "regionHint": {
+        "en": "Southern Europe / Western Italian coast",
+        "de": "Südeuropa / Italienische Westküste"
+      },
+      "clue": {
+        "en": "Urban lights curve around a large bay beside the dark volcanic terrain of Vesuvius.",
+        "de": "Stadtlichter ziehen sich um eine große Bucht neben dem dunklen vulkanischen Gelände des Vesuvs."
+      },
+      "latlng": [
+        40.85,
+        14.27
+      ],
+      "explanation": {
+        "en": "Naples is the city in this NASA photograph. Urban lights curve around a large bay beside the dark volcanic terrain of Vesuvius. These are historical photographs: lighting and urban growth change over time, and north is not necessarily at the top.",
+        "de": "Neapel ist die Stadt in diesem NASA-Foto. Stadtlichter ziehen sich um eine große Bucht neben dem dunklen vulkanischen Gelände des Vesuvs. Es sind historische Aufnahmen: Beleuchtung und Bebauung verändern sich, und Norden liegt nicht unbedingt oben."
+      }
+    },
+    {
+      "id": "winnipeg",
+      "name": {
+        "en": "Winnipeg",
+        "de": "Winnipeg"
+      },
+      "aliases": [
+        "Winnipeg"
+      ],
+      "cca3": "CAN",
+      "region": "North America",
+      "regionHint": {
+        "en": "Central North America / Canadian prairies",
+        "de": "Zentrales Nordamerika / Kanadische Prärie"
+      },
+      "clue": {
+        "en": "Road corridors radiate from a compact city at the meeting of two rivers.",
+        "de": "Straßenkorridore führen strahlenförmig aus einer kompakten Stadt am Zusammenfluss zweier Flüsse."
+      },
+      "latlng": [
+        49.9,
+        -97.14
+      ],
+      "explanation": {
+        "en": "Winnipeg is the city in this NASA photograph. Road corridors radiate from a compact city at the meeting of two rivers. These are historical photographs: lighting and urban growth change over time, and north is not necessarily at the top.",
+        "de": "Winnipeg ist die Stadt in diesem NASA-Foto. Straßenkorridore führen strahlenförmig aus einer kompakten Stadt am Zusammenfluss zweier Flüsse. Es sind historische Aufnahmen: Beleuchtung und Bebauung verändern sich, und Norden liegt nicht unbedingt oben."
+      }
+    },
+    {
+      "id": "prague",
+      "name": {
+        "en": "Prague",
+        "de": "Prag"
+      },
+      "aliases": [
+        "Prague",
+        "Prag",
+        "Praha"
+      ],
+      "cca3": "CZE",
+      "region": "Europe",
+      "regionHint": {
+        "en": "Central Europe",
+        "de": "Mitteleuropa"
+      },
+      "clue": {
+        "en": "A winding river cuts through a dense historic core and surrounding neighbourhoods.",
+        "de": "Ein gewundener Fluss durchzieht einen dichten historischen Kern und die umliegenden Viertel."
+      },
+      "latlng": [
+        50.08,
+        14.44
+      ],
+      "explanation": {
+        "en": "Prague is the city in this NASA photograph. A winding river cuts through a dense historic core and surrounding neighbourhoods. These are historical photographs: lighting and urban growth change over time, and north is not necessarily at the top.",
+        "de": "Prag ist die Stadt in diesem NASA-Foto. Ein gewundener Fluss durchzieht einen dichten historischen Kern und die umliegenden Viertel. Es sind historische Aufnahmen: Beleuchtung und Bebauung verändern sich, und Norden liegt nicht unbedingt oben."
+      }
+    },
+    {
+      "id": "antalya",
+      "name": {
+        "en": "Antalya",
+        "de": "Antalya"
+      },
+      "aliases": [
+        "Antalya"
+      ],
+      "cca3": "TUR",
+      "region": "Asia",
+      "regionHint": {
+        "en": "Western Asia / Eastern Mediterranean",
+        "de": "Westasien / Östliches Mittelmeer"
+      },
+      "clue": {
+        "en": "A curved Mediterranean bay borders urban lights beneath the dark Taurus Mountains.",
+        "de": "Eine gekrümmte Mittelmeerbucht grenzt an Stadtlichter unterhalb der dunklen Taurusberge."
+      },
+      "latlng": [
+        36.9,
+        30.71
+      ],
+      "explanation": {
+        "en": "Antalya is the city in this NASA photograph. A curved Mediterranean bay borders urban lights beneath the dark Taurus Mountains. These are historical photographs: lighting and urban growth change over time, and north is not necessarily at the top.",
+        "de": "Antalya ist die Stadt in diesem NASA-Foto. Eine gekrümmte Mittelmeerbucht grenzt an Stadtlichter unterhalb der dunklen Taurusberge. Es sind historische Aufnahmen: Beleuchtung und Bebauung verändern sich, und Norden liegt nicht unbedingt oben."
+      }
+    }
+  ],
+  "photos": [
+    {
+      "id": "iss006e022939",
+      "cityId": "london",
+      "src": "/images/adastra/iss006e022939.jpg",
+      "sourceUrl": "https://images.nasa.gov/details/iss006e22939",
+      "title": "City lights of London, England taken during Expedition Six",
+      "capturedAt": "2003-02-04T00:00:00.000Z",
+      "credit": "Image courtesy of the Earth Science and Remote Sensing Unit, NASA Johnson Space Center"
+    },
+    {
+      "id": "iss006e036913",
+      "cityId": "los-angeles",
+      "src": "/images/adastra/iss006e036913.jpg",
+      "sourceUrl": "https://images.nasa.gov/details/iss006e36913",
+      "title": "Crew Earth Observations (CEO) taken during Expedition Six",
+      "capturedAt": "2003-03-10T00:00:00.000Z",
+      "credit": "Image courtesy of the Earth Science and Remote Sensing Unit, NASA Johnson Space Center"
+    },
+    {
+      "id": "iss006e043510",
+      "cityId": "sendai",
+      "src": "/images/adastra/iss006e043510.jpg",
+      "sourceUrl": "https://images.nasa.gov/details/iss006e43510",
+      "title": "Crew Earth Observations (CEO) taken during Expedition Six",
+      "capturedAt": "2003-04-06T00:00:00.000Z",
+      "credit": "Image courtesy of the Earth Science and Remote Sensing Unit, NASA Johnson Space Center"
+    },
+    {
+      "id": "iss007e016525",
+      "cityId": "chicago",
+      "src": "/images/adastra/iss007e016525.jpg",
+      "sourceUrl": "https://images.nasa.gov/details/iss007e16525",
+      "title": "Earth observations taken by the Expedition Seven crew",
+      "capturedAt": "2003-10-07T00:00:00.000Z",
+      "credit": "Image courtesy of the Earth Science and Remote Sensing Unit, NASA Johnson Space Center"
+    },
+    {
+      "id": "iss010e012103",
+      "cityId": "seoul",
+      "src": "/images/adastra/iss010e012103.jpg",
+      "sourceUrl": "https://images.nasa.gov/details/iss010e12103",
+      "title": "Earth Observations taken by the Expedition 10 crew",
+      "capturedAt": "2004-12-25T00:00:00.000Z",
+      "credit": "Image courtesy of the Earth Science and Remote Sensing Unit, NASA Johnson Space Center"
+    },
+    {
+      "id": "iss020e039932",
+      "cityId": "dubai",
+      "src": "/images/adastra/iss020e039932.jpg",
+      "sourceUrl": "https://images.nasa.gov/details/iss020e039932",
+      "title": "Night earth observation taken by the Expedition 20 crew",
+      "capturedAt": "2009-09-11T00:00:00.000Z",
+      "credit": "Image courtesy of the Earth Science and Remote Sensing Unit, NASA Johnson Space Center"
+    },
+    {
+      "id": "iss022e078463",
+      "cityId": "houston",
+      "src": "/images/adastra/iss022e078463.jpg",
+      "sourceUrl": "https://eol.jsc.nasa.gov/SearchPhotos/photo.pl?mission=ISS022&roll=E&frame=78463",
+      "title": "Astronaut Photo ISS022-E-78463 USA-TEXAS",
+      "capturedAt": "2010-02-27T23:00:00.000Z",
+      "credit": "Image courtesy of the Earth Science and Remote Sensing Unit, NASA Johnson Space Center"
+    },
+    {
+      "id": "iss026e006255",
+      "cityId": "las-vegas",
+      "src": "/images/adastra/iss026e006255.jpg",
+      "sourceUrl": "https://eol.jsc.nasa.gov/SearchPhotos/photo.pl?mission=ISS026&roll=E&frame=6255",
+      "title": "Astronaut Photo ISS026-E-6255 USA-NEVADA",
+      "capturedAt": "2010-11-29T23:00:00.000Z",
+      "credit": "Image courtesy of the Earth Science and Remote Sensing Unit, NASA Johnson Space Center"
+    },
+    {
+      "id": "iss026e008222",
+      "cityId": "galveston",
+      "src": "/images/adastra/iss026e008222.jpg",
+      "sourceUrl": "https://images.nasa.gov/details/iss026e008222",
+      "title": "Earth Observations taken by Expedition 26 Crewmember",
+      "capturedAt": "2010-12-07T00:00:00.000Z",
+      "credit": "Image courtesy of the Earth Science and Remote Sensing Unit, NASA Johnson Space Center"
+    },
+    {
+      "id": "iss026e012284",
+      "cityId": "chicago",
+      "src": "/images/adastra/iss026e012284.jpg",
+      "sourceUrl": "https://images.nasa.gov/details/iss026e012284",
+      "title": "Earth Observations taken by the Expedition 26 Crew",
+      "capturedAt": "2010-12-23T00:00:00.000Z",
+      "credit": "Image courtesy of the Earth Science and Remote Sensing Unit, NASA Johnson Space Center"
+    },
+    {
+      "id": "iss026e016368",
+      "cityId": "brasilia",
+      "src": "/images/adastra/iss026e016368.jpg",
+      "sourceUrl": "https://images.nasa.gov/details/iss026e016368",
+      "title": "Earth Observations taken by Expedition 26 crewmember",
+      "capturedAt": "2011-01-08T00:00:00.000Z",
+      "credit": "Image courtesy of the Earth Science and Remote Sensing Unit, NASA Johnson Space Center"
+    },
+    {
+      "id": "iss026e028829",
+      "cityId": "milan",
+      "src": "/images/adastra/iss026e028829.jpg",
+      "sourceUrl": "https://images.nasa.gov/details/iss026e028829",
+      "title": "Earth Observations taken by Expedition 26 crewmember",
+      "capturedAt": "2011-02-22T00:00:00.000Z",
+      "credit": "Image courtesy of the Earth Science and Remote Sensing Unit, NASA Johnson Space Center"
+    },
+    {
+      "id": "iss030e062540",
+      "cityId": "chicago",
+      "src": "/images/adastra/iss030e062540.jpg",
+      "sourceUrl": "https://images.nasa.gov/details/iss030e062540",
+      "title": "Earth Observations taken by Expedition 30 crewmember",
+      "capturedAt": "2012-02-02T00:00:00.000Z",
+      "credit": "Image courtesy of the Earth Science and Remote Sensing Unit, NASA Johnson Space Center"
+    },
+    {
+      "id": "iss030e099324",
+      "cityId": "dubai",
+      "src": "/images/adastra/iss030e099324.jpg",
+      "sourceUrl": "https://images.nasa.gov/details/iss030e099324",
+      "title": "Earth observation taken by the Expedition 30 crewmember",
+      "capturedAt": "2012-02-22T00:00:00.000Z",
+      "credit": "Image courtesy of the Earth Science and Remote Sensing Unit, NASA Johnson Space Center"
+    },
+    {
+      "id": "iss030e188071",
+      "cityId": "shanghai",
+      "src": "/images/adastra/iss030e188071.jpg",
+      "sourceUrl": "https://images.nasa.gov/details/iss030e188071",
+      "title": "Earth Observations taken by Expedition 30 crewmember",
+      "capturedAt": "2012-03-26T00:00:00.000Z",
+      "credit": "Image courtesy of the Earth Science and Remote Sensing Unit, NASA Johnson Space Center"
+    },
+    {
+      "id": "iss031e143143",
+      "cityId": "jubail",
+      "src": "/images/adastra/iss031e143143.jpg",
+      "sourceUrl": "https://images.nasa.gov/details/iss031e143143",
+      "title": "iss031e143143",
+      "capturedAt": "2012-06-19T00:00:00.000Z",
+      "credit": "Image courtesy of the Earth Science and Remote Sensing Unit, NASA Johnson Space Center"
+    },
+    {
+      "id": "iss032e012070",
+      "cityId": "valencia",
+      "src": "/images/adastra/iss032e012070.jpg",
+      "sourceUrl": "https://images.nasa.gov/details/iss032e012070",
+      "title": "Night Earth Observation",
+      "capturedAt": "2012-08-04T00:00:00.000Z",
+      "credit": "Image courtesy of the Earth Science and Remote Sensing Unit, NASA Johnson Space Center"
+    },
+    {
+      "id": "iss032e017547",
+      "cityId": "istanbul",
+      "src": "/images/adastra/iss032e017547.jpg",
+      "sourceUrl": "https://images.nasa.gov/details/iss032e017547",
+      "title": "Earth Observation",
+      "capturedAt": "2012-08-09T00:00:00.000Z",
+      "credit": "Image courtesy of the Earth Science and Remote Sensing Unit, NASA Johnson Space Center"
+    },
+    {
+      "id": "iss032e017635",
+      "cityId": "kuwait-city",
+      "src": "/images/adastra/iss032e017635.jpg",
+      "sourceUrl": "https://images.nasa.gov/details/iss032e017635",
+      "title": "Earth Observation",
+      "capturedAt": "2012-08-09T00:00:00.000Z",
+      "credit": "Image courtesy of the Earth Science and Remote Sensing Unit, NASA Johnson Space Center"
+    },
+    {
+      "id": "iss032e023646",
+      "cityId": "kuwait-city",
+      "src": "/images/adastra/iss032e023646.jpg",
+      "sourceUrl": "https://images.nasa.gov/details/iss032e023646",
+      "title": "Earth Observations taken by Expedition 32 crewmember",
+      "capturedAt": "2012-08-15T00:00:00.000Z",
+      "credit": "Image courtesy of the Earth Science and Remote Sensing Unit, NASA Johnson Space Center"
+    },
+    {
+      "id": "iss032e023718",
+      "cityId": "dubai",
+      "src": "/images/adastra/iss032e023718.jpg",
+      "sourceUrl": "https://images.nasa.gov/details/iss032e023718",
+      "title": "Earth Observations taken by Expedition 32 crewmember",
+      "capturedAt": "2012-08-15T00:00:00.000Z",
+      "credit": "Image courtesy of the Earth Science and Remote Sensing Unit, NASA Johnson Space Center"
+    },
+    {
+      "id": "iss033e014186",
+      "cityId": "baltimore",
+      "src": "/images/adastra/iss033e014186.jpg",
+      "sourceUrl": "https://images.nasa.gov/details/iss033e014186",
+      "title": "Earth observation taken by the Expedition 33 crew.",
+      "capturedAt": "2012-10-16T00:00:00.000Z",
+      "credit": "Image courtesy of the Earth Science and Remote Sensing Unit, NASA Johnson Space Center"
+    },
+    {
+      "id": "iss033e014856",
+      "cityId": "doha",
+      "src": "/images/adastra/iss033e014856.jpg",
+      "sourceUrl": "https://images.nasa.gov/details/iss033e014856",
+      "title": "Earth observation taken by the Expedition 33 crew.",
+      "capturedAt": "2012-10-13T00:00:00.000Z",
+      "credit": "Image courtesy of the Earth Science and Remote Sensing Unit, NASA Johnson Space Center"
+    },
+    {
+      "id": "iss033e020288",
+      "cityId": "riyadh",
+      "src": "/images/adastra/iss033e020288.jpg",
+      "sourceUrl": "https://images.nasa.gov/details/iss033e020288",
+      "title": "Earth Observation taken by the Expedition 33 crew",
+      "capturedAt": "2012-11-13T00:00:00.000Z",
+      "credit": "Image courtesy of the Earth Science and Remote Sensing Unit, NASA Johnson Space Center"
+    },
+    {
+      "id": "iss033e020299",
+      "cityId": "riyadh",
+      "src": "/images/adastra/iss033e020299.jpg",
+      "sourceUrl": "https://images.nasa.gov/details/iss033e020299",
+      "title": "Earth Observation taken by the Expedition 33 crew",
+      "capturedAt": "2012-11-13T00:00:00.000Z",
+      "credit": "Image courtesy of the Earth Science and Remote Sensing Unit, NASA Johnson Space Center"
+    },
+    {
+      "id": "iss033e021464",
+      "cityId": "tokyo",
+      "src": "/images/adastra/iss033e021464.jpg",
+      "sourceUrl": "https://images.nasa.gov/details/iss033e021464",
+      "title": "iss033e021464",
+      "capturedAt": "2012-11-14T00:00:00.000Z",
+      "credit": "Image courtesy of the Earth Science and Remote Sensing Unit, NASA Johnson Space Center"
+    },
+    {
+      "id": "iss033e021663",
+      "cityId": "dallas",
+      "src": "/images/adastra/iss033e021663.jpg",
+      "sourceUrl": "https://images.nasa.gov/details/iss033e021663",
+      "title": "Earth Observation taken by the Expedition 33 crew",
+      "capturedAt": "2012-11-15T00:00:00.000Z",
+      "credit": "Image courtesy of the Earth Science and Remote Sensing Unit, NASA Johnson Space Center"
+    },
+    {
+      "id": "iss034e032466",
+      "cityId": "atlanta",
+      "src": "/images/adastra/iss034e032466.jpg",
+      "sourceUrl": "https://images.nasa.gov/details/iss034e032466",
+      "title": "Earth Observations taken by Expedition 34 crewmember",
+      "capturedAt": "2013-01-20T00:00:00.000Z",
+      "credit": "Image courtesy of the Earth Science and Remote Sensing Unit, NASA Johnson Space Center"
+    },
+    {
+      "id": "iss034e035548",
+      "cityId": "reno",
+      "src": "/images/adastra/iss034e035548.jpg",
+      "sourceUrl": "https://images.nasa.gov/details/iss034e035548",
+      "title": "Earth Observations taken by Expedition 34 crewmember",
+      "capturedAt": "2013-01-28T00:00:00.000Z",
+      "credit": "Image courtesy of the Earth Science and Remote Sensing Unit, NASA Johnson Space Center"
+    },
+    {
+      "id": "iss035e005438",
+      "cityId": "phoenix",
+      "src": "/images/adastra/iss035e005438.jpg",
+      "sourceUrl": "https://images.nasa.gov/details/iss035e005438",
+      "title": "Earth Observations taken by the Expedition 35 Crew",
+      "capturedAt": "2013-03-16T00:00:00.000Z",
+      "credit": "Image courtesy of the Earth Science and Remote Sensing Unit, NASA Johnson Space Center"
+    },
+    {
+      "id": "iss035e008051",
+      "cityId": "new-york-city",
+      "src": "/images/adastra/iss035e008051.jpg",
+      "sourceUrl": "https://images.nasa.gov/details/iss035e008051",
+      "title": "Earth Observations taken by the Expedition 35 Crew",
+      "capturedAt": "2013-03-23T00:00:00.000Z",
+      "credit": "Image courtesy of the Earth Science and Remote Sensing Unit, NASA Johnson Space Center"
+    },
+    {
+      "id": "iss035e008056",
+      "cityId": "new-york-city",
+      "src": "/images/adastra/iss035e008056.jpg",
+      "sourceUrl": "https://images.nasa.gov/details/iss035e008056",
+      "title": "Earth Observations taken by the Expedition 35 Crew",
+      "capturedAt": "2013-03-23T00:00:00.000Z",
+      "credit": "Image courtesy of the Earth Science and Remote Sensing Unit, NASA Johnson Space Center"
+    },
+    {
+      "id": "iss035e013076",
+      "cityId": "vancouver",
+      "src": "/images/adastra/iss035e013076.jpg",
+      "sourceUrl": "https://images.nasa.gov/details/iss035e013076",
+      "title": "Earth Observations taken by the Expedition 35 Crew",
+      "capturedAt": "2013-03-31T00:00:00.000Z",
+      "credit": "Image courtesy of the Earth Science and Remote Sensing Unit, NASA Johnson Space Center"
+    },
+    {
+      "id": "iss035e013112",
+      "cityId": "calgary",
+      "src": "/images/adastra/iss035e013112.jpg",
+      "sourceUrl": "https://images.nasa.gov/details/iss035e013112",
+      "title": "Earth Observations taken by the Expedition 35 Crew",
+      "capturedAt": "2013-03-31T00:00:00.000Z",
+      "credit": "Image courtesy of the Earth Science and Remote Sensing Unit, NASA Johnson Space Center"
+    },
+    {
+      "id": "iss035e017335",
+      "cityId": "paris",
+      "src": "/images/adastra/iss035e017335.jpg",
+      "sourceUrl": "https://images.nasa.gov/details/iss035e017335",
+      "title": "Earth Observations taken by the Expedition 35 Crew",
+      "capturedAt": "2013-04-07T00:00:00.000Z",
+      "credit": "Image courtesy of the Earth Science and Remote Sensing Unit, NASA Johnson Space Center"
+    },
+    {
+      "id": "iss036e032712",
+      "cityId": "bangkok",
+      "src": "/images/adastra/iss036e032712.jpg",
+      "sourceUrl": "https://images.nasa.gov/details/iss036e032712",
+      "title": "Earth Observation",
+      "capturedAt": "2013-08-15T00:00:00.000Z",
+      "credit": "Image courtesy of the Earth Science and Remote Sensing Unit, NASA Johnson Space Center"
+    },
+    {
+      "id": "iss037e005370",
+      "cityId": "seoul",
+      "src": "/images/adastra/iss037e005370.jpg",
+      "sourceUrl": "https://images.nasa.gov/details/iss037e005370",
+      "title": "Earth Observation taken during the Expedition 37 mission",
+      "capturedAt": "2013-10-03T00:00:00.000Z",
+      "credit": "Image courtesy of the Earth Science and Remote Sensing Unit, NASA Johnson Space Center"
+    },
+    {
+      "id": "iss038e015160",
+      "cityId": "houston",
+      "src": "/images/adastra/iss038e015160.jpg",
+      "sourceUrl": "https://images.nasa.gov/details/iss038e015160",
+      "title": "Earth observations taken by Expedition 38 crewmember",
+      "capturedAt": "2013-12-12T00:00:00.000Z",
+      "credit": "Image courtesy of the Earth Science and Remote Sensing Unit, NASA Johnson Space Center"
+    },
+    {
+      "id": "iss038e015162",
+      "cityId": "houston",
+      "src": "/images/adastra/iss038e015162.jpg",
+      "sourceUrl": "https://images.nasa.gov/details/iss038e015162",
+      "title": "Earth observations taken by Expedition 38 crewmember",
+      "capturedAt": "2013-12-12T00:00:00.000Z",
+      "credit": "Image courtesy of the Earth Science and Remote Sensing Unit, NASA Johnson Space Center"
+    },
+    {
+      "id": "iss038e016506",
+      "cityId": "salt-lake-city",
+      "src": "/images/adastra/iss038e016506.jpg",
+      "sourceUrl": "https://images.nasa.gov/details/iss038e016506",
+      "title": "Earth Observations taken by Expedition 38 crewmember",
+      "capturedAt": "2013-12-12T00:00:00.000Z",
+      "credit": "Image courtesy of the Earth Science and Remote Sensing Unit, NASA Johnson Space Center"
+    },
+    {
+      "id": "iss038e042992",
+      "cityId": "sochi",
+      "src": "/images/adastra/iss038e042992.jpg",
+      "sourceUrl": "https://images.nasa.gov/details/iss038e042992",
+      "title": "Earth Observations taken by Expedition 38 crewmember",
+      "capturedAt": "2014-02-08T00:00:00.000Z",
+      "credit": "Image courtesy of the Earth Science and Remote Sensing Unit, NASA Johnson Space Center"
+    },
+    {
+      "id": "iss039e009160",
+      "cityId": "moscow",
+      "src": "/images/adastra/iss039e009160.jpg",
+      "sourceUrl": "https://images.nasa.gov/details/iss039e009160",
+      "title": "Earth Observations taken by the Expedition 39 Crew",
+      "capturedAt": "2014-04-02T00:00:00.000Z",
+      "credit": "Image courtesy of the Earth Science and Remote Sensing Unit, NASA Johnson Space Center"
+    },
+    {
+      "id": "iss042e033842",
+      "cityId": "cairo",
+      "src": "/images/adastra/iss042e033842.jpg",
+      "sourceUrl": "https://eol.jsc.nasa.gov/SearchPhotos/photo.pl?mission=ISS042&roll=E&frame=33842",
+      "title": "Astronaut Photo ISS042-E-33842 EGYPT",
+      "capturedAt": "2014-12-09T23:00:00.000Z",
+      "credit": "Image courtesy of the Earth Science and Remote Sensing Unit, NASA Johnson Space Center"
+    },
+    {
+      "id": "iss043e093480",
+      "cityId": "paris",
+      "src": "/images/adastra/iss043e093480.jpg",
+      "sourceUrl": "https://eol.jsc.nasa.gov/SearchPhotos/photo.pl?mission=ISS043&roll=E&frame=93480",
+      "title": "Astronaut Photo ISS043-E-93480 FRANCE",
+      "capturedAt": "2015-04-07T22:00:00.000Z",
+      "credit": "Image courtesy of the Earth Science and Remote Sensing Unit, NASA Johnson Space Center"
+    },
+    {
+      "id": "iss045e032242",
+      "cityId": "london",
+      "src": "/images/adastra/iss045e032242.jpg",
+      "sourceUrl": "https://eol.jsc.nasa.gov/SearchPhotos/photo.pl?mission=ISS045&roll=E&frame=32242",
+      "title": "Astronaut Photo ISS045-E-32242 UK-ENGLAND",
+      "capturedAt": "2015-09-26T22:00:00.000Z",
+      "credit": "Image courtesy of the Earth Science and Remote Sensing Unit, NASA Johnson Space Center"
+    },
+    {
+      "id": "iss045e048653",
+      "cityId": "moscow",
+      "src": "/images/adastra/iss045e048653.jpg",
+      "sourceUrl": "https://images.nasa.gov/details/iss045e048653",
+      "title": "Earth Observation",
+      "capturedAt": "2015-10-06T00:00:00.000Z",
+      "credit": "Image courtesy of the Earth Science and Remote Sensing Unit, NASA Johnson Space Center"
+    },
+    {
+      "id": "iss045e148262",
+      "cityId": "haifa",
+      "src": "/images/adastra/iss045e148262.jpg",
+      "sourceUrl": "https://eol.jsc.nasa.gov/SearchPhotos/photo.pl?mission=ISS045&roll=E&frame=148262",
+      "title": "Astronaut Photo ISS045-E-148262 ISRAEL",
+      "capturedAt": "2015-11-28T23:00:00.000Z",
+      "credit": "Image courtesy of the Earth Science and Remote Sensing Unit, NASA Johnson Space Center"
+    },
+    {
+      "id": "iss047e043884",
+      "cityId": "chicago",
+      "src": "/images/adastra/iss047e043884.jpg",
+      "sourceUrl": "https://images.nasa.gov/details/iss047e043884",
+      "title": "Earth Observation",
+      "capturedAt": "2016-04-05T00:00:00.000Z",
+      "credit": "Image courtesy of the Earth Science and Remote Sensing Unit, NASA Johnson Space Center"
+    },
+    {
+      "id": "iss050e029655",
+      "cityId": "new-york-city",
+      "src": "/images/adastra/iss050e029655.jpg",
+      "sourceUrl": "https://eol.jsc.nasa.gov/SearchPhotos/photo.pl?mission=ISS050&roll=E&frame=29655",
+      "title": "Astronaut Photo ISS050-E-29655 USA-NEW YORK",
+      "capturedAt": "2017-01-09T23:00:00.000Z",
+      "credit": "Image courtesy of the Earth Science and Remote Sensing Unit, NASA Johnson Space Center"
+    },
+    {
+      "id": "iss050e037024",
+      "cityId": "naples",
+      "src": "/images/adastra/iss050e037024.jpg",
+      "sourceUrl": "https://eol.jsc.nasa.gov/SearchPhotos/photo.pl?mission=ISS050&roll=E&frame=37024",
+      "title": "Astronaut Photo ISS050-E-37024 ITALY",
+      "capturedAt": "2017-01-29T23:00:00.000Z",
+      "credit": "Image courtesy of the Earth Science and Remote Sensing Unit, NASA Johnson Space Center"
+    },
+    {
+      "id": "iss053e239527",
+      "cityId": "new-york-city",
+      "src": "/images/adastra/iss053e239527.jpg",
+      "sourceUrl": "https://images.nasa.gov/details/iss053e239527",
+      "title": "iss053e239527",
+      "capturedAt": "2017-11-23T00:00:00.000Z",
+      "credit": "Image courtesy of the Earth Science and Remote Sensing Unit, NASA Johnson Space Center"
+    },
+    {
+      "id": "iss060e060238",
+      "cityId": "xiamen",
+      "src": "/images/adastra/iss060e060238.jpg",
+      "sourceUrl": "https://images.nasa.gov/details/iss060e060238",
+      "title": "iss060e060238",
+      "capturedAt": "2019-09-12T00:00:00.000Z",
+      "credit": "Image courtesy of the Earth Science and Remote Sensing Unit, NASA Johnson Space Center"
+    },
+    {
+      "id": "iss061e066577",
+      "cityId": "dammam",
+      "src": "/images/adastra/iss061e066577.jpg",
+      "sourceUrl": "https://images.nasa.gov/details/iss061e066577",
+      "title": "iss061e066577",
+      "capturedAt": "2019-12-03T00:00:00.000Z",
+      "credit": "Image courtesy of the Earth Science and Remote Sensing Unit, NASA Johnson Space Center"
+    },
+    {
+      "id": "iss061e113495",
+      "cityId": "dallas",
+      "src": "/images/adastra/iss061e113495.jpg",
+      "sourceUrl": "https://images.nasa.gov/details/iss061e113495",
+      "title": "iss061e113495",
+      "capturedAt": "2020-01-03T00:00:00.000Z",
+      "credit": "Image courtesy of the Earth Science and Remote Sensing Unit, NASA Johnson Space Center"
+    },
+    {
+      "id": "iss061e120322",
+      "cityId": "winnipeg",
+      "src": "/images/adastra/iss061e120322.jpg",
+      "sourceUrl": "https://eol.jsc.nasa.gov/SearchPhotos/photo.pl?mission=ISS061&roll=E&frame=120322",
+      "title": "Astronaut Photo ISS061-E-120322 CANADA-M",
+      "capturedAt": "2020-01-05T23:00:00.000Z",
+      "credit": "Image courtesy of the Earth Science and Remote Sensing Unit, NASA Johnson Space Center"
+    },
+    {
+      "id": "iss062e081756",
+      "cityId": "shanghai",
+      "src": "/images/adastra/iss062e081756.jpg",
+      "sourceUrl": "https://images.nasa.gov/details/iss062e081756",
+      "title": "iss062e081756",
+      "capturedAt": "2020-03-05T00:00:00.000Z",
+      "credit": "Image courtesy of the Earth Science and Remote Sensing Unit, NASA Johnson Space Center"
+    },
+    {
+      "id": "iss062e082060",
+      "cityId": "seoul",
+      "src": "/images/adastra/iss062e082060.jpg",
+      "sourceUrl": "https://images.nasa.gov/details/iss062e082060",
+      "title": "iss062e082060",
+      "capturedAt": "2020-03-05T00:00:00.000Z",
+      "credit": "Image courtesy of the Earth Science and Remote Sensing Unit, NASA Johnson Space Center"
+    },
+    {
+      "id": "iss062e096115",
+      "cityId": "tokyo",
+      "src": "/images/adastra/iss062e096115.jpg",
+      "sourceUrl": "https://images.nasa.gov/details/iss062e096115",
+      "title": "iss062e096115",
+      "capturedAt": "2020-03-15T00:00:00.000Z",
+      "credit": "Image courtesy of the Earth Science and Remote Sensing Unit, NASA Johnson Space Center"
+    },
+    {
+      "id": "iss063e006708",
+      "cityId": "jazan",
+      "src": "/images/adastra/iss063e006708.jpg",
+      "sourceUrl": "https://images.nasa.gov/details/iss063e006708",
+      "title": "iss063e006708",
+      "capturedAt": "2020-05-05T00:00:00.000Z",
+      "credit": "Image courtesy of the Earth Science and Remote Sensing Unit, NASA Johnson Space Center"
+    },
+    {
+      "id": "iss063e055126",
+      "cityId": "perth",
+      "src": "/images/adastra/iss063e055126.jpg",
+      "sourceUrl": "https://images.nasa.gov/details/iss063e055126",
+      "title": "iss063e055126",
+      "capturedAt": "2020-07-23T00:00:00.000Z",
+      "credit": "Image courtesy of the Earth Science and Remote Sensing Unit, NASA Johnson Space Center"
+    },
+    {
+      "id": "iss063e082691",
+      "cityId": "dar-es-salaam",
+      "src": "/images/adastra/iss063e082691.jpg",
+      "sourceUrl": "https://images.nasa.gov/details/iss063e082691",
+      "title": "Earth Observations",
+      "capturedAt": "2020-09-01T00:00:00.000Z",
+      "credit": "Image courtesy of the Earth Science and Remote Sensing Unit, NASA Johnson Space Center"
+    },
+    {
+      "id": "iss063e088813",
+      "cityId": "barcelona",
+      "src": "/images/adastra/iss063e088813.jpg",
+      "sourceUrl": "https://images.nasa.gov/details/iss063e088813",
+      "title": "Earth Observations",
+      "capturedAt": "2020-09-15T00:00:00.000Z",
+      "credit": "Image courtesy of the Earth Science and Remote Sensing Unit, NASA Johnson Space Center"
+    },
+    {
+      "id": "iss064e005231",
+      "cityId": "vienna",
+      "src": "/images/adastra/iss064e005231.jpg",
+      "sourceUrl": "https://images.nasa.gov/details/iss064e005231",
+      "title": "iss064e005231",
+      "capturedAt": "2020-11-21T00:00:00.000Z",
+      "credit": "Image courtesy of the Earth Science and Remote Sensing Unit, NASA Johnson Space Center"
+    },
+    {
+      "id": "iss064e014965",
+      "cityId": "tokyo",
+      "src": "/images/adastra/iss064e014965.jpg",
+      "sourceUrl": "https://images.nasa.gov/details/iss064e014965",
+      "title": "iss064e014965",
+      "capturedAt": "2020-12-22T00:00:00.000Z",
+      "credit": "Image courtesy of the Earth Science and Remote Sensing Unit, NASA Johnson Space Center"
+    },
+    {
+      "id": "iss064e016772",
+      "cityId": "new-york-city",
+      "src": "/images/adastra/iss064e016772.jpg",
+      "sourceUrl": "https://images.nasa.gov/details/iss064e016772",
+      "title": "iss064e016772",
+      "capturedAt": "2020-12-30T00:00:00.000Z",
+      "credit": "Image courtesy of the Earth Science and Remote Sensing Unit, NASA Johnson Space Center"
+    },
+    {
+      "id": "iss064e016786",
+      "cityId": "boston",
+      "src": "/images/adastra/iss064e016786.jpg",
+      "sourceUrl": "https://images.nasa.gov/details/iss064e016786",
+      "title": "iss064e016786",
+      "capturedAt": "2020-12-30T00:00:00.000Z",
+      "credit": "Image courtesy of the Earth Science and Remote Sensing Unit, NASA Johnson Space Center"
+    },
+    {
+      "id": "iss064e021873",
+      "cityId": "karachi",
+      "src": "/images/adastra/iss064e021873.jpg",
+      "sourceUrl": "https://images.nasa.gov/details/iss064e021873",
+      "title": "iss064e021873",
+      "capturedAt": "2021-01-09T00:00:00.000Z",
+      "credit": "Image courtesy of the Earth Science and Remote Sensing Unit, NASA Johnson Space Center"
+    },
+    {
+      "id": "iss064e021924",
+      "cityId": "jeddah",
+      "src": "/images/adastra/iss064e021924.jpg",
+      "sourceUrl": "https://images.nasa.gov/details/iss064e021924",
+      "title": "iss064e021924",
+      "capturedAt": "2021-01-09T00:00:00.000Z",
+      "credit": "Image courtesy of the Earth Science and Remote Sensing Unit, NASA Johnson Space Center"
+    },
+    {
+      "id": "iss064e021961",
+      "cityId": "kuwait-city",
+      "src": "/images/adastra/iss064e021961.jpg",
+      "sourceUrl": "https://images.nasa.gov/details/iss064e021961",
+      "title": "iss064e021961",
+      "capturedAt": "2021-01-09T00:00:00.000Z",
+      "credit": "Image courtesy of the Earth Science and Remote Sensing Unit, NASA Johnson Space Center"
+    },
+    {
+      "id": "iss064e023844",
+      "cityId": "seoul",
+      "src": "/images/adastra/iss064e023844.jpg",
+      "sourceUrl": "https://images.nasa.gov/details/iss064e023844",
+      "title": "iss064e023844",
+      "capturedAt": "2021-01-16T00:00:00.000Z",
+      "credit": "Image courtesy of the Earth Science and Remote Sensing Unit, NASA Johnson Space Center"
+    },
+    {
+      "id": "iss064e024687",
+      "cityId": "moscow",
+      "src": "/images/adastra/iss064e024687.jpg",
+      "sourceUrl": "https://images.nasa.gov/details/iss064e024687",
+      "title": "iss064e024687",
+      "capturedAt": "2021-01-20T00:00:00.000Z",
+      "credit": "Image courtesy of the Earth Science and Remote Sensing Unit, NASA Johnson Space Center"
+    },
+    {
+      "id": "iss064e037842",
+      "cityId": "bangkok",
+      "src": "/images/adastra/iss064e037842.jpg",
+      "sourceUrl": "https://eol.jsc.nasa.gov/SearchPhotos/photo.pl?mission=ISS064&roll=E&frame=37842",
+      "title": "Astronaut Photo ISS064-E-37842 THAILAND",
+      "capturedAt": "2021-02-25T23:00:00.000Z",
+      "credit": "Image courtesy of the Earth Science and Remote Sensing Unit, NASA Johnson Space Center"
+    },
+    {
+      "id": "iss064e038775",
+      "cityId": "tokyo",
+      "src": "/images/adastra/iss064e038775.jpg",
+      "sourceUrl": "https://images.nasa.gov/details/iss064e038775",
+      "title": "iss064e038775",
+      "capturedAt": "2021-02-27T00:00:00.000Z",
+      "credit": "Image courtesy of the Earth Science and Remote Sensing Unit, NASA Johnson Space Center"
+    },
+    {
+      "id": "iss064e046345",
+      "cityId": "moscow",
+      "src": "/images/adastra/iss064e046345.jpg",
+      "sourceUrl": "https://images.nasa.gov/details/iss064e046345",
+      "title": "iss064e046345",
+      "capturedAt": "2021-03-23T00:00:00.000Z",
+      "credit": "Image courtesy of the Earth Science and Remote Sensing Unit, NASA Johnson Space Center"
+    },
+    {
+      "id": "iss065e030820",
+      "cityId": "istanbul",
+      "src": "/images/adastra/iss065e030820.jpg",
+      "sourceUrl": "https://images.nasa.gov/details/iss065e030820",
+      "title": "Earth observation taken by the Expedition 65 crew",
+      "capturedAt": "2021-05-10T00:00:00.000Z",
+      "credit": "Image courtesy of the Earth Science and Remote Sensing Unit, NASA Johnson Space Center"
+    },
+    {
+      "id": "iss066e117709",
+      "cityId": "minsk",
+      "src": "/images/adastra/iss066e117709.jpg",
+      "sourceUrl": "https://images.nasa.gov/details/iss066e117709",
+      "title": "iss066e117709",
+      "capturedAt": "2022-01-06T00:00:00.000Z",
+      "credit": "Image courtesy of the Earth Science and Remote Sensing Unit, NASA Johnson Space Center"
+    },
+    {
+      "id": "iss066e158512",
+      "cityId": "quanzhou",
+      "src": "/images/adastra/iss066e158512.jpg",
+      "sourceUrl": "https://images.nasa.gov/details/iss066e158512",
+      "title": "iss066e158512",
+      "capturedAt": "2022-03-08T00:00:00.000Z",
+      "credit": "Image courtesy of the Earth Science and Remote Sensing Unit, NASA Johnson Space Center"
+    },
+    {
+      "id": "iss066e158841",
+      "cityId": "seoul",
+      "src": "/images/adastra/iss066e158841.jpg",
+      "sourceUrl": "https://images.nasa.gov/details/iss066e158841",
+      "title": "iss066e158841",
+      "capturedAt": "2022-03-08T00:00:00.000Z",
+      "credit": "Image courtesy of the Earth Science and Remote Sensing Unit, NASA Johnson Space Center"
+    },
+    {
+      "id": "iss066e187571",
+      "cityId": "prague",
+      "src": "/images/adastra/iss066e187571.jpg",
+      "sourceUrl": "https://eol.jsc.nasa.gov/SearchPhotos/photo.pl?mission=ISS066&roll=E&frame=187571",
+      "title": "Astronaut Photo ISS066-E-187571 CZECH REPUBLIC",
+      "capturedAt": "2022-03-20T23:00:00.000Z",
+      "credit": "Image courtesy of the Earth Science and Remote Sensing Unit, NASA Johnson Space Center"
+    },
+    {
+      "id": "iss067e176745",
+      "cityId": "curitiba",
+      "src": "/images/adastra/iss067e176745.jpg",
+      "sourceUrl": "https://images.nasa.gov/details/iss067e176745",
+      "title": "iss067e176745",
+      "capturedAt": "2022-07-04T00:00:00.000Z",
+      "credit": "Image courtesy of the Earth Science and Remote Sensing Unit, NASA Johnson Space Center"
+    },
+    {
+      "id": "iss067e176807",
+      "cityId": "rio-de-janeiro",
+      "src": "/images/adastra/iss067e176807.jpg",
+      "sourceUrl": "https://images.nasa.gov/details/iss067e176807",
+      "title": "iss067e176807",
+      "capturedAt": "2022-07-04T00:00:00.000Z",
+      "credit": "Image courtesy of the Earth Science and Remote Sensing Unit, NASA Johnson Space Center"
+    },
+    {
+      "id": "iss067e372979",
+      "cityId": "antalya",
+      "src": "/images/adastra/iss067e372979.jpg",
+      "sourceUrl": "https://eol.jsc.nasa.gov/SearchPhotos/photo.pl?mission=ISS067&roll=E&frame=372979",
+      "title": "Astronaut Photo ISS067-E-372979 TURKEY",
+      "capturedAt": "2022-09-16T22:00:00.000Z",
+      "credit": "Image courtesy of the Earth Science and Remote Sensing Unit, NASA Johnson Space Center"
+    },
+    {
+      "id": "iss069e027389",
+      "cityId": "xiamen",
+      "src": "/images/adastra/iss069e027389.jpg",
+      "sourceUrl": "https://images.nasa.gov/details/iss069e027389",
+      "title": "Earth Observations during Expedition 69",
+      "capturedAt": "2023-07-02T00:00:00.000Z",
+      "credit": "Image courtesy of the Earth Science and Remote Sensing Unit, NASA Johnson Space Center"
+    },
+    {
+      "id": "iss069e027403",
+      "cityId": "busan",
+      "src": "/images/adastra/iss069e027403.jpg",
+      "sourceUrl": "https://images.nasa.gov/details/iss069e027403",
+      "title": "Earth Observations during Expedition 69",
+      "capturedAt": "2023-07-02T00:00:00.000Z",
+      "credit": "Image courtesy of the Earth Science and Remote Sensing Unit, NASA Johnson Space Center"
+    },
+    {
+      "id": "iss069e091732",
+      "cityId": "baku",
+      "src": "/images/adastra/iss069e091732.jpg",
+      "sourceUrl": "https://images.nasa.gov/details/iss069e091732",
+      "title": "iss069e091732",
+      "capturedAt": "2023-09-23T00:00:00.000Z",
+      "credit": "Image courtesy of the Earth Science and Remote Sensing Unit, NASA Johnson Space Center"
+    },
+    {
+      "id": "iss070e027906",
+      "cityId": "mexico-city",
+      "src": "/images/adastra/iss070e027906.jpg",
+      "sourceUrl": "https://images.nasa.gov/details/iss070e027906",
+      "title": "iss070e027906",
+      "capturedAt": "2023-11-19T00:00:00.000Z",
+      "credit": "Image courtesy of the Earth Science and Remote Sensing Unit, NASA Johnson Space Center"
+    },
+    {
+      "id": "iss070e093399",
+      "cityId": "santiago",
+      "src": "/images/adastra/iss070e093399.jpg",
+      "sourceUrl": "https://images.nasa.gov/details/iss070e093399",
+      "title": "iss070e093399",
+      "capturedAt": "2024-02-14T00:00:00.000Z",
+      "credit": "Image courtesy of the Earth Science and Remote Sensing Unit, NASA Johnson Space Center"
+    },
+    {
+      "id": "iss070e098022",
+      "cityId": "boston",
+      "src": "/images/adastra/iss070e098022.jpg",
+      "sourceUrl": "https://images.nasa.gov/details/iss070e098022",
+      "title": "iss070e098022",
+      "capturedAt": "2024-02-22T00:00:00.000Z",
+      "credit": "Image courtesy of the Earth Science and Remote Sensing Unit, NASA Johnson Space Center"
+    },
+    {
+      "id": "iss070e099645",
+      "cityId": "chicago",
+      "src": "/images/adastra/iss070e099645.jpg",
+      "sourceUrl": "https://images.nasa.gov/details/iss070e099645",
+      "title": "iss070e099645",
+      "capturedAt": "2024-02-23T00:00:00.000Z",
+      "credit": "Image courtesy of the Earth Science and Remote Sensing Unit, NASA Johnson Space Center"
+    },
+    {
+      "id": "iss072e789833",
+      "cityId": "paris",
+      "src": "/images/adastra/iss072e789833.jpg",
+      "sourceUrl": "https://images.nasa.gov/details/iss072e789833",
+      "title": "Paris, France's capital and largest city, pictured at night from the space station",
+      "capturedAt": "2025-03-14T00:00:00.000Z",
+      "credit": "Image courtesy of the Earth Science and Remote Sensing Unit, NASA Johnson Space Center"
+    },
+    {
+      "id": "iss072e792891",
+      "cityId": "almaty",
+      "src": "/images/adastra/iss072e792891.jpg",
+      "sourceUrl": "https://images.nasa.gov/details/iss072e792891",
+      "title": "Almaty, Kazakhstan's largest city, pictured  at night from the space station",
+      "capturedAt": "2025-03-17T00:00:00.000Z",
+      "credit": "Image courtesy of the Earth Science and Remote Sensing Unit, NASA Johnson Space Center"
+    },
+    {
+      "id": "iss072e793133",
+      "cityId": "ashgabat",
+      "src": "/images/adastra/iss072e793133.jpg",
+      "sourceUrl": "https://images.nasa.gov/details/iss072e793133",
+      "title": "Ashgabat, the capital city of Turkmenistan, pictured  at night from the space station",
+      "capturedAt": "2025-03-17T00:00:00.000Z",
+      "credit": "Image courtesy of the Earth Science and Remote Sensing Unit, NASA Johnson Space Center"
+    },
+    {
+      "id": "iss072e793149",
+      "cityId": "mashhad",
+      "src": "/images/adastra/iss072e793149.jpg",
+      "sourceUrl": "https://images.nasa.gov/details/iss072e793149",
+      "title": "Mashhad, the second-most populous city in Iran, pictured  at night from the space station",
+      "capturedAt": "2025-03-17T00:00:00.000Z",
+      "credit": "Image courtesy of the Earth Science and Remote Sensing Unit, NASA Johnson Space Center"
+    },
+    {
+      "id": "iss073e134535",
+      "cityId": "baghdad",
+      "src": "/images/adastra/iss073e134535.jpg",
+      "sourceUrl": "https://images.nasa.gov/details/iss073e0134535",
+      "title": "Baghdad, the capital and largest city in Iraq, pictured at night",
+      "capturedAt": "2025-05-22T00:00:00.000Z",
+      "credit": "Image courtesy of the Earth Science and Remote Sensing Unit, NASA Johnson Space Center"
+    },
+    {
+      "id": "iss073e134545",
+      "cityId": "basra",
+      "src": "/images/adastra/iss073e134545.jpg",
+      "sourceUrl": "https://images.nasa.gov/details/iss073e0134545",
+      "title": "The port city of Basrah, Iraq, pictured at night",
+      "capturedAt": "2025-05-22T00:00:00.000Z",
+      "credit": "Image courtesy of the Earth Science and Remote Sensing Unit, NASA Johnson Space Center"
+    },
+    {
+      "id": "iss073e134550",
+      "cityId": "kuwait-city",
+      "src": "/images/adastra/iss073e134550.jpg",
+      "sourceUrl": "https://images.nasa.gov/details/iss073e0134550",
+      "title": "Kuwait City, with a population of about 3.5 million, pictured at night",
+      "capturedAt": "2025-05-22T00:00:00.000Z",
+      "credit": "Image courtesy of the Earth Science and Remote Sensing Unit, NASA Johnson Space Center"
+    },
+    {
+      "id": "iss073e134562",
+      "cityId": "dammam",
+      "src": "/images/adastra/iss073e134562.jpg",
+      "sourceUrl": "https://images.nasa.gov/details/iss073e0134562",
+      "title": "The port city of Dammam, Saudi Arabia, pictured at night",
+      "capturedAt": "2025-05-22T00:00:00.000Z",
+      "credit": "Image courtesy of the Earth Science and Remote Sensing Unit, NASA Johnson Space Center"
+    },
+    {
+      "id": "iss073e134569",
+      "cityId": "doha",
+      "src": "/images/adastra/iss073e134569.jpg",
+      "sourceUrl": "https://images.nasa.gov/details/iss073e0134569",
+      "title": "Doha, the capital and largest city of Qatar, pictured at night",
+      "capturedAt": "2025-05-22T00:00:00.000Z",
+      "credit": "Image courtesy of the Earth Science and Remote Sensing Unit, NASA Johnson Space Center"
+    },
+    {
+      "id": "iss073e420079",
+      "cityId": "hangzhou",
+      "src": "/images/adastra/iss073e420079.jpg",
+      "sourceUrl": "https://images.nasa.gov/details/iss073e0420079",
+      "title": "Hangzhou, China—home to approximately 13 million people",
+      "capturedAt": "2025-07-03T00:00:00.000Z",
+      "credit": "Image courtesy of the Earth Science and Remote Sensing Unit, NASA Johnson Space Center"
+    },
+    {
+      "id": "iss073e658285",
+      "cityId": "new-york-city",
+      "src": "/images/adastra/iss073e658285.jpg",
+      "sourceUrl": "https://images.nasa.gov/details/iss073e0658285",
+      "title": "A nighttime view of the New York-New Jersey metropolitan area",
+      "capturedAt": "2025-09-11T00:00:00.000Z",
+      "credit": "Image courtesy of the Earth Science and Remote Sensing Unit, NASA Johnson Space Center"
+    },
+    {
+      "id": "iss073e763646",
+      "cityId": "new-delhi",
+      "src": "/images/adastra/iss073e763646.jpg",
+      "sourceUrl": "https://images.nasa.gov/details/iss073e0763646",
+      "title": "India’s National Capital Territory of Delhi, home to approximately 34.67 million people",
+      "capturedAt": "2025-09-21T00:00:00.000Z",
+      "credit": "Image courtesy of the Earth Science and Remote Sensing Unit, NASA Johnson Space Center"
+    },
+    {
+      "id": "iss073e918643",
+      "cityId": "tokyo",
+      "src": "/images/adastra/iss073e918643.jpg",
+      "sourceUrl": "https://images.nasa.gov/details/iss073e0918643",
+      "title": "Tokyo, Japan, the world’s most populated urban center with over 39 million people",
+      "capturedAt": "2025-10-18T00:00:00.000Z",
+      "credit": "Image courtesy of the Earth Science and Remote Sensing Unit, NASA Johnson Space Center"
+    },
+    {
+      "id": "iss074e334334",
+      "cityId": "quebec-city",
+      "src": "/images/adastra/iss074e334334.jpg",
+      "sourceUrl": "https://images.nasa.gov/details/iss074e0334334",
+      "title": "Quebec City pictured at night from the International Space Station",
+      "capturedAt": "2026-02-27T00:00:00.000Z",
+      "credit": "Image courtesy of the Earth Science and Remote Sensing Unit, NASA Johnson Space Center"
+    },
+    {
+      "id": "iss074e381351",
+      "cityId": "london",
+      "src": "/images/adastra/iss074e381351.jpg",
+      "sourceUrl": "https://images.nasa.gov/details/iss074e0381351",
+      "title": "London, England, is split by the River Thames in this nighttime photograph",
+      "capturedAt": "2026-03-13T00:00:00.000Z",
+      "credit": "Image courtesy of the Earth Science and Remote Sensing Unit, NASA Johnson Space Center"
+    },
+    {
+      "id": "iss074e405029",
+      "cityId": "london",
+      "src": "/images/adastra/iss074e405029.jpg",
+      "sourceUrl": "https://images.nasa.gov/details/iss074e0405029",
+      "title": "London, England, is split by the River Thames in this nighttime photograph",
+      "capturedAt": "2026-03-19T00:00:00.000Z",
+      "credit": "Image courtesy of the Earth Science and Remote Sensing Unit, NASA Johnson Space Center"
+    },
+    {
+      "id": "iss074e556317",
+      "cityId": "moscow",
+      "src": "/images/adastra/iss074e556317.jpg",
+      "sourceUrl": "https://images.nasa.gov/details/iss074e0556317",
+      "title": "Nighttime view of Moscow, Russia, before sunrise",
+      "capturedAt": "2026-05-03T00:00:00.000Z",
+      "credit": "Image courtesy of the Earth Science and Remote Sensing Unit, NASA Johnson Space Center"
+    },
+    {
+      "id": "iss075e099858",
+      "cityId": "chicago",
+      "src": "/images/adastra/iss075e099858.jpg",
+      "sourceUrl": "https://images.nasa.gov/details/iss075e0099858",
+      "title": "Chicago, Illinois, pictured at night from the International Space Station",
+      "capturedAt": "2026-09-08T00:00:00.000Z",
+      "credit": "Image courtesy of the Earth Science and Remote Sensing Unit, NASA Johnson Space Center"
+    }
+  ]
+}

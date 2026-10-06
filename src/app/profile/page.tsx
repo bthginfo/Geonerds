@@ -15,6 +15,8 @@ import { streakFromDates } from "@/lib/daily";
 import { getGame } from "@/games/registry";
 import { formatNumber } from "@/lib/utils";
 import { useProgression } from "@/store/progression";
+import { useCommunityRewards } from "@/hooks/use-community-rewards";
+import { GameCreatorAward } from "@/components/community/game-creator-award";
 
 export default function ProfilePage() {
   const { t, locale } = useT();
@@ -22,6 +24,7 @@ export default function ProfilePage() {
   const user = useAuth((s) => s.user);
   const dailyResults = useDaily((s) => s.results);
   const progression = useProgression();
+  const community = useCommunityRewards();
 
   const dexHits = useDex((s) => s.hits);
   const dexCollected = useMemo(() => {
@@ -31,7 +34,7 @@ export default function ProfilePage() {
     return { collected, total: pool.length };
   }, [dexHits]);
 
-  const stats = useMemo(() => computeStats(runs ?? [], dexHits, progression), [runs, dexHits, progression]);
+  const stats = useMemo(() => computeStats(runs ?? [], dexHits, progression, community.badgeIds), [runs, dexHits, progression, community.badgeIds]);
   const level = useMemo(() => levelFromXp(stats.totalScore), [stats.totalScore]);
   const earned = useMemo(() => BADGES.filter((b) => b.earned(stats)), [stats]);
   const dailyStreak = useMemo(() => streakFromDates(Object.keys(dailyResults)), [dailyResults]);
@@ -83,6 +86,8 @@ export default function ProfilePage() {
       </div>
 
       <Link href="/challenges" className="mt-4 flex min-h-16 items-center gap-3 rounded-2xl border border-primary/25 bg-primary/5 p-4 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"><Swords className="h-5 w-5 shrink-0 text-primary" /><div className="min-w-0 flex-1"><p className="font-semibold">{locale === "de" ? "Deine Herausforderungen" : "Your challenges"}</p><p className="mt-0.5 text-xs text-muted-foreground">{locale === "de" ? "Einladungen, offene Duelle und Ergebnisse" : "Invitations, active encounters and results"}</p></div><ChevronRight className="h-4 w-4 text-primary" /></Link>
+
+      {community.badgeIds.includes("game-creator") && <GameCreatorAward />}
 
       {/* Stat tiles */}
       <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3">

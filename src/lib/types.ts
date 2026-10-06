@@ -54,7 +54,8 @@ export type GameId =
   | "flag-pie"
   | "city-compass"
   | "flag-mosaic"
-  | "country-radar";
+  | "country-radar"
+  | "adastra";
 
 export type Difficulty = "easy" | "medium" | "hard";
 

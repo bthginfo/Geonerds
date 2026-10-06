@@ -13,10 +13,22 @@ describe("game registry editorial order", () => {
   });
 
   it("appends the four visual deduction games without moving legacy games", () => {
-    expect(GAMES.slice(-4).map((game) => game.id)).toEqual([
+    expect(GAMES.slice(-5, -1).map((game) => game.id)).toEqual([
       "flag-pie", "city-compass", "flag-mosaic", "country-radar",
     ]);
     expect(new Set(GAMES.map((game) => game.id)).size).toBe(GAMES.length);
+  });
+
+  it("adds untimed Adastra with choice, typing and a complete photo run", () => {
+    expect(GAMES.at(-1)?.id).toBe("adastra");
+    expect(GAMES.at(-1)?.modes).toEqual(["choice", "type"]);
+    expect(GAMES.at(-1)?.countOptions).toEqual([10, 25, 50, 0]);
+    expect(GAMES.at(-1)?.supportsTimed).toBe(false);
+    for (const locale of ["en", "de"] as const) {
+      for (const key of ["games.adastra.name", "games.adastra.short", "howto.adastra", "adastra.setupNote"]) {
+        expect(translate(locale, key)).not.toBe(key);
+      }
+    }
   });
 
   it("offers only fair answer modes for the visual games", () => {

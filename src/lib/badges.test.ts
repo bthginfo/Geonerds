@@ -1,7 +1,14 @@
 import { describe, expect, it } from "vitest";
-import { BADGES, badgeCategory, badgeTier } from "./badges";
+import { BADGES, badgeCategory, badgeTier, computeStats } from "./badges";
 
 describe("badge metadata integrity", () => {
+  it("awards Game Creator only from the signed-in account's server grant", () => {
+    const badge = BADGES.find((item) => item.id === "game-creator")!;
+    expect(badge.name).toEqual({ en: "Game Creator", de: "Game Creator" });
+    expect(badge.earned(computeStats([]))).toBe(false);
+    expect(badge.earned({ ...computeStats([]), totalScore: 10_000_000, totalRuns: 10_000 })).toBe(false);
+    expect(badge.earned(computeStats([], {}, undefined, ["game-creator"]))).toBe(true);
+  });
   it("has stable unique ids and valid derived metadata", () => {
     expect(new Set(BADGES.map((badge) => badge.id)).size).toBe(BADGES.length);
     for (const badge of BADGES) {
