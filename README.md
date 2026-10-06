@@ -78,8 +78,8 @@ identify cities, metro areas, urban corridors and larger regions from real ISS
 night photographs: street grids, coastlines, connecting roads and the glow of
 neighbouring settlements are the clues. The public UI does not expose library
 totals, so the reviewed catalogue can grow gradually.
-Cloud-obscured or spacecraft-obstructed frames are excluded rather than counted
-as extra content. Runs balance different targets before revisiting one, never
+Cloud-obscured, spacecraft-obstructed or motion-blurred frames are excluded from
+fresh runs rather than counted as extra content. Runs balance different targets before revisiting one, never
 reuse a photograph within a run, and share a reproducible seed in challenges.
 
 Play 10, 25, 50 or all photos, with multiple choice or EN/DE typed place names.
@@ -91,8 +91,10 @@ country in the CountryDex. Previously created duels retain their original
 catalogue and question sequence; new Adastra duels use a versioned seed.
 The expanded pool includes additional European, African, Asian and Oceanian
 cities, coastal urban corridors, peninsulas, river valleys and cross-border
-regions. Original city-only and metropolitan-v2 duels use frozen photo-ID
-snapshots; the current catalogue is used for fresh runs and new v3 duels.
+regions. Original city-only, metropolitan-v2 and expanded-v3 duels use frozen
+photo-ID snapshots; the active catalogue is used for fresh runs and new v4 duels.
+Retired photos and their target records remain archived for already-published
+duels, but are not eligible as questions or answer options in new runs.
 There is no timer. Each optional hint removes 25% of the original round's base
 points; Easy includes a free regional hint. The viewer supports zoom, native
 touch scrolling and mouse panning, plus keyboard controls. The answer reveals
@@ -108,7 +110,9 @@ No endorsement by NASA is implied. The import utility
 and a temporary contact-sheet directory; `--append` preserves existing records
 and checks additions against their image hashes. It rejects duplicate image bytes,
 unapproved hosts, inadequate resolutions and visually excluded frames. Its
-returned catalogue is reviewed before being applied to the repository.
+returned catalogue is reviewed before being applied to the repository. Review
+new frames at full resolution as well as on contact sheets: small previews can
+hide motion blur in the road and street-light patterns.
 
 On publication, the additive community-reward migration resolves the matching
 signed-in submission's account, grants **Game Creator** once and creates one

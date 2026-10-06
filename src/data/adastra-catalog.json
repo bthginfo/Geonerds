@@ -4412,7 +4412,8 @@
       "sourceUrl": "https://eol.jsc.nasa.gov/SearchPhotos/photo.pl?frame=15038&mission=ISS007&roll=E",
       "title": "Frankfurt at night (ISS007-E-15038)",
       "capturedAt": "2003-09-16T00:00:00.000Z",
-      "credit": "Image courtesy of the Earth Science and Remote Sensing Unit, NASA Johnson Space Center"
+      "credit": "Image courtesy of the Earth Science and Remote Sensing Unit, NASA Johnson Space Center",
+      "retired": true
     },
     {
       "id": "iss007e016525",

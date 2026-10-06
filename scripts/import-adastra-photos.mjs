@@ -42,6 +42,7 @@ const rejectedFrames = new Set([
   "iss065e013034", "iss066e029018", "iss069e036759", "iss069e037776",
   "iss073e824492", "iss073e842436", "iss073e982720", "iss074e351649",
   "iss074e351753", "iss066e117737",
+  "iss007e015038", "iss026e026479",
 ]);
 let next = 0;
 const safeText = (value) => String(value).replace(/(?:[\u00c2-\u00f4][\u0080-\u00bf]{1,3})+/g,

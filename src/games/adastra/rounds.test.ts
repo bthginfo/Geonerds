@@ -2,17 +2,18 @@ import { createHash } from "node:crypto";
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { describe, expect, it } from "vitest";
-import { ADASTRA_CITIES, ADASTRA_CREDIT, ADASTRA_PHOTOS } from "@/data/adastra";
+import { ADASTRA_CATALOG, ADASTRA_CITIES, ADASTRA_CREDIT, ADASTRA_PHOTOS } from "@/data/adastra";
 import legacyPhotoIds from "@/data/adastra-city-v1-photo-ids.json";
 import networkPhotoIds from "@/data/adastra-network-v2-photo-ids.json";
+import expandedPhotoIds from "@/data/adastra-expanded-v3-photo-ids.json";
 import { getCountryByCca3 } from "@/data/countries";
 import { ADASTRA_CATALOG_SEED_PREFIX, getAdastraCatalogVersion } from "@/lib/adastra-catalog-version";
 import type { Difficulty } from "@/lib/types";
 import { adastraAnswerScore, makeAdastraRounds } from "./rounds";
 
 describe("reviewed Adastra photograph library", () => {
-  it("contains at least 200 distinct, locally available NASA photographs", () => {
-    expect(ADASTRA_PHOTOS.length).toBeGreaterThanOrEqual(200);
+  it("contains approximately 200 distinct, locally available NASA photographs", () => {
+    expect(ADASTRA_PHOTOS.length).toBeGreaterThanOrEqual(199);
     expect(new Set(ADASTRA_PHOTOS.map((photo) => photo.id)).size).toBe(ADASTRA_PHOTOS.length);
     const hashes = new Set<string>();
     for (const photo of ADASTRA_PHOTOS) {
@@ -30,6 +31,14 @@ describe("reviewed Adastra photograph library", () => {
       if (photo.capturedAt) expect(Number.isFinite(Date.parse(photo.capturedAt))).toBe(true);
     }
     expect(hashes.size).toBe(ADASTRA_PHOTOS.length);
+  });
+
+  it("excludes the motion-blurred Rhine–Main–Neckar frame from fresh games", () => {
+    expect(ADASTRA_CATALOG.photos.find((photo) => photo.id === "iss007e015038")?.retired).toBe(true);
+    expect(ADASTRA_PHOTOS.every((photo) => !photo.retired)).toBe(true);
+    const fresh = makeAdastraRounds({ seed: "quality-review", rounds: 0, difficulty: "medium" });
+    expect(fresh.some((round) => round.photo.id === "iss007e015038")).toBe(false);
+    expect(fresh.some((round) => round.options.some((city) => city.id === "rhine-main-neckar"))).toBe(false);
   });
 
   it("links every photo to one fully translated, valid city or wider target", () => {
@@ -64,6 +73,16 @@ describe("reviewed Adastra photograph library", () => {
 });
 
 describe("Adastra replayable seeded rounds", () => {
+  it("preserves the exact published v3 duel sequence when a photograph is retired", () => {
+    const rounds = makeAdastraRounds({ seed: "published-expanded-challenge-test", rounds: 0, difficulty: "medium", catalogVersion: "expanded-v3" });
+    const sequence = rounds.map((round) => [round.photo.id, round.city.id, round.options.map((city) => city.id)]);
+    expect(createHash("sha256").update(JSON.stringify(sequence)).digest("hex"))
+      .toBe("d8c8c74ad0fd473f76a89764303a72e93af03fcef8093446c3a963b68e16cece");
+    expect(rounds).toHaveLength(200);
+    expect(new Set(rounds.map((round) => round.photo.id))).toEqual(new Set(expandedPhotoIds));
+    expect(rounds.some((round) => round.photo.id === "iss007e015038")).toBe(true);
+  });
+
   it("replays the same challenge but varies fresh starts", () => {
     const config = { seed: "challenge-a", rounds: 25, difficulty: "medium" as const };
     expect(makeAdastraRounds(config)).toEqual(makeAdastraRounds(config));
@@ -136,6 +155,7 @@ describe("Adastra replayable seeded rounds", () => {
   it("uses the wider catalogue for fresh games and versioned duels, but not old duels", () => {
     expect(getAdastraCatalogVersion("geo:old-duel", true)).toBe("city-v1");
     expect(getAdastraCatalogVersion("geo:adastra-v2:existing-duel", true)).toBe("network-v2");
+    expect(getAdastraCatalogVersion("geo:adastra-v3:existing-duel", true)).toBe("expanded-v3");
     expect(getAdastraCatalogVersion(`${ADASTRA_CATALOG_SEED_PREFIX}new-duel`, true)).toBe("current");
     expect(getAdastraCatalogVersion("random-fresh-start")).toBe("current");
   });

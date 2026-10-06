@@ -28,9 +28,17 @@ export type NightPhoto = {
   title: string;
   capturedAt?: string;
   credit: string;
+  /** Archived for published duels only; unsuitable for new games. */
+  retired?: boolean;
 };
 
 export const ADASTRA_CREDIT = "Image courtesy of the Earth Science and Remote Sensing Unit, NASA Johnson Space Center";
 export const ADASTRA_USAGE_URL = "https://eol.jsc.nasa.gov/FAQ/";
-export const ADASTRA_CITIES = catalog.cities as unknown as readonly NightCity[];
-export const ADASTRA_PHOTOS = catalog.photos as unknown as readonly NightPhoto[];
+/** Keep source records and assets immutable for already-published duel seeds. */
+export const ADASTRA_CATALOG = {
+  cities: catalog.cities as unknown as readonly NightCity[],
+  photos: catalog.photos as unknown as readonly NightPhoto[],
+};
+export const ADASTRA_PHOTOS = ADASTRA_CATALOG.photos.filter((photo) => !photo.retired);
+const activeTargetIds = new Set(ADASTRA_PHOTOS.map((photo) => photo.cityId));
+export const ADASTRA_CITIES = ADASTRA_CATALOG.cities.filter((city) => activeTargetIds.has(city.id));
