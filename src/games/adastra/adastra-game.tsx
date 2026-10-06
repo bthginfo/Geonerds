@@ -8,14 +8,14 @@ import { useT } from "@/i18n/I18nProvider";
 import { newRunSeed } from "@/lib/random";
 import { haptic } from "@/lib/haptics";
 import { cn } from "@/lib/utils";
-import { isLegacyAdastraChallenge } from "@/lib/adastra-catalog-version";
+import { getAdastraCatalogVersion } from "@/lib/adastra-catalog-version";
 import { AnswerPanel, RoundFeedback, VisualGameFrame, useVisualSession, type VisualPlayHandlers, type VisualSessionUI } from "@/games/flag-pie/game-kit";
 import { adastraAnswerScore, makeAdastraRounds, type AdastraRound } from "./rounds";
 import { NightPhotoViewer } from "./photo-viewer";
 
 export function AdastraGame(handlers: VisualPlayHandlers) {
   const [seed] = useState(() => handlers.seed ?? newRunSeed());
-  const rounds = useMemo(() => makeAdastraRounds({ seed, rounds: handlers.roundCount, difficulty: handlers.difficulty, legacy: isLegacyAdastraChallenge(seed, handlers.challenge) }), [seed, handlers.roundCount, handlers.difficulty, handlers.challenge]);
+  const rounds = useMemo(() => makeAdastraRounds({ seed, rounds: handlers.roundCount, difficulty: handlers.difficulty, catalogVersion: getAdastraCatalogVersion(seed, handlers.challenge) }), [seed, handlers.roundCount, handlers.difficulty, handlers.challenge]);
   const hits = useMemo(() => rounds.map((round) => (round.city.countryCodes?.length ?? 0) > 1 ? undefined : round.city.cca3), [rounds]);
   const session = useVisualSession({ ...handlers, timed: false, total: rounds.length, hits });
   const round = rounds[session.index];

@@ -4,14 +4,15 @@ import { resolve } from "node:path";
 import { describe, expect, it } from "vitest";
 import { ADASTRA_CITIES, ADASTRA_CREDIT, ADASTRA_PHOTOS } from "@/data/adastra";
 import legacyPhotoIds from "@/data/adastra-city-v1-photo-ids.json";
+import networkPhotoIds from "@/data/adastra-network-v2-photo-ids.json";
 import { getCountryByCca3 } from "@/data/countries";
-import { ADASTRA_CATALOG_SEED_PREFIX, isLegacyAdastraChallenge } from "@/lib/adastra-catalog-version";
+import { ADASTRA_CATALOG_SEED_PREFIX, getAdastraCatalogVersion } from "@/lib/adastra-catalog-version";
 import type { Difficulty } from "@/lib/types";
 import { adastraAnswerScore, makeAdastraRounds } from "./rounds";
 
 describe("reviewed Adastra photograph library", () => {
-  it("contains at least 100 distinct, locally available NASA photographs", () => {
-    expect(ADASTRA_PHOTOS.length).toBeGreaterThanOrEqual(100);
+  it("contains at least 200 distinct, locally available NASA photographs", () => {
+    expect(ADASTRA_PHOTOS.length).toBeGreaterThanOrEqual(200);
     expect(new Set(ADASTRA_PHOTOS.map((photo) => photo.id)).size).toBe(ADASTRA_PHOTOS.length);
     const hashes = new Set<string>();
     for (const photo of ADASTRA_PHOTOS) {
@@ -34,7 +35,7 @@ describe("reviewed Adastra photograph library", () => {
   it("links every photo to one fully translated, valid city or wider target", () => {
     const ids = new Set(ADASTRA_CITIES.map((city) => city.id));
     expect(ids.size).toBe(ADASTRA_CITIES.length);
-    expect(ids.size).toBeGreaterThanOrEqual(50);
+    expect(ids.size).toBeGreaterThanOrEqual(100);
     for (const photo of ADASTRA_PHOTOS) expect(ids.has(photo.cityId)).toBe(true);
     for (const city of ADASTRA_CITIES) {
       expect(ADASTRA_PHOTOS.some((photo) => photo.cityId === city.id)).toBe(true);
@@ -89,8 +90,12 @@ describe("Adastra replayable seeded rounds", () => {
         && round.options.some((city) => city.id === "los-angeles")).toBe(false);
       if (difficulty !== "easy") {
         const alternatives = ADASTRA_CITIES.filter((city) => city.id !== round.city.id && city.region === round.city.region
-          && (city.kind ?? "city") === (round.city.kind ?? "city"));
-        if (alternatives.length >= 3) expect(round.options.every((city) => city.region === round.city.region)).toBe(true);
+          && (city.kind ?? "city") === (round.city.kind ?? "city")
+          && !city.overlaps?.includes(round.city.id) && !round.city.overlaps?.includes(city.id));
+        // Overlapping regions cannot be competing choices even on a harder run.
+        const independent = alternatives.every((city) => alternatives.every((other) =>
+          !city.overlaps?.includes(other.id) && !other.overlaps?.includes(city.id)));
+        if (alternatives.length >= 3 && independent) expect(round.options.every((city) => city.region === round.city.region)).toBe(true);
       }
     }
   });
@@ -109,19 +114,30 @@ describe("Adastra replayable seeded rounds", () => {
   });
 
   it("preserves the exact already-published duel sequence after expansion", () => {
-    const rounds = makeAdastraRounds({ seed: "published-challenge-test", rounds: 25, difficulty: "medium", legacy: true });
+    const rounds = makeAdastraRounds({ seed: "published-challenge-test", rounds: 25, difficulty: "medium", catalogVersion: "city-v1" });
     const sequence = rounds.map((round) => [round.photo.id, round.city.id, round.options.map((city) => city.id)]);
     expect(createHash("sha256").update(JSON.stringify(sequence)).digest("hex"))
       .toBe("12b92a6e61532bf12b5f891afcdbdc166d2ba6a61b60f669a0b7e98acb77088f");
-    const all = makeAdastraRounds({ seed: "old-all", rounds: 0, difficulty: "hard", legacy: true });
+    const all = makeAdastraRounds({ seed: "old-all", rounds: 0, difficulty: "hard", catalogVersion: "city-v1" });
     expect(new Set(all.map((round) => round.photo.id))).toEqual(new Set(legacyPhotoIds));
     expect(all.every((round) => (round.city.kind ?? "city") === "city")).toBe(true);
   });
 
+  it("preserves the metropolitan v2 duel catalogue and exact sequence", () => {
+    const rounds = makeAdastraRounds({ seed: "published-network-challenge-test", rounds: 25, difficulty: "medium", catalogVersion: "network-v2" });
+    const sequence = rounds.map((round) => [round.photo.id, round.city.id, round.options.map((city) => city.id)]);
+    expect(createHash("sha256").update(JSON.stringify(sequence)).digest("hex"))
+      .toBe("78f6b55a580c6ba3b62992ab6ef931c151141b1dada45b33e4e12c3a95c6a883");
+    const all = makeAdastraRounds({ seed: "old-network-all", rounds: 0, difficulty: "hard", catalogVersion: "network-v2" });
+    expect(new Set(all.map((round) => round.photo.id))).toEqual(new Set(networkPhotoIds));
+    expect(all).toHaveLength(127);
+  });
+
   it("uses the wider catalogue for fresh games and versioned duels, but not old duels", () => {
-    expect(isLegacyAdastraChallenge("geo:old-duel", true)).toBe(true);
-    expect(isLegacyAdastraChallenge(`${ADASTRA_CATALOG_SEED_PREFIX}new-duel`, true)).toBe(false);
-    expect(isLegacyAdastraChallenge("random-fresh-start")).toBe(false);
+    expect(getAdastraCatalogVersion("geo:old-duel", true)).toBe("city-v1");
+    expect(getAdastraCatalogVersion("geo:adastra-v2:existing-duel", true)).toBe("network-v2");
+    expect(getAdastraCatalogVersion(`${ADASTRA_CATALOG_SEED_PREFIX}new-duel`, true)).toBe("current");
+    expect(getAdastraCatalogVersion("random-fresh-start")).toBe("current");
   });
 });
 

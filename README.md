@@ -89,6 +89,10 @@ compete as answers. Country-wide or statewide labels are not inferred from a
 close-up city photo. Cross-border regions do not count as finding one specific
 country in the CountryDex. Previously created duels retain their original
 catalogue and question sequence; new Adastra duels use a versioned seed.
+The expanded pool includes additional European, African, Asian and Oceanian
+cities, coastal urban corridors, peninsulas, river valleys and cross-border
+regions. Original city-only and metropolitan-v2 duels use frozen photo-ID
+snapshots; the current catalogue is used for fresh runs and new v3 duels.
 There is no timer. Each optional hint removes 25% of the original round's base
 points; Easy includes a free regional hint. The viewer supports zoom, native
 touch scrolling and mouse panning, plus keyboard controls. The answer reveals

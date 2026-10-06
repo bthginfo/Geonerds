@@ -8,6 +8,7 @@ import { createHash } from "node:crypto";
 import sharp from "sharp";
 import { NIGHT_CITY_DEFINITIONS } from "../src/data/adastra-city-definitions.ts";
 import { NIGHT_AREA_DEFINITIONS } from "../src/data/adastra-area-definitions.ts";
+import { NIGHT_EXPANSION_DEFINITIONS } from "../src/data/adastra-expansion-definitions.ts";
 
 const [input, qaDirectory, mode] = process.argv.slice(2);
 if (!input || !qaDirectory) throw new Error("A reviewed candidate file and QA directory are required.");
@@ -16,7 +17,7 @@ const candidates = JSON.parse(await fs.readFile(input, "utf8"));
 const output = path.resolve("public/images/adastra");
 await fs.mkdir(output, { recursive: true });
 await fs.mkdir(qaDirectory, { recursive: true });
-const definitions = [...NIGHT_CITY_DEFINITIONS, ...NIGHT_AREA_DEFINITIONS];
+const definitions = [...NIGHT_CITY_DEFINITIONS, ...NIGHT_AREA_DEFINITIONS, ...NIGHT_EXPANSION_DEFINITIONS];
 const lookup = new Map(definitions.flatMap((city) => [...new Set([city.name.en, ...city.aliases])].map((name) => [name.toLowerCase(), city])));
 // Broad-area typing aliases may contain a city name. Reviewed canonical names
 // take precedence, so importing a Tokyo city frame never changes it to Greater Tokyo.
@@ -37,6 +38,10 @@ const rejectedFrames = new Set([
   "iss040e005997", "iss042e019343", "iss063e039001", "iss073e685684",
   "iss066e158964", "iss040e019206", "iss040e097837",
   "iss025e010008", "iss031e095276", "iss028e033315", "sts097-355-011",
+  "iss006e037658", "iss007e011085", "iss028e029679", "iss059e061476",
+  "iss065e013034", "iss066e029018", "iss069e036759", "iss069e037776",
+  "iss073e824492", "iss073e842436", "iss073e982720", "iss074e351649",
+  "iss074e351753", "iss066e117737",
 ]);
 let next = 0;
 const safeText = (value) => String(value).replace(/(?:[\u00c2-\u00f4][\u0080-\u00bf]{1,3})+/g,

@@ -1,5 +1,7 @@
 import { ADASTRA_CITIES, ADASTRA_PHOTOS, type NightCity, type NightPhoto } from "@/data/adastra";
 import legacyPhotoIds from "@/data/adastra-city-v1-photo-ids.json";
+import networkPhotoIds from "@/data/adastra-network-v2-photo-ids.json";
+import type { AdastraCatalogVersion } from "@/lib/adastra-catalog-version";
 import { seededShuffle } from "@/lib/random";
 import { scoreForAnswer } from "@/lib/scoring";
 import type { Difficulty } from "@/lib/types";
@@ -10,6 +12,7 @@ export type AdastraRound = { photo: NightPhoto; city: NightCity; options: NightC
 // Never offer the encompassing city and its port as competing answers.
 const overlappingCities = new Set(["long-beach", "los-angeles"]);
 const originalFrames = new Set(legacyPhotoIds);
+const networkFrames = new Set(networkPhotoIds);
 const targetKind = (target: NightCity) => target.kind ?? "city";
 const overlap = (a: NightCity, b: NightCity) => a.overlaps?.includes(b.id) || b.overlaps?.includes(a.id)
   || (overlappingCities.has(a.id) && overlappingCities.has(b.id));
@@ -35,10 +38,12 @@ function includeNetworkViews(available: string[], cities: Map<string, NightCity>
 }
 
 /** Balance targets before revisiting them; never repeat a source photo within a run. */
-export function makeAdastraRounds({ seed, rounds, difficulty, legacy = false }: {
-  seed: string; rounds: number; difficulty: Difficulty; legacy?: boolean;
+export function makeAdastraRounds({ seed, rounds, difficulty, catalogVersion = "current" }: {
+  seed: string; rounds: number; difficulty: Difficulty; catalogVersion?: AdastraCatalogVersion;
 }): AdastraRound[] {
-  const library = legacy ? ADASTRA_PHOTOS.filter((photo) => originalFrames.has(photo.id)) : ADASTRA_PHOTOS;
+  const legacy = catalogVersion === "city-v1";
+  const frameIds = legacy ? originalFrames : catalogVersion === "network-v2" ? networkFrames : undefined;
+  const library = frameIds ? ADASTRA_PHOTOS.filter((photo) => frameIds.has(photo.id)) : ADASTRA_PHOTOS;
   const includedIds = new Set(library.map((photo) => photo.cityId));
   const pool = ADASTRA_CITIES.filter((city) => includedIds.has(city.id));
   const cities = new Map(pool.map((city) => [city.id, city]));
