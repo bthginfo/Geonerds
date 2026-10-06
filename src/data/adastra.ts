@@ -1,10 +1,18 @@
 import catalog from "./adastra-catalog.json";
 
+export type NightTargetKind = "city" | "metro" | "state" | "region";
+
 export type NightCity = {
   id: string;
+  /** Missing on the original catalogue: a city, not a larger surrounding area. */
+  kind?: NightTargetKind;
   name: { en: string; de: string };
   aliases: readonly string[];
   cca3: string;
+  /** Larger areas may cross borders; do not assign only their primary country. */
+  countryCodes?: readonly string[];
+  /** Do not offer a containing and contained region as competing answers. */
+  overlaps?: readonly string[];
   region: string;
   regionHint: { en: string; de: string };
   clue: { en: string; de: string };

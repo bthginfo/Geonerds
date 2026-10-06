@@ -9,6 +9,7 @@ import {
   type GeoChallenge, type GeoChallengeAttempt, type GeoChallengeConfig, type GeoChallengeStatus,
 } from "@/lib/challenges";
 import type { RunResult } from "@/lib/types";
+import { ADASTRA_CATALOG_SEED_PREFIX } from "@/lib/adastra-catalog-version";
 
 type Query = postgres.Sql | postgres.TransactionSql;
 type Row = Record<string, unknown>;
@@ -145,7 +146,7 @@ export async function createGeoChallenge(req: Request) {
       WHERE challenger_id=${gate.session.uid} AND status IN ('pending','active') AND expires_at>now()`;
     if (Number(open[0].count) >= 30) return failure("too_many_challenges", 429);
     const id = newId();
-    const seed = `geo:${randomBytes(24).toString("base64url")}`;
+    const seed = `${config.gameId === "adastra" ? ADASTRA_CATALOG_SEED_PREFIX : "geo:"}${randomBytes(24).toString("base64url")}`;
     const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
     await sql`INSERT INTO gn_challenges (id,challenger_id,opponent_id,game_id,difficulty,mode,rounds,timed,variant,seed,expires_at)
       VALUES (${id},${gate.session.uid},${opponent.id},${config.gameId},${config.difficulty},${config.mode},${config.rounds},${config.timed},${config.variant},${seed},${expiresAt})`;

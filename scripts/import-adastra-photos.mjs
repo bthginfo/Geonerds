@@ -1,29 +1,42 @@
 /** Import the reviewed NASA catalogue, not live search results. Run with Node24+.
  * Binary assets are copied unchanged; the caller applies the returned JSON catalog.
- * node scripts/import-adastra-photos.mjs <reviewed-candidates.json> <QA-temp-directory>
+ * node scripts/import-adastra-photos.mjs <reviewed-candidates.json> <QA-temp-directory> [--append]
  */
 import fs from "node:fs/promises";
 import path from "node:path";
 import { createHash } from "node:crypto";
 import sharp from "sharp";
 import { NIGHT_CITY_DEFINITIONS } from "../src/data/adastra-city-definitions.ts";
+import { NIGHT_AREA_DEFINITIONS } from "../src/data/adastra-area-definitions.ts";
 
-const [input, qaDirectory] = process.argv.slice(2);
+const [input, qaDirectory, mode] = process.argv.slice(2);
 if (!input || !qaDirectory) throw new Error("A reviewed candidate file and QA directory are required.");
+if (mode && mode !== "--append") throw new Error("Only --append is supported as an import mode.");
 const candidates = JSON.parse(await fs.readFile(input, "utf8"));
 const output = path.resolve("public/images/adastra");
 await fs.mkdir(output, { recursive: true });
 await fs.mkdir(qaDirectory, { recursive: true });
-const lookup = new Map(NIGHT_CITY_DEFINITIONS.flatMap((city) => [...new Set([city.name.en, ...city.aliases])].map((name) => [name.toLowerCase(), city])));
+const definitions = [...NIGHT_CITY_DEFINITIONS, ...NIGHT_AREA_DEFINITIONS];
+const lookup = new Map(definitions.flatMap((city) => [...new Set([city.name.en, ...city.aliases])].map((name) => [name.toLowerCase(), city])));
+// Broad-area typing aliases may contain a city name. Reviewed canonical names
+// take precedence, so importing a Tokyo city frame never changes it to Greater Tokyo.
+for (const city of definitions) lookup.set(city.name.en.toLowerCase(), city);
+const existing = mode === "--append" ? JSON.parse(await fs.readFile("src/data/adastra-catalog.json", "utf8")) : { cities: [], photos: [] };
+const existingFrames = new Set(existing.photos.map((photo) => photo.id));
 const hashes = new Map();
-const photos = [];
+for (const photo of existing.photos) {
+  const bytes = await fs.readFile(path.join(output, `${photo.id}.jpg`));
+  hashes.set(createHash("sha256").update(bytes).digest("hex"), photo.id);
+}
+const photos = [...existing.photos];
 const issues = [];
-// Visually reviewed frames where clouds, hardware or the horizon obscure the city.
+// Visually reviewed frames where clouds, blur or hardware obscure the target.
 // Preserve these exclusions when regenerating the catalogue from the source list.
 const rejectedFrames = new Set([
   "iss036e032765", "iss036e022872", "iss040e091715", "iss040e091716",
   "iss040e005997", "iss042e019343", "iss063e039001", "iss073e685684",
   "iss066e158964", "iss040e019206", "iss040e097837",
+  "iss025e010008", "iss031e095276", "iss028e033315", "sts097-355-011",
 ]);
 let next = 0;
 const safeText = (value) => String(value).replace(/(?:[\u00c2-\u00f4][\u0080-\u00bf]{1,3})+/g,
@@ -38,7 +51,8 @@ async function worker() {
   while (next < unique.length) {
     const candidate = unique[next++];
     const id = canonicalId(candidate.nasaId);
-    if (rejectedFrames.has(id)) { issues.push({ id, issue: "visual-review-city-obscured" }); continue; }
+    if (existingFrames.has(id)) { issues.push({ id, issue: "already-in-catalogue" }); continue; }
+    if (rejectedFrames.has(id)) { issues.push({ id, issue: "visual-review-target-obscured" }); continue; }
     const city = lookup.get(candidate.city.toLowerCase());
     if (!city) { issues.push({ id, city: candidate.city, issue: "missing-reviewed-city-definition" }); continue; }
     if (!/^[a-z0-9-]+$/.test(id)) { issues.push({ id, issue: "invalid-photo-id" }); continue; }
@@ -71,10 +85,12 @@ async function worker() {
 await Promise.all(Array.from({ length: 4 }, worker));
 photos.sort((a, b) => a.id.localeCompare(b.id));
 const usedCities = new Set(photos.map((photo) => photo.cityId));
-const cities = NIGHT_CITY_DEFINITIONS.filter((city) => usedCities.has(city.id));
+const cities = [...new Map([...definitions, ...existing.cities].filter((city) => usedCities.has(city.id))
+  .map((city) => [city.id, city])).values()];
 // Contact sheets are inspection artifacts only; game photographs remain unchanged.
-for (let start = 0; start < photos.length; start += 40) {
-  const batch = photos.slice(start, start + 40);
+const reviewPhotos = photos.filter((photo) => !existingFrames.has(photo.id));
+for (let start = 0; start < reviewPhotos.length; start += 40) {
+  const batch = reviewPhotos.slice(start, start + 40);
   const tiles = await Promise.all(batch.map(async (photo, i) => ({
     input: await sharp(path.join(output, `${photo.id}.jpg`)).resize(240, 160, { fit: "contain", background: "#030712" }).toBuffer(),
     left: (i % 8) * 240, top: Math.floor(i / 8) * 184,
@@ -87,4 +103,4 @@ for (let start = 0; start < photos.length; start += 40) {
 }
 console.log(JSON.stringify({ catalog: { cities, photos }, issues,
   stats: { photos: photos.length, cities: cities.length, countries: new Set(cities.map((city) => city.cca3)).size,
-    regions: [...new Set(cities.map((city) => city.region))], contactSheets: Math.ceil(photos.length / 40) } }));
+    addedPhotos: reviewPhotos.length, regions: [...new Set(cities.map((city) => city.region))], contactSheets: Math.ceil(reviewPhotos.length / 40) } }));

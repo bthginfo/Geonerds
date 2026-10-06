@@ -3,7 +3,9 @@ import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { describe, expect, it } from "vitest";
 import { ADASTRA_CITIES, ADASTRA_CREDIT, ADASTRA_PHOTOS } from "@/data/adastra";
+import legacyPhotoIds from "@/data/adastra-city-v1-photo-ids.json";
 import { getCountryByCca3 } from "@/data/countries";
+import { ADASTRA_CATALOG_SEED_PREFIX, isLegacyAdastraChallenge } from "@/lib/adastra-catalog-version";
 import type { Difficulty } from "@/lib/types";
 import { adastraAnswerScore, makeAdastraRounds } from "./rounds";
 
@@ -29,7 +31,7 @@ describe("reviewed Adastra photograph library", () => {
     expect(hashes.size).toBe(ADASTRA_PHOTOS.length);
   });
 
-  it("links every photo to one fully translated, valid city", () => {
+  it("links every photo to one fully translated, valid city or wider target", () => {
     const ids = new Set(ADASTRA_CITIES.map((city) => city.id));
     expect(ids.size).toBe(ADASTRA_CITIES.length);
     expect(ids.size).toBeGreaterThanOrEqual(50);
@@ -37,6 +39,11 @@ describe("reviewed Adastra photograph library", () => {
     for (const city of ADASTRA_CITIES) {
       expect(ADASTRA_PHOTOS.some((photo) => photo.cityId === city.id)).toBe(true);
       expect(getCountryByCca3(city.cca3)).toBeDefined();
+      expect(["city", "metro", "state", "region"]).toContain(city.kind ?? "city");
+      if (city.countryCodes) {
+        expect(city.countryCodes).toContain(city.cca3);
+        for (const code of city.countryCodes) expect(getCountryByCca3(code)).toBeDefined();
+      }
       expect(city.latlng[0]).toBeGreaterThanOrEqual(-90);
       expect(city.latlng[0]).toBeLessThanOrEqual(90);
       expect(city.latlng[1]).toBeGreaterThanOrEqual(-180);
@@ -49,6 +56,9 @@ describe("reviewed Adastra photograph library", () => {
         expect(city.aliases).toContain(city.name[locale]);
       }
     }
+    for (const kind of new Set(ADASTRA_CITIES.map((city) => city.kind ?? "city"))) {
+      expect(ADASTRA_CITIES.filter((city) => (city.kind ?? "city") === kind).length).toBeGreaterThanOrEqual(4);
+    }
   });
 });
 
@@ -60,7 +70,7 @@ describe("Adastra replayable seeded rounds", () => {
       .not.toEqual(makeAdastraRounds(config).map((round) => round.photo.id));
   });
 
-  it.each(["easy", "medium", "hard"] as Difficulty[])("balances cities and gives four unique, valid answers on %s", (difficulty) => {
+  it.each(["easy", "medium", "hard"] as Difficulty[])("balances targets and gives four unique, same-scale answers on %s", (difficulty) => {
     const rounds = makeAdastraRounds({ seed: "reviewed-library", rounds: 0, difficulty });
     expect(rounds).toHaveLength(ADASTRA_PHOTOS.length);
     expect(new Set(rounds.map((round) => round.photo.id)).size).toBe(rounds.length);
@@ -71,10 +81,15 @@ describe("Adastra replayable seeded rounds", () => {
       expect(new Set(round.options.map((city) => city.id)).size).toBe(4);
       expect(round.options.filter((city) => city.id === round.city.id)).toHaveLength(1);
       expect(new Set(round.options.map((city) => city.name.en.toLowerCase())).size).toBe(4);
+      expect(round.options.every((city) => (city.kind ?? "city") === (round.city.kind ?? "city"))).toBe(true);
+      for (const option of round.options) {
+        expect(round.options.some((other) => other.id !== option.id && option.overlaps?.includes(other.id))).toBe(false);
+      }
       expect(round.options.some((city) => city.id === "long-beach")
         && round.options.some((city) => city.id === "los-angeles")).toBe(false);
       if (difficulty !== "easy") {
-        const alternatives = ADASTRA_CITIES.filter((city) => city.id !== round.city.id && city.region === round.city.region);
+        const alternatives = ADASTRA_CITIES.filter((city) => city.id !== round.city.id && city.region === round.city.region
+          && (city.kind ?? "city") === (round.city.kind ?? "city"));
         if (alternatives.length >= 3) expect(round.options.every((city) => city.region === round.city.region)).toBe(true);
       }
     }
@@ -84,6 +99,29 @@ describe("Adastra replayable seeded rounds", () => {
     const rounds = makeAdastraRounds({ seed: "count", rounds: count, difficulty: "easy" });
     expect(rounds).toHaveLength(Math.min(count, ADASTRA_PHOTOS.length));
     expect(new Set(rounds.map((round) => round.photo.id)).size).toBe(rounds.length);
+  });
+
+  it.each(["network-a", "network-b", "network-c"])("includes metro and regional views in a short mixed run (%s)", (seed) => {
+    const rounds = makeAdastraRounds({ seed, rounds: 10, difficulty: "medium" });
+    expect(rounds.some((round) => round.city.kind === "metro")).toBe(true);
+    expect(rounds.some((round) => round.city.kind === "region")).toBe(true);
+    expect(new Set(rounds.map((round) => round.city.id)).size).toBe(10);
+  });
+
+  it("preserves the exact already-published duel sequence after expansion", () => {
+    const rounds = makeAdastraRounds({ seed: "published-challenge-test", rounds: 25, difficulty: "medium", legacy: true });
+    const sequence = rounds.map((round) => [round.photo.id, round.city.id, round.options.map((city) => city.id)]);
+    expect(createHash("sha256").update(JSON.stringify(sequence)).digest("hex"))
+      .toBe("12b92a6e61532bf12b5f891afcdbdc166d2ba6a61b60f669a0b7e98acb77088f");
+    const all = makeAdastraRounds({ seed: "old-all", rounds: 0, difficulty: "hard", legacy: true });
+    expect(new Set(all.map((round) => round.photo.id))).toEqual(new Set(legacyPhotoIds));
+    expect(all.every((round) => (round.city.kind ?? "city") === "city")).toBe(true);
+  });
+
+  it("uses the wider catalogue for fresh games and versioned duels, but not old duels", () => {
+    expect(isLegacyAdastraChallenge("geo:old-duel", true)).toBe(true);
+    expect(isLegacyAdastraChallenge(`${ADASTRA_CATALOG_SEED_PREFIX}new-duel`, true)).toBe(false);
+    expect(isLegacyAdastraChallenge("random-fresh-start")).toBe(false);
   });
 });
 

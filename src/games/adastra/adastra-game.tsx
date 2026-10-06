@@ -8,14 +8,15 @@ import { useT } from "@/i18n/I18nProvider";
 import { newRunSeed } from "@/lib/random";
 import { haptic } from "@/lib/haptics";
 import { cn } from "@/lib/utils";
+import { isLegacyAdastraChallenge } from "@/lib/adastra-catalog-version";
 import { AnswerPanel, RoundFeedback, VisualGameFrame, useVisualSession, type VisualPlayHandlers, type VisualSessionUI } from "@/games/flag-pie/game-kit";
 import { adastraAnswerScore, makeAdastraRounds, type AdastraRound } from "./rounds";
 import { NightPhotoViewer } from "./photo-viewer";
 
 export function AdastraGame(handlers: VisualPlayHandlers) {
   const [seed] = useState(() => handlers.seed ?? newRunSeed());
-  const rounds = useMemo(() => makeAdastraRounds({ seed, rounds: handlers.roundCount, difficulty: handlers.difficulty }), [seed, handlers.roundCount, handlers.difficulty]);
-  const hits = useMemo(() => rounds.map((round) => round.city.cca3), [rounds]);
+  const rounds = useMemo(() => makeAdastraRounds({ seed, rounds: handlers.roundCount, difficulty: handlers.difficulty, legacy: isLegacyAdastraChallenge(seed, handlers.challenge) }), [seed, handlers.roundCount, handlers.difficulty, handlers.challenge]);
+  const hits = useMemo(() => rounds.map((round) => (round.city.countryCodes?.length ?? 0) > 1 ? undefined : round.city.cca3), [rounds]);
   const session = useVisualSession({ ...handlers, timed: false, total: rounds.length, hits });
   const round = rounds[session.index];
   const nextSrc = rounds[session.index + 1]?.photo.src;
@@ -38,7 +39,8 @@ function NightObservation({ round, session, handlers }: { round: AdastraRound; s
   const hints = Number(regionalHint && handlers.difficulty !== "easy") + Number(clue);
   const points = adastraAnswerScore(handlers.difficulty, hints, handlers.practice);
   const answered = Boolean(session.answer);
-  const country = getCountryByCca3(round.city.cca3);
+  const country = (round.city.countryCodes?.length ?? 0) > 1 ? undefined : getCountryByCca3(round.city.cca3);
+  const kind = round.city.kind ?? "city";
 
   function answer(correct: boolean) {
     if (!ready || answered) return;
@@ -49,9 +51,9 @@ function NightObservation({ round, session, handlers }: { round: AdastraRound; s
 
   return <>
     <header>
-      <p className="mb-2 flex items-center gap-2 text-xs font-bold tracking-wide text-amber-800 dark:text-amber-300"><MoonStar className="h-4 w-4" aria-hidden />{t("adastra.kicker")}</p>
-      <h1 className="text-xl font-extrabold tracking-tight sm:text-3xl">{t("adastra.prompt")}</h1>
-      <p className="mt-1.5 text-sm leading-relaxed text-muted-foreground">{t("adastra.instruction")}</p>
+      <p className="mb-2 flex flex-wrap items-center gap-2 text-xs font-bold tracking-wide text-amber-800 dark:text-amber-300"><MoonStar className="h-4 w-4" aria-hidden />{t("adastra.kicker")}<span className="max-w-full rounded-md border border-amber-600/25 bg-amber-500/10 px-2 py-1 leading-relaxed">{t(`adastra.kind.${kind}`)}</span></p>
+      <h1 className="text-xl font-extrabold tracking-tight sm:text-3xl">{t(`adastra.prompt.${kind}`)}</h1>
+      <p className="mt-1.5 text-sm leading-relaxed text-muted-foreground">{t(kind === "city" ? "adastra.instruction" : "adastra.networkTip")}</p>
     </header>
     <NightPhotoViewer photo={round.photo} revealed={answered} onReady={setReady} onExit={handlers.onExit} />
     <a href={ADASTRA_USAGE_URL} target="_blank" rel="noopener noreferrer" title={ADASTRA_CREDIT} className="-mt-3 inline-flex w-fit max-w-full items-center gap-1.5 text-[11px] leading-relaxed text-muted-foreground underline decoration-border underline-offset-3 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">{t("adastra.credit")}<ExternalLink className="h-3 w-3 shrink-0" aria-hidden /></a>
@@ -68,7 +70,7 @@ function NightObservation({ round, session, handlers }: { round: AdastraRound; s
         {clue && <div className="rounded-xl border border-amber-600/25 bg-amber-500/5 p-3"><p className="flex items-center gap-1.5 text-xs font-semibold text-amber-800 dark:text-amber-300"><Lightbulb className="h-3.5 w-3.5" aria-hidden />{t("adastra.clue")}</p><p className="mt-1 text-sm leading-relaxed">{round.city.clue[locale]}</p></div>}
       </div>}
       <AnswerPanel key={round.photo.id} mode={handlers.mode} options={round.options.map((city) => ({ id: city.id, label: city.name[locale] }))}
-        correctId={round.city.id} accepted={[round.city.name.en, round.city.name.de, ...round.city.aliases]} answered={answered} onAnswer={answer} placeholderKey="adastra.typePlaceholder" />
+        correctId={round.city.id} accepted={[round.city.name.en, round.city.name.de, ...round.city.aliases]} answered={answered} onAnswer={answer} placeholderKey={`adastra.typePlaceholder.${kind}`} />
     </>}
     <RoundFeedback session={session} answerLabel={`${round.city.name[locale]}${country ? ` · ${countryName(country, locale)}` : ""}`}>
       <p className="text-sm leading-relaxed">{round.city.explanation[locale]}</p>
