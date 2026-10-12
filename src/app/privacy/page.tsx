@@ -51,11 +51,21 @@ export default function PrivacyPage() {
             <section>
               <h2>4. Optionales Konto & Bestenliste</h2>
               <p>
-                Nur wenn du dich freiwillig anmeldest, speichern wir den von dir gewählten Namen, einen
+                Wenn du dich freiwillig anmeldest, speichern wir den von dir gewählten Namen, einen
                 verschlüsselten Zugangscode sowie deine eingereichten Spielergebnisse auf unserem
                 Server, um die globale Bestenliste anzuzeigen. Gib bitte keinen Klarnamen an, wenn du
                 anonym bleiben möchtest. Du kannst die Löschung deines Kontos jederzeit per E-Mail
                 anfragen.
+              </p>
+              <p>
+                Für Herausforderungen zwischen registrierten Konten speichern wir Einladungsdaten,
+                Spielversuche und Ergebnisse sowie kontobezogene Benachrichtigungen. Die Liste offener
+                Herausforderungen zeigt deinen gewählten Benutzernamen. Über einen Einladungslink
+                können Gäste mit einem Spitznamen mitspielen; ihr Alias und Ergebnis werden für dieses
+                Duell gespeichert. Ein technisch notwendiges HttpOnly-Cookie, das nur für diese
+                Herausforderung gilt und bis zu sieben Tage gültig ist, ermöglicht den Gastzugang.
+                Kehre im selben Browser zurück. Gastspiele erhalten keinen Eintrag in öffentlichen
+                Bestenlisten.
               </p>
             </section>
             <section>
@@ -115,13 +125,21 @@ export default function PrivacyPage() {
             <section>
               <h2>4. Optional account &amp; leaderboard</h2>
               <p>
-                Only if you voluntarily sign in do we store your chosen name, a hashed passcode and the
+                When you voluntarily sign in, we store your chosen name, a hashed passcode and the
                 game results you submit on our server. In Poke-Nerds this also includes your optional
                 trainer passport, league rating, seasonal record, challenges and server-verified
                 badges. Public trainer passports and rankings show your chosen name; you can make the
                 passport private. Challenge and seasonal records are retained for ranking integrity
                 until the account is deleted. Please don&apos;t use your real name if you wish to stay
                 anonymous. You may request deletion of your account at any time by email.
+              </p>
+              <p>
+                Registered-account challenges store invitation metadata, attempts and results, and
+                account notifications. The open challenge lobby displays your chosen username.
+                Invitation-link guests can join with a nickname; their alias and result are stored
+                for that duel. An essential HttpOnly cookie, scoped to that challenge and valid for up
+                to seven days, provides guest access. Return in the same browser. Guest games do not
+                receive entries in public leaderboards.
               </p>
             </section>
             <section>

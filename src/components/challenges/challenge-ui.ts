@@ -22,6 +22,13 @@ const ERRORS: Record<string, Record<Locale, string>> = {
   wrong_game: { de: "Diese Herausforderung gehört zu einem anderen Spiel. Öffne sie über die Übersicht.", en: "This challenge is for a different game. Open it from the overview." },
   missing_seed: { de: "Die gemeinsamen Fragen sind noch nicht bereit. Aktualisiere deine Herausforderungen.", en: "The shared questions are not ready. Refresh your challenges." },
   invalid_request: { de: "Prüfe den Benutzernamen und die Spieleinstellungen.", en: "Check the username and game settings." },
+  no_random_opponents: { de: "Gerade ist kein zufälliges Gegenüber verfügbar. Erstelle stattdessen eine offene Herausforderung oder einen Einladungslink.", en: "No random opponent is available right now. Try an open challenge or an invite link instead." },
+  invitation_taken: { de: "Diese Einladung ist bereits vergeben oder geschlossen. Finde ein anderes Gegenüber in den offenen Herausforderungen.", en: "This invitation has already been claimed or closed. Find another opponent in Open challenges." },
+  invalid_guest_name: { de: "Wähle einen Gastnamen mit 2–20 Zeichen: Buchstaben, Zahlen, Leerzeichen, Punkt, Unterstrich oder Bindestrich.", en: "Choose a guest name with 2–20 characters: letters, numbers, spaces, period, underscore or hyphen." },
+  guest_requires_link: { de: "Als Gast kannst du nur einen Einladungslink annehmen. Für offene Herausforderungen brauchst du ein Konto.", en: "Guests can only accept invite links. Open challenges require an account." },
+  already_challenged: { de: "Mit diesem Konto läuft bereits eine Einladung oder Herausforderung. Öffne sie in deiner Übersicht.", en: "You already have an invitation or active challenge with this account. Open it in your list." },
+  rate_limited: { de: "Du hast gerade viele Anfragen gesendet. Warte kurz und versuche es danach erneut.", en: "You have sent many requests recently. Wait a moment, then try again." },
+  invalid_config: { de: "Diese Spieleinstellungen werden nicht unterstützt. Wähle das Spiel erneut und prüfe die Einstellungen.", en: "These game settings are not supported. Select the game again and check its settings." },
 };
 
 export function challengeError(error: string | undefined, locale: Locale): string {
@@ -30,6 +37,7 @@ export function challengeError(error: string | undefined, locale: Locale): strin
 
 export function challengePlayBlock(challenge: GeoChallenge, gameId: GameId, now = Date.now()): string | null {
   if (challenge.gameId !== gameId) return "wrong_game";
+  if (challenge.viewerRole === "visitor") return "not_participant";
   const expiry = new Date(challenge.expiresAt).getTime();
   if (challenge.status === "expired" || !Number.isFinite(expiry) || expiry <= now) return "expired";
   if (challenge.viewerAttempted) return "already_submitted";
@@ -48,6 +56,14 @@ export interface SavedChallengeAttempt {
 
 export function attemptStorageKey(userId: string, challengeId: string): string {
   return `geonerds-challenge-attempt:${userId}:${challengeId}`;
+}
+
+/** This key is not authority: a guest still needs the server's challenge cookie. */
+export function challengeAttemptStorageKey(challenge: GeoChallenge, accountId?: string): string | null {
+  if (challenge.viewerRole === "visitor") return null;
+  if (accountId) return attemptStorageKey(accountId, challenge.id);
+  if (!challenge.viewerIsGuest || challenge.viewerRole !== "opponent" || !challenge.viewerKey) return null;
+  return attemptStorageKey(challenge.viewerKey, challenge.id);
 }
 
 export function readSavedAttempt(key: string): SavedChallengeAttempt | null {

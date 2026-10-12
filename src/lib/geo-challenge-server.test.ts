@@ -7,6 +7,7 @@ const state = vi.hoisted(() => ({
 }));
 async function fakeSql(parts: TemplateStringsArray, ...values: unknown[]) {
   state.calls.push({ text: parts.join("?"), values });
+  if (parts.join("?").includes("INSERT INTO gn_challenge_notifications")) return [];
   return state.responses.shift() ?? [];
 }
 const sql = Object.assign(fakeSql, { begin: async <T>(work: (query: typeof fakeSql) => Promise<T>): Promise<T> => work(fakeSql) });
@@ -86,7 +87,7 @@ describe("Geo challenge mutation guards", () => {
     ["adastra", "", ADASTRA_CATALOG_SEED_PREFIX],
     ["flags", "world", "geo:"],
   ])("versions new %s seeds without changing other games", async (gameId, variant, prefix) => {
-    state.responses = [[{ id: "bob", name: "Bob" }], [{ count: 0 }], []];
+    state.responses = [[{ id: "alice", name: "Alice" }], [{ id: "bob", name: "Bob" }], [{ count: 0 }], [], []];
     const response = await createGeoChallenge(request({
       gameId, difficulty: "medium", mode: "choice", rounds: 10, timed: false, variant, opponentName: "Bob",
     }));
@@ -96,7 +97,7 @@ describe("Geo challenge mutation guards", () => {
     expect(seed).toEqual(expect.stringMatching(new RegExp(`^${prefix}[A-Za-z0-9_-]{32}$`)));
   });
   it("cannot challenge yourself", async () => {
-    state.responses = [[{ id: "alice", name: "Alice" }]];
+    state.responses = [[{ id: "alice", name: "Alice" }], [{ id: "alice", name: "Alice" }]];
     const response = await createGeoChallenge(request({ ...run, rounds: 10, timed: false, variant: "world", opponentName: "Alice" }));
     expect(response.status).toBe(400);
     expect((await response.json()).error).toBe("self_challenge");

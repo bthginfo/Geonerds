@@ -129,9 +129,18 @@ describe("private feedback administration", () => {
     expect(response.headers.get("Cache-Control")).toBe("private, no-store");
     expect(response.headers.get("Vary")).toBe("Cookie");
     expect(await response.json()).toEqual({ configured: true, submissions: [{
-      id, authorName: "Alice", message, status: "new", createdAt: "2026-10-05T10:00:00.000Z", reviewedAt: null,
+      id, authorName: "Alice", message, status: "new", createdAt: "2026-10-05T10:00:00.000Z", reviewedAt: null, contributorAwarded: false,
     }], total: 2, allCount: 5, newCount: 2, hasMore: true });
-    expect(state.calls[2].text).not.toContain("user_id");
+    expect(state.calls[2].text).not.toContain("SELECT f.user_id");
+  });
+  it("lets TheCreator verify a Contributor award bound to the exact submission without exposing account IDs", async () => {
+    state.session = { uid: "creator", name: "TheCreator" };
+    state.responses = [[{ id: "creator" }], [{ total: 1, all_count: 1, new_count: 1 }], [{ ...record, contributor_awarded: true }]];
+    const result = await (await listCommunityFeedback(listReq())).json();
+    expect(result.submissions[0].contributorAwarded).toBe(true);
+    expect(state.calls[2].text).toContain("a.feedback_id=f.id AND a.user_id=f.user_id");
+    expect(state.calls[2].text).toContain("a.badge_id='contributor'");
+    expect(result.submissions[0]).not.toHaveProperty("userId");
   });
   it("rejects invalid list filters and pagination", async () => {
     state.session = { uid: "creator", name: "TheCreator" };

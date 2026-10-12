@@ -14,6 +14,8 @@ export interface FeedbackSubmission {
   status: FeedbackStatus;
   createdAt: string;
   reviewedAt: string | null;
+  /** Private admin proof, tied to the actual submission/account rather than its display name. */
+  contributorAwarded?: boolean;
 }
 
 export interface DuelStanding {

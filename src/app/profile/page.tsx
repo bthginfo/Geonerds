@@ -17,6 +17,8 @@ import { formatNumber } from "@/lib/utils";
 import { useProgression } from "@/store/progression";
 import { useCommunityRewards } from "@/hooks/use-community-rewards";
 import { GameCreatorAward } from "@/components/community/game-creator-award";
+import { ContributorAward } from "@/components/community/contributor-award";
+import { CONTRIBUTOR_BADGE_ID } from "@/lib/community-rewards";
 
 export default function ProfilePage() {
   const { t, locale } = useT();
@@ -88,6 +90,7 @@ export default function ProfilePage() {
       <Link href="/challenges" className="mt-4 flex min-h-16 items-center gap-3 rounded-2xl border border-primary/25 bg-primary/5 p-4 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"><Swords className="h-5 w-5 shrink-0 text-primary" /><div className="min-w-0 flex-1"><p className="font-semibold">{locale === "de" ? "Deine Herausforderungen" : "Your challenges"}</p><p className="mt-0.5 text-xs text-muted-foreground">{locale === "de" ? "Einladungen, offene Duelle und Ergebnisse" : "Invitations, active encounters and results"}</p></div><ChevronRight className="h-4 w-4 text-primary" /></Link>
 
       {community.badgeIds.includes("game-creator") && <GameCreatorAward />}
+      {community.badgeIds.includes(CONTRIBUTOR_BADGE_ID) && <ContributorAward />}
 
       {/* Stat tiles */}
       <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3">

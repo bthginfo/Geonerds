@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import type { GeoChallenge } from "@/lib/challenges";
-import { attemptStorageKey, challengeError, challengePlayBlock, readSavedAttempt, writeSavedAttempt } from "./challenge-ui";
+import { attemptStorageKey, challengeAttemptStorageKey, challengeError, challengePlayBlock, readSavedAttempt, writeSavedAttempt } from "./challenge-ui";
 
 const record: GeoChallenge = {
   id: "challenge-1", gameId: "flags", difficulty: "medium", mode: "choice", rounds: 10, timed: false, variant: "world", seed: "same-questions", status: "active", challengerName: "Atlas", opponentName: "Explorer", direction: "sent", viewerAttempted: false, viewerStarted: false, attemptCount: 0, expiresAt: "2026-10-10T12:00:00Z", createdAt: "2026-10-01T12:00:00Z", winnerName: null, viewerOutcome: null,
@@ -20,6 +20,9 @@ describe("challenge play gate", () => {
     expect(challengePlayBlock({ ...record, viewerAttempted: true }, "flags", now)).toBe("already_submitted");
     expect(challengePlayBlock({ ...record, viewerStarted: true }, "flags", now)).toBe("already_started");
   });
+  it("never offers a run to a visitor even when the record is active", () => {
+    expect(challengePlayBlock({ ...record, viewerRole: "visitor" }, "flags", now)).toBe("not_participant");
+  });
   it("blocks expired and malformed expiry dates", () => {
     expect(challengePlayBlock({ ...record, expiresAt: "2026-10-01T12:00:00Z" }, "flags", now)).toBe("expired");
     expect(challengePlayBlock({ ...record, expiresAt: "not-a-date" }, "flags", now)).toBe("expired");
@@ -27,6 +30,14 @@ describe("challenge play gate", () => {
 });
 
 describe("recoverable submission", () => {
+  it("uses only the API-authorized guest viewer key and keeps account caches separate", () => {
+    const guest = { ...record, viewerIsGuest: true, viewerRole: "opponent" as const, viewerKey: `guest:${record.id}` };
+    expect(challengeAttemptStorageKey(guest)).toBe(attemptStorageKey(guest.viewerKey, record.id));
+    expect(challengeAttemptStorageKey(guest, "user-a")).toBe(attemptStorageKey("user-a", record.id));
+    expect(challengeAttemptStorageKey({ ...guest, viewerRole: "visitor" })).toBeNull();
+    expect(challengeAttemptStorageKey({ ...guest, viewerIsGuest: false })).toBeNull();
+    expect(challengeAttemptStorageKey({ ...guest, viewerKey: undefined })).toBeNull();
+  });
   function memoryStorage() {
     const values = new Map<string, string>();
     vi.stubGlobal("sessionStorage", { getItem: (key: string) => values.get(key) ?? null, setItem: (key: string, value: string) => values.set(key, value) });

@@ -3,7 +3,7 @@ import { getSession } from "./auth";
 import { getDb, isDbConfigured } from "./db";
 import { sameGeoOrigin } from "./geo-challenge-server";
 import { rateLimit } from "./ratelimit";
-import { GAME_CREATOR_BADGE_ID, type CommunityAward, type CommunityNotification } from "./community-rewards";
+import { CONTRIBUTOR_BADGE_ID, GAME_CREATOR_BADGE_ID, type CommunityAward, type CommunityNotification } from "./community-rewards";
 
 const HEADERS = { "Cache-Control": "private, no-store", Vary: "Cookie" };
 const reply = (body: unknown, status = 200) => NextResponse.json(body, { status, headers: HEADERS });
@@ -15,14 +15,14 @@ export async function listCommunityRewards() {
     if (!session) return reply({ error: "unauthorized" }, 401);
     const sql = await getDb();
     const awards = await sql`SELECT badge_id,game_id,awarded_at FROM gn_badge_awards
-      WHERE user_id=${session.uid} AND badge_id=${GAME_CREATOR_BADGE_ID} ORDER BY awarded_at DESC`;
+      WHERE user_id=${session.uid} AND badge_id IN (${GAME_CREATOR_BADGE_ID},${CONTRIBUTOR_BADGE_ID}) ORDER BY awarded_at DESC`;
     const notifications = await sql`SELECT id,kind,game_id,created_at,read_at FROM gn_community_notifications
       WHERE user_id=${session.uid} AND read_at IS NULL ORDER BY created_at DESC,id ASC LIMIT 20`;
     const data = {
       configured: true,
-      awards: awards.map((row): CommunityAward => ({ badgeId: GAME_CREATOR_BADGE_ID, gameId: String(row.game_id),
+      awards: awards.map((row): CommunityAward => ({ badgeId: row.badge_id as CommunityAward["badgeId"], gameId: String(row.game_id),
         awardedAt: new Date(String(row.awarded_at)).toISOString() })),
-      notifications: notifications.map((row): CommunityNotification => ({ id: String(row.id), kind: "game-published",
+      notifications: notifications.map((row): CommunityNotification => ({ id: String(row.id), kind: row.kind as CommunityNotification["kind"],
         gameId: String(row.game_id), createdAt: new Date(String(row.created_at)).toISOString(),
         readAt: row.read_at == null ? null : new Date(String(row.read_at)).toISOString() })),
     };

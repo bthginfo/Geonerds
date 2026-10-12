@@ -10,7 +10,7 @@ export function ChallengeSummary({ challenge, locked = false }: { challenge: Geo
   const game = getGame(challenge.gameId);
   return <div className="rounded-xl border border-primary/20 bg-primary/5 p-4">
     <div className="flex items-center gap-2 text-xs font-semibold text-primary">{locked && <LockKeyhole className="h-4 w-4" />}{locale === "de" ? "Identische Bedingungen für beide Spieler" : "Identical settings for both players"}</div>
-    <dl className="mt-3 grid grid-cols-2 gap-x-4 gap-y-3 text-sm">
+    <dl className="mt-3 grid min-w-0 grid-cols-2 gap-x-4 gap-y-3 text-sm [&>div]:min-w-0 [&_dd]:break-words">
       <div><dt className="text-xs text-muted-foreground">{locale === "de" ? "Spiel" : "Game"}</dt><dd className="mt-0.5 font-semibold">{t(`games.${challenge.gameId}.name`)}</dd></div>
       <div><dt className="text-xs text-muted-foreground">{t("common.difficulty")}</dt><dd className="mt-0.5 font-semibold">{t(`difficulty.${challenge.difficulty}`)}</dd></div>
       <div><dt className="text-xs text-muted-foreground">{t("common.mode")}</dt><dd className="mt-0.5 font-semibold">{t(`mode.${challenge.mode}`)}</dd></div>
@@ -23,5 +23,5 @@ export function ChallengeSummary({ challenge, locked = false }: { challenge: Geo
 
 export function ChallengeRules() {
   const { locale } = useT();
-  return <p className="text-xs leading-relaxed text-muted-foreground">{locale === "de" ? "Gleiche Fragen in gleicher Reihenfolge. Höhere Punktzahl gewinnt; bei Gleichstand zählen richtige Antworten, danach die kürzere Gesamtzeit. Ist alles gleich, endet es unentschieden. Ein Versuch pro Person, 7 Tage Zeit." : "Same questions in the same order. Higher score wins; ties use correct answers, then shorter total time. If all three match, it is a draw. One attempt per player, 7 days to complete."}</p>;
+  return <p className="text-xs leading-relaxed text-muted-foreground">{locale === "de" ? "Einladungen bleiben drei Tage offen. Nach der Annahme habt ihr sieben Tage zum Spielen. Gleiche Fragen in gleicher Reihenfolge, ein Versuch pro Person, kein Neustart. Ihr spielt unabhängig voneinander; der Vergleich bleibt verborgen, bis beide fertig sind. Höhere Punktzahl gewinnt; bei Gleichstand zählen richtige Antworten, danach die kürzere Gesamtzeit. Ist alles gleich, endet es unentschieden." : "Invitations stay open for three days. Once accepted, you have seven days to play. Same questions in the same order, one attempt each, no replay. Play independently; the comparison stays hidden until both finish. Higher score wins; ties use correct answers, then shorter total time. If all three match, it is a draw."}</p>;
 }

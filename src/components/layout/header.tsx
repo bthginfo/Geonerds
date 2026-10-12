@@ -6,6 +6,7 @@ import { useT } from "@/i18n/I18nProvider";
 import { ThemeToggle } from "./theme-toggle";
 import { LangToggle } from "./lang-toggle";
 import { cn } from "@/lib/utils";
+import { ChallengeNotificationBell } from "@/components/challenges/challenge-notification-bell";
 
 const NAV = [
   { href: "/", key: "nav.home" },
@@ -24,11 +25,11 @@ export function Header() {
 
   return (
     <header className="sticky top-0 z-40 border-b border-border/60 bg-background/80 backdrop-blur-md">
-      <div className="mx-auto flex h-16 w-full max-w-5xl items-center justify-between px-4">
-        <Link href="/" className="flex items-center gap-2 font-bold tracking-tight">
+      <div className="mx-auto flex h-16 w-full max-w-5xl items-center justify-between gap-2 px-3 sm:px-4">
+        <Link href="/" className="flex min-h-11 min-w-0 shrink-0 items-center gap-2 rounded-md font-bold tracking-tight focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src="/logo.svg" alt="" width={36} height={36} className="h-9 w-9 rounded-xl shadow-sm" />
-          <span className="text-lg">{t("app.name")}</span>
+          <span className="text-base sm:text-lg">{t("app.name")}</span>
         </Link>
 
         <nav aria-label={locale === "de" ? "Hauptnavigation" : "Main navigation"} className="hidden items-center gap-1 md:flex">
@@ -38,7 +39,7 @@ export function Header() {
               href={item.href}
               aria-current={pathname === item.href ? "page" : undefined}
               className={cn(
-                "rounded-lg px-3 py-2 text-sm font-medium transition-colors",
+                "inline-flex min-h-11 items-center rounded-lg px-2 py-2 text-xs font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring lg:px-3 lg:text-sm",
                 pathname === item.href
                   ? "bg-muted text-foreground"
                   : "text-muted-foreground hover:bg-muted hover:text-foreground"
@@ -49,7 +50,8 @@ export function Header() {
           ))}
         </nav>
 
-        <div className="flex items-center gap-1.5">
+        <div className="flex shrink-0 items-center gap-0.5 sm:gap-1.5">
+          <ChallengeNotificationBell />
           <LangToggle />
           <ThemeToggle />
         </div>

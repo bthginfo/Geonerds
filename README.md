@@ -54,19 +54,36 @@ Signed in as **TheCreator**, open `/admin/feedback` (or **View submissions** on
 Home) to read all messages and mark them new/reviewed. This account is checked
 against its signed session UID and database record on every admin request.
 
-On `/challenges`, enter an opponent's username directly or open the searchable
-player list. It includes all registered accounts, even those without scores,
-and excludes your own account. The signed-in-only `/api/challenges/users` endpoint
-returns public names in alphabetical pages of 20, with case-insensitive literal
-search and keyset pagination. No account IDs or private data are exposed; manual
-entry remains available if browsing is temporarily unavailable.
+On `/challenges`, challenge a random GeoNerd, choose a player, offer one open
+seat, or create an invitation link. The searchable player list includes all
+registered accounts, even those without scores, and excludes your own account.
+The signed-in-only `/api/challenges/users` endpoint returns public names in
+alphabetical pages of 20, with case-insensitive literal search and keyset
+pagination. No account IDs or private data are exposed; manual entry remains
+available if browsing is temporarily unavailable.
+
+Unaccepted invitations expire after three days. Acceptance starts a separate
+seven-day play window; both players get the same seed and one attempt. Open
+seats and links are claimed atomically, so only one opponent can accept. Link
+recipients may join with a guest nickname, without creating an account. Guest
+access uses a seven-day, challenge-scoped HttpOnly cookie: play and return to
+the results in the same browser. Guest duels never enter public rankings.
+
+The header notification bell surfaces invitations, acceptance, declines,
+cancellations, expiry, an opponent finishing and final results. Notifications
+are stored per account and remain unread until acknowledged. Expiry is enforced
+by the server on every challenge operation; expiry notifications are created
+when the deadline is next observed. There is no email or browser-push service.
+Implemented community improvements can earn an account-owned **Contributor**
+badge and a personal thank-you notification. Grants are idempotent, attributed
+to the submission's actual registered author, and published only in production.
 
 The **Duels** tab on `/leaderboard` ranks completed Geo challenges: 3 points per
 win, 1 per draw and 0 per loss, followed by win rate and wins for tie-breaking.
 Equal standings share a rank. Filter by game or the current calendar month;
 monthly results use completion time. Both attempts must exist, and unfinished,
-cancelled or expired challenges never count. Public standings expose aggregates,
-not private invitations or opponents' unfinished results.
+cancelled, expired or guest challenges never count. Public standings expose
+aggregates, not private invitations or opponents' unfinished results.
 
 These features use the existing database/auth configuration below; additive
 tables and indexes are created automatically. Wine/Poke routes are unaffected.

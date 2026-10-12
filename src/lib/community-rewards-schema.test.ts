@@ -3,6 +3,26 @@ import type postgres from "postgres";
 import { ensureCommunityRewards } from "./community-rewards-schema";
 
 describe("community release migration", () => {
+  it("grants Contributor only after publication, bound to Shahin's verified proposal", async () => {
+    const calls: {text:string;values:unknown[]}[]=[];
+    const query=async(parts:TemplateStringsArray,...values:unknown[])=>{calls.push({text:parts.join("?"),values});return [];};
+    const sql=Object.assign(query,{begin:async(work:(tx:typeof query)=>Promise<unknown>)=>work(query)});
+    await ensureCommunityRewards(sql as unknown as ReturnType<typeof postgres>,false);
+    expect(calls.some(c=>c.text.includes("WITH community_contributor"))).toBe(false);
+    calls.length=0;
+    await ensureCommunityRewards(sql as unknown as ReturnType<typeof postgres>,true);
+    const award=calls.find(c=>c.text.includes("WITH community_contributor"))!;
+    expect(award.text).toContain("JOIN gn_users u ON u.id=f.user_id");
+    expect(award.text).toContain("u.name_lower='shahin'");
+    expect(award.text).toContain("hope to challenge other people not only my friends");
+    expect(award.text).toContain("ORDER BY f.created_at DESC");
+    expect(award.values).toContain("contributor");
+    expect(award.text).toContain("ON CONFLICT (user_id,badge_id) DO NOTHING");
+    const notice=calls.find(c=>c.text.includes(":community-challenges:published"))!;
+    expect(notice.text).toContain("'feature-published','challenges'");
+    expect(notice.text).not.toContain("read_at=");
+    expect(calls.some(c=>c.text.includes("pg_advisory_xact_lock"))).toBe(true);
+  });
   it("binds a reviewed submission to its real account and grants each reward only once", async () => {
     const calls: { text: string; values: unknown[] }[] = [];
     const query = async (parts: TemplateStringsArray, ...values: unknown[]) => {

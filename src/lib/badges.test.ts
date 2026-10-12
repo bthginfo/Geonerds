@@ -9,6 +9,14 @@ describe("badge metadata integrity", () => {
     expect(badge.earned({ ...computeStats([]), totalScore: 10_000_000, totalRuns: 10_000 })).toBe(false);
     expect(badge.earned(computeStats([], {}, undefined, ["game-creator"]))).toBe(true);
   });
+  it("awards Contributor only from the signed-in account's server grant", () => {
+    const badge = BADGES.find((item) => item.id === "contributor")!;
+    expect(badge.name).toEqual({ en: "Contributor", de: "Contributor" });
+    expect(badge.earned(computeStats([]))).toBe(false);
+    expect(badge.earned({ ...computeStats([]), totalScore: 10_000_000, totalRuns: 10_000 })).toBe(false);
+    expect(badge.earned(computeStats([], {}, undefined, ["game-creator"]))).toBe(false);
+    expect(badge.earned(computeStats([], {}, undefined, ["contributor"]))).toBe(true);
+  });
   it("has stable unique ids and valid derived metadata", () => {
     expect(new Set(BADGES.map((badge) => badge.id)).size).toBe(BADGES.length);
     for (const badge of BADGES) {

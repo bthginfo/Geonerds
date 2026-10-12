@@ -45,6 +45,16 @@ describe("account-owned community recognition", () => {
     expect((await readCommunityNotification(request("https://evil.example"), context())).status).toBe(403);
     expect(state.calls).toHaveLength(0);
   });
+  it("preserves the Contributor grant and feature notification kind", async () => {
+    state.session = { uid: "feature-author" };
+    state.rows = [[{ badge_id: "contributor", game_id: "challenges", awarded_at: "2026-10-12T10:00:00Z" }],
+      [{ id, kind: "feature-published", game_id: "challenges", created_at: "2026-10-12T10:00:00Z", read_at: null }]];
+    const response = await listCommunityRewards();
+    const result = await response.json();
+    expect(result.awards).toEqual([{ badgeId: "contributor", gameId: "challenges", awardedAt: "2026-10-12T10:00:00.000Z" }]);
+    expect(result.notifications[0]).toMatchObject({ id, kind: "feature-published", gameId: "challenges", readAt: null });
+    expect(state.calls.every((call) => call.values.includes("feature-author"))).toBe(true);
+  });
   it("requires a signed-in recipient and a bounded notification ID", async () => {
     expect((await readCommunityNotification(request(), context())).status).toBe(401);
     state.session = { uid: "owner" };

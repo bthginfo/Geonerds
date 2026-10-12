@@ -1,4 +1,4 @@
-import type { CreateGeoChallengeInput, GeoChallenge, GeoChallengeAction, GeoChallengeRunInput } from "@/lib/challenges";
+import type { CreateGeoChallengeInput, GeoChallenge, GeoChallengeAction, GeoChallengeNotification, GeoChallengeRunInput } from "@/lib/challenges";
 
 interface MutationResult { ok: boolean; error?: string }
 
@@ -48,7 +48,7 @@ export async function apiGeoChallengeUsers({ query = "", cursor = null, signal }
   };
 }
 
-export function apiCreateGeoChallenge(input: CreateGeoChallengeInput): Promise<MutationResult & { id?: string }> {
+export function apiCreateGeoChallenge(input: CreateGeoChallengeInput): Promise<MutationResult & { id?: string; opponentName?: string; sharePath?: string }> {
   return request("", "POST", input);
 }
 
@@ -57,8 +57,22 @@ export async function apiGeoChallenge(id: string): Promise<{ configured: boolean
   return { ...data, configured: data.configured !== false, challenge: data.challenge ?? null };
 }
 
-export function apiActGeoChallenge(id: string, action: GeoChallengeAction): Promise<MutationResult> {
-  return request(`/${encodeURIComponent(id)}`, "PATCH", { action });
+export function apiActGeoChallenge(id: string, action: GeoChallengeAction, guestName?: string): Promise<MutationResult> {
+  return request(`/${encodeURIComponent(id)}`, "PATCH", { action, ...(guestName ? { guestName } : {}) });
+}
+
+export async function apiGeoOpenChallenges(signal?: AbortSignal): Promise<{ configured: boolean; challenges: GeoChallenge[]; error?: string }> {
+  const data = await request<{ configured?: boolean; challenges?: GeoChallenge[]; error?: string }>("/open", "GET", undefined, signal);
+  return { ...data, configured: data.configured !== false, challenges: data.challenges ?? [] };
+}
+
+export async function apiGeoChallengeNotifications(signal?: AbortSignal): Promise<{ notifications: GeoChallengeNotification[]; error?: string }> {
+  const data = await request<{ notifications?: GeoChallengeNotification[]; error?: string }>("/notifications", "GET", undefined, signal);
+  return { ...data, notifications: Array.isArray(data.notifications) ? data.notifications : [] };
+}
+
+export function apiReadGeoChallengeNotification(id: string): Promise<MutationResult> {
+  return request(`/notifications/${encodeURIComponent(id)}`, "POST", {});
 }
 
 export function apiStartGeoChallenge(id: string): Promise<MutationResult & { attemptToken?: string }> {

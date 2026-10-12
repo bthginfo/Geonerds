@@ -10,7 +10,7 @@ import type { ScoreEntry } from "./leaderboard/types";
 import { CONTINENTS, DEX_POOL, dexStateOf } from "./dex";
 import { GAMES } from "@/games/registry";
 import type { ProgressionData } from "./progression";
-import { GAME_CREATOR_BADGE_ID } from "./community-rewards";
+import { CONTRIBUTOR_BADGE_ID, GAME_CREATOR_BADGE_ID } from "./community-rewards";
 
 export type BadgeCategory = "journey" | "skill" | "mastery" | "collection" | "challenge";
 export type BadgeTier = "bronze" | "silver" | "gold" | "mythic";
@@ -193,6 +193,10 @@ export interface Badge {
 const g = (s: Stats, id: string) => s.correctByGame[id] ?? 0;
 
 export const BADGES: Badge[] = [
+  { id: CONTRIBUTOR_BADGE_ID, icon: Lightbulb, name: { en: "Contributor", de: "Contributor" },
+    desc: { en: "Your idea changed GeoNerds. Thank you for helping make the community better.", de: "Deine Idee hat GeoNerds verändert. Danke, dass du unsere Community besser machst." },
+    earned: (s) => s.accountAwardIds?.includes(CONTRIBUTOR_BADGE_ID) ?? false,
+    category: "journey", tier: "gold" },
   { id: GAME_CREATOR_BADGE_ID, icon: Lightbulb, name: { en: "Game Creator", de: "Game Creator" },
     desc: { en: "Your community idea became a GeoNerds game. Awarded to your account, across devices.", de: "Deine Community-Idee wurde ein GeoNerds-Spiel. Mit deinem Konto auf allen Geräten verknüpft." },
     earned: (s) => s.accountAwardIds?.includes(GAME_CREATOR_BADGE_ID) ?? false,

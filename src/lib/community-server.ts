@@ -114,6 +114,7 @@ function serializeSubmission(row: Row): FeedbackSubmission {
     message: String(row.message), status: row.status as FeedbackSubmission["status"],
     createdAt: new Date(String(row.created_at)).toISOString(),
     reviewedAt: row.reviewed_at == null ? null : new Date(String(row.reviewed_at)).toISOString(),
+    contributorAwarded: Boolean(row.contributor_awarded),
   };
 }
 
@@ -131,8 +132,10 @@ export async function listCommunityFeedback(req: Request) {
       const counts = await tx`SELECT COUNT(*)::int AS all_count,
         COUNT(*) FILTER (WHERE ${status}='all' OR status=${status})::int AS total,
         COUNT(*) FILTER (WHERE status='new')::int AS new_count FROM gn_feedback`;
-      const rows = await tx`SELECT id,author_name,message,status,created_at,reviewed_at FROM gn_feedback
-        WHERE ${status}='all' OR status=${status} ORDER BY created_at DESC,id ASC LIMIT ${page.limit} OFFSET ${page.offset}`;
+      const rows = await tx`SELECT f.id,f.author_name,f.message,f.status,f.created_at,f.reviewed_at,
+        EXISTS(SELECT 1 FROM gn_badge_awards a WHERE a.feedback_id=f.id AND a.user_id=f.user_id
+          AND a.badge_id='contributor') AS contributor_awarded FROM gn_feedback f
+        WHERE ${status}='all' OR f.status=${status} ORDER BY f.created_at DESC,f.id ASC LIMIT ${page.limit} OFFSET ${page.offset}`;
       const total = Number(counts[0].total);
       return { configured: true, submissions: rows.map(serializeSubmission), total, allCount: Number(counts[0].all_count),
         newCount: Number(counts[0].new_count), hasMore: page.offset + rows.length < total };
@@ -177,7 +180,7 @@ export async function listDuelStandings(req: Request) {
         FROM gn_challenges c
         JOIN gn_challenge_attempts a ON a.challenge_id=c.id AND a.user_id=c.challenger_id
         JOIN gn_challenge_attempts b ON b.challenge_id=c.id AND b.user_id=c.opponent_id
-        WHERE c.status='resolved' AND c.resolved_at IS NOT NULL
+        WHERE c.status='resolved' AND c.resolved_at IS NOT NULL AND c.guest_name IS NULL
           AND (c.winner_id IS NULL OR c.winner_id=c.challenger_id OR c.winner_id=c.opponent_id)
           AND (${game}='all' OR c.game_id=${game})
           AND (${period}='all' OR c.resolved_at>=date_trunc('month',now()))

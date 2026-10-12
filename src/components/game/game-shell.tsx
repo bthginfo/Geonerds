@@ -26,7 +26,8 @@ import { apiGeoChallenge, apiStartGeoChallenge, apiSubmitGeoChallengeAttempt } f
 import { AccountPanel } from "@/components/account/account-panel";
 import { ChallengeRules, ChallengeSummary } from "@/components/challenges/challenge-summary";
 import { AdastraSetupPhoto } from "@/components/community/adastra-feature";
-import { attemptStorageKey, challengeError, challengePlayBlock, readSavedAttempt, writeSavedAttempt, type SavedChallengeAttempt } from "@/components/challenges/challenge-ui";
+import { challengeAttemptStorageKey, challengeError, challengePlayBlock, readSavedAttempt, writeSavedAttempt, type SavedChallengeAttempt } from "@/components/challenges/challenge-ui";
+import { notifyChallengeMutation } from "@/hooks/use-challenge-notifications";
 
 export interface PlayResult {
   score: number;
@@ -120,12 +121,14 @@ function GameShellContent({
   const submitLock = useRef(false);
   const attemptToken = useRef<string | undefined>(undefined);
   const completedAttempt = useRef<SavedChallengeAttempt | null>(null);
-  const storageKey = user && challengeId ? attemptStorageKey(user.id, challengeId) : null;
+  const storageKey = challenge && challengeId ? challengeAttemptStorageKey(challenge, user?.id) : null;
+  const authorizedGuest = Boolean(!user && challenge?.viewerIsGuest && challenge.viewerRole === "opponent" && challenge.viewerKey);
+  const authorizedParticipant = Boolean((user && challenge?.viewerRole !== "visitor") || authorizedGuest);
 
   useEffect(() => {
     if (!isChallenge || !loaded) return;
-    if (!configured || !user || !challengeId) {
-      setChallengeFailure(!configured ? "not_configured" : !user ? "unauthorized" : "not_found");
+    if (!configured || !challengeId) {
+      setChallengeFailure(!configured ? "not_configured" : "not_found");
       setChallengeLoading(false);
       return;
     }
@@ -142,10 +145,14 @@ function GameShellContent({
       }
       const block = challengePlayBlock(record, gameId);
       setChallenge(record);
-      if (block === "wrong_game" || block === "expired") { setChallengeFailure(block); return; }
-      const key = attemptStorageKey(user.id, challengeId);
-      const saved = readSavedAttempt(key);
-      if (saved?.run && saved.run.gameId === gameId && saved.run.difficulty === record.difficulty && saved.run.mode === record.mode && ["active", "resolved"].includes(record.status)) {
+      if (record.viewerRole === "visitor" || (!user && (!record.viewerIsGuest || record.viewerRole !== "opponent" || !record.viewerKey))) {
+        setChallengeFailure(!user && record.invitationType === "link" ? "not_active" : "not_participant");
+        return;
+      }
+      if (block === "wrong_game") { setChallengeFailure(block); return; }
+      const key = challengeAttemptStorageKey(record, user?.id);
+      const saved = key ? readSavedAttempt(key) : null;
+      if (saved?.run && saved.run.gameId === gameId && saved.run.difficulty === record.difficulty && saved.run.mode === record.mode && ["active", "resolved", "expired"].includes(record.status)) {
         completedAttempt.current = saved;
         attemptToken.current = saved.attemptToken;
         finishGuard.current = true;
@@ -153,7 +160,7 @@ function GameShellContent({
         setPhase("result");
         setSubmitStatus(record.viewerAttempted ? "saved" : "error");
         setSubmitError(record.viewerAttempted ? undefined : "submission_pending");
-        if (!saved.localSaved) void saveProgress(saved.run, { countryHits: saved.countryHits ?? [] });
+        if (!saved.localSaved) void saveProgress(saved.run, { countryHits: saved.countryHits ?? [] }, key);
         return;
       }
       if (block) setChallengeFailure(block);
@@ -176,7 +183,8 @@ function GameShellContent({
     };
     const timer = window.setInterval(() => void refresh(), 30_000);
     document.addEventListener("visibilitychange", refresh);
-    return () => { cancelled = true; clearInterval(timer); document.removeEventListener("visibilitychange", refresh); };
+    window.addEventListener("focus", refresh);
+    return () => { cancelled = true; clearInterval(timer); document.removeEventListener("visibilitychange", refresh); window.removeEventListener("focus", refresh); };
   }, [isChallenge, challengeId, phase, submitStatus, challenge?.status]);
 
   if (!config) return null;
@@ -211,13 +219,14 @@ function GameShellContent({
     await saveProgress(run, r);
   }
 
-  async function saveProgress(run: RunResult, r: Pick<PlayResult, "countryHits">) {
+  async function saveProgress(run: RunResult, r: Pick<PlayResult, "countryHits">, recoveredStorageKey?: string | null) {
     if (progressGuard.current || (isChallenge && completedAttempt.current?.localSaved)) return;
     progressGuard.current = true;
     // Mark before any side effects. Submission retries never touch local progress.
     if (isChallenge && completedAttempt.current) {
       completedAttempt.current = { ...completedAttempt.current, localSaved: true };
-      if (storageKey) writeSavedAttempt(storageKey, completedAttempt.current);
+      const key = recoveredStorageKey ?? storageKey;
+      if (key) writeSavedAttempt(key, completedAttempt.current);
     }
     try {
     // Feed the country collection (Geo-Dex) — capture state before/after to show
@@ -283,7 +292,7 @@ function GameShellContent({
   }
 
   async function startChallenge() {
-    if (startLock.current || !challenge || !challengeId || !user || challengePlayBlock(challenge, gameId)) return;
+    if (startLock.current || !challenge || !challengeId || !authorizedParticipant || challengePlayBlock(challenge, gameId)) return;
     startLock.current = true;
     setStarting(true);
     setChallengeFailure(undefined);
@@ -297,6 +306,7 @@ function GameShellContent({
       attemptToken.current = response.attemptToken;
       completedAttempt.current = { attemptToken: response.attemptToken, localSaved: false };
       if (storageKey) writeSavedAttempt(storageKey, completedAttempt.current);
+      notifyChallengeMutation();
       finishGuard.current = false;
       progressGuard.current = false;
       setSeed(challenge.seed ?? undefined);
@@ -317,6 +327,7 @@ function GameShellContent({
       if (response.ok) {
         if (response.challenge) setChallenge(response.challenge);
         setSubmitStatus("saved");
+        notifyChallengeMutation();
       } else if (response.error === "already_submitted") {
         const latest = await apiGeoChallenge(challengeId);
         if (latest.challenge?.viewerAttempted) { setChallenge(latest.challenge); setSubmitStatus("saved"); }
@@ -331,8 +342,8 @@ function GameShellContent({
   }
 
   if (isChallenge && (!loaded || challengeLoading)) return <ShellLoading />;
-  if (isChallenge && (!configured || !user || !challenge || (challengeFailure && phase !== "playing" && phase !== "result" && challengeFailure !== "network_error"))) {
-    return <div className="geo-aurora flex flex-1 items-center justify-center px-4 py-8"><div className="w-full max-w-md rounded-2xl border border-border bg-card p-5"><Swords className="h-8 w-8 text-primary" /><h1 className="mt-3 text-xl font-bold">{locale === "de" ? "Herausforderung nicht spielbar" : "Challenge unavailable"}</h1><p role="alert" className="mt-3 text-sm leading-relaxed text-muted-foreground">{challengeError(challengeFailure ?? (!configured ? "not_configured" : !user ? "unauthorized" : "not_found"), locale)}</p>{configured && !user && <div className="mt-5"><AccountPanel /></div>}<Link href="/challenges" className="mt-5 inline-flex min-h-11 items-center gap-2 rounded-lg bg-primary px-4 text-sm font-semibold text-primary-foreground"><ArrowLeft className="h-4 w-4" />{locale === "de" ? "Zur Herausforderungen-Übersicht" : "Back to challenges"}</Link></div></div>;
+  if (isChallenge && (!configured || !authorizedParticipant || !challenge || (challengeFailure && phase !== "playing" && phase !== "result" && challengeFailure !== "network_error"))) {
+    return <div className="geo-aurora flex flex-1 items-center justify-center px-4 py-8"><div className="w-full max-w-md rounded-2xl border border-border bg-card p-5"><Swords className="h-8 w-8 text-primary" /><h1 className="mt-3 text-xl font-bold">{locale === "de" ? "Herausforderung nicht spielbar" : "Challenge unavailable"}</h1><p role="alert" className="mt-3 text-sm leading-relaxed text-muted-foreground">{challengeError(challengeFailure ?? (!configured ? "not_configured" : !authorizedParticipant ? "not_participant" : "not_found"), locale)}</p>{challengeId && <Link href={`/challenges?invite=${encodeURIComponent(challengeId)}`} className="mt-4 inline-flex min-h-11 items-center gap-2 rounded-lg bg-primary px-4 text-sm font-semibold text-primary-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">{locale === "de" ? "Einladung und Zugang öffnen" : "Open invitation and access"}</Link>}{configured && !user && !authorizedGuest && <div className="mt-5"><AccountPanel /></div>}<Link href="/challenges" className="mt-5 inline-flex min-h-11 items-center gap-2 rounded-lg px-1 text-sm font-semibold text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"><ArrowLeft className="h-4 w-4" />{locale === "de" ? "Zur Herausforderungen-Übersicht" : "Back to challenges"}</Link></div></div>;
   }
 
   if (phase === "playing") {
@@ -372,7 +383,18 @@ function GameShellContent({
   const Icon = config.icon;
 
   if (isChallenge && challenge) {
-    return <div className="geo-aurora flex flex-1 flex-col"><div className="mx-auto w-full max-w-md px-4 py-8"><Link href="/challenges" className="mb-6 inline-flex min-h-11 items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground"><ArrowLeft className="h-4 w-4" />{locale === "de" ? "Herausforderungen" : "Challenges"}</Link><span className="flex h-16 w-16 items-center justify-center rounded-2xl bg-primary text-primary-foreground"><Swords className="h-8 w-8" /></span><p className="mt-5 text-xs font-semibold uppercase tracking-wider text-primary">{locale === "de" ? "Dein einziger Versuch" : "Your one attempt"}</p><h1 className="mt-2 text-2xl font-extrabold">{t(`games.${gameId}.name`)}</h1><p className="mt-2 break-words text-sm text-muted-foreground">{locale === "de" ? "Gegen" : "Against"} <strong className="text-foreground">{challenge.opponentName}</strong></p><div className="mt-6"><ChallengeSummary challenge={challenge} locked /></div><div className="mt-5"><ChallengeRules /></div><p className="mt-5 flex items-start gap-2 rounded-xl border border-amber-500/25 bg-amber-500/5 p-3 text-xs leading-relaxed text-muted-foreground"><LockKeyhole className="mt-0.5 h-4 w-4 shrink-0 text-amber-700 dark:text-amber-400" />{locale === "de" ? "Mit dem Start beginnt dein Versuch. Einstellungen, Übungsmodus und Neustart sind danach gesperrt. Verlasse die Seite erst nach dem Ergebnis." : "Starting uses your attempt. Settings, practice and replay are locked. Stay on this page until your result is saved."}</p>{challengeFailure && <p role="alert" className="mt-4 text-sm text-danger">{challengeError(challengeFailure, locale)}</p>}<Button size="lg" className="mt-6 w-full gap-2" disabled={starting} onClick={() => void startChallenge()}>{starting ? <Loader2 className="h-5 w-5 animate-spin" /> : <Play className="h-5 w-5" />}{starting ? (locale === "de" ? "Versuch startet…" : "Starting attempt…") : (locale === "de" ? "Herausforderung starten" : "Start challenge")}</Button></div></div>;
+    return <div className="geo-aurora flex flex-1 flex-col"><div className="mx-auto w-full max-w-md px-4 py-8">
+      <Link href={`/challenges?invite=${encodeURIComponent(challenge.id)}`} className="mb-6 inline-flex min-h-11 items-center gap-1.5 rounded text-sm text-muted-foreground hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"><ArrowLeft className="h-4 w-4" aria-hidden />{locale === "de" ? "Zur Herausforderung" : "Back to challenge"}</Link>
+      <h1 className="text-2xl font-extrabold">{t(`games.${gameId}.name`)}</h1>
+      <p className="mt-2 break-words text-sm text-muted-foreground">{locale === "de" ? "Gegen" : "Against"} <strong className="text-foreground">{challenge.opponentName}</strong>{challenge.opponentIsGuest && <span> ({locale === "de" ? "Gast" : "Guest"})</span>}</p>
+      {(challenge.viewerIsGuest || challenge.opponentIsGuest) && <p className="mt-2 text-xs font-semibold text-primary">{locale === "de" ? "Gastspiel · Ohne Duell-Ranglistenwertung" : "Guest game · Casual, unranked duel"}</p>}
+      {authorizedGuest && <p className="mt-3 text-xs leading-relaxed text-muted-foreground">{locale === "de" ? "Dein Gastzugang gilt in diesem Browser. Bewahre den Einladungslink auf, um später dein Ergebnis zu sehen." : "Your guest access works in this browser. Keep the invitation link to return to your result later."}</p>}
+      <div className="mt-5"><ChallengeSummary challenge={challenge} locked /></div>
+      <div className="mt-4"><ChallengeRules /></div>
+      <p className="mt-5 flex items-start gap-2 rounded-xl border border-amber-500/25 bg-amber-500/5 p-3 text-xs leading-relaxed text-muted-foreground"><LockKeyhole className="mt-0.5 h-4 w-4 shrink-0 text-amber-700 dark:text-amber-400" aria-hidden />{locale === "de" ? "Mit dem Start beginnt dein einziger Versuch. Einstellungen, Übungsmodus und Neustart sind danach gesperrt. Verlasse die Seite erst nach dem Ergebnis." : "Starting uses your one attempt. Settings, practice and replay are locked. Stay on this page until your result is saved."}</p>
+      {challengeFailure && <p role="alert" className="mt-4 text-sm text-danger">{challengeError(challengeFailure, locale)}</p>}
+      <Button size="lg" className="mt-6 h-auto min-h-14 w-full gap-2 px-4 py-3" disabled={starting || Boolean(challengePlayBlock(challenge, gameId))} onClick={() => void startChallenge()}>{starting ? <Loader2 className="h-5 w-5 shrink-0 animate-spin" aria-hidden /> : <Play className="h-5 w-5 shrink-0" aria-hidden />}<span className="whitespace-normal">{starting ? (locale === "de" ? "Versuch startet…" : "Starting attempt…") : (locale === "de" ? "Herausforderung starten" : "Start challenge")}</span></Button>
+    </div></div>;
   }
 
   return (

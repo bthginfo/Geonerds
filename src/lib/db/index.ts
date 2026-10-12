@@ -1,5 +1,6 @@
 import postgres from "postgres";
 import { ensureCommunityRewards } from "@/lib/community-rewards-schema";
+import { ensureGeoChallengeCommunity } from "@/lib/geo-challenge-schema";
 
 const CONNECTION =
   process.env.DATABASE_URL ||
@@ -102,6 +103,7 @@ async function ensureSchema(sql: ReturnType<typeof postgres>) {
   await sql`CREATE INDEX IF NOT EXISTS gn_challenges_inbox_idx ON gn_challenges (opponent_id, status, created_at DESC)`;
   await sql`CREATE INDEX IF NOT EXISTS gn_challenges_sent_idx ON gn_challenges (challenger_id, status, created_at DESC)`;
   await sql`CREATE INDEX IF NOT EXISTS gn_challenges_resolved_idx ON gn_challenges (resolved_at DESC, game_id) WHERE status='resolved'`;
+  await ensureGeoChallengeCommunity(sql);
   await sql`
     CREATE TABLE IF NOT EXISTS gn_feedback (
       id text PRIMARY KEY,
