@@ -1,5 +1,7 @@
 import { Flag, Shapes, Network, Globe2, Compass, Sparkles, type LucideIcon } from "lucide-react";
 import type { GameId, Locale } from "@/lib/types";
+import { GAMES, type GameConfig } from "./registry";
+import { isFeaturedGame } from "./featured";
 
 export interface GameCategory {
   id: string;
@@ -12,13 +14,6 @@ export interface GameCategory {
 /** Editorial ordering is deliberately independent of registry insertion order. */
 export const GAME_CATEGORIES: GameCategory[] = [
   {
-    id: "new",
-    name: { de: "Neue Spiele", en: "New games" },
-    description: { de: "Frische Perspektiven, inspiriert von unserer Community.", en: "Fresh perspectives, inspired by our community." },
-    icon: Sparkles,
-    games: ["adastra"],
-  },
-  {
     id: "flags",
     name: { de: "Flaggen & Farben", en: "Flags & colors" },
     description: { de: "Erkenne die Welt an ihren Farben, Mustern und Symbolen.", en: "Read the world through its colors, patterns and symbols." },
@@ -30,7 +25,7 @@ export const GAME_CATEGORIES: GameCategory[] = [
     name: { de: "Karten & Formen", en: "Maps & shapes" },
     description: { de: "Vom Umriss zum Ort: Schärfe deinen Blick für Geografie.", en: "From silhouette to location: sharpen your geographic eye." },
     icon: Shapes,
-    games: ["outline", "map-click", "country-radar", "draw", "trace", "jigsaw", "city-compass"],
+    games: ["outline", "map-click", "country-radar", "draw", "trace", "jigsaw", "city-compass", "adastra"],
   },
   {
     id: "logic",
@@ -54,3 +49,18 @@ export const GAME_CATEGORIES: GameCategory[] = [
     games: ["expedition", "pin", "route", "waters"],
   },
 ];
+
+/** Every game keeps a permanent category; a live feature temporarily takes its place. */
+export function getGameCategories(now: number | null, registry: readonly Pick<GameConfig, "id" | "featuredSince">[] = GAMES): GameCategory[] {
+  const catalogued = new Set(GAME_CATEGORIES.flatMap((group) => group.games));
+  const featured = [...new Set(registry.filter((game) => catalogued.has(game.id) && isFeaturedGame(game, now)).map((game) => game.id))];
+  const featuredIds = new Set(featured);
+  const regular = GAME_CATEGORIES.map((group) => ({ ...group, games: group.games.filter((id) => !featuredIds.has(id)) })).filter((group) => group.games.length > 0);
+  return featured.length ? [{
+    id: "new",
+    name: { de: "Neue Spiele", en: "New games" },
+    description: { de: "Frische Perspektiven, inspiriert von unserer Community.", en: "Fresh perspectives, inspired by our community." },
+    icon: Sparkles,
+    games: featured,
+  }, ...regular] : regular;
+}

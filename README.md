@@ -39,6 +39,18 @@ Daily and weekly challenges mix these mechanics into seeded runs that are the sa
 All games share one scoring engine (base points × difficulty × speed bonus × streak),
 a results screen, and a local leaderboard.
 
+### New-game features
+
+Every game belongs to a permanent thematic category in `src/games/categories.ts`.
+To feature a new release, set its optional `featuredSince` UTC launch timestamp
+in `src/games/registry.ts`. Home places it in **New games** for one calendar month,
+then automatically returns it to its permanent category without a redeploy.
+Month ends are clamped to the last day of the following month. Open tabs refresh
+at the boundary and on return from the background; an expired New filter falls
+back to All games. Content updates do not reset the launch timestamp.
+Adastra's first production publication was 6 October 2026 at 18:55:46 UTC; its
+feature ends on 6 November 2026 at 18:55:46 UTC, under **Maps & shapes** thereafter.
+
 ## Flags with giveaway text
 
 Flags whose lettering would reveal the country (e.g. the Central-American coats of

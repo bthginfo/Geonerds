@@ -35,6 +35,8 @@ import type { AnswerMode, GameId } from "@/lib/types";
 
 export interface GameConfig {
   id: GameId;
+  /** UTC launch timestamp for a one-calendar-month placement in New games. Updates do not reset it. */
+  featuredSince?: string;
   icon: LucideIcon;
   /** Tailwind gradient classes for the game's accent. */
   gradient: string;
@@ -313,6 +315,7 @@ export const GAMES: GameConfig[] = [
   },
   {
     id: "adastra",
+    featuredSince: "2026-10-06T18:55:46Z",
     icon: Telescope,
     gradient: "from-slate-900 via-sky-900 to-amber-700",
     supportsDifficulty: true,

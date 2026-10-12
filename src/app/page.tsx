@@ -1,11 +1,12 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { motion } from "framer-motion";
 import { Sparkles, Gamepad2, Swords, ArrowUpRight, Search, X } from "lucide-react";
 import { GAMES } from "@/games/registry";
-import { GAME_CATEGORIES } from "@/games/categories";
+import { getGameCategories } from "@/games/categories";
+import { nextFeatureTransition } from "@/games/featured";
 import { GameCard } from "@/components/game-card";
 import { DailyCard } from "@/components/daily-card";
 import { WeeklyCard } from "@/components/weekly-card";
@@ -36,8 +37,28 @@ export default function Home() {
   const progression = useProgression();
   const [category, setCategory] = useState("all");
   const [query, setQuery] = useState("");
+  // SSR always uses permanent categories; client time is applied after hydration.
+  const [catalogNow, setCatalogNow] = useState<number | null>(null);
+  useEffect(() => {
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    const refresh = () => {
+      clearTimeout(timer);
+      const now = Date.now();
+      setCatalogNow(now);
+      const next = nextFeatureTransition(GAMES, now);
+      // Browsers cap timeouts at ~24.8 days; safely re-arm longer promotion windows.
+      if (next !== null) timer = setTimeout(refresh, Math.min(next - now, 2_147_483_647));
+    };
+    const onVisible = () => { if (!document.hidden) refresh(); };
+    refresh();
+    window.addEventListener("focus", refresh);
+    document.addEventListener("visibilitychange", onVisible);
+    return () => { clearTimeout(timer); window.removeEventListener("focus", refresh); document.removeEventListener("visibilitychange", onVisible); };
+  }, []);
+  const categories = useMemo(() => getGameCategories(catalogNow), [catalogNow]);
+  const activeCategory = category === "new" && !categories.some((group) => group.id === "new") ? "all" : category;
 
-  const sections = useMemo(() => GAME_CATEGORIES.filter((group) => category === "all" || group.id === category).map((group) => ({
+  const sections = useMemo(() => categories.filter((group) => activeCategory === "all" || group.id === activeCategory).map((group) => ({
     ...group,
     entries: group.games.flatMap((id) => {
       const game = GAMES.find((entry) => entry.id === id);
@@ -45,7 +66,7 @@ export default function Home() {
       const searchText = `${t(`games.${id}.name`)} ${t(`games.${id}.short`)} ${group.name[locale]}`.toLocaleLowerCase(locale);
       return searchText.includes(query.trim().toLocaleLowerCase(locale)) ? [game] : [];
     }),
-  })).filter((group) => group.entries.length > 0), [category, query, t, locale]);
+  })).filter((group) => group.entries.length > 0), [categories, activeCategory, query, t, locale]);
   const visibleCount = sections.reduce((count, group) => count + group.entries.length, 0);
   const newSection = sections.find((group) => group.id === "new");
   const legacySections = sections.filter((group) => group.id !== "new");
@@ -115,12 +136,12 @@ export default function Home() {
             <p className="text-xs font-semibold uppercase tracking-widest text-primary">{locale === "de" ? "Dein Spielfeld ist die Welt" : "The world is your playground"}</p>
             <h2 className="mt-2 text-2xl font-extrabold tracking-tight sm:text-3xl">{t("home.chooseGame")}</h2>
           </div>
-          <p className="text-sm text-muted-foreground">{GAMES.length} {locale === "de" ? "Spiele" : "games"} · {GAME_CATEGORIES.length} {locale === "de" ? "Themen" : "themes"}</p>
+          <p className="text-sm text-muted-foreground">{GAMES.length} {locale === "de" ? "Spiele" : "games"} · {categories.length} {locale === "de" ? "Themen" : "themes"}</p>
         </div>
 
         <div className="mt-4 flex flex-wrap gap-2" aria-label={locale === "de" ? "Spielthemen filtern" : "Filter game themes"}>
-          {[{ id: "all", name: { de: "Alle Spiele", en: "All games" } }, ...GAME_CATEGORIES].map((group) => (
-            <button key={group.id} type="button" aria-label={group.name[locale]} title={group.name[locale]} aria-pressed={category === group.id} onClick={() => { setCategory(group.id); if (group.id === "new") requestAnimationFrame(() => document.getElementById("new-games")?.scrollIntoView({ block: "start" })); }} className={cn("h-8 whitespace-nowrap rounded-full border px-2 text-xs font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background", category === group.id ? "border-primary/40 bg-primary/10 text-primary" : "border-border/60 bg-card/40 text-muted-foreground hover:border-primary/50 hover:text-foreground")}>{CATEGORY_LABELS[group.id]?.[locale] ?? group.name[locale]}</button>
+          {[{ id: "all", name: { de: "Alle Spiele", en: "All games" } }, ...categories].map((group) => (
+            <button key={group.id} type="button" aria-label={group.name[locale]} title={group.name[locale]} aria-pressed={activeCategory === group.id} onClick={() => { setCategory(group.id); if (group.id === "new") requestAnimationFrame(() => document.getElementById("new-games")?.scrollIntoView({ block: "start" })); }} className={cn("h-8 whitespace-nowrap rounded-full border px-2 text-xs font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background", activeCategory === group.id ? "border-primary/40 bg-primary/10 text-primary" : "border-border/60 bg-card/40 text-muted-foreground hover:border-primary/50 hover:text-foreground")}>{CATEGORY_LABELS[group.id]?.[locale] ?? group.name[locale]}</button>
           ))}
         </div>
         <div className="relative mt-3 max-w-md">
@@ -135,7 +156,7 @@ export default function Home() {
         <div className="mt-8 space-y-10 sm:space-y-12">
           {legacySections.map((group) => {
             const Icon = group.icon;
-            const ordinal = GAME_CATEGORIES.findIndex((entry) => entry.id === group.id) + 1;
+            const ordinal = categories.findIndex((entry) => entry.id === group.id) + 1;
             return <section key={group.id} aria-labelledby={`category-${group.id}`} className="scroll-mt-24">
               <div className="mb-4 flex items-start gap-3 border-b border-border/70 pb-4">
                 <span className="mt-0.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary"><Icon className="h-5 w-5" /></span>
