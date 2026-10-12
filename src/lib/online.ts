@@ -68,16 +68,20 @@ export interface PublicProfile {
   totalRuns: number;
   bestStreak: number;
   games: { game_id: string; best: number; runs: number }[];
+  /** Earned from this account's saved games and server-owned community awards. */
+  badgeIds: string[];
 }
 
 export async function apiUserProfile(
-  name: string
-): Promise<{ configured: boolean; found: boolean; profile?: PublicProfile }> {
+  name: string,
+  signal?: AbortSignal,
+): Promise<{ configured: boolean; found: boolean; profile?: PublicProfile; error?: string }> {
   try {
-    const res = await fetch(`/api/users/${encodeURIComponent(name)}`, { cache: "no-store" });
+    const res = await fetch(`/api/users/${encodeURIComponent(name)}`, { cache: "no-store", signal });
+    if (!res.ok) return { configured: true, found: false, error: "service_unavailable" };
     return await res.json();
   } catch {
-    return { configured: false, found: false };
+    return { configured: false, found: false, error: signal?.aborted ? "aborted" : "service_unavailable" };
   }
 }
 

@@ -88,6 +88,14 @@ aggregates, not private invitations or opponents' unfinished results.
 These features use the existing database/auth configuration below; additive
 tables and indexes are created automatically. Wine/Poke routes are unaffected.
 
+Public player profiles at `/u/<name>` show earned badges from that account's
+complete saved game history and community awards, including **Contributor** and
+**Game Creator**. Queries use the registered account ID, never the visiting
+browser's progress or a historical display name. Badge-only accounts can have
+public profiles without scores. Per-country GeoDex and local-hour achievements
+remain device-local and are not inferred or shared; the profile explains this.
+Only earned badge IDs are public, not private submission or notification data.
+
 ## Adastra — places after dark
 
 Inspired by **Adastra1995**'s community suggestion, Adastra asks players to
