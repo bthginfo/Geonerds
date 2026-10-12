@@ -4,6 +4,15 @@ import type postgres from "postgres";
 export async function ensureGeoChallengeCommunity(sql: ReturnType<typeof postgres>) {
   await sql.begin(async (tx) => {
     await tx`SELECT pg_advisory_xact_lock(714003201)`;
+    // Upgrade the old check once, atomically, without rewriting existing duels.
+    await tx`DO $$ BEGIN
+      IF NOT EXISTS (SELECT 1 FROM pg_constraint
+        WHERE conrelid='gn_challenges'::regclass AND conname='gn_challenges_rounds_all_check') THEN
+        ALTER TABLE gn_challenges DROP CONSTRAINT IF EXISTS gn_challenges_rounds_check;
+        ALTER TABLE gn_challenges ADD CONSTRAINT gn_challenges_rounds_all_check
+          CHECK (rounds IN (0,10,25,50));
+      END IF;
+    END; $$`;
     await tx`ALTER TABLE gn_challenges ALTER COLUMN opponent_id DROP NOT NULL`;
     await tx`ALTER TABLE gn_challenges ADD COLUMN IF NOT EXISTS invitation_type text NOT NULL DEFAULT 'direct'
       CHECK (invitation_type IN ('direct','random','open','link'))`;

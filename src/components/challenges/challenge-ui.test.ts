@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import type { GeoChallenge } from "@/lib/challenges";
-import { attemptStorageKey, challengeAttemptStorageKey, challengeError, challengePlayBlock, readSavedAttempt, writeSavedAttempt } from "./challenge-ui";
+import { attemptStorageKey, challengeAttemptStorageKey, challengeError, challengePlayBlock, challengeRoundsLabel, readSavedAttempt, writeSavedAttempt } from "./challenge-ui";
 
 const record: GeoChallenge = {
   id: "challenge-1", gameId: "flags", difficulty: "medium", mode: "choice", rounds: 10, timed: false, variant: "world", seed: "same-questions", status: "active", challengerName: "Atlas", opponentName: "Explorer", direction: "sent", viewerAttempted: false, viewerStarted: false, attemptCount: 0, expiresAt: "2026-10-10T12:00:00Z", createdAt: "2026-10-01T12:00:00Z", winnerName: null, viewerOutcome: null,
@@ -8,6 +8,15 @@ const record: GeoChallenge = {
 const now = new Date("2026-10-02T12:00:00Z").getTime();
 
 afterEach(() => vi.unstubAllGlobals());
+
+describe("challenge round labels", () => {
+  it("labels the full-pool option in both languages without showing zero rounds", () => {
+    expect(challengeRoundsLabel(0, "de")).toBe("Alle Runden");
+    expect(challengeRoundsLabel(0, "en")).toBe("All rounds");
+    expect(challengeRoundsLabel(10, "de")).toBe("10 Runden");
+    expect(challengeRoundsLabel(25, "en")).toBe("25 rounds");
+  });
+});
 
 describe("challenge play gate", () => {
   it("only permits an active, fresh matching game with a shared seed", () => {

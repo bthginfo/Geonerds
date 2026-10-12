@@ -72,6 +72,9 @@ describe("Geo challenge API access", () => {
     expect(view.seed).toBe(base.seed);
     expect(view.direction).toBe("received");
     expect(view.opponentName).toBe("Alice");
+    for (const viewer of ["alice", "bob"]) {
+      expect(serializeGeoChallenge({ ...base, rounds: 0, status: "active" }, viewer).rounds).toBe(0);
+    }
   });
   it("returns not_found rather than exposing an invitation to a nonparticipant", async () => {
     state.responses = [[], []];
@@ -84,17 +87,19 @@ describe("Geo challenge API access", () => {
 
 describe("Geo challenge mutation guards", () => {
   it.each([
-    ["adastra", "", ADASTRA_CATALOG_SEED_PREFIX],
-    ["flags", "world", "geo:"],
-  ])("versions new %s seeds without changing other games", async (gameId, variant, prefix) => {
+    ["adastra", "", ADASTRA_CATALOG_SEED_PREFIX, 10],
+    ["flags", "world", "geo:", 10],
+    ["flags", "world", "geo:", 0],
+  ])("versions new %s seeds with %s scope without changing other games", async (gameId, variant, prefix, rounds) => {
     state.responses = [[{ id: "alice", name: "Alice" }], [{ id: "bob", name: "Bob" }], [{ count: 0 }], [], []];
     const response = await createGeoChallenge(request({
-      gameId, difficulty: "medium", mode: "choice", rounds: 10, timed: false, variant, opponentName: "Bob",
+      gameId, difficulty: "medium", mode: "choice", rounds, timed: false, variant, opponentName: "Bob",
     }));
     expect(response.status).toBe(201);
     const insert = state.calls.find((call) => call.text.includes("INSERT INTO gn_challenges"))!;
     const seed = insert.values.find((value) => typeof value === "string" && value.startsWith("geo:"));
     expect(seed).toEqual(expect.stringMatching(new RegExp(`^${prefix}[A-Za-z0-9_-]{32}$`)));
+    expect(insert.values[7]).toBe(rounds);
   });
   it("cannot challenge yourself", async () => {
     state.responses = [[{ id: "alice", name: "Alice" }], [{ id: "alice", name: "Alice" }]];
@@ -160,5 +165,22 @@ describe("Geo challenge mutation guards", () => {
     expect(state.calls[0].text).toContain("FOR UPDATE");
     const resolution = state.calls.find((call) => call.text.includes("status='resolved'"))!;
     expect(resolution.values).toContain("alice");
+  });
+  it("saves and resolves a full-pool duel with more than fifty actual rounds", async () => {
+    const fullRun = { ...run, total: 196, correct: 150, bestStreak: 20, score: 19_000, durationMs: 600_000 };
+    const fullMine = { ...mine, total: 196, correct: 150, best_streak: 20, score: 19_000, duration_ms: 600_000 };
+    const fullOther = { ...other, total: 196, correct: 149, best_streak: 18, score: 18_000, duration_ms: 590_000 };
+    const fullRow = { ...base, rounds: 0 };
+    state.responses = [
+      [{ ...fullRow, status: "active" }], [], [{ token: "token", started_at: new Date(Date.now() - 605_000).toISOString() }], [],
+      [fullMine, fullOther], [], [{ ...fullRow, status: "resolved", winner_id: "alice", attempt_count: 2, viewer_attempted: true }], [fullMine, fullOther],
+    ];
+    const response = await submitGeoChallenge(request(fullRun), ctx);
+    const data = await response.json();
+    expect(response.status).toBe(200);
+    expect(data.challenge.rounds).toBe(0);
+    expect(data.challenge.viewerOutcome).toBe("win");
+    expect(data.challenge.attempts.map((attempt: { total: number }) => attempt.total)).toEqual([196, 196]);
+    expect(state.calls.find((call) => call.text.includes("INSERT INTO gn_challenge_attempts"))?.values).toContain(196);
   });
 });

@@ -1,12 +1,14 @@
 import { getGame } from "@/games/registry";
 import type { AnswerMode, Difficulty, RunResult } from "@/lib/types";
 import { validateName } from "@/lib/validate";
+import { validGeoScore } from "@/lib/score-validation";
 
 export const CHALLENGE_GAME_IDS = [
   "flags", "capitals", "outline", "trivia", "waters", "neighbors", "origin", "mountains", "languages",
   "flag-pie", "city-compass", "flag-mosaic", "country-radar", "adastra",
 ] as const;
-export const CHALLENGE_ROUND_COUNTS = [10, 25, 50] as const;
+/** Zero means the complete available question pool, as in normal game setup. */
+export const CHALLENGE_ROUND_COUNTS = [10, 25, 50, 0] as const;
 export const CHALLENGE_INVITE_TTL_MS = 3 * 24 * 60 * 60 * 1000;
 export const CHALLENGE_PLAY_TTL_MS = 7 * 24 * 60 * 60 * 1000;
 export type GeoChallengeInviteType = "direct" | "random" | "open" | "link";
@@ -97,6 +99,7 @@ export function parseGeoChallengeConfig(body: Record<string, unknown>): CreateGe
   if (mode !== "choice" && mode !== "type") return null;
   if (!(game.modes ?? ["choice"]).includes(mode)) return null;
   if (typeof rounds !== "number" || !CHALLENGE_ROUND_COUNTS.some((count) => count === rounds)) return null;
+  if (rounds === 0 && !game.countOptions?.includes(0)) return null;
   if (typeof timed !== "boolean" || (timed && !game.supportsTimed)) return null;
   if (typeof variant !== "string" || (game.variants ? !game.variants.options.includes(variant) : variant !== "")) return null;
   return { ...(opponentName ? { opponentName } : {}), invitationType: invitationType as GeoChallengeInviteType,
@@ -122,6 +125,8 @@ export function validGeoChallengeResult(body: Record<string, unknown>, config: G
   const values = [body.score, body.correct, body.total, body.bestStreak, body.durationMs];
   if (!values.every((value) => typeof value === "number" && Number.isSafeInteger(value) && value >= 0)) return false;
   const { score, correct, total, bestStreak, durationMs } = body as unknown as RunResult;
-  return total > 0 && total <= config.rounds && correct <= total && bestStreak <= correct
+  // All is a selection sentinel, never the actual result total. Keep the shared
+  // leaderboard bounds for full-pool runs and the selected cap for fixed runs.
+  return total > 0 && (config.rounds === 0 ? validGeoScore(body) : total <= config.rounds) && correct <= total && bestStreak <= correct
     && score <= correct * 1000 && durationMs >= 500 && durationMs <= 86_400_000;
 }

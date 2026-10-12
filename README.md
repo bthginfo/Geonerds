@@ -81,6 +81,13 @@ recipients may join with a guest nickname, without creating an account. Guest
 access uses a seven-day, challenge-scoped HttpOnly cookie: play and return to
 the results in the same browser. Guest duels never enter public rankings.
 
+Challenge round counts offer **10, 25, 50 or All**. All uses the game's complete
+available pool for the selected settings (including difficulty/region where
+applicable), with the same seed and order for both players. Internally `rounds=0`
+is only the selection sentinel; submitted results keep their actual positive
+question total. An atomic, guarded schema upgrade permits this new option without
+rewriting historical invitations or attempts.
+
 The header notification bell surfaces invitations, acceptance, declines,
 cancellations, expiry, an opponent finishing and final results. Notifications
 are stored per account and remain unread until acknowledged. Expiry is enforced

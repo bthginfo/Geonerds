@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import { CHALLENGE_GAME_IDS, CHALLENGE_ROUND_COUNTS, compareGeoAttempts, geoChallengeTransition, parseGeoChallengeConfig, validGeoChallengeResult } from "./challenges";
 import { createSeededRandom, seededShuffle } from "./random";
 import { validGeoScore } from "./score-validation";
+import { getGame } from "@/games/registry";
 
 const config = { gameId: "flags" as const, difficulty: "medium" as const, mode: "choice" as const, rounds: 10, timed: false, variant: "world" };
 const result = { gameId: "flags", difficulty: "medium", mode: "choice", score: 900, correct: 6, total: 10, bestStreak: 4, durationMs: 30_000 };
@@ -26,7 +27,7 @@ describe("Geo challenge settings", () => {
     expect(parseGeoChallengeConfig({ ...config, rounds, opponentName: "Explorer" })?.rounds).toBe(rounds);
   });
   it.each([
-    { rounds: 0 }, { rounds: 11 }, { rounds: "10" }, { difficulty: "expert" },
+    { rounds: -1 }, { rounds: 11 }, { rounds: "10" }, { rounds: "all" }, { rounds: null }, { rounds: Infinity }, { difficulty: "expert" },
     { mode: "invalid" }, { variant: "unlisted" }, { timed: "false" },
   ])("rejects unsupported settings %j", (change) => {
     expect(parseGeoChallengeConfig({ ...config, opponentName: "Explorer", ...change })).toBeNull();
@@ -35,6 +36,15 @@ describe("Geo challenge settings", () => {
     expect(parseGeoChallengeConfig({ ...config, gameId: "languages", variant: "", mode: "type", opponentName: "Explorer" })).toBeNull();
     expect(parseGeoChallengeConfig({ ...config, gameId: "adastra", variant: "", timed: true, opponentName: "Explorer" })).toBeNull();
     expect(parseGeoChallengeConfig({ ...config, gameId: "adastra", variant: "", mode: "type", opponentName: "Explorer" })).not.toBeNull();
+  });
+  it("offers All for every current challenge game, preserving its selection sentinel", () => {
+    for (const gameId of CHALLENGE_GAME_IDS) {
+      const game = getGame(gameId)!;
+      expect(game.countOptions).toContain(0);
+      const parsed = parseGeoChallengeConfig({ ...config, gameId, mode: game.modes?.[0] ?? "choice", variant: game.variants?.default ?? "", rounds: 0, opponentName: "Explorer" });
+      expect(parsed?.rounds).toBe(0);
+    }
+    expect(parseGeoChallengeConfig({ ...config, variant: "Europe", rounds: 0, invitationType: "link" })?.rounds).toBe(0);
   });
 });
 
@@ -75,6 +85,16 @@ describe("Challenge lifecycle and fairness", () => {
 });
 
 describe("Score validation", () => {
+  it("accepts an actual full-pool result instead of comparing its total with zero", () => {
+    const all = { ...config, rounds: 0 };
+    const full = { ...result, total: 196, correct: 150, bestStreak: 20, score: 19_000, durationMs: 600_000 };
+    expect(validGeoChallengeResult(full, all)).toBe(true);
+    expect(validGeoChallengeResult(full, { ...config, rounds: 50 })).toBe(false);
+    expect(validGeoChallengeResult({ ...full, total: 0 }, all)).toBe(false);
+    expect(validGeoChallengeResult({ ...full, total: 100_001 }, all)).toBe(false);
+    expect(validGeoChallengeResult({ ...full, score: 10_000_001, correct: 20_000, total: 20_000 }, all)).toBe(false);
+    expect(validGeoChallengeResult({ ...full, bestStreak: 151 }, all)).toBe(false);
+  });
   it("accepts a consistent completed result and a pool capped below the selected rounds", () => {
     expect(validGeoChallengeResult(result, config)).toBe(true);
     expect(validGeoChallengeResult({ ...result, total: 7 }, config)).toBe(true);

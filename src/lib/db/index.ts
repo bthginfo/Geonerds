@@ -64,7 +64,7 @@ async function ensureSchema(sql: ReturnType<typeof postgres>) {
       game_id text NOT NULL,
       difficulty text NOT NULL CHECK (difficulty IN ('easy', 'medium', 'hard')),
       mode text NOT NULL CHECK (mode IN ('choice', 'type')),
-      rounds integer NOT NULL CHECK (rounds IN (10, 25, 50)),
+      rounds integer NOT NULL CONSTRAINT gn_challenges_rounds_all_check CHECK (rounds IN (0, 10, 25, 50)),
       timed boolean NOT NULL DEFAULT false,
       variant text NOT NULL DEFAULT '',
       seed text NOT NULL,

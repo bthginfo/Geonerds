@@ -11,7 +11,7 @@ import { validateName } from "@/lib/validate";
 import { AccountPanel } from "@/components/account/account-panel";
 import { Button } from "@/components/ui/button";
 import { CHALLENGE_CHANGED_EVENT, notifyChallengeMutation } from "@/hooks/use-challenge-notifications";
-import { challengeError } from "./challenge-ui";
+import { challengeError, challengeRoundsLabel } from "./challenge-ui";
 import { ChallengeSummary } from "./challenge-summary";
 import { ChallengeResultPanel } from "./challenge-result";
 import { ChallengeShareLink } from "./challenge-share-link";
@@ -106,7 +106,7 @@ export function ChallengeInvite({ challengeId }: { challengeId: string }) {
   return <section aria-labelledby={`${id}-title`} className="mb-6 min-w-0 rounded-2xl border border-primary/30 bg-card p-4 sm:p-6">
     <div className="flex items-start justify-between gap-3"><h2 id={`${id}-title`} className="min-w-0 break-words text-xl font-bold">{title}</h2><Button type="button" variant="ghost" size="icon" disabled={loading || busy !== null} onClick={() => void load()} aria-label={locale === "de" ? "Einladung neu laden" : "Reload invitation"}><RefreshCw className="h-4 w-4" aria-hidden /></Button></div>
     {loading && !record ? <p role="status" className="mt-4 flex items-center gap-2 text-sm text-muted-foreground"><Loader2 className="h-4 w-4 animate-spin" aria-hidden />{locale === "de" ? "Einladung wird geladen…" : "Loading invitation…"}</p> : record && <>
-      <p className="mt-2 text-sm text-muted-foreground">{t(`games.${record.gameId}.name`)} · {record.rounds} {locale === "de" ? "Runden" : "rounds"}</p>
+      <p className="mt-2 text-sm text-muted-foreground">{t(`games.${record.gameId}.name`)} · {challengeRoundsLabel(record.rounds, locale)}</p>
       {(guest || record.opponentIsGuest) && <p className="mt-2 text-xs font-semibold text-primary">{locale === "de" ? "Gastspiel · Ohne Duell-Ranglistenwertung" : "Guest game · Casual, unranked duel"}</p>}
       <div className="mt-4"><ChallengeSummary challenge={record} locked /></div>
       {["pending", "active"].includes(record.status) && !expired && <p className="mt-3 text-xs leading-relaxed text-muted-foreground">{record.status === "pending" ? (locale === "de" ? "Annehmen bis" : "Accept by") : (locale === "de" ? "Spielen bis" : "Finish by")} <time dateTime={record.expiresAt}>{new Date(record.expiresAt).toLocaleString(locale, { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })}</time>. {locale === "de" ? "Ihr spielt unabhängig voneinander, mit denselben Fragen und einem Versuch pro Person." : "Play at your own pace, with the same questions and one attempt each."}</p>}

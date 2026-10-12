@@ -14,7 +14,7 @@ export function ChallengeSummary({ challenge, locked = false }: { challenge: Geo
       <div><dt className="text-xs text-muted-foreground">{locale === "de" ? "Spiel" : "Game"}</dt><dd className="mt-0.5 font-semibold">{t(`games.${challenge.gameId}.name`)}</dd></div>
       <div><dt className="text-xs text-muted-foreground">{t("common.difficulty")}</dt><dd className="mt-0.5 font-semibold">{t(`difficulty.${challenge.difficulty}`)}</dd></div>
       <div><dt className="text-xs text-muted-foreground">{t("common.mode")}</dt><dd className="mt-0.5 font-semibold">{t(`mode.${challenge.mode}`)}</dd></div>
-      <div><dt className="text-xs text-muted-foreground">{t("setup.rounds")}</dt><dd className="mt-0.5 font-semibold">{challenge.rounds}</dd></div>
+      <div><dt className="text-xs text-muted-foreground">{t("setup.rounds")}</dt><dd className="mt-0.5 font-semibold">{challenge.rounds === 0 ? t("setup.all") : challenge.rounds}</dd></div>
       {game?.variants && <div><dt className="text-xs text-muted-foreground">{t(game.variants.labelKey)}</dt><dd className="mt-0.5 font-semibold">{t(`scope.${challenge.variant}`)}</dd></div>}
       <div><dt className="flex items-center gap-1 text-xs text-muted-foreground"><Timer className="h-3 w-3" />{t("setup.timed")}</dt><dd className="mt-0.5 font-semibold">{challenge.timed ? (locale === "de" ? "Mit Zeitlimit" : "Countdown on") : (locale === "de" ? "Ohne Zeitlimit" : "Countdown off")}</dd></div>
     </dl>

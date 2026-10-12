@@ -35,6 +35,12 @@ export function challengeError(error: string | undefined, locale: Locale): strin
   return ERRORS[error ?? ""]?.[locale] ?? (locale === "de" ? "Das hat leider nicht geklappt. Bitte versuche es erneut." : "Something went wrong. Please try again.");
 }
 
+/** Never expose the internal full-pool sentinel as "0 rounds". */
+export function challengeRoundsLabel(rounds: number, locale: Locale): string {
+  if (rounds === 0) return locale === "de" ? "Alle Runden" : "All rounds";
+  return `${rounds} ${locale === "de" ? (rounds === 1 ? "Runde" : "Runden") : (rounds === 1 ? "round" : "rounds")}`;
+}
+
 export function challengePlayBlock(challenge: GeoChallenge, gameId: GameId, now = Date.now()): string | null {
   if (challenge.gameId !== gameId) return "wrong_game";
   if (challenge.viewerRole === "visitor") return "not_participant";

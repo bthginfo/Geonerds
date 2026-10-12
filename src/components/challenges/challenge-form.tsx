@@ -12,7 +12,7 @@ import { useAuth } from "@/store/auth";
 import { Button } from "@/components/ui/button";
 import { validateName } from "@/lib/validate";
 import { cn } from "@/lib/utils";
-import { challengeError } from "./challenge-ui";
+import { challengeError, challengeRoundsLabel } from "./challenge-ui";
 import { ChallengeRules } from "./challenge-summary";
 import { ChallengeShareLink } from "./challenge-share-link";
 import { OpponentPicker } from "./opponent-picker";
@@ -38,6 +38,7 @@ export function ChallengeForm({ initialOpponent = "", onCreated }: { initialOppo
   const submitLock = useRef(false);
   const config = getGame(gameId)!;
   const modes = config.modes ?? ["choice"];
+  const roundCounts = CHALLENGE_ROUND_COUNTS.filter((count) => count !== 0 || config.countOptions?.includes(0));
   const methodNames = { random: locale === "de" ? "Zufälliger GeoNerd" : "Random GeoNerd", direct: locale === "de" ? "Spieler wählen" : "Choose player", open: locale === "de" ? "Offene Herausforderung" : "Open challenge", link: locale === "de" ? "Einladungslink" : "Invite link" };
   const descriptions = {
     random: locale === "de" ? "Wir laden ein anderes GeoNerds-Konto für dich ein. Es hat drei Tage Zeit, anzunehmen." : "We invite another GeoNerds account for you. They have three days to accept.",
@@ -55,6 +56,7 @@ export function ChallengeForm({ initialOpponent = "", onCreated }: { initialOppo
     setVariant(next.variants?.default ?? "");
     setTimed(false);
     setDifficulty("medium");
+    if (rounds === 0 && !next.countOptions?.includes(0)) setRounds(10);
     setError(undefined);
   }
 
@@ -94,7 +96,7 @@ export function ChallengeForm({ initialOpponent = "", onCreated }: { initialOppo
         {method === "direct" && <OpponentPicker value={opponent} onChange={(name) => { setOpponent(name); setError(undefined); }} disabled={busy} />}
         <div className="grid min-w-0 grid-cols-[minmax(0,1fr)_minmax(0,0.6fr)] gap-3">
           <label className="min-w-0 text-sm font-semibold">{locale === "de" ? "Spiel" : "Game"}<select name="gameId" value={gameId} onChange={(event) => chooseGame(event.target.value as GeoChallengeGameId)} className={inputClass}>{CHALLENGE_GAME_IDS.filter((value) => getGame(value)).map((value) => <option key={value} value={value}>{t(`games.${value}.name`)}</option>)}</select></label>
-          <label className="min-w-0 text-sm font-semibold">{t("setup.rounds")}<select name="rounds" value={rounds} onChange={(event) => setRounds(Number(event.target.value))} className={inputClass}>{CHALLENGE_ROUND_COUNTS.map((count) => <option key={count} value={count}>{count}</option>)}</select></label>
+          <label className="min-w-0 text-sm font-semibold">{t("setup.rounds")}<select name="rounds" value={rounds} onChange={(event) => setRounds(Number(event.target.value))} className={inputClass}>{roundCounts.map((count) => <option key={count} value={count}>{count === 0 ? t("setup.all") : count}</option>)}</select></label>
         </div>
         <details className="border-y border-border">
           <summary className="min-h-11 cursor-pointer py-3 text-sm font-semibold text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">{locale === "de" ? "Weitere Einstellungen" : "More settings"}</summary>
@@ -106,7 +108,7 @@ export function ChallengeForm({ initialOpponent = "", onCreated }: { initialOppo
             {!config.supportsTimed && <p className="text-xs leading-relaxed text-muted-foreground">{locale === "de" ? "Dieses Spiel wird ohne Zeitlimit gespielt." : "This game is played without a countdown."}</p>}
           </div>
         </details>
-        <p aria-live="polite" className="text-sm leading-relaxed"><span className="font-semibold">{t(`games.${gameId}.name`)} · {rounds} {locale === "de" ? "Runden" : "rounds"}</span><span className="mt-1 block text-xs text-muted-foreground">{t(`difficulty.${difficulty}`)} · {t(`mode.${mode}`)}{config.variants ? ` · ${t(`scope.${variant}`)}` : ""} · {timed ? (locale === "de" ? "Mit Zeitlimit" : "Countdown on") : (locale === "de" ? "Ohne Zeitlimit" : "Untimed")}</span></p>
+        <p aria-live="polite" className="text-sm leading-relaxed"><span className="font-semibold">{t(`games.${gameId}.name`)} · {challengeRoundsLabel(rounds, locale)}</span><span className="mt-1 block text-xs text-muted-foreground">{t(`difficulty.${difficulty}`)} · {t(`mode.${mode}`)}{config.variants ? ` · ${t(`scope.${variant}`)}` : ""} · {timed ? (locale === "de" ? "Mit Zeitlimit" : "Countdown on") : (locale === "de" ? "Ohne Zeitlimit" : "Untimed")}</span>{rounds === 0 && <span className="mt-1 block text-xs text-muted-foreground">{locale === "de" ? "Alle verfügbaren Fragen für die gewählten Einstellungen." : "All available questions for the selected settings."}</span>}</p>
         {error && <p role="alert" className="rounded-lg border border-danger/20 bg-danger/5 p-3 text-sm leading-relaxed text-danger">{challengeError(error, locale)}</p>}
         <Button type="submit" className="h-auto min-h-12 w-full gap-2 px-3 py-3" disabled={busy}>{busy ? <Loader2 className="h-4 w-4 shrink-0 animate-spin" aria-hidden /> : <Send className="h-4 w-4 shrink-0" aria-hidden />}<span className="min-w-0 whitespace-normal">{busy ? (locale === "de" ? "Einladung wird erstellt…" : "Creating invitation…") : cta}</span></Button>
       </fieldset>
