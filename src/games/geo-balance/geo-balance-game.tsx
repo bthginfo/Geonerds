@@ -86,7 +86,7 @@ function GeoBalanceHand({ round, handlers, session, onAnswer }: { round: GeoBala
         <p className="text-sm font-bold tabular-nums" aria-live="polite">{t("geobalance.selected", { n: selected.length })}</p>
         {!answer && <p className="flex items-center gap-1.5 text-xs text-muted-foreground"><LockKeyhole className="h-3.5 w-3.5 shrink-0" aria-hidden />{t("geobalance.hidden")}</p>}
       </div>
-      <div className="grid grid-cols-2 gap-2 sm:grid-cols-4 sm:gap-3">
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 sm:gap-4">
         {round.hand.map((country) => {
           const selectedIndex = selected.indexOf(country.cca3);
           const chosen = selectedIndex >= 0;

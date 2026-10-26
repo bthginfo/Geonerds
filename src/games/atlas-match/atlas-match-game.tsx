@@ -136,7 +136,7 @@ export function AtlasMatchGame(handlers: PlayHandlers) {
               <span>{t("atlasmatch.collected", { found: state.matched, total })}</span>
             </div>
           </header>
-          <div className="grid grid-cols-4 gap-2 sm:gap-3" aria-label={t("atlasmatch.board", { n: state.boardIndex + 1 })}>
+          <div className="grid grid-cols-4 gap-3 sm:gap-4" aria-label={t("atlasmatch.board", { n: state.boardIndex + 1 })}>
             {board.cards.map((card, index) => {
               const solved = state.solved.includes(card.country.cca3);
               const open = solved || state.open.includes(card.id);
