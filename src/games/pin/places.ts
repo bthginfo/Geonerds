@@ -1,13 +1,17 @@
+import { EXTRA_PEAKS } from "@/games/mountains/peaks";
+
 export interface Place {
   en: string;
   de: string;
   lat: number;
   lng: number;
+  /** Present for new city entries, also shared with City Compass. */
+  cca3?: string;
 }
 
 /** Famous cities and landmarks for Pin the Place (coords as [lat, lng]).
  *  Capitals come from a separate dataset (public/geo/capitals.json). */
-export const PLACES: Place[] = [
+export const LEGACY_PLACES: Place[] = [
   // ── Major cities (non-capital or iconic) ──
   { en: "New York City", de: "New York", lat: 40.71, lng: -74.01 },
   { en: "Los Angeles", de: "Los Angeles", lat: 34.05, lng: -118.24 },
@@ -124,3 +128,33 @@ export const PLACES: Place[] = [
   { en: "North Pole", de: "Nordpol", lat: 89.9, lng: 0 },
   { en: "South Pole", de: "Südpol", lat: -89.9, lng: 0 },
 ];
+
+export const EXTRA_PLACES: Place[] = [
+  { en: "Recife", de: "Recife", lat: -8.05, lng: -34.88, cca3: "BRA" },
+  { en: "Manaus", de: "Manaus", lat: -3.12, lng: -60.02, cca3: "BRA" },
+  { en: "Ushuaia", de: "Ushuaia", lat: -54.8, lng: -68.3, cca3: "ARG" },
+  { en: "Puebla", de: "Puebla", lat: 19.04, lng: -98.2, cca3: "MEX" },
+  { en: "Québec City", de: "Québec", lat: 46.81, lng: -71.21, cca3: "CAN" },
+  { en: "New Orleans", de: "New Orleans", lat: 29.95, lng: -90.07, cca3: "USA" },
+  { en: "Marrakesh", de: "Marrakesch", lat: 31.63, lng: -7.99, cca3: "MAR" },
+  { en: "Kumasi", de: "Kumasi", lat: 6.69, lng: -1.62, cca3: "GHA" },
+  { en: "Dar es Salaam", de: "Daressalam", lat: -6.79, lng: 39.21, cca3: "TZA" },
+  { en: "Arusha", de: "Arusha", lat: -3.39, lng: 36.68, cca3: "TZA" },
+  { en: "Gondar", de: "Gondar", lat: 12.61, lng: 37.47, cca3: "ETH" },
+  { en: "Samarkand", de: "Samarkand", lat: 39.65, lng: 66.96, cca3: "UZB" },
+  { en: "Bukhara", de: "Buchara", lat: 39.77, lng: 64.42, cca3: "UZB" },
+  { en: "Pokhara", de: "Pokhara", lat: 28.21, lng: 83.99, cca3: "NPL" },
+  { en: "Kandy", de: "Kandy", lat: 7.29, lng: 80.64, cca3: "LKA" },
+  { en: "Siem Reap", de: "Siem Reap", lat: 13.36, lng: 103.86, cca3: "KHM" },
+  { en: "Luang Prabang", de: "Luang Prabang", lat: 19.89, lng: 102.14, cca3: "LAO" },
+  { en: "Salalah", de: "Salalah", lat: 17.02, lng: 54.09, cca3: "OMN" },
+  { en: "Yogyakarta", de: "Yogyakarta", lat: -7.8, lng: 110.37, cca3: "IDN" },
+  { en: "Hiroshima", de: "Hiroshima", lat: 34.39, lng: 132.45, cca3: "JPN" },
+  { en: "Xi'an", de: "Xi’an", lat: 34.26, lng: 108.94, cca3: "CHN" },
+  { en: "Cairns", de: "Cairns", lat: -16.92, lng: 145.77, cca3: "AUS" },
+  { en: "Dunedin", de: "Dunedin", lat: -45.87, lng: 170.5, cca3: "NZL" },
+  { en: "Dubrovnik", de: "Dubrovnik", lat: 42.65, lng: 18.09, cca3: "HRV" },
+  ...EXTRA_PEAKS.map((peak) => ({ en: peak.en, de: peak.de, lat: peak.lat, lng: peak.lng })),
+];
+
+export const PLACES: Place[] = [...LEGACY_PLACES, ...EXTRA_PLACES];

@@ -68,7 +68,7 @@ export function getExpeditionRoute(id: string | null | undefined): ExpeditionRou
 export function starsForAccuracy(correct: number, total: number): number {
   const accuracy = total > 0 ? correct / total : 0;
   if (accuracy >= 0.9) return 3;
-  if (accuracy >= 0.67) return 2;
+  if (accuracy >= 2 / 3) return 2;
   if (accuracy > 0) return 1;
   return 0;
 }

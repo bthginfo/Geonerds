@@ -18,6 +18,7 @@ import { Button } from "@/components/ui/button";
 import { haptic } from "@/lib/haptics";
 import { haversineKm } from "@/lib/utils";
 import { GameLoadState } from "@/games/load-state";
+import { createSeededRandom } from "@/lib/random";
 
 const DOT_THRESHOLD_KM2 = 25_000;
 const MAX_WRONG = 3;
@@ -32,7 +33,7 @@ const DOTS: MapDot[] = COUNTRIES.filter(
 ).map((c) => ({ ccn3: String(c.ccn3), lat: c.latlng![0], lng: c.latlng![1], flag: c.flag }));
 const DOT_SET = new Set(DOTS.map((d) => d.ccn3));
 
-export function MapClickGame({ difficulty, roundCount, timed, variant, practice, onFinish, onExit }: PlayHandlers) {
+export function MapClickGame({ difficulty, roundCount, timed, variant, scope, seed, practice, onFinish, onExit }: PlayHandlers) {
   const { t, locale } = useT();
   const [ready, setReady] = useState(false);
   const [loadFailed, setLoadFailed] = useState(false);
@@ -46,6 +47,7 @@ export function MapClickGame({ difficulty, roundCount, timed, variant, practice,
   const [resetSignal, setResetSignal] = useState(0);
   const [timeLeft, setTimeLeft] = useState(0);
   const [proximity, setProximity] = useState<"hot" | "warm" | "cold" | null>(null);
+  const [outcome, setOutcome] = useState<"correct" | "revealed" | null>(null);
 
   const startRef = useRef(Date.now());
   const qStartRef = useRef(Date.now());
@@ -69,22 +71,26 @@ export function MapClickGame({ difficulty, roundCount, timed, variant, practice,
   useEffect(() => () => { pendingRef.current.forEach(clearTimeout); }, []);
 
   useEffect(() => {
+    let active = true;
     featuresByCcn3("50m").then((feats) => {
+      if (!active) return;
       const difficultyPool = poolForDifficulty(difficulty);
-      const base = !variant || variant === "world" ? difficultyPool : difficultyPool.filter((c) => c.region === variant);
+      const region = scope || (variant !== "world" ? variant : undefined);
+      const base = !region ? difficultyPool : difficultyPool.filter((c) => c.region === region);
       const pool = base.filter(
         (c) => c.ccn3 && (feats.has(String(c.ccn3)) || DOT_SET.has(String(c.ccn3)))
       );
       const count = roundCount === 0 ? pool.length : roundCount;
-      const picked = pickQuestions(pool, count);
+      const picked = pickQuestions(pool, count, seed ? createSeededRandom(seed) : Math.random);
       const startedAt = Date.now();
       startRef.current = startedAt;
       qStartRef.current = startedAt;
       setTargets(picked);
       setTimeLeft(picked.length * TIME_PER_TARGET_MS);
       setReady(true);
-    }).catch(() => setLoadFailed(true));
-  }, [difficulty, roundCount, variant]);
+    }).catch(() => { if (active) setLoadFailed(true); });
+    return () => { active = false; };
+  }, [difficulty, roundCount, variant, scope, seed]);
 
   const target = targets[idx];
 
@@ -133,6 +139,7 @@ export function MapClickGame({ difficulty, roundCount, timed, variant, practice,
     setWrongCount(0);
     wrongCountRef.current = 0;
     setProximity(null);
+    setOutcome(null);
     qStartRef.current = Date.now();
     lockRef.current = false;
   }
@@ -140,8 +147,9 @@ export function MapClickGame({ difficulty, roundCount, timed, variant, practice,
   function reveal(ccn3: string, ok: boolean, delay: number) {
     if (finishedRef.current) return;
     answeredRef.current += 1;
+    setOutcome(ok ? "correct" : "revealed");
     setFlash({ ccn3, ok });
-    setFound((f) => new Set(f).add(ccn3));
+    if (ok) setFound((f) => new Set(f).add(ccn3));
     later(() => {
       setFlash(null);
       advance();
@@ -222,7 +230,7 @@ export function MapClickGame({ difficulty, roundCount, timed, variant, practice,
           </div>
         </div>
         <div className="ml-auto flex shrink-0 items-center gap-1">
-          <Button variant="ghost" size="icon" aria-label={t("mapclick.skip")} onClick={skip}>
+          <Button variant="ghost" size="icon" aria-label={t("mapclick.skip")} disabled={outcome !== null} onClick={skip}>
             <SkipForward className="h-5 w-5" />
           </Button>
           <Button
@@ -236,7 +244,8 @@ export function MapClickGame({ difficulty, roundCount, timed, variant, practice,
         </div>
       </div>
 
-      <div className="mx-auto flex min-h-9 w-full max-w-3xl items-center gap-2 px-4 pb-2" aria-live="polite">
+      <div className="mx-auto flex min-h-9 w-full max-w-3xl flex-wrap items-center gap-2 px-4 pb-2" role="status" aria-live="polite">
+        {outcome && <span className={`text-xs font-semibold ${outcome === "correct" ? "text-success" : "text-muted-foreground"}`}>{outcome === "correct" ? t("common.correct") : t("refresh.map.revealed")}</span>}
         {!practice && (
           <div className="flex gap-1" aria-hidden="true">
             {Array.from({ length: MAX_WRONG }).map((_, index) => (
@@ -244,7 +253,7 @@ export function MapClickGame({ difficulty, roundCount, timed, variant, practice,
             ))}
           </div>
         )}
-        {proximity && (
+        {proximity && !outcome && (
           <span className={`ml-auto rounded-lg px-2.5 py-1 text-xs font-bold ${proximity === "hot" ? "bg-orange-500/15 text-orange-600 dark:text-orange-400" : proximity === "warm" ? "bg-warning/15 text-amber-700 dark:text-warning" : "bg-sky-500/15 text-sky-700 dark:text-sky-300"}`}>
             {t(`mapclick.proximity.${proximity}`)}
           </span>

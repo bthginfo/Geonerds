@@ -19,6 +19,7 @@ import { sound } from "@/lib/sound";
 import { useT } from "@/i18n/I18nProvider";
 import { createSeededRandom } from "@/lib/random";
 import { GameLoadState } from "@/games/load-state";
+import { isLegacyGeoSeed } from "@/lib/geo-content-version";
 
 const MAX_CLUES = 4;
 const PER_ROUND_BUDGET_MS = 15000;
@@ -43,7 +44,7 @@ export function TriviaGame({ difficulty, mode, roundCount, timed, scope, practic
       const options = shuffle([answer, ...distractors], random).map((c) => ({ id: c.cca3, label: countryName(c, locale) }));
       return {
         answer,
-        clues: triviaClues(answer, locale, random).slice(0, MAX_CLUES),
+        clues: triviaClues(answer, locale, random, isLegacyGeoSeed(seed)).slice(0, MAX_CLUES),
         options,
         accepted: countryAccepted(answer),
       };
@@ -71,6 +72,9 @@ export function TriviaGame({ difficulty, mode, roundCount, timed, scope, practic
   const finishedRef = useRef(false);
   const hitsRef = useRef<string[]>([]);
   const answerLockRef = useRef(false);
+  const spellingRetryRef = useRef(false);
+  const nextLockRef = useRef(false);
+  useEffect(() => { nextLockRef.current = false; }, [idx]);
 
   const round = rounds[idx];
   const maxClues = round ? Math.min(MAX_CLUES, round.clues.length) : MAX_CLUES;
@@ -137,15 +141,17 @@ export function TriviaGame({ difficulty, mode, roundCount, timed, scope, practic
   function submitTyped() {
     if (answered || finishedRef.current || answerLockRef.current || !typed.trim()) return;
     const res = matchAnswer(typed, round.accepted);
-    if (res.status === "near" && res.suggestion) {
-      setHint(t("type.almost", { guess: res.suggestion }));
+    if (res.status === "near" && !spellingRetryRef.current) {
+      spellingRetryRef.current = true;
+      setHint(t("refresh.quiz.retry"));
       return;
     }
     commit(res.status === "correct");
   }
 
   function next() {
-    if (finishedRef.current || !answered) return;
+    if (finishedRef.current || nextLockRef.current || !answered) return;
+    nextLockRef.current = true;
     if (idx + 1 >= total) {
       doFinish();
       return;
@@ -156,6 +162,7 @@ export function TriviaGame({ difficulty, mode, roundCount, timed, scope, practic
     setAnswered(false);
     setTyped("");
     setHint(null);
+    spellingRetryRef.current = false;
   }
 
   if (!round) return <GameLoadState onExit={onExit} empty />;
@@ -219,6 +226,7 @@ export function TriviaGame({ difficulty, mode, roundCount, timed, scope, practic
                   )}
                   {countryName(round.answer, locale)}
                 </div>
+                <p className={lastCorrect ? "text-sm font-semibold text-success" : "text-sm font-semibold text-danger"}>{t(lastCorrect ? "common.correct" : "common.wrong")}</p>
                 <div className="flex items-start gap-1 text-xs text-muted-foreground">
                   <Lightbulb className="mt-0.5 h-3.5 w-3.5 shrink-0 text-accent" />
                   {fact}
@@ -253,18 +261,18 @@ export function TriviaGame({ difficulty, mode, roundCount, timed, scope, practic
                   value={typed}
                   onChange={(e) => setTyped(e.target.value)}
                   onKeyDown={(e) => e.key === "Enter" && submitTyped()}
-                  autoFocus
+                  aria-label={t("type.placeholder")}
                   autoComplete="off"
                   autoCapitalize="words"
                   spellCheck={false}
                   placeholder={t("type.placeholder")}
                   className="h-12 min-w-0 flex-1 rounded-xl border-2 border-border bg-card px-4 text-base outline-none focus:border-primary"
                 />
-                <Button size="lg" className="px-4" onClick={submitTyped} aria-label={t("type.submit")}>
+                <Button size="lg" className="px-4" disabled={!typed.trim()} onClick={submitTyped} aria-label={t("type.submit")}>
                   <CornerDownLeft className="h-5 w-5" />
                 </Button>
               </div>
-              {hint && <p className="mt-2 text-center text-sm font-medium text-warning">{hint}</p>}
+              {hint && <p role="status" className="mt-2 text-center text-sm font-medium text-amber-800 dark:text-warning">{hint}</p>}
             </div>
           )}
         </div>

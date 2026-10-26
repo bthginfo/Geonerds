@@ -1,7 +1,8 @@
 import { seededShuffle } from "@/lib/random";
+import { isLegacyGeoSeed } from "@/lib/geo-content-version";
 import { haversineKm } from "@/lib/utils";
 import type { AnswerMode, Difficulty } from "@/lib/types";
-import { COMPASS_CITIES, cityPool, type CompassCity } from "./cities";
+import { COMPASS_CITIES, LEGACY_COMPASS_CITIES, cityPool, type CompassCity } from "./cities";
 
 export const COMPASS_DIRECTIONS = ["N", "NE", "E", "SE", "S", "SW", "W", "NW"] as const;
 export type CompassDirection = (typeof COMPASS_DIRECTIONS)[number];
@@ -39,9 +40,9 @@ function cityGeometry(a: CompassCity, b: CompassCity) {
 
 function cityDistance(a: CompassCity, b: CompassCity) { return cityGeometry(a, b).distance; }
 
-function chooseReferences(answer: CompassCity, seed: string, difficulty: Difficulty): CityReference[] {
+function chooseReferences(answer: CompassCity, seed: string, difficulty: Difficulty, catalog: CompassCity[]): CityReference[] {
   const buckets = new Map<CompassDirection, CompassCity[]>();
-  for (const reference of COMPASS_CITIES) {
+  for (const reference of catalog) {
     if (reference.id === answer.id) continue;
     const distance = cityDistance(answer, reference);
     if (distance < 0.1 || distance > 14000) continue;
@@ -58,7 +59,7 @@ function chooseReferences(answer: CompassCity, seed: string, difficulty: Difficu
       .map((city) => ({ city, direction })),
   ), `${seed}:references`);
   const references: CityReference[] = [];
-  let survivors = [...COMPASS_CITIES];
+  let survivors = [...catalog];
   const requested = difficulty === "easy" ? 5 : difficulty === "medium" ? 4 : 3;
   while (references.length < requested) {
     const used = new Set(references.map((reference) => reference.direction));
@@ -76,11 +77,12 @@ function chooseReferences(answer: CompassCity, seed: string, difficulty: Difficu
 
 export function buildCityCompassRounds(difficulty: Difficulty, count: number, seed: string, mode: AnswerMode = "choice"): CityCompassRound[] {
   const rounds: CityCompassRound[] = [];
-  const pool = cityPool(difficulty);
+  const catalog = isLegacyGeoSeed(seed) ? LEGACY_COMPASS_CITIES : COMPASS_CITIES;
+  const pool = cityPool(difficulty, catalog);
   for (const answer of seededShuffle(pool, `${seed}:city-compass:targets`)) {
-    const references = chooseReferences(answer, `${seed}:city-compass:${answer.id}`, difficulty);
+    const references = chooseReferences(answer, `${seed}:city-compass:${answer.id}`, difficulty, catalog);
     if (references.length < 3) continue;
-    if (mode === "type" && COMPASS_CITIES.filter((city) => references.every((reference) =>
+    if (mode === "type" && catalog.filter((city) => references.every((reference) =>
       cityGeometry(city, reference.city).direction === reference.direction)).length !== 1) continue;
     const distractors = seededShuffle(pool.filter((city) => city.id !== answer.id &&
       !references.some((reference) => reference.city.id === city.id) && !references.every((reference) => cityGeometry(city, reference.city).direction === reference.direction)),

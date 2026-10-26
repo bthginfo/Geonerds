@@ -8,7 +8,7 @@ export interface CityEntry {
   de?: string;
 }
 
-export const CITIES: Record<string, CityEntry[]> = {
+export const LEGACY_CITIES: Record<string, CityEntry[]> = {
   USA: [{ en: "New York" }, { en: "Los Angeles" }, { en: "Chicago" }, { en: "Houston" }, { en: "Miami" }, { en: "San Francisco" }],
   CAN: [{ en: "Toronto" }, { en: "Montreal", de: "Montréal" }, { en: "Vancouver" }, { en: "Calgary" }],
   BRA: [{ en: "São Paulo" }, { en: "Rio de Janeiro" }, { en: "Salvador" }, { en: "Belo Horizonte" }],
@@ -65,6 +65,86 @@ export const CITIES: Record<string, CityEntry[]> = {
   MYS: [{ en: "George Town" }, { en: "Johor Bahru" }],
   BGD: [{ en: "Chittagong" }, { en: "Khulna" }],
 };
+
+const EXTRA_CITIES: Record<string, CityEntry[]> = {
+  USA: [{ en: "Philadelphia" }, { en: "New Orleans" }, { en: "Detroit" }, { en: "San Diego" }],
+  CAN: [{ en: "Québec City", de: "Québec" }, { en: "Edmonton" }, { en: "Winnipeg" }],
+  BRA: [{ en: "Recife" }, { en: "Manaus" }, { en: "Fortaleza" }],
+  MEX: [{ en: "Puebla" }, { en: "Mérida" }, { en: "Oaxaca" }],
+  ARG: [{ en: "Mar del Plata" }, { en: "Ushuaia" }],
+  GBR: [{ en: "Bristol" }, { en: "Leeds" }, { en: "Belfast" }],
+  FRA: [{ en: "Strasbourg", de: "Straßburg" }, { en: "Toulouse" }, { en: "Nantes" }],
+  DEU: [{ en: "Dresden" }, { en: "Leipzig" }, { en: "Nuremberg", de: "Nürnberg" }],
+  ITA: [{ en: "Bologna" }, { en: "Palermo" }, { en: "Genoa", de: "Genua" }],
+  ESP: [{ en: "Granada" }, { en: "Zaragoza", de: "Saragossa" }, { en: "Málaga" }],
+  PRT: [{ en: "Coimbra" }, { en: "Faro" }],
+  CHN: [{ en: "Xi'an" }, { en: "Wuhan" }, { en: "Hangzhou" }, { en: "Guilin" }],
+  JPN: [{ en: "Hiroshima" }, { en: "Fukuoka" }, { en: "Nagasaki" }],
+  IND: [{ en: "Jaipur" }, { en: "Varanasi" }, { en: "Ahmedabad" }],
+  IDN: [{ en: "Yogyakarta" }, { en: "Makassar" }],
+  TUR: [{ en: "Bursa" }, { en: "Konya" }],
+  AUS: [{ en: "Adelaide" }, { en: "Darwin" }, { en: "Cairns" }],
+  NZL: [{ en: "Dunedin" }, { en: "Queenstown" }],
+  GHA: [{ en: "Kumasi" }, { en: "Tamale" }],
+  SEN: [{ en: "Saint-Louis" }, { en: "Touba" }],
+  TZA: [{ en: "Dar es Salaam", de: "Daressalam" }, { en: "Arusha" }, { en: "Mwanza" }],
+  ETH: [{ en: "Gondar" }, { en: "Dire Dawa" }],
+  UGA: [{ en: "Jinja" }, { en: "Gulu" }],
+  CMR: [{ en: "Douala" }, { en: "Garoua" }],
+  CIV: [{ en: "Abidjan" }, { en: "Bouaké" }],
+  DZA: [{ en: "Oran" }, { en: "Constantine" }],
+  TUN: [{ en: "Sfax" }, { en: "Sousse" }],
+  MDG: [{ en: "Toamasina" }, { en: "Antsirabe" }],
+  ZMB: [{ en: "Livingstone" }, { en: "Ndola" }],
+  ZWE: [{ en: "Bulawayo" }, { en: "Mutare" }],
+  NAM: [{ en: "Swakopmund" }, { en: "Walvis Bay" }],
+  MOZ: [{ en: "Beira" }, { en: "Nampula" }],
+  UZB: [{ en: "Samarkand" }, { en: "Bukhara", de: "Buchara" }],
+  KAZ: [{ en: "Almaty" }, { en: "Shymkent" }],
+  KGZ: [{ en: "Osh", de: "Osch" }],
+  NPL: [{ en: "Pokhara" }, { en: "Biratnagar" }],
+  LKA: [{ en: "Kandy" }, { en: "Galle" }],
+  KHM: [{ en: "Siem Reap" }, { en: "Battambang" }],
+  LAO: [{ en: "Luang Prabang" }, { en: "Pakse" }],
+  MMR: [{ en: "Yangon", de: "Rangun" }, { en: "Mandalay" }],
+  OMN: [{ en: "Salalah" }, { en: "Sohar" }],
+  JOR: [{ en: "Aqaba", de: "Akaba" }, { en: "Irbid" }],
+  LBN: [{ en: "Sidon" }, { en: "Tyre", de: "Tyros" }],
+  GEO: [{ en: "Batumi" }, { en: "Kutaisi", de: "Kutaissi" }],
+  ARM: [{ en: "Gyumri", de: "Gjumri" }],
+  BOL: [{ en: "Santa Cruz de la Sierra" }, { en: "Cochabamba" }],
+  URY: [{ en: "Punta del Este" }, { en: "Salto" }],
+  VEN: [{ en: "Maracaibo" }, { en: "Barquisimeto" }],
+  CUB: [{ en: "Santiago de Cuba" }, { en: "Camagüey" }],
+  DOM: [{ en: "Santiago de los Caballeros" }, { en: "Puerto Plata" }],
+  HND: [{ en: "San Pedro Sula" }],
+  CRI: [{ en: "Liberia" }, { en: "Cartago" }],
+  SVK: [{ en: "Košice", de: "Kaschau" }],
+  SVN: [{ en: "Maribor" }, { en: "Koper" }],
+  HRV: [{ en: "Split" }, { en: "Dubrovnik" }, { en: "Rijeka" }],
+  BIH: [{ en: "Mostar" }, { en: "Banja Luka" }],
+  SRB: [{ en: "Novi Sad" }, { en: "Niš" }],
+  BGR: [{ en: "Plovdiv" }, { en: "Varna", de: "Warna" }],
+  ALB: [{ en: "Durrës" }, { en: "Shkodër" }],
+  EST: [{ en: "Tartu" }],
+  LVA: [{ en: "Liepāja" }],
+  LTU: [{ en: "Kaunas" }, { en: "Klaipėda" }],
+};
+
+// A bare city name is the question in the current city->country mode. Avoid
+// well-known namesakes (e.g. Córdoba in Spain AND Argentina) even when the
+// other namesake is absent from our finite catalogue. Legacy invitations keep
+// their original country->city pool untouched above.
+const AMBIGUOUS_CITY_NAMES = new Set([
+  "Córdoba", "Valencia", "Guadalajara", "Granada", "Mérida", "Trujillo",
+  "Cartago", "Saint-Louis", "George Town", "Lagos",
+]);
+
+export const CITIES: Record<string, CityEntry[]> = Object.fromEntries(
+  [...new Set([...Object.keys(LEGACY_CITIES), ...Object.keys(EXTRA_CITIES)])].map((code) => [
+    code, [...(LEGACY_CITIES[code] ?? []), ...(EXTRA_CITIES[code] ?? [])].filter((city) => !AMBIGUOUS_CITY_NAMES.has(city.en)),
+  ]),
+);
 
 /** Country codes (cca3) that have at least one curated non-capital city. */
 export const CITY_COUNTRY_CODES = new Set(Object.keys(CITIES));

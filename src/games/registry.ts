@@ -29,6 +29,7 @@ import {
   Scan,
   Radar,
   Telescope,
+  Layers3,
   type LucideIcon,
 } from "lucide-react";
 import type { AnswerMode, GameId } from "@/lib/types";
@@ -176,7 +177,7 @@ export const GAMES: GameConfig[] = [
     icon: ListOrdered,
     gradient: "from-teal-500 to-emerald-600",
     supportsDifficulty: true,
-    countOptions: [10, 25, 50, 0],
+    countOptions: [10, 25, 50],
     supportsTimed: true,
   },
   {
@@ -201,7 +202,7 @@ export const GAMES: GameConfig[] = [
     gradient: "from-green-500 to-lime-600",
     supportsDifficulty: true,
     modes: ["choice", "type"],
-    countOptions: [10, 25, 50, 0],
+    countOptions: [10, 25, 50],
     supportsTimed: true,
   },
   {
@@ -323,6 +324,26 @@ export const GAMES: GameConfig[] = [
     countOptions: [10, 25, 50, 0],
     supportsTimed: false,
     setupNoteKey: "adastra.setupNote",
+  },
+  {
+    id: "atlas-match",
+    featuredSince: "2026-10-26T07:30:00Z",
+    icon: Layers3,
+    gradient: "from-teal-500 to-cyan-600",
+    supportsDifficulty: true,
+    countOptions: [10, 25, 50, 0],
+    supportsTimed: false,
+    setupNoteKey: "atlasmatch.setupNote",
+  },
+  {
+    id: "geo-balance",
+    featuredSince: "2026-10-26T07:30:00Z",
+    icon: Scale,
+    gradient: "from-amber-500 to-orange-600",
+    supportsDifficulty: true,
+    countOptions: [5, 10, 25],
+    supportsTimed: false,
+    setupNoteKey: "geobalance.setupNote",
   },
 ];
 

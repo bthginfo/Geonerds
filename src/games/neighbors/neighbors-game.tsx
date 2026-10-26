@@ -20,6 +20,7 @@ import { sample, shuffle, formatNumber } from "@/lib/utils";
 import { useT } from "@/i18n/I18nProvider";
 import { createSeededRandom } from "@/lib/random";
 import { GameLoadState } from "@/games/load-state";
+import { isLegacyGeoSeed } from "@/lib/geo-content-version";
 
 const PER_ROUND_BUDGET_MS = 15000;
 
@@ -68,6 +69,9 @@ export function NeighborsGame({ difficulty, mode, roundCount, timed, scope, prac
         clues.push({ icon: Users, label: t("neighbors.clue.population"), node: t("neighbors.clue.people", { n: roundPeople(answer.population) }) });
       if (answer.area > 0)
         clues.push({ icon: Maximize2, label: t("neighbors.clue.area"), node: t("neighbors.clue.km2", { n: formatNumber(Math.round(answer.area), locale) }) });
+      // Keep the more revealing language/currency/neighbour clues later, while
+      // varying the opening deduction instead of always leading with a region.
+      if (!isLegacyGeoSeed(seed)) clues.splice(0, clues.length, ...shuffle(clues, random));
       if (answer.languages.length > 0)
         clues.push({ icon: LangIcon, label: t("neighbors.clue.language"), node: answer.languages.slice(0, 2).join(", ") });
       if (answer.currencies.length > 0)
@@ -121,6 +125,9 @@ export function NeighborsGame({ difficulty, mode, roundCount, timed, scope, prac
   const finishedRef = useRef(false);
   const hitsRef = useRef<string[]>([]);
   const answerLockRef = useRef(false);
+  const spellingRetryRef = useRef(false);
+  const nextLockRef = useRef(false);
+  useEffect(() => { nextLockRef.current = false; }, [idx]);
 
   const round = rounds[idx];
   const maxClues = round ? round.clues.length : 0;
@@ -170,14 +177,16 @@ export function NeighborsGame({ difficulty, mode, roundCount, timed, scope, prac
   function submitTyped() {
     if (answered || finishedRef.current || answerLockRef.current || !typed.trim()) return;
     const res = matchAnswer(typed, round.accepted);
-    if (res.status === "near" && res.suggestion) {
-      setHint(t("type.almost", { guess: res.suggestion }));
+    if (res.status === "near" && !spellingRetryRef.current) {
+      spellingRetryRef.current = true;
+      setHint(t("refresh.quiz.retry"));
       return;
     }
     commit(res.status === "correct");
   }
   function next() {
-    if (finishedRef.current || !answered) return;
+    if (finishedRef.current || nextLockRef.current || !answered) return;
+    nextLockRef.current = true;
     if (idx + 1 >= total) {
       doFinish();
       return;
@@ -188,6 +197,7 @@ export function NeighborsGame({ difficulty, mode, roundCount, timed, scope, prac
     setAnswered(false);
     setTyped("");
     setHint(null);
+    spellingRetryRef.current = false;
   }
 
   // Timer
@@ -254,6 +264,7 @@ export function NeighborsGame({ difficulty, mode, roundCount, timed, scope, prac
                   {lastCorrect ? <Check className="h-4 w-4 text-success" /> : <X className="h-4 w-4 text-danger" />}
                   {countryName(round.answer, locale)}
                 </div>
+                <p className={lastCorrect ? "text-sm font-semibold text-success" : "text-sm font-semibold text-danger"}>{t(lastCorrect ? "common.correct" : "common.wrong")}</p>
                 <div className="flex items-start gap-1 text-xs text-muted-foreground">
                   <Lightbulb className="mt-0.5 h-3.5 w-3.5 shrink-0 text-accent" />
                   {fact}
@@ -288,18 +299,18 @@ export function NeighborsGame({ difficulty, mode, roundCount, timed, scope, prac
                   value={typed}
                   onChange={(e) => setTyped(e.target.value)}
                   onKeyDown={(e) => e.key === "Enter" && submitTyped()}
-                  autoFocus
+                  aria-label={t("type.placeholder")}
                   autoComplete="off"
                   autoCapitalize="words"
                   spellCheck={false}
                   placeholder={t("type.placeholder")}
                   className="h-12 min-w-0 flex-1 rounded-xl border-2 border-border bg-card px-4 text-base outline-none focus:border-primary"
                 />
-                <Button size="lg" className="px-4" onClick={submitTyped} aria-label={t("type.submit")}>
+                <Button size="lg" className="px-4" disabled={!typed.trim()} onClick={submitTyped} aria-label={t("type.submit")}>
                   <CornerDownLeft className="h-5 w-5" />
                 </Button>
               </div>
-              {hint && <p className="mt-2 text-center text-sm font-medium text-warning">{hint}</p>}
+              {hint && <p role="status" className="mt-2 text-center text-sm font-medium text-amber-800 dark:text-warning">{hint}</p>}
             </div>
           )}
         </div>

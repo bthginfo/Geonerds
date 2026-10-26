@@ -42,8 +42,8 @@ export interface RoutePair {
 }
 
 /** Pick a start/destination pair whose shortest land route length is in range. */
-export function pickRoutePair(pool: Country[], minLen: number, maxLen: number): RoutePair | null {
-  const starts = shuffle(pool.filter((c) => c.ccn3 && ccn3Neighbors(String(c.ccn3)).size > 0));
+export function pickRoutePair(pool: Country[], minLen: number, maxLen: number, random: () => number = Math.random): RoutePair | null {
+  const starts = shuffle(pool.filter((c) => c.ccn3 && ccn3Neighbors(String(c.ccn3)).size > 0), random);
   for (const a of starts) {
     const dist = distancesFrom(String(a.ccn3));
     const candidates: Country[] = [];
@@ -54,9 +54,38 @@ export function pickRoutePair(pool: Country[], minLen: number, maxLen: number): 
       }
     }
     if (candidates.length) {
-      const b = pickOne(candidates);
+      const b = pickOne(candidates, random);
       return { a, b, optimal: dist.get(String(b.ccn3))! };
     }
   }
   return null;
+}
+
+export interface RouteRound extends RoutePair { dist: Map<string, number> }
+
+const distanceCache = new Map<string, Map<string, number>>();
+function routeDistances(code: string): Map<string, number> {
+  let result = distanceCache.get(code);
+  if (!result) { result = distancesFrom(code); distanceCache.set(code, result); }
+  return result;
+}
+
+/** Unique endpoint pairs, complete shortest-path witnesses, no retry lottery. */
+export function generateRouteRounds(pool: Country[], min: number, max: number, count: number, random: () => number = Math.random): RouteRound[] {
+  const limit = Math.min(100, Math.max(0, Number.isFinite(count) ? Math.floor(count) : 0));
+  if (!limit) return [];
+  const eligible = pool.filter((country) => country.ccn3 && ccn3Neighbors(String(country.ccn3)).size);
+  const pairs: RoutePair[] = [];
+  for (let index = 0; index < eligible.length; index++) {
+    const a = eligible[index];
+    const distances = routeDistances(String(a.ccn3));
+    for (const b of eligible.slice(index + 1)) {
+      const length = distances.get(String(b.ccn3));
+      if (length !== undefined && length >= min && length <= max) pairs.push({ a, b, optimal: length });
+    }
+  }
+  return shuffle(pairs, random).slice(0, limit).map((pair) => {
+    const [a, b] = random() < .5 ? [pair.a, pair.b] : [pair.b, pair.a];
+    return { a, b, optimal: pair.optimal, dist: routeDistances(String(b.ccn3)) };
+  });
 }

@@ -16,19 +16,21 @@ import { sound } from "@/lib/sound";
 import { sample, shuffle, cn } from "@/lib/utils";
 import { useT } from "@/i18n/I18nProvider";
 import { GameLoadState } from "@/games/load-state";
+import { createSeededRandom } from "@/lib/random";
+import { useGameTimeouts } from "@/games/use-game-timeouts";
 
 const STEP_POINTS = 40;
 const WRONG_PENALTY = 20;
 const PER_THEME_MS = 25000;
 
-export function NameAllGame({ difficulty, mode, roundCount, timed, practice, onFinish, onExit }: PlayHandlers) {
+export function NameAllGame({ difficulty, mode, roundCount, timed, practice, seed, onFinish, onExit }: PlayHandlers) {
   const { t, locale } = useT();
   const clickMode = (mode ?? "choice") === "choice";
 
   const themes = useMemo(() => {
     const count = roundCount === 0 ? Infinity : roundCount;
-    return generateThemes(difficulty, locale, count, clickMode ? "choice" : "type");
-  }, [difficulty, roundCount, locale, clickMode]);
+    return generateThemes(difficulty, locale, count, clickMode ? "choice" : "type", seed ? createSeededRandom(seed) : Math.random);
+  }, [difficulty, roundCount, locale, clickMode, seed]);
 
   const total = themes.length;
   const budget = total * PER_THEME_MS;
@@ -41,6 +43,8 @@ export function NameAllGame({ difficulty, mode, roundCount, timed, practice, onF
   const [flash, setFlash] = useState<string | null>(null);
   const [score, setScore] = useState(0);
   const [streak, setStreak] = useState(0);
+  const [feedback, setFeedback] = useState("");
+  const { schedule, clearTimers } = useGameTimeouts();
 
   const startRef = useRef(Date.now());
   const scoreRef = useRef(0);
@@ -74,14 +78,15 @@ export function NameAllGame({ difficulty, mode, roundCount, timed, practice, onF
   // Click-mode chips: targets mixed with plausible distractors.
   const chips = useMemo(() => {
     if (!clickMode || !theme) return [] as string[];
+    const random = seed ? createSeededRandom(`${seed}:chips:${idx}`) : Math.random;
     const pool = poolForDifficulty(difficulty).map((c) => c.cca3);
     const distractors = sample(
       pool.filter((c) => !targetSet.has(c)),
-      Math.min(10, Math.max(6, theme.targets.length))
+      Math.min(10, Math.max(6, theme.targets.length)),
+      random
     );
-    return shuffle([...theme.targets, ...distractors]);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [clickMode, idx, difficulty]);
+    return shuffle([...theme.targets, ...distractors], random);
+  }, [clickMode, idx, difficulty, seed, theme, targetSet]);
 
   if (!theme) return <GameLoadState onExit={onExit} empty />;
   const remaining = theme.targets.length - found.size;
@@ -97,6 +102,7 @@ export function NameAllGame({ difficulty, mode, roundCount, timed, practice, onF
   }
   function penalize() {
     setStreak(0);
+    setFeedback(t("refresh.nameall.wrong"));
     if (practice) return;
     scoreRef.current = Math.max(0, scoreRef.current - WRONG_PENALTY);
     setScore((s) => Math.max(0, s - WRONG_PENALTY));
@@ -108,6 +114,8 @@ export function NameAllGame({ difficulty, mode, roundCount, timed, practice, onF
     sound.correct();
     award();
     hitsRef.current.push(cca3);
+    const country = getCountryByCca3(cca3);
+    if (country) setFeedback(t("refresh.nameall.found", { country: countryName(country, locale) }));
     setFound((f) => new Set(f).add(cca3));
   }
 
@@ -119,7 +127,7 @@ export function NameAllGame({ difficulty, mode, roundCount, timed, practice, onF
       sound.wrong();
       penalize();
       setFlash(cca3);
-      setTimeout(() => setFlash((x) => (x === cca3 ? null : x)), 400);
+      schedule(() => setFlash((x) => (x === cca3 ? null : x)), 400);
     }
   }
 
@@ -136,13 +144,14 @@ export function NameAllGame({ difficulty, mode, roundCount, timed, practice, onF
       sound.wrong();
       penalize();
       setShake(true);
-      setTimeout(() => setShake(false), 400);
+      schedule(() => setShake(false), 400);
     }
   }
 
   function doFinish() {
     if (finishedRef.current) return;
     finishedRef.current = true;
+    clearTimers();
     onFinish({
       score: scoreRef.current,
       correct: correctRef.current,
@@ -157,6 +166,8 @@ export function NameAllGame({ difficulty, mode, roundCount, timed, practice, onF
   function next() {
     if (finishedRef.current || nextLockRef.current) return;
     nextLockRef.current = true;
+    clearTimers();
+    if (foundRef.current.size < theme.targets.length) setStreak(0);
     if (idx + 1 >= total) {
       doFinish();
       return;
@@ -166,6 +177,17 @@ export function NameAllGame({ difficulty, mode, roundCount, timed, practice, onF
     setFound(new Set());
     setRevealed(false);
     setInput("");
+    setFeedback("");
+    setFlash(null);
+    setShake(false);
+  }
+
+  function revealTheme() {
+    if (finishedRef.current || revealed) return;
+    setRevealed(true);
+    setStreak(0);
+    setFeedback(t("refresh.nameall.revealed"));
+    sound.tick();
   }
 
   const complete = found.size === theme.targets.length;
@@ -230,7 +252,7 @@ export function NameAllGame({ difficulty, mode, roundCount, timed, practice, onF
                     onClick={() => pickChip(code)}
                     disabled={isFound || revealed}
                     className={cn(
-                      "inline-flex items-center gap-1.5 rounded-xl border-2 px-3 py-2 text-sm font-semibold transition-all active:scale-95",
+                      "inline-flex min-h-11 max-w-full items-center gap-1.5 rounded-xl border-2 px-3 py-2 text-sm font-semibold transition-all active:scale-95",
                       isFound
                         ? "border-success bg-success/15 text-success opacity-60"
                         : isFlash
@@ -250,8 +272,8 @@ export function NameAllGame({ difficulty, mode, roundCount, timed, practice, onF
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
                 onKeyDown={(e) => e.key === "Enter" && submitTyped()}
-                disabled={revealed}
-                autoFocus
+                disabled={revealed || complete}
+                aria-label={t("type.placeholder")}
                 autoComplete="off"
                 autoCapitalize="words"
                 spellCheck={false}
@@ -261,7 +283,7 @@ export function NameAllGame({ difficulty, mode, roundCount, timed, practice, onF
                   shake ? "animate-shake border-danger" : "border-border"
                 )}
               />
-              <Button size="lg" className="px-4" onClick={submitTyped} aria-label={t("type.submit")}>
+              <Button size="lg" className="px-4" disabled={revealed || complete || !input.trim()} onClick={submitTyped} aria-label={t("type.submit")}>
                 <CornerDownLeft className="h-5 w-5" />
               </Button>
             </div>
@@ -270,14 +292,14 @@ export function NameAllGame({ difficulty, mode, roundCount, timed, practice, onF
 
         <div className="mt-auto flex gap-2 pt-6">
           {!complete && !revealed && (
-            <Button variant="outline" className="flex-1 gap-2" onClick={() => setRevealed(true)}>
+            <Button variant="outline" className="flex-1 gap-2" onClick={revealTheme}>
               <Eye className="h-4 w-4" />
               {t("nameall.reveal")}
             </Button>
           )}
           <motion.div className="flex-1" initial={false} animate={{ opacity: complete || revealed ? 1 : 0.7 }}>
             <Button className="w-full gap-2" onClick={next}>
-              {idx + 1 >= total ? t("common.continue") : t("common.next")}
+              {!complete && !revealed ? t("refresh.nameall.skip") : idx + 1 >= total ? t("common.continue") : t("common.next")}
               <ArrowRight className="h-4 w-4" />
             </Button>
           </motion.div>
@@ -287,6 +309,7 @@ export function NameAllGame({ difficulty, mode, roundCount, timed, practice, onF
             {t("nameall.remaining", { n: remaining })}
           </p>
         )}
+        {feedback && <p role="status" aria-live="polite" className="mt-2 text-center text-sm leading-relaxed text-muted-foreground">{feedback}</p>}
       </div>
     </div>
   );

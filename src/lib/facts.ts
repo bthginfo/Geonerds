@@ -1,6 +1,7 @@
 import type { Country, Locale } from "./types";
 import { getCountryByCca3 } from "@/data/countries";
 import { COUNTRY_FACTS } from "./country-facts";
+import { FACT_QUESTIONS } from "./fact-questions";
 import { simplifyCurrency } from "./currency";
 import { formatNumber, pickOne, shuffle } from "./utils";
 
@@ -87,6 +88,26 @@ function hemispherePhrase(c: Country, locale: Locale): string | null {
   return locale === "de"
     ? `Sein Kartenmittelpunkt liegt auf der ${north ? "Nordhalbkugel" : "Südhalbkugel"}.`
     : `Its map reference point is in the ${north ? "northern" : "southern"} hemisphere.`;
+}
+
+function meridianPhrase(c: Country, locale: Locale): string | null {
+  if (!c.latlng) return null;
+  const east = c.latlng[1] >= 0;
+  return locale === "de"
+    ? `Sein Kartenmittelpunkt liegt ${east ? "östlich" : "westlich"} des Nullmeridians.`
+    : `Its map reference point lies ${east ? "east" : "west"} of the prime meridian.`;
+}
+
+function capitalInitialPhrase(c: Country, locale: Locale): string | null {
+  if (!c.capital) return null;
+  return locale === "de"
+    ? `Der englische Name seiner Hauptstadt beginnt mit „${c.capital.charAt(0)}“.`
+    : `The English name of its capital starts with “${c.capital.charAt(0)}”.`;
+}
+
+function curatedPlaceClue(c: Country, locale: Locale, random: () => number): string | null {
+  const questions = FACT_QUESTIONS.filter((question) => question.cca3 === c.cca3);
+  return questions.length ? pickOne(questions, random).q[locale] : null;
 }
 
 function languagePhrase(c: Country, locale: Locale): string | null {
@@ -202,7 +223,7 @@ function firstNonNull(gens: Array<() => string | null>, random: () => number): s
  *   1) continent  2) a distinctive stat  3) a culture clue (dish/language/currency)
  *   4) the capital city (near give-away, so the round is always solvable).
  */
-export function triviaClues(c: Country, locale: Locale, random: () => number = Math.random): string[] {
+export function triviaClues(c: Country, locale: Locale, random: () => number = Math.random, legacy = false): string[] {
   // Each tier picks randomly among several categories for variety, while the
   // overall order escalates from vague (continent) to easy (capital).
   const tier1 = firstNonNull([
@@ -210,6 +231,7 @@ export function triviaClues(c: Country, locale: Locale, random: () => number = M
     () => sizeRankPhrase(c, locale),
     () => hemispherePhrase(c, locale),
     () => islandPhrase(c, locale),
+    ...(!legacy ? [() => meridianPhrase(c, locale)] : []),
   ], random);
   const tier2 = firstNonNull([
     () => populationPhrase(c, locale),
@@ -224,6 +246,7 @@ export function triviaClues(c: Country, locale: Locale, random: () => number = M
     () => languagesPhrase(c, locale),
     () => currencyPhrase(c, locale),
     () => neighbourPhrase(c, locale),
+    ...(!legacy ? [() => capitalInitialPhrase(c, locale), () => curatedPlaceClue(c, locale, random)] : []),
   ], random);
   // Build the first three clues, backfilling so we have three distinct ones…
   const core: string[] = [tier1, tier2, tier3].filter((x): x is string => !!x);

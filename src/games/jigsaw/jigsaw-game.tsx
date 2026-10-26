@@ -60,10 +60,8 @@ function trayPath(feature: CountryFeature): string {
   return geoPath(projection)(cleaned) ?? "";
 }
 
-function requestedPuzzleCount(difficulty: PlayHandlers["difficulty"], roundCount: number): number {
+function requestedPuzzleCount(roundCount: number): number {
   if (roundCount === 0) return Infinity;
-  // Three is the setup default; hard neighborhoods contain many more pieces.
-  if (difficulty === "hard" && roundCount === 3) return 2;
   return roundCount;
 }
 
@@ -96,8 +94,9 @@ export function JigsawGame({ difficulty, roundCount, practice, onFinish, onExit 
   const { schedule, clearTimers } = useGameTimeouts();
 
   useEffect(() => {
-    featuresByCcn3("10m").then(setFeatures).catch(() => setLoadError(true));
-    return () => { if (feedbackTimerRef.current != null) window.clearTimeout(feedbackTimerRef.current); };
+    let active = true;
+    featuresByCcn3("10m").then((loaded) => { if (active) setFeatures(loaded); }).catch(() => { if (active) setLoadError(true); });
+    return () => { active = false; if (feedbackTimerRef.current != null) window.clearTimeout(feedbackTimerRef.current); };
   }, []);
 
   const puzzles = useMemo(() => {
@@ -107,7 +106,7 @@ export function JigsawGame({ difficulty, roundCount, practice, onFinish, onExit 
       COUNTRIES,
       new Set(features.keys()),
       difficulty,
-      requestedPuzzleCount(difficulty, roundCount),
+      requestedPuzzleCount(roundCount),
       Math.random
     );
   }, [features, difficulty, roundCount, generation]);

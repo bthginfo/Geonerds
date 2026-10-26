@@ -8,7 +8,7 @@ import { PinMap } from "@/components/map/pin-map";
 import { Compass } from "@/components/map/compass";
 import { GameTopBar, ScorePill, StreakPill, RoundPill, TimerPill, LivesPill } from "@/components/game/hud";
 import { Button } from "@/components/ui/button";
-import { PEAKS, PEAK_MAX_TIER, peakName, peakAccepted, type Peak } from "./peaks";
+import { PEAKS, LEGACY_PEAKS, PEAK_MAX_TIER, peakName, peakAccepted, type Peak } from "./peaks";
 import { matchAnswer } from "@/lib/fuzzy";
 import { scoreForAnswer } from "@/lib/scoring";
 import { sound } from "@/lib/sound";
@@ -16,6 +16,7 @@ import { sample, shuffle, cn } from "@/lib/utils";
 import { useT } from "@/i18n/I18nProvider";
 import { createSeededRandom } from "@/lib/random";
 import { GameLoadState } from "@/games/load-state";
+import { isLegacyGeoSeed } from "@/lib/geo-content-version";
 
 const TIME_LIMIT_MS = 12000;
 const MAX_LIVES = 3;
@@ -24,7 +25,7 @@ export function MountainsGame({ difficulty, mode, roundCount, timed, practice, s
   const { t, locale } = useT();
 
   const peaks = useMemo<Peak[]>(() => {
-    const pool = PEAKS.filter((p) => p.tier <= PEAK_MAX_TIER[difficulty]);
+    const pool = (isLegacyGeoSeed(seed) ? LEGACY_PEAKS : PEAKS).filter((p) => p.tier <= PEAK_MAX_TIER[difficulty]);
     const count = roundCount === 0 ? pool.length : roundCount;
     return sample(pool, Math.min(count, pool.length), seed ? createSeededRandom(seed) : Math.random);
   }, [difficulty, roundCount, seed]);
@@ -35,7 +36,7 @@ export function MountainsGame({ difficulty, mode, roundCount, timed, practice, s
   const [lastCorrect, setLastCorrect] = useState(false);
   const [selected, setSelected] = useState<string | null>(null);
   const [input, setInput] = useState("");
-  const [shake, setShake] = useState(false);
+  const [hint, setHint] = useState<string | null>(null);
   const [score, setScore] = useState(0);
   const [streak, setStreak] = useState(0);
   const [lives, setLives] = useState(MAX_LIVES);
@@ -52,6 +53,7 @@ export function MountainsGame({ difficulty, mode, roundCount, timed, practice, s
   const finishedRef = useRef(false);
   const answerLockRef = useRef(false);
   const nextLockRef = useRef(false);
+  const spellingRetryRef = useRef(false);
   useEffect(() => { nextLockRef.current = false; }, [idx]);
 
   const peak = peaks[idx];
@@ -59,7 +61,7 @@ export function MountainsGame({ difficulty, mode, roundCount, timed, practice, s
   const options = useMemo(() => {
     if (mode !== "choice" || !peak) return [] as Peak[];
     const random = seed ? createSeededRandom(`${seed}:options:${peak.en}`) : Math.random;
-    const distractors = sample(PEAKS.filter((p) => p.en !== peak.en), 3, random);
+    const distractors = sample((isLegacyGeoSeed(seed) ? LEGACY_PEAKS : PEAKS).filter((p) => p.en !== peak.en), 3, random);
     return shuffle([peak, ...distractors], random);
   }, [peak, mode, seed]);
 
@@ -116,19 +118,19 @@ export function MountainsGame({ difficulty, mode, roundCount, timed, practice, s
   }
 
   function pick(p: Peak) {
-    if (answered) return;
+    if (answered || answerLockRef.current || finishedRef.current) return;
     setSelected(p.en);
     commit(p.en === peak.en);
   }
   function submitTyped() {
     if (finishedRef.current || answerLockRef.current || answered || !input.trim()) return;
-    const ok = matchAnswer(input, peakAccepted(peak)).status === "correct";
-    if (!ok && matchAnswer(input, peakAccepted(peak)).status === "near") {
-      setShake(true);
-      setTimeout(() => setShake(false), 400);
+    const result = matchAnswer(input, peakAccepted(peak));
+    if (result.status === "near" && !spellingRetryRef.current) {
+      spellingRetryRef.current = true;
+      setHint(t("refresh.quiz.retry"));
       return;
     }
-    commit(ok);
+    commit(result.status === "correct");
   }
 
   function doFinish() {
@@ -156,6 +158,8 @@ export function MountainsGame({ difficulty, mode, roundCount, timed, practice, s
     setAnswered(false);
     setSelected(null);
     setInput("");
+    setHint(null);
+    spellingRetryRef.current = false;
     setTimeLeft(TIME_LIMIT_MS);
   }
 
@@ -224,24 +228,27 @@ export function MountainsGame({ difficulty, mode, roundCount, timed, practice, s
             ))}
           </div>
         ) : (
-          <div className="flex gap-2">
-            <input
-              value={input}
-              onChange={(e) => setInput(e.target.value)}
-              onKeyDown={(e) => e.key === "Enter" && submitTyped()}
-              autoFocus
-              autoComplete="off"
-              autoCapitalize="words"
-              spellCheck={false}
-              placeholder={t("type.placeholder")}
-              className={cn(
-                "h-12 min-w-0 flex-1 rounded-xl border-2 bg-card px-4 text-base outline-none focus:border-primary",
-                shake ? "animate-shake border-danger" : "border-border"
-              )}
-            />
-            <Button size="lg" className="px-4" onClick={submitTyped} aria-label={t("type.submit")}>
-              <CornerDownLeft className="h-5 w-5" />
-            </Button>
+          <div>
+            <div className="flex gap-2">
+              <input
+                value={input}
+                onChange={(e) => setInput(e.target.value)}
+                onKeyDown={(e) => e.key === "Enter" && submitTyped()}
+                aria-label={t("refresh.mountains.placeholder")}
+                autoComplete="off"
+                autoCapitalize="words"
+                spellCheck={false}
+                placeholder={t("refresh.mountains.placeholder")}
+                className={cn(
+                  "h-12 min-w-0 flex-1 rounded-xl border-2 bg-card px-4 text-base outline-none focus:border-primary",
+                  hint ? "border-amber-600" : "border-border"
+                )}
+              />
+              <Button size="lg" className="px-4" onClick={submitTyped} disabled={!input.trim()} aria-label={t("type.submit")}>
+                <CornerDownLeft className="h-5 w-5" />
+              </Button>
+            </div>
+            {hint && <p role="status" className="mt-2 text-sm text-amber-800 dark:text-warning">{hint}</p>}
           </div>
         )}
       </div>

@@ -1,3 +1,5 @@
+import { EXTRA_LANDMARKS } from "./landmarks-expansion";
+
 /** Stable, single-country places checked against UNESCO's World Heritage List.
  * Keep transnational properties out: a country quiz must have one valid answer.
  * https://whc.unesco.org/en/list/ (reviewed 2026-10-02)
@@ -86,7 +88,9 @@ const places: Omit<Landmark, "source">[] = [
   { en: "Chiribiquete National Park", de: "Chiribiquete-Nationalpark", cca3: "COL", tier: 3 },
 ];
 
-export const LANDMARKS: Landmark[] = places.map((place) => ({
+export const LEGACY_LANDMARKS: Landmark[] = places.map((place) => ({
   ...place,
   source: "https://whc.unesco.org/en/list/",
 }));
+
+export const LANDMARKS: Landmark[] = [...LEGACY_LANDMARKS, ...EXTRA_LANDMARKS];

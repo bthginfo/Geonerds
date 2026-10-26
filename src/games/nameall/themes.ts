@@ -2,6 +2,7 @@ import type { Country, Difficulty, Locale } from "@/lib/types";
 import { COUNTRIES, getCountryByCca3, countryName } from "@/data/countries";
 import { capitalLabel } from "@/games/aliases";
 import { sample, shuffle } from "@/lib/utils";
+import { subregionLabel } from "@/lib/regions";
 
 export interface Theme {
   id: string;
@@ -31,7 +32,7 @@ function t(locale: Locale, en: string, de: string): string {
 /** Build a pool of themes whose answer set size fits the difficulty, then sample `count`.
  *  `mode` matters: country-name letter themes are trivial in choice mode (you just
  *  read the first letter off the chips), so they're typing-only. */
-export function generateThemes(difficulty: Difficulty, locale: Locale, count: number, mode: "choice" | "type" = "choice"): Theme[] {
+export function generateThemes(difficulty: Difficulty, locale: Locale, count: number, mode: "choice" | "type" = "choice", random: () => number = Math.random): Theme[] {
   // Difficulty limits the size of a complete answer set, never its truth.
   // A valid neighbour/language answer must not disappear because it is obscure.
   const pool = COUNTRIES;
@@ -82,7 +83,7 @@ export function generateThemes(difficulty: Difficulty, locale: Locale, count: nu
     bySub.set(c.subregion, [...(bySub.get(c.subregion) ?? []), c.cca3]);
   }
   for (const [sub, codes] of bySub) {
-    add(`sub-${sub}`, t(locale, `Countries in ${sub}`, `Länder in ${sub}`), codes);
+    add(`sub-${sub}`, t(locale, `Countries in ${sub}`, `Länder in ${subregionLabel(sub, locale)}`), codes);
   }
 
   // Landlocked by region.
@@ -155,14 +156,30 @@ export function generateThemes(difficulty: Difficulty, locale: Locale, count: nu
     add("manyNeighbours", t(locale, "Countries with 6+ neighbours", "Länder mit 6+ Nachbarn"), mostNb);
   }
 
+  // Complete geographic groups, rather than a few hand-picked example answers.
+  const geographyGroups: { id: string; en: string; de: string; codes: string[] }[] = [
+    { id: "baltic-sea", en: "Countries with a Baltic Sea coast", de: "Länder mit Ostseeküste", codes: ["DNK", "EST", "FIN", "DEU", "LVA", "LTU", "POL", "RUS", "SWE"] },
+    { id: "black-sea", en: "Countries with a Black Sea coast", de: "Länder mit Schwarzmeerküste", codes: ["BGR", "GEO", "ROU", "RUS", "TUR", "UKR"] },
+    { id: "caspian-sea", en: "Countries bordering the Caspian Sea", de: "Anrainerstaaten des Kaspischen Meeres", codes: ["AZE", "IRN", "KAZ", "RUS", "TKM"] },
+    { id: "adriatic-sea", en: "Countries with an Adriatic Sea coast", de: "Länder mit Adriaküste", codes: ["ALB", "BIH", "HRV", "ITA", "MNE", "SVN"] },
+    { id: "red-sea", en: "Countries with a Red Sea coast (including its gulfs)", de: "Länder am Roten Meer (einschließlich seiner Golfe)", codes: ["DJI", "EGY", "ERI", "ISR", "JOR", "SAU", "SDN", "YEM"] },
+    { id: "persian-gulf", en: "Countries with a Persian Gulf coast", de: "Länder mit Küste am Persischen Golf", codes: ["BHR", "IRN", "IRQ", "KWT", "OMN", "QAT", "SAU", "ARE"] },
+    { id: "andes", en: "Countries crossed by the Andes", de: "Länder, durch die sich die Anden ziehen", codes: ["ARG", "BOL", "CHL", "COL", "ECU", "PER", "VEN"] },
+    { id: "central-america", en: "The seven countries of Central America", de: "Die sieben Staaten Mittelamerikas", codes: ["BLZ", "CRI", "SLV", "GTM", "HND", "NIC", "PAN"] },
+    { id: "caribbean-islands", en: "Sovereign island states in the Caribbean region", de: "Souveräne Inselstaaten der Karibikregion", codes: ["ATG", "BHS", "BRB", "CUB", "DMA", "DOM", "GRD", "HTI", "JAM", "KNA", "LCA", "VCT", "TTO"] },
+    { id: "north-africa-med", en: "African countries with a Mediterranean coast", de: "Afrikanische Länder mit Mittelmeerküste", codes: ["DZA", "EGY", "LBY", "MAR", "TUN"] },
+    { id: "south-america-pacific", en: "South American countries with a Pacific coast", de: "Südamerikanische Länder mit Pazifikküste", codes: ["CHL", "COL", "ECU", "PER"] },
+  ];
+  for (const group of geographyGroups) add(`geo-${group.id}`, t(locale, group.en, group.de), group.codes);
+
   // Unique by target signature, then sample.
   const seen = new Set<string>();
-  const unique = shuffle(candidates).filter((th) => {
+  const unique = shuffle(candidates, random).filter((th) => {
     const sig = [...th.targets].sort().join(",");
     if (seen.has(sig)) return false;
     seen.add(sig);
     return true;
   });
 
-  return sample(unique, Math.min(count, unique.length));
+  return sample(unique, Math.min(count, unique.length), random);
 }

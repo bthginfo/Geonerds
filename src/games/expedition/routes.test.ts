@@ -20,7 +20,8 @@ describe("Geo Expedition routes", () => {
     expect(energyLossForAccuracy(1, 3)).toBe(1);
     expect(energyLossForAccuracy(2, 3)).toBe(0);
     expect(starsForAccuracy(3, 3)).toBe(3);
-    expect(starsForAccuracy(2, 3)).toBe(1);
+    expect(starsForAccuracy(2, 3)).toBe(2);
+    expect(starsForAccuracy(1, 3)).toBe(1);
     expect(normalizedStageScore(3, 3, 3)).toBe(1000);
   });
 });

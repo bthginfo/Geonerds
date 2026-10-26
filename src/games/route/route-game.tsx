@@ -3,7 +3,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { motion } from "framer-motion";
 import { ArrowRight, Check, CornerDownLeft, Lightbulb } from "lucide-react";
-import type { Country } from "@/lib/types";
 import type { PlayHandlers } from "@/components/game/game-shell";
 import { WorldMap } from "@/components/map/world-map";
 import { FlagImage } from "@/components/flag-image";
@@ -12,45 +11,31 @@ import { Compass } from "@/components/map/compass";
 import { Button } from "@/components/ui/button";
 import { COUNTRIES, poolForDifficulty, countryName, getCountryByCcn3 } from "@/data/countries";
 import { countryAccepted } from "@/games/aliases";
-import { pickRoutePair, ccn3Neighbors, distancesFrom } from "./graph";
+import { generateRouteRounds, ccn3Neighbors } from "./graph";
 import { matchAnswer } from "@/lib/fuzzy";
 import { DIFFICULTY_MULTIPLIER } from "@/lib/scoring";
 import { sound } from "@/lib/sound";
 import { sample, shuffle, cn } from "@/lib/utils";
 import { useT } from "@/i18n/I18nProvider";
 import { GameLoadState } from "@/games/load-state";
+import { createSeededRandom } from "@/lib/random";
+import { useGameTimeouts } from "@/games/use-game-timeouts";
 
 const NO_FLAG = () => undefined;
 const STEP_POINTS = 60;
 const WRONG_PENALTY = 15;
 
-interface RouteRound {
-  a: Country;
-  b: Country;
-  optimal: number;
-  dist: Map<string, number>;
-}
-
 const PER_ROUTE_MS = 25000;
 
-export function RouteGame({ difficulty, mode, roundCount, timed, practice, onFinish, onExit }: PlayHandlers) {
+export function RouteGame({ difficulty, mode, roundCount, timed, scope, seed, practice, onFinish, onExit }: PlayHandlers) {
   const { t, locale } = useT();
 
-  const rounds = useMemo<RouteRound[]>(() => {
-    const pool = poolForDifficulty(difficulty);
+  const rounds = useMemo(() => {
+    const pool = poolForDifficulty(difficulty).filter((country) => !scope || country.region === scope);
     // Longer routes on the harder tiers so it isn't only quick 2-step hops.
     const [min, max] = difficulty === "easy" ? [2, 4] : difficulty === "hard" ? [5, 9] : [3, 6];
-    const count = roundCount === 0 ? 10 : roundCount;
-    const out: RouteRound[] = [];
-    let guard = 0;
-    while (out.length < count && guard++ < count * 8) {
-      const pair = pickRoutePair(pool, min, max);
-      if (pair && !out.some((p) => p.a.cca3 === pair.a.cca3 && p.b.cca3 === pair.b.cca3)) {
-        out.push({ ...pair, dist: distancesFrom(String(pair.b.ccn3)) });
-      }
-    }
-    return out;
-  }, [difficulty, roundCount]);
+    return generateRouteRounds(pool, min, max, roundCount || 10, seed ? createSeededRandom(seed) : Math.random);
+  }, [difficulty, roundCount, scope, seed]);
 
   const total = rounds.length;
   const budget = total * PER_ROUTE_MS;
@@ -63,6 +48,8 @@ export function RouteGame({ difficulty, mode, roundCount, timed, practice, onFin
   const [score, setScore] = useState(0);
   const [streak, setStreak] = useState(0);
   const [timeLeft, setTimeLeft] = useState(budget);
+  const [feedback, setFeedback] = useState("");
+  const { schedule, clearTimers } = useGameTimeouts();
 
   const startRef = useRef(Date.now());
   const scoreRef = useRef(0);
@@ -103,18 +90,20 @@ export function RouteGame({ difficulty, mode, roundCount, timed, practice, onFin
 
   const options = useMemo(() => {
     if (mode !== "choice" || done || !round) return [] as string[];
+    const random = seed ? createSeededRandom(`${seed}:options:${idx}:${current}`) : Math.random;
     const correct = nextSteps.slice(0, 2);
     const pool = COUNTRIES.filter(
       (c) => c.ccn3 && String(c.ccn3) !== current && !correct.includes(String(c.ccn3)) && !path.includes(String(c.ccn3))
     ).map((c) => String(c.ccn3));
-    const distractors = sample(pool, Math.max(0, 5 - correct.length));
-    return shuffle([...correct, ...distractors]);
+    const distractors = sample(pool, Math.max(0, 5 - correct.length), random);
+    return shuffle([...correct, ...distractors], random);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [mode, done, idx, current]);
+  }, [mode, done, idx, current, seed]);
 
   function doFinish() {
     if (finishedRef.current) return;
     finishedRef.current = true;
+    clearTimers();
     onFinish({
       score: scoreRef.current,
       correct: correctRef.current,
@@ -133,6 +122,7 @@ export function RouteGame({ difficulty, mode, roundCount, timed, practice, onFin
     attemptsRef.current += 1;
     correctRef.current += 1;
     const country = getCountryByCcn3(ccn3);
+    if (country) setFeedback(t("refresh.route.moved", { country: countryName(country, locale) }));
     if (country) hitsRef.current.push(country.cca3);
     const earned = Math.round(STEP_POINTS * DIFFICULTY_MULTIPLIER[difficulty]);
     scoreRef.current += earned;
@@ -149,6 +139,7 @@ export function RouteGame({ difficulty, mode, roundCount, timed, practice, onFin
     sound.wrong();
     attemptsRef.current += 1;
     setStreak(0);
+    setFeedback(t("refresh.route.wrong"));
     if (practice) return;
     scoreRef.current = Math.max(0, scoreRef.current - WRONG_PENALTY);
     setScore((s) => Math.max(0, s - WRONG_PENALTY));
@@ -160,7 +151,7 @@ export function RouteGame({ difficulty, mode, roundCount, timed, practice, onFin
     else {
       wrong();
       setFlash(ccn3);
-      setTimeout(() => setFlash((f) => (f === ccn3 ? null : f)), 400);
+      schedule(() => setFlash((f) => (f === ccn3 ? null : f)), 400);
     }
   }
 
@@ -175,7 +166,7 @@ export function RouteGame({ difficulty, mode, roundCount, timed, practice, onFin
     else {
       wrong();
       setShake(true);
-      setTimeout(() => setShake(false), 400);
+      schedule(() => setShake(false), 400);
     }
   }
 
@@ -186,6 +177,7 @@ export function RouteGame({ difficulty, mode, roundCount, timed, practice, onFin
     // Reveal a correct next step without points (so you never get stuck).
     sound.tick();
     setStreak(0);
+    setFeedback(t("refresh.route.hinted"));
     const np = [...path, nextSteps[0]];
     setPath(np);
     if (nextSteps[0] === bId) setDone(true);
@@ -199,10 +191,14 @@ export function RouteGame({ difficulty, mode, roundCount, timed, practice, onFin
       return;
     }
     const ni = idx + 1;
+    clearTimers();
     setIdx(ni);
     setPath([String(rounds[ni].a.ccn3)]);
     setDone(false);
     setInput("");
+    setFeedback("");
+    setFlash(null);
+    setShake(false);
   }
 
   function getFill(ccn3: string): string | undefined {
@@ -250,7 +246,7 @@ export function RouteGame({ difficulty, mode, roundCount, timed, practice, onFin
 
       <div className="mx-auto w-full max-w-md px-4 py-3">
         {done ? (
-          <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className="flex items-center gap-3">
+          <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className="flex flex-wrap items-center gap-3">
             <span className="flex items-center gap-1.5 font-semibold text-success">
               <Check className="h-5 w-5" />
               {t("route.reached")}
@@ -295,7 +291,7 @@ export function RouteGame({ difficulty, mode, roundCount, timed, practice, onFin
                   value={input}
                   onChange={(e) => setInput(e.target.value)}
                   onKeyDown={(e) => e.key === "Enter" && submitTyped()}
-                  autoFocus
+                  aria-label={t("type.placeholder")}
                   autoComplete="off"
                   autoCapitalize="words"
                   spellCheck={false}
@@ -305,17 +301,18 @@ export function RouteGame({ difficulty, mode, roundCount, timed, practice, onFin
                     shake ? "animate-shake border-danger" : "border-border"
                   )}
                 />
-                <Button size="lg" className="px-4" onClick={submitTyped} aria-label={t("type.submit")}>
+                <Button size="lg" className="px-4" disabled={!input.trim()} onClick={submitTyped} aria-label={t("type.submit")}>
                   <CornerDownLeft className="h-5 w-5" />
                 </Button>
               </div>
             )}
-            <button onClick={hint} className="mt-2 inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground">
+            <button onClick={hint} className="mt-2 inline-flex min-h-11 items-center gap-1 text-sm text-muted-foreground hover:text-foreground">
               <Lightbulb className="h-3.5 w-3.5" />
               {t("route.hint")}
             </button>
           </>
         )}
+        {feedback && <p role="status" aria-live="polite" className="mt-2 text-sm leading-relaxed text-muted-foreground">{feedback}</p>}
       </div>
     </div>
   );

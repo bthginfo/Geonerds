@@ -1,7 +1,7 @@
 import capitals from "../../../public/geo/capitals.json";
 import { COUNTRIES } from "@/data/countries";
 import { CAPITAL_DE } from "@/games/aliases";
-import { PLACES } from "@/games/pin/places";
+import { PLACES, LEGACY_PLACES, type Place } from "@/games/pin/places";
 import type { Difficulty, Locale } from "@/lib/types";
 
 export interface CompassCity {
@@ -29,7 +29,7 @@ const EXTRA_CITY_CODES: Record<string, string> = {
 };
 
 const countryByCode = new Map(COUNTRIES.map((country) => [country.cca3, country]));
-export const COMPASS_CITIES: CompassCity[] = [
+function citiesFromPlaces(places: readonly Place[]): CompassCity[] { return [
   ...capitals.flatMap((capital) => {
     const country = countryByCode.get(capital.code);
     if (!country) return [];
@@ -42,16 +42,19 @@ export const COMPASS_CITIES: CompassCity[] = [
       tier: country.difficulty,
     }];
   }),
-  ...PLACES.flatMap((place) => {
-    const cca3 = EXTRA_CITY_CODES[place.en];
+  ...places.flatMap((place) => {
+    const cca3 = place.cca3 ?? EXTRA_CITY_CODES[place.en];
     if (!cca3) return [];
-    return [{ id: `city:${place.en}`, name: { en: place.en, de: place.de }, lat: place.lat, lng: place.lng, cca3, tier: 1 }];
+    return [{ id: `city:${place.en}`, name: { en: place.en, de: place.de }, lat: place.lat, lng: place.lng, cca3, tier: place.cca3 ? 2 : 1 }];
   }),
-];
+]; }
+
+export const COMPASS_CITIES = citiesFromPlaces(PLACES);
+export const LEGACY_COMPASS_CITIES = citiesFromPlaces(LEGACY_PLACES);
 
 export function cityLabel(city: CompassCity, locale: Locale): string { return city.name[locale]; }
 
-export function cityPool(difficulty: Difficulty): CompassCity[] {
+export function cityPool(difficulty: Difficulty, catalog = COMPASS_CITIES): CompassCity[] {
   const maxTier = difficulty === "easy" ? 1 : difficulty === "medium" ? 2 : 4;
-  return COMPASS_CITIES.filter((city) => city.tier <= maxTier);
+  return catalog.filter((city) => city.tier <= maxTier);
 }

@@ -20,6 +20,7 @@ vi.mock("@/lib/ratelimit", () => ({ clientIp: () => "127.0.0.1", rateLimit: asyn
 
 import { actGeoChallenge, createGeoChallenge, getGeoChallenge, listGeoChallenges, sameGeoOrigin, serializeGeoChallenge, startGeoChallenge, submitGeoChallenge } from "./geo-challenge-server";
 import { ADASTRA_CATALOG_SEED_PREFIX } from "./adastra-catalog-version";
+import { GEO_CONTENT_SEED_PREFIX } from "./geo-content-version";
 
 const base = {
   id: "duel", challenger_id: "alice", opponent_id: "bob", challenger_name: "Alice", opponent_name: "Bob",
@@ -88,8 +89,8 @@ describe("Geo challenge API access", () => {
 describe("Geo challenge mutation guards", () => {
   it.each([
     ["adastra", "", ADASTRA_CATALOG_SEED_PREFIX, 10],
-    ["flags", "world", "geo:", 10],
-    ["flags", "world", "geo:", 0],
+    ["flags", "world", GEO_CONTENT_SEED_PREFIX, 10],
+    ["flags", "world", GEO_CONTENT_SEED_PREFIX, 0],
   ])("versions new %s seeds with %s scope without changing other games", async (gameId, variant, prefix, rounds) => {
     state.responses = [[{ id: "alice", name: "Alice" }], [{ id: "bob", name: "Bob" }], [{ count: 0 }], [], []];
     const response = await createGeoChallenge(request({
@@ -97,7 +98,7 @@ describe("Geo challenge mutation guards", () => {
     }));
     expect(response.status).toBe(201);
     const insert = state.calls.find((call) => call.text.includes("INSERT INTO gn_challenges"))!;
-    const seed = insert.values.find((value) => typeof value === "string" && value.startsWith("geo:"));
+    const seed = insert.values.find((value) => typeof value === "string" && value.startsWith(prefix));
     expect(seed).toEqual(expect.stringMatching(new RegExp(`^${prefix}[A-Za-z0-9_-]{32}$`)));
     expect(insert.values[7]).toBe(rounds);
   });

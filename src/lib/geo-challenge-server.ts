@@ -11,6 +11,7 @@ import { CHALLENGE_INVITE_TTL_MS, CHALLENGE_PLAY_TTL_MS, compareGeoAttempts, geo
 import { guestTokenHash, newGuestChallengeAccess, readGuestChallengeToken, validGuestChallengeToken } from "./geo-challenge-guest";
 import type { RunResult } from "@/lib/types";
 import { ADASTRA_CATALOG_SEED_PREFIX } from "@/lib/adastra-catalog-version";
+import { GEO_CONTENT_SEED_PREFIX } from "@/lib/geo-content-version";
 
 type Query = postgres.Sql | postgres.TransactionSql;
 type Row = Record<string, unknown>;
@@ -271,7 +272,7 @@ export async function createGeoChallenge(req: Request) {
         if (duplicates.length) return failure("already_challenged", 409);
       }
       const id = newId();
-      const seed = `${config.gameId === "adastra" ? ADASTRA_CATALOG_SEED_PREFIX : "geo:"}${randomBytes(24).toString("base64url")}`;
+      const seed = `${config.gameId === "adastra" ? ADASTRA_CATALOG_SEED_PREFIX : GEO_CONTENT_SEED_PREFIX}${randomBytes(24).toString("base64url")}`;
       const expiresAt = new Date(Date.now() + CHALLENGE_INVITE_TTL_MS);
       await tx`INSERT INTO gn_challenges (id,challenger_id,opponent_id,invitation_type,game_id,difficulty,mode,rounds,timed,variant,seed,expires_at)
         VALUES (${id},${viewer.userId},${opponent ? String(opponent.id) : null},${invitationType},${config.gameId},${config.difficulty},${config.mode},${config.rounds},${config.timed},${config.variant},${seed},${expiresAt})`;

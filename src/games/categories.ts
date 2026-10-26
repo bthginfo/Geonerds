@@ -32,7 +32,7 @@ export const GAME_CATEGORIES: GameCategory[] = [
     name: { de: "Logik & Verbindungen", en: "Logic & connections" },
     description: { de: "Kombiniere Hinweise, finde Zusammenhänge und denke um die Ecke.", en: "Connect the clues, uncover relationships and think a step ahead." },
     icon: Network,
-    games: ["grid", "minesweeper", "connections", "neighbors", "border-chain"],
+    games: ["grid", "minesweeper", "connections", "neighbors", "border-chain", "atlas-match", "geo-balance"],
   },
   {
     id: "knowledge",

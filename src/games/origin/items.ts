@@ -1,4 +1,4 @@
-import { LANDMARKS } from "@/data/landmarks";
+import { LANDMARKS, LEGACY_LANDMARKS } from "@/data/landmarks";
 
 export type ItemCategory =
   | "animal"
@@ -239,6 +239,11 @@ const AMBIGUOUS_ITEMS = new Set([
 export const ITEMS: OriginItem[] = [
   ...LEGACY_ITEMS.filter((item) => !AMBIGUOUS_ITEMS.has(item.en)),
   ...LANDMARKS.map((place): OriginItem => ({ ...place, category: "symbol", emoji: "🏛️" })),
+];
+
+export const LEGACY_ORIGIN_ITEMS: OriginItem[] = [
+  ...LEGACY_ITEMS.filter((item) => !AMBIGUOUS_ITEMS.has(item.en)),
+  ...LEGACY_LANDMARKS.map((place): OriginItem => ({ ...place, category: "symbol", emoji: "🏛️" })),
 ];
 
 /** Item difficulty tiers permitted at each game difficulty. */

@@ -153,13 +153,31 @@ export function generateGrid(countries: Country[], difficulty: Difficulty, seed:
   const clean = countries.filter((country) => country.independent && country.cca3 && country.latlng);
   const random = seededRandom(seed);
   const pool = constraintsFor(clean, difficulty);
+  const memberships = new Map(pool.map((constraint) => [constraint.id,
+    new Set(clean.filter((country) => matchesGridConstraint(country, constraint)).map((country) => country.cca3)),
+  ]));
+  const floor = MIN_CANDIDATES[difficulty];
+  // Construct compatible columns instead of gambling on six unrelated clues.
+  // Sparse hard-mode border clues used to force almost every seed into the
+  // same fallback. Each row must have enough distinct countries for 3 cells.
+  const rowPool = pool.filter((constraint) => memberships.get(constraint.id)!.size >= floor * 3);
   for (let attempt = 0; attempt < RETRIES; attempt++) {
-    const picked = shuffle(pool, random).slice(0, 6);
-    const rows = picked.slice(0, 3);
-    const columns = picked.slice(3);
-    if (new Set(picked.map((c) => c.id)).size !== 6) continue;
-    const puzzle = tryBoard(clean, difficulty, rows, columns, random, seed >>> 0, false);
-    if (puzzle) return puzzle;
+    const rows = shuffle(rowPool, random).slice(0, 3);
+    if (rows.length !== 3) continue;
+    const rowIds = new Set(rows.map((constraint) => constraint.id));
+    const compatible = shuffle(pool.filter((column) => !rowIds.has(column.id) && rows.every((row) => {
+      const columnCodes = memberships.get(column.id)!;
+      let overlap = 0;
+      for (const code of memberships.get(row.id)!) if (columnCodes.has(code)) overlap++;
+      return overlap >= floor;
+    })), random);
+    if (compatible.length < 3) continue;
+    // A few different column triples handle overlap without unbounded search.
+    for (let start = 0; start < Math.min(compatible.length - 2, 6); start++) {
+      const columns = compatible.slice(start, start + 3);
+      const puzzle = tryBoard(clean, difficulty, rows, columns, random, seed >>> 0, false);
+      if (puzzle) return puzzle;
+    }
   }
   const puzzle = generateFallbackGrid(clean, difficulty, seed, random);
   if (!puzzle) throw new Error(`Geo Grid fallback is invalid for ${difficulty}`);

@@ -105,6 +105,7 @@ export function ColorFlagGame({ difficulty, variant, roundCount, timed, practice
   const [fills, setFills] = useState<(string | null)[]>([]);
   const [answered, setAnswered] = useState(false);
   const [lastPct, setLastPct] = useState<number | null>(null);
+  const [lastSwatchCorrect, setLastSwatchCorrect] = useState(false);
   const [pickHex, setPickHex] = useState("#888888");
   const [flashWrong, setFlashWrong] = useState(false);
   const [score, setScore] = useState(0);
@@ -237,6 +238,7 @@ export function ColorFlagGame({ difficulty, variant, roundCount, timed, practice
     answerLockRef.current = true;
     totalRef.current += 1;
     const ok = hex === target;
+    setLastSwatchCorrect(ok);
     setFill(groupIdx, target);
     setAnswered(true);
     if (ok) {
@@ -262,11 +264,7 @@ export function ColorFlagGame({ difficulty, variant, roundCount, timed, practice
         if (livesRef.current <= 0) gameOverRef.current = true;
       }
     }
-    later(() => {
-      if (getFlagPolicyNote(flag.code, locale)) return;
-      if (gameOverRef.current) doFinish();
-      else advanceGroup();
-    }, 700);
+    // Leave the correction visible until the player chooses to continue.
   }
 
   function confirmPro() {
@@ -380,9 +378,10 @@ export function ColorFlagGame({ difficulty, variant, roundCount, timed, practice
             </div>
           )}
         </div>
-        {answered && getFlagPolicyNote(flag.code, locale) && <div className="mt-4 w-full space-y-3">
-          <p className="rounded-xl border border-border bg-muted/50 p-3 text-xs leading-relaxed text-muted-foreground">{getFlagPolicyNote(flag.code, locale)}</p>
-          {!pro && <Button className="w-full gap-2" onClick={() => gameOverRef.current ? doFinish() : advanceGroup()}>{lives === 0 ? t("common.continue") : t("common.next")}<ArrowRight className="h-4 w-4" /></Button>}
+        {answered && <div className="mt-4 w-full space-y-3">
+          {!pro && <p role="status" aria-live="polite" className={cn("text-sm font-semibold", lastSwatchCorrect ? "text-success" : "text-danger")}>{t(lastSwatchCorrect ? "refresh.color.correct" : "refresh.color.wrong")}</p>}
+          {getFlagPolicyNote(flag.code, locale) && <p className="rounded-xl border border-border bg-muted/50 p-3 text-xs leading-relaxed text-muted-foreground">{getFlagPolicyNote(flag.code, locale)}</p>}
+          {!pro && <Button className="w-full gap-2" onClick={() => gameOverRef.current ? doFinish() : advanceGroup()}>{lives === 0 || groupIdx + 1 >= groups && idx + 1 >= total ? t("common.continue") : t("common.next")}<ArrowRight className="h-4 w-4" /></Button>}
         </div>}
       </div>
     </div>

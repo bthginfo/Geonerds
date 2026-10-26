@@ -6,9 +6,10 @@ import { QuizGame, type QuizRound } from "@/games/quiz-core";
 import { COUNTRIES, getCountryByCca3, countryName } from "@/data/countries";
 import { countryAccepted } from "@/games/aliases";
 import { sample, shuffle } from "@/lib/utils";
-import { ITEMS, ITEM_MAX_TIER } from "./items";
+import { ITEMS, LEGACY_ORIGIN_ITEMS, ITEM_MAX_TIER } from "./items";
 import { useT } from "@/i18n/I18nProvider";
 import { createSeededRandom } from "@/lib/random";
+import { isLegacyGeoSeed } from "@/lib/geo-content-version";
 
 export function OriginGame({ difficulty, mode, roundCount, timed, practice, seed, challenge, onFinish, onExit }: PlayHandlers) {
   const { t, locale } = useT();
@@ -19,7 +20,7 @@ export function OriginGame({ difficulty, mode, roundCount, timed, practice, seed
   const rounds = useMemo<QuizRound[]>(() => {
     const random = seed ? createSeededRandom(seed) : Math.random;
     const maxTier = ITEM_MAX_TIER[difficulty];
-    const usable = ITEMS.filter((it) => it.tier <= maxTier && getCountryByCca3(it.cca3));
+    const usable = (isLegacyGeoSeed(seed) ? LEGACY_ORIGIN_ITEMS : ITEMS).filter((it) => it.tier <= maxTier && getCountryByCca3(it.cca3));
     const count = roundCount === 0 ? usable.length : roundCount;
     return sample(usable, Math.min(count, usable.length), random).map((item) => {
       const answer = getCountryByCca3(item.cca3)!;

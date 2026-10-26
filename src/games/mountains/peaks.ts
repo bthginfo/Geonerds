@@ -7,9 +7,10 @@ export interface Peak {
   /** 1 = famous, 2 = medium, 3 = obscure. */
   tier: 1 | 2 | 3;
   aliases?: string[];
+  source?: string;
 }
 
-export const PEAKS: Peak[] = [
+export const LEGACY_PEAKS: Peak[] = [
   { en: "Mount Everest", de: "Mount Everest", lat: 27.9881, lng: 86.925, kind: "mountain", tier: 1, aliases: ["Everest", "Sagarmatha", "Chomolungma"] },
   { en: "Kilimanjaro", de: "Kilimandscharo", lat: -3.0674, lng: 37.3556, kind: "volcano", tier: 1, aliases: ["Mount Kilimanjaro"] },
   { en: "Mont Blanc", de: "Montblanc", lat: 45.8326, lng: 6.8652, kind: "mountain", tier: 1 },
@@ -88,6 +89,24 @@ export const PEAKS: Peak[] = [
   { en: "Puncak Jaya", de: "Puncak Jaya", lat: -4.078, lng: 137.158, kind: "mountain", tier: 3, aliases: ["Carstensz Pyramid", "Carstensz-Pyramide"] },
   { en: "Mount Wilhelm", de: "Mount Wilhelm", lat: -5.795, lng: 145.029, kind: "mountain", tier: 3 },
 ];
+
+// Coordinates checked against Smithsonian Global Volcanism Program / GSJ.
+export const EXTRA_PEAKS: Peak[] = [
+  { en: "Kīlauea", de: "Kīlauea", lat: 19.421, lng: -155.287, kind: "volcano", tier: 1, aliases: ["Kilauea"], source: "https://volcano.si.edu/volcano.cfm?vn=332010" },
+  { en: "Piton de la Fournaise", de: "Piton de la Fournaise", lat: -21.244, lng: 55.708, kind: "volcano", tier: 2, source: "https://volcano.si.edu/volcano.cfm?vn=233020" },
+  { en: "Sakurajima", de: "Sakurajima", lat: 31.5925, lng: 130.6567, kind: "volcano", tier: 2, aliases: ["Sakura-jima"], source: "https://gbank.gsj.jp/volcano/Quat_Vol/volcano_data/K20.html" },
+  { en: "Mount Ruapehu", de: "Ruapehu", lat: -39.28, lng: 175.57, kind: "volcano", tier: 2, aliases: ["Ruapehu"], source: "https://volcano.si.edu/volcano.cfm?vn=241100" },
+  { en: "Mount Taranaki", de: "Taranaki", lat: -39.3, lng: 174.07, kind: "volcano", tier: 2, aliases: ["Taranaki", "Mount Egmont", "Taranaki Maunga"], source: "https://volcano.si.edu/volcano.cfm?vn=241030" },
+  { en: "Erta Ale", de: "Erta Ale", lat: 13.601, lng: 40.666, kind: "volcano", tier: 3, source: "https://volcano.si.edu/volcano.cfm?vn=221080" },
+  { en: "Nyamulagira", de: "Nyamulagira", lat: -1.408, lng: 29.2, kind: "volcano", tier: 3, aliases: ["Nyamuragira"], source: "https://volcano.si.edu/volcano.cfm?vn=223020" },
+  { en: "Ol Doinyo Lengai", de: "Ol Doinyo Lengai", lat: -2.764, lng: 35.914, kind: "volcano", tier: 3, source: "https://volcano.si.edu/volcano.cfm?vn=222120" },
+  { en: "Mount Tambora", de: "Tambora", lat: -8.25, lng: 118, kind: "volcano", tier: 2, aliases: ["Tambora"], source: "https://volcano.si.edu/volcano.cfm?vn=264040" },
+  { en: "Volcán de Fuego", de: "Volcán de Fuego", lat: 14.4748, lng: -90.8806, kind: "volcano", tier: 2, aliases: ["Fuego", "Volcan Fuego", "Volcan de Fuego"], source: "https://volcano.si.edu/volcano.cfm?vn=342090" },
+  { en: "Mount Yasur", de: "Yasur", lat: -19.532, lng: 169.447, kind: "volcano", tier: 3, aliases: ["Yasur"], source: "https://volcano.si.edu/volcano.cfm?vn=257100" },
+  { en: "Ulawun", de: "Ulawun", lat: -5.05, lng: 151.33, kind: "volcano", tier: 3, source: "https://volcano.si.edu/volcano.cfm?vn=252120" },
+];
+
+export const PEAKS: Peak[] = [...LEGACY_PEAKS, ...EXTRA_PEAKS];
 
 export const PEAK_MAX_TIER: Record<"easy" | "medium" | "hard", number> = {
   easy: 1,

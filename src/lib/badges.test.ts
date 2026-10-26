@@ -1,7 +1,16 @@
 import { describe, expect, it } from "vitest";
 import { BADGES, badgeCategory, badgeTier, computeStats } from "./badges";
+import type { ScoreEntry } from "./leaderboard/types";
 
 describe("badge metadata integrity", () => {
+  it("does not call a completed memory board flawless when turns included misses", () => {
+    const run: ScoreEntry = { id: "memory-run", gameId: "atlas-match", difficulty: "hard", mode: "choice",
+      score: 5000, correct: 6, total: 10, bestStreak: 3, durationMs: 60000, createdAt: Date.now() };
+    const flawless = BADGES.find((badge) => badge.id === "perfect")!;
+    expect(flawless.earned(computeStats([run]))).toBe(false);
+    expect(computeStats([run]).hardPerfect).toBe(0);
+    expect(flawless.earned(computeStats([{ ...run, total: 6 }]))).toBe(true);
+  });
   it("awards Game Creator only from the signed-in account's server grant", () => {
     const badge = BADGES.find((item) => item.id === "game-creator")!;
     expect(badge.name).toEqual({ en: "Game Creator", de: "Game Creator" });

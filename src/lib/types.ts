@@ -55,7 +55,9 @@ export type GameId =
   | "city-compass"
   | "flag-mosaic"
   | "country-radar"
-  | "adastra";
+  | "adastra"
+  | "atlas-match"
+  | "geo-balance";
 
 export type Difficulty = "easy" | "medium" | "hard";
 

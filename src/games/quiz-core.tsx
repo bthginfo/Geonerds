@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { AnimatePresence, motion } from "framer-motion";
+import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { Check, X, ArrowRight, CornerDownLeft, Lightbulb } from "lucide-react";
 import type { AnswerMode, Country, Difficulty, GameId } from "@/lib/types";
 import type { PlayResult } from "@/components/game/game-shell";
@@ -14,6 +14,7 @@ import { scoreForAnswer } from "@/lib/scoring";
 import { matchAnswer } from "@/lib/fuzzy";
 import { randomFact } from "@/lib/facts";
 import { sound } from "@/lib/sound";
+import { haptic } from "@/lib/haptics";
 import { cn } from "@/lib/utils";
 
 const TIME_LIMIT_MS = 10000;
@@ -61,6 +62,7 @@ export function QuizGame({
   typePlaceholderKey?: string;
 }) {
   const { t, locale } = useT();
+  const reducedMotion = useReducedMotion();
   const [idx, setIdx] = useState(0);
   const [score, setScore] = useState(0);
   const [streak, setStreak] = useState(0);
@@ -89,14 +91,31 @@ export function QuizGame({
   const advanceLockRef = useRef(false);
   const marksRef = useRef<boolean[]>([]);
   const hitsRef = useRef<string[]>([]);
+  const spellingRetryRef = useRef(false);
 
   const round = rounds[idx];
   const inputRef = useRef<HTMLInputElement>(null);
+  const nextRef = useRef<HTMLButtonElement>(null);
+  const feedbackRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     advanceLockRef.current = false;
-    if (mode === "type") inputRef.current?.focus();
+    // A mobile keyboard must not hide the question before the player sees it.
+    if (mode === "type" && window.matchMedia("(pointer: fine)").matches) {
+      inputRef.current?.focus({ preventScroll: true });
+    }
   }, [idx, mode]);
+
+  useEffect(() => {
+    if (!answered) return;
+    nextRef.current?.focus({ preventScroll: true });
+    const feedback = feedbackRef.current;
+    if (!feedback) return;
+    const bounds = feedback.getBoundingClientRect();
+    if (bounds.bottom > window.innerHeight || bounds.top < 0) {
+      feedback.scrollIntoView({ block: "nearest", behavior: reducedMotion ? "instant" : "smooth" });
+    }
+  }, [answered, reducedMotion]);
 
   function doFinish() {
     if (finishedRef.current) return;
@@ -161,6 +180,7 @@ export function QuizGame({
     setGain(earned);
     if (correct) {
       sound.correct();
+      haptic.success();
       correctRef.current += 1;
       setStreak((s) => {
         const ns = s + 1;
@@ -170,6 +190,7 @@ export function QuizGame({
       if (round.factCountry) setFact(randomFact(round.factCountry, locale));
     } else {
       sound.wrong();
+      haptic.error();
       setStreak(0);
       loseLife();
     }
@@ -188,6 +209,7 @@ export function QuizGame({
     setSelectedId(null);
     setTyped("");
     setHint(null);
+    spellingRetryRef.current = false;
     setGain(null);
     setFact(null);
     setTimedOut(false);
@@ -195,7 +217,7 @@ export function QuizGame({
   }
 
   function pickOption(id: string) {
-    if (answered) return;
+    if (answered || answerLockRef.current || finishedRef.current || !round) return;
     setSelectedId(id);
     commit(id === round.correctId);
   }
@@ -204,15 +226,16 @@ export function QuizGame({
     if (answered) return;
     if (!typed.trim()) return;
     const res = matchAnswer(typed, round.accepted);
-    if (res.status === "near" && res.suggestion) {
-      setHint(t("type.almost", { guess: res.suggestion }));
+    if (res.status === "near" && !spellingRetryRef.current) {
+      spellingRetryRef.current = true;
+      setHint(t("refresh.quiz.retry"));
       return;
     }
     commit(res.status === "correct");
   }
 
   // progress fraction 0..1
-  const progress = (idx + (answered ? 1 : 0)) / total;
+  const progress = total > 0 ? (idx + (answered ? 1 : 0)) / total : 0;
 
   if (!round) {
     return <GameLoadState onExit={onExit} empty />;
@@ -236,10 +259,17 @@ export function QuizGame({
         <AnimatePresence mode="wait">
           <motion.div
             key={round.key}
-            initial={{ opacity: 0, y: 14 }}
+            initial={reducedMotion ? false : { opacity: 0, y: 14 }}
             animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -14 }}
-            transition={{ duration: 0.22 }}
+            exit={reducedMotion ? { opacity: 1 } : { opacity: 0, y: -14 }}
+            transition={{ duration: reducedMotion ? 0 : 0.22 }}
+            onAnimationComplete={() => {
+              // AnimatePresence mounts the next input after the previous card
+              // exits, later than the round-index effect above.
+              if (mode === "type" && !answerLockRef.current && window.matchMedia("(pointer: fine)").matches) {
+                inputRef.current?.focus({ preventScroll: true });
+              }
+            }}
             className="flex flex-1 flex-col"
           >
             <div className="relative flex flex-1 items-center justify-center py-4">
@@ -247,8 +277,8 @@ export function QuizGame({
               <AnimatePresence>
                 {gain != null && gain !== 0 && (
                   <motion.div
-                    initial={{ opacity: 0, y: 0, scale: 0.8 }}
-                    animate={{ opacity: 1, y: -28, scale: 1 }}
+                    initial={reducedMotion ? false : { opacity: 0, y: 0, scale: 0.8 }}
+                    animate={{ opacity: 1, y: reducedMotion ? 0 : -28, scale: 1 }}
                     exit={{ opacity: 0 }}
                     className={cn(
                       "pointer-events-none absolute right-2 top-2 rounded-full px-2.5 py-1 text-sm font-bold text-white",
@@ -272,7 +302,7 @@ export function QuizGame({
                       disabled={answered}
                       onClick={() => pickOption(o.id)}
                       className={cn(
-                        "flex min-h-12 items-center justify-center rounded-xl border-2 px-4 py-3 text-center text-sm font-semibold transition-all active:scale-[0.98]",
+                        "flex min-h-12 min-w-0 items-center justify-center break-words rounded-xl border-2 px-4 py-3 text-center text-sm font-semibold transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary active:scale-[0.98]",
                         !answered && "border-border bg-card hover:border-primary/50 hover:bg-muted/50",
                         answered && isCorrect && "border-success bg-success/15 text-success",
                         answered && isSelected && !isCorrect && "border-danger bg-danger/15 text-danger",
@@ -297,7 +327,8 @@ export function QuizGame({
                       else if (typed.trim()) submitTyped();
                     }}
                     disabled={answered}
-                    autoFocus
+                    aria-label={t(typePlaceholderKey)}
+                    aria-describedby={hint && !answered ? "quiz-spelling-hint" : undefined}
                     autoComplete="off"
                     autoCorrect="off"
                     autoCapitalize="words"
@@ -318,23 +349,23 @@ export function QuizGame({
                   )}
                 </div>
                 {hint && !answered && (
-                  <p className="mt-2 text-center text-sm font-medium text-warning">{hint}</p>
+                  <p id="quiz-spelling-hint" role="status" className="mt-2 text-center text-sm font-medium text-amber-800 dark:text-warning">{hint}</p>
                 )}
               </div>
             )}
 
-            <div className="mt-4 min-h-14">
+            <div ref={feedbackRef} className="mt-4 min-h-14 scroll-mb-6">
               <AnimatePresence>
                 {answered && (
                   <motion.div
-                    initial={{ opacity: 0, y: 8 }}
+                    initial={reducedMotion ? false : { opacity: 0, y: 8 }}
                     animate={{ opacity: 1, y: 0 }}
                     className="space-y-2"
                     role="status"
                     aria-live="polite"
                   >
-                    <div className="flex items-center justify-between gap-3">
-                      <div className="flex items-center gap-2 text-sm font-semibold">
+                    <div className="flex flex-wrap items-center justify-between gap-3">
+                      <div className="min-w-0 flex-1 text-sm font-semibold">
                         {lastCorrect ? (
                           <span className="flex items-center gap-1 text-success">
                             <Check className="h-5 w-5" /> {t("common.correct")}
@@ -351,7 +382,7 @@ export function QuizGame({
                           </span>
                         )}
                       </div>
-                      <Button onClick={next} className="gap-1.5">
+                      <Button ref={nextRef} onClick={next} className="shrink-0 gap-1.5">
                         {gameOverRef.current || idx + 1 >= total ? t("common.continue") : t("common.next")}
                         <ArrowRight className="h-4 w-4" />
                       </Button>

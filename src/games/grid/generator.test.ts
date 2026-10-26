@@ -45,4 +45,11 @@ describe("Geo Grid generator", () => {
       expect(new Set(puzzle?.witness).size).toBe(9);
     }
   });
+
+  it("gives hard mode varied compatible boards instead of the same fallback", () => {
+    const puzzles = Array.from({ length: 60 }, (_, seed) => generateGrid(COUNTRIES, "hard", seed));
+    const signatures = puzzles.map((puzzle) => [...puzzle.rows, ...puzzle.columns].map((clue) => clue.id).join("|"));
+    expect(new Set(signatures).size).toBeGreaterThanOrEqual(55);
+    expect(puzzles.filter((puzzle) => puzzle.fallback).length).toBeLessThanOrEqual(2);
+  });
 });

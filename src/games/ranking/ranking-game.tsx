@@ -11,20 +11,13 @@ import { GameTopBar, ScorePill, StreakPill, RoundPill, TimerPill } from "@/compo
 import { Button } from "@/components/ui/button";
 import { BASE_POINTS, DIFFICULTY_MULTIPLIER } from "@/lib/scoring";
 import { sound } from "@/lib/sound";
-import { sample, shuffle, pickOne, formatNumber, cn } from "@/lib/utils";
+import { formatNumber, cn } from "@/lib/utils";
 import { useT } from "@/i18n/I18nProvider";
 import { GameLoadState } from "@/games/load-state";
+import { createSeededRandom } from "@/lib/random";
+import { generateRankingRounds, rankingValue as mval, type RankingMetric as Metric } from "./generator";
 
-type Metric = "population" | "area" | "gdp" | "density" | "neighbors";
 const PER_ROUND_BUDGET_MS = 16000;
-
-function mval(c: Country, m: Metric): number {
-  if (m === "population") return c.population;
-  if (m === "area") return c.area;
-  if (m === "gdp") return c.gdp ?? 0;
-  if (m === "neighbors") return c.borders.length;
-  return c.area > 0 ? c.population / c.area : 0;
-}
 
 function fmt(v: number, m: Metric, locale: string): string {
   const loc = locale === "de" ? "de-DE" : "en-US";
@@ -35,44 +28,13 @@ function fmt(v: number, m: Metric, locale: string): string {
   return formatNumber(v, locale);
 }
 
-interface RankRound {
-  metric: Metric;
-  items: Country[];
-  sorted: Country[]; // ordered to match `dir` (top of the list first)
-  dir: "desc" | "asc";
-}
-
-export function RankingGame({ difficulty, roundCount, timed, scope, practice, onFinish, onExit }: PlayHandlers) {
+export function RankingGame({ difficulty, roundCount, timed, scope, practice, seed, onFinish, onExit }: PlayHandlers) {
   const { t, locale } = useT();
-  const n = difficulty === "easy" ? 3 : difficulty === "hard" ? 5 : 4;
 
-  const rounds = useMemo<RankRound[]>(() => {
+  const rounds = useMemo(() => {
     const base = poolForDifficulty(difficulty).filter((country) => !scope || country.region === scope);
-    const count = roundCount === 0 ? 25 : roundCount;
-    const out: RankRound[] = [];
-    for (let i = 0; i < count; i++) {
-      const metric = pickOne<Metric>(["population", "area", "gdp", "density", "neighbors"]);
-      const pool = base.filter((c) => (metric === "gdp" ? (c.gdp ?? 0) > 0 : mval(c, metric) > 0));
-      const picked: Country[] = [];
-      const seen = new Set<number>();
-      for (const c of sample(pool, pool.length)) {
-        const v = Math.round(mval(c, metric));
-        if (!seen.has(v)) {
-          seen.add(v);
-          picked.push(c);
-        }
-        if (picked.length === n) break;
-      }
-      if (picked.length < n) continue;
-      // Mix it up: sometimes rank from the top, sometimes from the bottom.
-      const dir: "desc" | "asc" = Math.random() < 0.5 ? "desc" : "asc";
-      const sorted = [...picked].sort((a, b) =>
-        dir === "desc" ? mval(b, metric) - mval(a, metric) : mval(a, metric) - mval(b, metric)
-      );
-      out.push({ metric, items: shuffle(picked), sorted, dir });
-    }
-    return out;
-  }, [difficulty, roundCount, n, scope]);
+    return generateRankingRounds(base, difficulty, roundCount || 10, seed ? createSeededRandom(seed) : Math.random);
+  }, [difficulty, roundCount, scope, seed]);
 
   const total = rounds.length;
   const budget = total * PER_ROUND_BUDGET_MS;
@@ -205,7 +167,7 @@ export function RankingGame({ difficulty, roundCount, timed, scope, practice, on
                 value={c}
                 dragListener={!answered}
                 className={cn(
-                  "flex select-none items-center gap-3 rounded-xl border-2 bg-card px-3 py-3",
+                  "flex min-w-0 select-none items-center gap-2 rounded-xl border-2 bg-card px-3 py-3 sm:gap-3",
                   !answered && "cursor-grab border-border active:cursor-grabbing",
                   answered && isRight && "border-success bg-success/15",
                   answered && !isRight && "border-danger bg-danger/15"
@@ -220,14 +182,14 @@ export function RankingGame({ difficulty, roundCount, timed, scope, practice, on
                   {i + 1}
                 </span>
                 <FlagImage code={c.flag} alt="" className="aspect-[4/3] w-9 shrink-0" />
-                <span className="flex-1 font-semibold">{countryName(c, locale)}</span>
+                <span className="min-w-0 flex-1 break-words text-sm font-semibold sm:text-base">{countryName(c, locale)}</span>
                 {answered ? (
                   <span className="text-right text-xs tabular-nums text-muted-foreground"><span className="block font-bold">#{correctRank + 1}</span>{fmt(mval(c, round.metric), round.metric, locale)}</span>
                 ) : (
                   <div className="flex shrink-0 items-center gap-1">
-                    <button type="button" disabled={i === 0} onPointerDown={(event) => event.stopPropagation()} onClick={() => moveItem(i, -1)} aria-label={`${countryName(c, locale)}: ${locale === "de" ? "nach oben" : "move up"}`} className="flex h-11 w-9 items-center justify-center rounded-lg hover:bg-muted disabled:opacity-25"><ArrowUp className="h-4 w-4" /></button>
-                    <button type="button" disabled={i === arrangement.length - 1} onPointerDown={(event) => event.stopPropagation()} onClick={() => moveItem(i, 1)} aria-label={`${countryName(c, locale)}: ${locale === "de" ? "nach unten" : "move down"}`} className="flex h-11 w-9 items-center justify-center rounded-lg hover:bg-muted disabled:opacity-25"><ArrowDown className="h-4 w-4" /></button>
-                    <GripVertical className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
+                    <button type="button" disabled={i === 0} onPointerDown={(event) => event.stopPropagation()} onClick={() => moveItem(i, -1)} aria-label={`${countryName(c, locale)}: ${locale === "de" ? "nach oben" : "move up"}`} className="flex h-11 w-11 items-center justify-center rounded-lg hover:bg-muted disabled:opacity-25"><ArrowUp className="h-4 w-4" /></button>
+                    <button type="button" disabled={i === arrangement.length - 1} onPointerDown={(event) => event.stopPropagation()} onClick={() => moveItem(i, 1)} aria-label={`${countryName(c, locale)}: ${locale === "de" ? "nach unten" : "move down"}`} className="flex h-11 w-11 items-center justify-center rounded-lg hover:bg-muted disabled:opacity-25"><ArrowDown className="h-4 w-4" /></button>
+                    <GripVertical className="hidden h-4 w-4 text-muted-foreground sm:block" aria-hidden="true" />
                   </div>
                 )}
               </Reorder.Item>

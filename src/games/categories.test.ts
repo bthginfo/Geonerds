@@ -35,7 +35,10 @@ describe("themed game catalog", () => {
     const visible = categories.flatMap((group) => group.games);
     expect([...visible].sort()).toEqual([...ids].sort());
     expect(new Set(visible).size).toBe(visible.length);
-    expect(categories.some((group) => group.id === "new")).toBe(featured);
+    expect(categories.some((group) => group.id === "new")).toBe(GAMES.some((game) => {
+      if (game.id === "adastra") return featured;
+      return now !== null && now >= Date.parse("2026-10-26T07:30:00Z") && now < Date.parse("2026-11-26T07:30:00Z") && ["atlas-match", "geo-balance"].includes(game.id);
+    }));
     expect(categories.find((group) => group.games.includes("adastra"))?.id).toBe(featured ? "new" : "maps");
     expect(categories.find((group) => group.id === "flags")?.games[0]).toBe("flags");
     expect(visible.indexOf("grid")).toBeGreaterThan(8);
@@ -52,11 +55,19 @@ describe("themed game catalog", () => {
     const now = Date.parse("2026-11-06T18:55:46Z");
     const categories = getGameCategories(now, registry);
     expect(categories[0].id).toBe("new");
-    expect(categories[0].games).toEqual(["flag-pie"]);
+    expect(categories[0].games).toEqual(["flag-pie", "atlas-match", "geo-balance"]);
     expect(categories.find((group) => group.id === "maps")?.games).toContain("adastra");
     expect(categories.find((group) => group.id === "flags")?.games).not.toContain("flag-pie");
     expect(categories.flatMap((group) => group.games).sort()).toEqual([...ids].sort());
     expect(GAME_CATEGORIES).toEqual(before);
+  });
+
+  it("returns both new puzzles to Logic after exactly one calendar month", () => {
+    const before = getGameCategories(Date.parse("2026-11-26T07:29:59Z"));
+    expect(before[0].games).toEqual(["atlas-match", "geo-balance"]);
+    const after = getGameCategories(Date.parse("2026-11-26T07:30:00Z"));
+    expect(after.some((category) => category.id === "new")).toBe(false);
+    expect(after.find((category) => category.id === "logic")?.games).toEqual(expect.arrayContaining(["atlas-match", "geo-balance"]));
   });
 
   it("keeps missing or invalid feature dates in their permanent category", () => {

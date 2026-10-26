@@ -1,9 +1,13 @@
 import type { Locale } from "@/lib/types";
+import { REFRESH_MESSAGES } from "@/games/refresh-messages";
+import { LEGACY_REFRESH_MESSAGES } from "@/games/legacy-refresh-messages";
 
 type Dict = Record<string, string>;
 
 export const messages: Record<Locale, Dict> = {
   en: {
+    ...REFRESH_MESSAGES.en,
+    ...LEGACY_REFRESH_MESSAGES.en,
     "home.gamesFound.one": "1 game to explore",
     "home.gamesFound.other": "{n} games to explore",
     "games.adastra.name": "Adastra",
@@ -328,7 +332,7 @@ export const messages: Record<Locale, Dict> = {
     "setup.timed": "Timed mode",
     "setup.timed.desc": "Race against the clock for a speed bonus",
     "setup.practice": "Practice mode",
-    "setup.practice.desc": "Run through everything to learn — no points, no lives, nothing saved",
+    "setup.practice.desc": "Explore at your own pace — no points, no lives, nothing saved",
 
     "fact.learned": "Did you know?",
 
@@ -352,7 +356,7 @@ export const messages: Record<Locale, Dict> = {
     "games.expedition.name": "Geo Expedition",
     "games.expedition.short": "A six-stage journey across the map.",
     "games.capitals.name": "Capitals & Cities",
-    "games.capitals.short": "Name the capital — or a major city — of each country.",
+    "games.capitals.short": "Name capitals — or identify the home country of major cities.",
     "capitals.scopeLabel": "Mode",
     "capitals.cityPrompt": "Name a major city",
     "games.outline.name": "Outline Quiz",
@@ -549,9 +553,9 @@ export const messages: Record<Locale, Dict> = {
     "gn.q.mostNeighbours": "Which of these borders the most countries?",
     "gn.q.highestDensity": "Which of these has the highest population density?",
     "gn.q.largestGdp": "Which of these has the largest GDP?",
-    "gn.q.northernmost": "Which of these countries lies farthest north?",
+    "gn.q.northernmost": "Which country's map reference point is farthest north?",
     "gn.q.island": "Which of these is an island nation (no land borders)?",
-    "gn.q.southern": "Which of these lies in the southern hemisphere?",
+    "gn.q.southern": "Which country's map reference point is in the southern hemisphere?",
     "gn.q.borderCount": "How many countries does {c} border?",
 
     "neighbors.prompt": "Which country borders all of these?",
@@ -599,7 +603,7 @@ export const messages: Record<Locale, Dict> = {
 
     "howto.flags": "A flag is shown. In multiple-choice mode pick the correct country; in type mode, type its name — minor typos and either English or German names are accepted. On hard, look-alike flags appear as decoys. With the optional timer on, faster answers earn bonus points.",
     "howto.expedition": "Choose a regional journey and complete six short checkpoints. Pick branches, earn up to three stars per stage and protect your three shared energy points. Your journey is saved safely between checkpoints; the last checkpoint is a harder boss challenge.",
-    "howto.capitals": "A country is shown. Choose or type its capital — or switch to Cities mode to name a major city instead. With the optional timer on, faster answers earn bonus points.",
+    "howto.capitals": "In Capitals mode, a country is shown: choose or type its capital. In Cities mode, a major city is shown: identify its country. All uses every available city, not just one city per country. With the optional timer on, faster answers earn bonus points. Existing challenges created before this update retain their original country-to-city questions.",
     "howto.outline": "Only the country's silhouette is shown — no flag, no name. Identify it by its shape.",
     "howto.trivia": "You start with one trivia fact about a country and can reveal up to four. Guess the country — the fewer facts you reveal, the more points you score.",
     "howto.higher-lower": "Two countries are compared by a stat — population, area, density, GDP or number of neighbours. Guess whether the second is higher or lower than the first. Keep the streak alive!",
@@ -856,6 +860,8 @@ export const messages: Record<Locale, Dict> = {
   },
 
   de: {
+    ...REFRESH_MESSAGES.de,
+    ...LEGACY_REFRESH_MESSAGES.de,
     "home.gamesFound.one": "1 Spiel entdecken",
     "home.gamesFound.other": "{n} Spiele entdecken",
     "games.adastra.name": "Adastra",
@@ -1180,7 +1186,7 @@ export const messages: Record<Locale, Dict> = {
     "setup.timed": "Zeitmodus",
     "setup.timed.desc": "Gegen die Uhr spielen für einen Tempo-Bonus",
     "setup.practice": "Lernmodus",
-    "setup.practice.desc": "Alles am Stück durchgehen zum Lernen – keine Punkte, keine Leben, nichts wird gespeichert",
+    "setup.practice.desc": "Lerne in deinem Tempo – keine Punkte, keine Leben, nichts wird gespeichert",
 
     "fact.learned": "Schon gewusst?",
 
@@ -1204,7 +1210,7 @@ export const messages: Record<Locale, Dict> = {
     "games.expedition.name": "Geo-Expedition",
     "games.expedition.short": "Eine Reise in sechs Etappen über die Karte.",
     "games.capitals.name": "Hauptstädte & Städte",
-    "games.capitals.short": "Nenne die Hauptstadt – oder eine große Stadt – jedes Landes.",
+    "games.capitals.short": "Nenne Hauptstädte – oder erkenne das Heimatland großer Städte.",
     "capitals.scopeLabel": "Modus",
     "capitals.cityPrompt": "Nenne eine große Stadt",
     "games.outline.name": "Umriss-Quiz",
@@ -1401,9 +1407,9 @@ export const messages: Record<Locale, Dict> = {
     "gn.q.mostNeighbours": "Welches dieser Länder hat die meisten Nachbarn?",
     "gn.q.highestDensity": "Welches davon hat die höchste Bevölkerungsdichte?",
     "gn.q.largestGdp": "Welches davon hat das größte BIP?",
-    "gn.q.northernmost": "Welches dieser Länder liegt am weitesten nördlich?",
+    "gn.q.northernmost": "Welcher Kartenmittelpunkt liegt am weitesten nördlich?",
     "gn.q.island": "Welches davon ist ein Inselstaat (ohne Landgrenzen)?",
-    "gn.q.southern": "Welches dieser Länder liegt auf der Südhalbkugel?",
+    "gn.q.southern": "Welcher Kartenmittelpunkt liegt auf der Südhalbkugel?",
     "gn.q.borderCount": "An wie viele Länder grenzt {c}?",
 
     "neighbors.prompt": "Welches Land grenzt an all diese?",
@@ -1451,7 +1457,7 @@ export const messages: Record<Locale, Dict> = {
 
     "howto.flags": "Eine Flagge wird gezeigt. Im Multiple-Choice-Modus wählst du das richtige Land; im Tippmodus tippst du den Namen – kleine Tippfehler sowie deutsche oder englische Namen werden akzeptiert. Auf Schwer tauchen ähnlich aussehende Flaggen als Köder auf. Mit eingeschaltetem Timer geben schnelle Antworten Bonuspunkte.",
     "howto.expedition": "Wähle eine regionale Reise und absolviere sechs kurze Checkpoints. Entscheide dich an Abzweigungen, verdiene bis zu drei Sterne pro Etappe und schütze deine drei gemeinsamen Energiepunkte. Zwischen Checkpoints wird sicher gespeichert; am Ende wartet eine schwierigere Abschluss-Challenge.",
-    "howto.capitals": "Ein Land wird gezeigt. Wähle oder tippe seine Hauptstadt – oder wechsle in den Städte-Modus, um eine große Stadt zu nennen. Mit eingeschaltetem Timer geben schnelle Antworten Bonuspunkte.",
+    "howto.capitals": "Im Hauptstädte-Modus wird ein Land gezeigt: Wähle oder tippe seine Hauptstadt. Im Städte-Modus wird eine große Stadt gezeigt: Erkenne ihr Land. Alle nutzt jede verfügbare Stadt statt nur einer Stadt pro Land. Mit eingeschaltetem Timer geben schnelle Antworten Bonuspunkte. Bereits vor diesem Update erstellte Challenges behalten ihre ursprünglichen Land-zu-Stadt-Fragen.",
     "howto.outline": "Nur die Silhouette des Landes wird gezeigt – keine Flagge, kein Name. Erkenne es an seiner Form.",
     "howto.trivia": "Du startest mit einem Trivia-Fakt zu einem Land und kannst bis zu vier aufdecken. Errate das Land – je weniger Fakten du aufdeckst, desto mehr Punkte gibt es.",
     "howto.higher-lower": "Zwei Länder werden anhand eines Werts verglichen – Einwohner, Fläche, Dichte, BIP oder Anzahl der Nachbarn. Rate, ob das zweite höher oder niedriger ist als das erste. Halte die Serie am Leben!",

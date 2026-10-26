@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import { CornerDownLeft } from "lucide-react";
+import { ArrowRight, CornerDownLeft, Lightbulb } from "lucide-react";
 import type { Country } from "@/lib/types";
 import type { PlayHandlers } from "@/components/game/game-shell";
 import { COUNTRIES, getCountryByCca3, poolForDifficulty, countryName } from "@/data/countries";
@@ -14,11 +14,13 @@ import { scoreForAnswer } from "@/lib/scoring";
 import { sound } from "@/lib/sound";
 import { pickOne, sample, shuffle, cn } from "@/lib/utils";
 import { useT } from "@/i18n/I18nProvider";
+import { GameLoadState } from "@/games/load-state";
+import { useGameTimeouts } from "@/games/use-game-timeouts";
 
 const GAME_MS = 60000;
 
-function neighborsOf(c: Country): Country[] {
-  return c.borders.map((b) => getCountryByCca3(b)).filter((x): x is Country => !!x);
+function neighborsOf(c: Country | undefined): Country[] {
+  return c?.borders.map((b) => getCountryByCca3(b)).filter((x): x is Country => !!x) ?? [];
 }
 
 export function BorderChainGame({ difficulty, mode, roundCount, timed, practice, onFinish, onExit }: PlayHandlers) {
@@ -37,6 +39,8 @@ export function BorderChainGame({ difficulty, mode, roundCount, timed, practice,
   const [input, setInput] = useState("");
   const [flashWrong, setFlashWrong] = useState(false);
   const [wrongChip, setWrongChip] = useState<string | null>(null);
+  const [revealed, setRevealed] = useState(false);
+  const [feedback, setFeedback] = useState("");
   const [timeLeft, setTimeLeft] = useState(GAME_MS);
 
   const [score, setScore] = useState(0);
@@ -50,14 +54,14 @@ export function BorderChainGame({ difficulty, mode, roundCount, timed, practice,
   const bestRef = useRef(0);
   const hitsRef = useRef<string[]>([]);
   const foundRef = useRef(new Set<string>());
-  const transitionRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-
-  useEffect(() => () => { if (transitionRef.current) clearTimeout(transitionRef.current); }, []);
+  const nextLockRef = useRef(false);
+  const { schedule, clearTimers } = useGameTimeouts();
+  useEffect(() => { nextLockRef.current = false; }, [current, completed]);
 
   const neighbors = useMemo(() => neighborsOf(current), [current]);
 
   const options = useMemo(() => {
-    if (mode !== "choice") return [];
+    if (mode !== "choice" || !current) return [];
     const nIds = new Set(neighbors.map((n) => n.cca3));
     const distractorCount = Math.max(3, Math.min(6, neighbors.length));
     const sameRegion = COUNTRIES.filter(
@@ -91,10 +95,11 @@ export function BorderChainGame({ difficulty, mode, roundCount, timed, practice,
   function finish() {
     if (finishedRef.current) return;
     finishedRef.current = true;
+    clearTimers();
     onFinish({
       score: scoreRef.current,
       correct: correctRef.current,
-      total: Math.max(attemptsRef.current, correctRef.current),
+      total: Math.max(1, attemptsRef.current, correctRef.current),
       bestStreak: bestRef.current,
       durationMs: Date.now() - startRef.current,
       mode: timed ? "timed" : mode,
@@ -103,6 +108,9 @@ export function BorderChainGame({ difficulty, mode, roundCount, timed, practice,
   }
 
   function chainNext(fromFound: Set<string>) {
+    if (!current || finishedRef.current || nextLockRef.current) return;
+    nextLockRef.current = true;
+    clearTimers();
     const nextCompleted = completed + 1;
     setCompleted(nextCompleted);
     if (!timed && nextCompleted >= targetCountries) {
@@ -120,10 +128,15 @@ export function BorderChainGame({ difficulty, mode, roundCount, timed, practice,
     setCurrent(nextCountry);
     setFound(new Set());
     foundRef.current = new Set();
+    setRevealed(false);
+    setInput("");
+    setFeedback("");
+    setWrongChip(null);
+    setFlashWrong(false);
   }
 
   function markFound(hit: Country) {
-    if (finishedRef.current || foundRef.current.has(hit.cca3) || foundRef.current.size === neighbors.length) return;
+    if (finishedRef.current || revealed || foundRef.current.has(hit.cca3) || foundRef.current.size === neighbors.length) return;
     foundRef.current.add(hit.cca3);
     hitsRef.current.push(hit.cca3);
     sound.correct();
@@ -137,15 +150,14 @@ export function BorderChainGame({ difficulty, mode, roundCount, timed, practice,
     setStreak(ns);
     const newFound = new Set(foundRef.current);
     setFound(newFound);
-    if (newFound.size >= neighbors.length) {
-      transitionRef.current = setTimeout(() => { if (!finishedRef.current) chainNext(newFound); }, 500);
-    }
+    setFeedback(t("refresh.border.found", { country: countryName(hit, locale) }));
   }
 
   function registerWrong() {
     sound.wrong();
     attemptsRef.current += 1;
     setStreak(0);
+    setFeedback(t("refresh.border.wrong"));
     if (!practice) {
       scoreRef.current = Math.max(0, scoreRef.current - 10);
       setScore((s) => Math.max(0, s - 10));
@@ -153,7 +165,7 @@ export function BorderChainGame({ difficulty, mode, roundCount, timed, practice,
   }
 
   function submit() {
-    if (finishedRef.current || foundRef.current.size === neighbors.length) return;
+    if (finishedRef.current || revealed || foundRef.current.size === neighbors.length) return;
     const guess = input.trim();
     if (!guess) return;
     setInput("");
@@ -165,21 +177,36 @@ export function BorderChainGame({ difficulty, mode, roundCount, timed, practice,
     } else {
       registerWrong();
       setFlashWrong(true);
-      setTimeout(() => setFlashWrong(false), 350);
+      schedule(() => setFlashWrong(false), 350);
     }
   }
 
   function pickChoice(country: Country) {
-    if (finishedRef.current || foundRef.current.size >= neighbors.length || foundRef.current.has(country.cca3)) return;
+    if (finishedRef.current || revealed || foundRef.current.size >= neighbors.length || foundRef.current.has(country.cca3)) return;
     const isNeighbor = neighbors.some((n) => n.cca3 === country.cca3);
     if (isNeighbor) {
       markFound(country);
     } else {
       registerWrong();
       setWrongChip(country.cca3);
-      setTimeout(() => setWrongChip((c) => (c === country.cca3 ? null : c)), 450);
+      schedule(() => setWrongChip((c) => (c === country.cca3 ? null : c)), 450);
     }
   }
+
+  function revealRemaining() {
+    if (finishedRef.current || revealed || foundRef.current.size >= neighbors.length) return;
+    clearTimers();
+    attemptsRef.current += neighbors.length - foundRef.current.size;
+    setRevealed(true);
+    setWrongChip(null);
+    setFlashWrong(false);
+    setStreak(0);
+    setFeedback(t("refresh.border.revealed"));
+    sound.tick();
+  }
+
+  if (!current) return <GameLoadState onExit={onExit} empty />;
+  const readyForNext = revealed || found.size >= neighbors.length;
 
   return (
     <div className="flex flex-1 flex-col">
@@ -212,17 +239,17 @@ export function BorderChainGame({ difficulty, mode, roundCount, timed, practice,
               return (
                 <button
                   key={o.cca3}
-                  disabled={isFound}
+                  disabled={isFound || readyForNext}
                   onClick={() => pickChoice(o)}
                   className={cn(
-                    "flex items-center gap-2 rounded-xl border-2 px-3 py-2.5 text-left text-sm font-semibold transition-all active:scale-[0.98]",
-                    isFound && "border-success bg-success/15 text-success",
+                    "flex min-h-11 min-w-0 items-center gap-2 rounded-xl border-2 px-3 py-2.5 text-left text-sm font-semibold transition-all active:scale-[0.98]",
+                    (isFound || revealed && neighbors.some((neighbor) => neighbor.cca3 === o.cca3)) && "border-success bg-success/15 text-success",
                     isWrong && "animate-shake border-danger bg-danger/15 text-danger",
-                    !isFound && !isWrong && "border-border bg-card hover:border-primary/50 hover:bg-muted/50"
+                    !isFound && !isWrong && !(revealed && neighbors.some((neighbor) => neighbor.cca3 === o.cca3)) && "border-border bg-card hover:border-primary/50 hover:bg-muted/50"
                   )}
                 >
                   <FlagImage code={o.flag} alt="" className="aspect-[4/3] w-7 shrink-0" rounded={false} />
-                  <span className="truncate">{countryName(o, locale)}</span>
+                  <span className="min-w-0 break-words">{countryName(o, locale)}</span>
                 </button>
               );
             })}
@@ -242,7 +269,7 @@ export function BorderChainGame({ difficulty, mode, roundCount, timed, practice,
                         : "border-dashed border-border bg-muted/40 text-muted-foreground"
                     )}
                   >
-                    {isFound ? (
+                    {isFound || revealed ? (
                       <>
                         <FlagImage code={n.flag} alt="" className="aspect-[4/3] w-5" rounded={false} />
                         {countryName(n, locale)}
@@ -261,7 +288,8 @@ export function BorderChainGame({ difficulty, mode, roundCount, timed, practice,
                   value={input}
                   onChange={(e) => setInput(e.target.value)}
                   onKeyDown={(e) => e.key === "Enter" && submit()}
-                  autoFocus
+                  disabled={readyForNext}
+                  aria-label={t("type.placeholder")}
                   autoComplete="off"
                   autoCapitalize="words"
                   spellCheck={false}
@@ -271,13 +299,17 @@ export function BorderChainGame({ difficulty, mode, roundCount, timed, practice,
                     flashWrong ? "animate-shake border-danger" : "border-border"
                   )}
                 />
-                <Button size="lg" className="px-4" onClick={submit} aria-label={t("type.submit")}>
+                <Button size="lg" className="px-4" disabled={readyForNext || !input.trim()} onClick={submit} aria-label={t("type.submit")}>
                   <CornerDownLeft className="h-5 w-5" />
                 </Button>
               </div>
             </div>
           </>
         )}
+        <div className="mt-4 space-y-3">
+          <p role="status" aria-live="polite" className="min-h-5 text-sm leading-relaxed text-muted-foreground">{feedback}</p>
+          {readyForNext ? <Button className="w-full gap-2" onClick={() => chainNext(foundRef.current)}>{!timed && completed + 1 >= targetCountries ? t("common.continue") : t("common.next")}<ArrowRight className="h-4 w-4" /></Button> : <Button variant="outline" className="h-auto min-h-11 w-full gap-2 whitespace-normal py-2.5" onClick={revealRemaining}><Lightbulb className="h-4 w-4 shrink-0" />{t("refresh.border.reveal")}</Button>}
+        </div>
       </div>
     </div>
   );
