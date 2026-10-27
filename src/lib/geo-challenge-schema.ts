@@ -15,7 +15,13 @@ export async function ensureGeoChallengeCommunity(sql: ReturnType<typeof postgre
     END; $$`;
     await tx`ALTER TABLE gn_challenges ALTER COLUMN opponent_id DROP NOT NULL`;
     await tx`ALTER TABLE gn_challenges ADD COLUMN IF NOT EXISTS invitation_type text NOT NULL DEFAULT 'direct'
-      CHECK (invitation_type IN ('direct','random','open','link'))`;
+      CHECK (invitation_type IN ('direct','random','open','link','bot'))`;
+    await tx`ALTER TABLE gn_challenges DROP CONSTRAINT IF EXISTS gn_challenges_invitation_type_check`;
+    await tx`ALTER TABLE gn_challenges ADD CONSTRAINT gn_challenges_invitation_type_check
+      CHECK (invitation_type IN ('direct','random','open','link','bot'))`;
+    await tx`ALTER TABLE gn_challenges ADD COLUMN IF NOT EXISTS bot_difficulty text
+      CHECK (bot_difficulty IN ('easy','medium','hard'))`;
+    await tx`ALTER TABLE gn_challenges ADD COLUMN IF NOT EXISTS bot_seed text`;
     await tx`ALTER TABLE gn_challenges ADD COLUMN IF NOT EXISTS guest_name text`;
     await tx`ALTER TABLE gn_challenges ADD COLUMN IF NOT EXISTS guest_token_hash text`;
     await tx`ALTER TABLE gn_challenges ADD COLUMN IF NOT EXISTS winner_side text
@@ -44,6 +50,15 @@ export async function ensureGeoChallengeCommunity(sql: ReturnType<typeof postgre
       created_at timestamptz NOT NULL DEFAULT now(),
       read_at timestamptz,
       UNIQUE (user_id,challenge_id,kind)
+    )`;
+    await tx`CREATE TABLE IF NOT EXISTS gn_challenge_bot_attempts (
+      challenge_id text PRIMARY KEY REFERENCES gn_challenges(id) ON DELETE CASCADE,
+      score integer NOT NULL CHECK (score >= 0),
+      correct integer NOT NULL CHECK (correct >= 0),
+      total integer NOT NULL CHECK (total > 0 AND total <= 1000 AND correct <= total),
+      best_streak integer NOT NULL CHECK (best_streak >= 0 AND best_streak <= correct),
+      duration_ms integer NOT NULL CHECK (duration_ms >= 500),
+      created_at timestamptz NOT NULL DEFAULT now()
     )`;
     await tx`CREATE INDEX IF NOT EXISTS gn_challenge_notifications_unread_idx
       ON gn_challenge_notifications (user_id,created_at DESC) WHERE read_at IS NULL`;

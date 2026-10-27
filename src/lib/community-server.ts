@@ -115,6 +115,7 @@ function serializeSubmission(row: Row): FeedbackSubmission {
     createdAt: new Date(String(row.created_at)).toISOString(),
     reviewedAt: row.reviewed_at == null ? null : new Date(String(row.reviewed_at)).toISOString(),
     contributorAwarded: Boolean(row.contributor_awarded),
+    botReplySent: Boolean(row.bot_reply_sent),
   };
 }
 
@@ -134,7 +135,9 @@ export async function listCommunityFeedback(req: Request) {
         COUNT(*) FILTER (WHERE status='new')::int AS new_count FROM gn_feedback`;
       const rows = await tx`SELECT f.id,f.author_name,f.message,f.status,f.created_at,f.reviewed_at,
         EXISTS(SELECT 1 FROM gn_badge_awards a WHERE a.feedback_id=f.id AND a.user_id=f.user_id
-          AND a.badge_id='contributor') AS contributor_awarded FROM gn_feedback f
+          AND a.badge_id='contributor') AS contributor_awarded,
+        EXISTS(SELECT 1 FROM gn_community_notifications n WHERE n.user_id=f.user_id
+          AND n.kind='feature-published' AND n.game_id='bot-challenges') AS bot_reply_sent FROM gn_feedback f
         WHERE ${status}='all' OR f.status=${status} ORDER BY f.created_at DESC,f.id ASC LIMIT ${page.limit} OFFSET ${page.offset}`;
       const total = Number(counts[0].total);
       return { configured: true, submissions: rows.map(serializeSubmission), total, allCount: Number(counts[0].all_count),
@@ -157,6 +160,23 @@ export async function updateCommunityFeedback(req: Request, { params }: RouteCon
     if (!validSubmissionId(id)) return failure("not_found", 404);
     const body = await readBody(req);
     if (!body || (body.status !== "new" && body.status !== "reviewed")) return failure("invalid_status");
+    if (body.notifyFeature !== undefined) {
+      if (body.notifyFeature !== "bot-challenges" || body.status !== "reviewed") return failure("invalid_notification");
+      return gate.sql.begin("isolation level read committed", async (tx) => {
+        // Account identity comes from the selected feedback, not client input or a display name.
+        const rows = await tx`SELECT f.id,u.id AS user_id FROM gn_feedback f LEFT JOIN gn_users u ON u.id=f.user_id
+          WHERE f.id=${id.toLowerCase()} FOR UPDATE OF f`;
+        if (!rows.length) return failure("not_found", 404);
+        const authorId = rows[0].user_id;
+        if (!authorId) return failure("author_unavailable", 409);
+        const notificationId = createHash("md5").update(`${authorId}:bot-challenges:published`).digest("hex");
+        await tx`INSERT INTO gn_community_notifications (id,user_id,kind,game_id)
+          VALUES (${notificationId},${String(authorId)},'feature-published','bot-challenges')
+          ON CONFLICT (user_id,kind,game_id) DO NOTHING`;
+        await tx`UPDATE gn_feedback SET status='reviewed',reviewed_at=COALESCE(reviewed_at,now()) WHERE id=${id.toLowerCase()}`;
+        return NextResponse.json({ ok: true, botReplySent: true }, { headers: PRIVATE_HEADERS });
+      });
+    }
     const rows = await gate.sql`UPDATE gn_feedback SET status=${body.status},
       reviewed_at=CASE WHEN ${body.status}='reviewed' THEN COALESCE(reviewed_at,now()) ELSE NULL END
       WHERE id=${id.toLowerCase()} RETURNING id`;
@@ -180,7 +200,7 @@ export async function listDuelStandings(req: Request) {
         FROM gn_challenges c
         JOIN gn_challenge_attempts a ON a.challenge_id=c.id AND a.user_id=c.challenger_id
         JOIN gn_challenge_attempts b ON b.challenge_id=c.id AND b.user_id=c.opponent_id
-        WHERE c.status='resolved' AND c.resolved_at IS NOT NULL AND c.guest_name IS NULL
+        WHERE c.status='resolved' AND c.resolved_at IS NOT NULL AND c.guest_name IS NULL AND c.invitation_type<>'bot'
           AND (c.winner_id IS NULL OR c.winner_id=c.challenger_id OR c.winner_id=c.opponent_id)
           AND (${game}='all' OR c.game_id=${game})
           AND (${period}='all' OR c.resolved_at>=date_trunc('month',now()))

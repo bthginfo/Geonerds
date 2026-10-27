@@ -2,6 +2,7 @@ import { getGame } from "@/games/registry";
 import type { AnswerMode, Difficulty, RunResult } from "@/lib/types";
 import { validateName } from "@/lib/validate";
 import { validGeoScore } from "@/lib/score-validation";
+import { supportsBotGame } from "@/lib/challenge-bots";
 
 export const CHALLENGE_GAME_IDS = [
   "flags", "capitals", "outline", "trivia", "waters", "neighbors", "origin", "mountains", "languages",
@@ -11,7 +12,7 @@ export const CHALLENGE_GAME_IDS = [
 export const CHALLENGE_ROUND_COUNTS = [10, 25, 50, 0] as const;
 export const CHALLENGE_INVITE_TTL_MS = 3 * 24 * 60 * 60 * 1000;
 export const CHALLENGE_PLAY_TTL_MS = 7 * 24 * 60 * 60 * 1000;
-export type GeoChallengeInviteType = "direct" | "random" | "open" | "link";
+export type GeoChallengeInviteType = "direct" | "random" | "open" | "link" | "bot";
 export type GeoChallengeGameId = (typeof CHALLENGE_GAME_IDS)[number];
 export type GeoChallengeStatus = "pending" | "active" | "resolved" | "declined" | "cancelled" | "expired";
 export type GeoChallengeAction = "accept" | "decline" | "cancel";
@@ -29,6 +30,7 @@ export interface GeoChallengeConfig {
 export interface CreateGeoChallengeInput extends GeoChallengeConfig {
   opponentName?: string;
   invitationType?: GeoChallengeInviteType;
+  botDifficulty?: Difficulty;
 }
 
 export interface GeoChallengeAttempt {
@@ -40,6 +42,7 @@ export interface GeoChallengeAttempt {
   durationMs: number;
   mine: boolean;
   guest?: boolean;
+  bot?: boolean;
 }
 
 export interface GeoChallenge extends GeoChallengeConfig {
@@ -62,6 +65,8 @@ export interface GeoChallenge extends GeoChallengeConfig {
   viewerRole?: "challenger" | "opponent" | "visitor";
   viewerIsGuest?: boolean;
   opponentIsGuest?: boolean;
+  opponentIsBot?: boolean;
+  botDifficulty?: Difficulty;
   canAccept?: boolean;
   sharePath?: string;
   /** Non-secret cache key; guest authority comes only from its challenge-bound cookie. */
@@ -86,8 +91,12 @@ export function parseGeoChallengeConfig(body: Record<string, unknown>): CreateGe
   const opponentName = validateName(body.opponentName);
   const invitationType = body.invitationType ?? "direct";
   const gameId = body.gameId;
-  if (!["direct", "random", "open", "link"].includes(String(invitationType))) return null;
+  if (!["direct", "random", "open", "link", "bot"].includes(String(invitationType))) return null;
   if ((invitationType === "direct" && !opponentName) || typeof gameId !== "string" || !CHALLENGE_GAME_IDS.some((id) => id === gameId)) return null;
+  const botDifficulty = body.botDifficulty;
+  if (invitationType === "bot") {
+    if (!supportsBotGame(gameId) || (botDifficulty !== "easy" && botDifficulty !== "medium" && botDifficulty !== "hard") || body.opponentName) return null;
+  } else if (botDifficulty != null) return null;
   const game = getGame(gameId);
   if (!game) return null;
   const difficulty = body.difficulty;
@@ -103,6 +112,7 @@ export function parseGeoChallengeConfig(body: Record<string, unknown>): CreateGe
   if (typeof timed !== "boolean" || (timed && !game.supportsTimed)) return null;
   if (typeof variant !== "string" || (game.variants ? !game.variants.options.includes(variant) : variant !== "")) return null;
   return { ...(opponentName ? { opponentName } : {}), invitationType: invitationType as GeoChallengeInviteType,
+    ...(invitationType === "bot" ? { botDifficulty: botDifficulty as Difficulty } : {}),
     gameId: gameId as GeoChallengeGameId, difficulty, mode, rounds, timed, variant };
 }
 

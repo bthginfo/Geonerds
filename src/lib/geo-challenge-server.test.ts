@@ -87,6 +87,52 @@ describe("Geo challenge API access", () => {
 });
 
 describe("Geo challenge mutation guards", () => {
+  it("creates a ready bot game without fake accounts, invitations, or a shareable seat", async () => {
+    state.responses = [[{ id: "alice", name: "Alice" }], [{ count: 0 }], []];
+    const response = await createGeoChallenge(request({ ...run, rounds: 10, timed: false, variant: "world", invitationType: "bot", botDifficulty: "easy" }));
+    const data = await response.json();
+    expect(response.status).toBe(201);
+    expect(data.opponentName).toBe("GeoBot");
+    expect(data.sharePath).toBeUndefined();
+    const insert = state.calls.find((call) => call.text.includes("INSERT INTO gn_challenges"))!;
+    expect(insert.text).toContain("bot_difficulty,bot_seed,status,accepted_at");
+    expect(insert.values).toContain("active");
+    expect(insert.values).toContain("easy");
+    expect(insert.values.some((value) => typeof value === "string" && /^[A-Za-z0-9_-]{43}$/.test(value))).toBe(true);
+    expect(state.calls.some((call) => call.text.includes("WHERE name_lower="))).toBe(false);
+    expect(state.calls.some((call) => call.text.includes("INSERT INTO gn_users"))).toBe(false);
+    expect(state.calls.some((call) => call.text.includes("INSERT INTO gn_challenge_notifications"))).toBe(false);
+  });
+  it("serializes an explicit Bot marker and never exposes its committed performance seed", () => {
+    const view = serializeGeoChallenge({ ...base, opponent_id: null, opponent_name: null, invitation_type: "bot", bot_difficulty: "hard", bot_seed: "private-bot-seed", status: "active" }, "alice");
+    expect(view.opponentIsBot).toBe(true);
+    expect(view.opponentName).toBe("GeoBot");
+    expect(view.botDifficulty).toBe("hard");
+    expect(view.canAccept).toBe(false);
+    expect(JSON.stringify(view)).not.toContain("private-bot-seed");
+    expect(view.sharePath).toBeUndefined();
+  });
+  it.each([0, 1500])("resolves a bot game immediately and keeps bot wins separate from human winner IDs (player score %s)", async (score) => {
+    const botRow = { ...base, opponent_id: null, opponent_name: null, invitation_type: "bot", bot_difficulty: "medium", bot_seed: "private-bot-seed", status: "active" };
+    const human = { ...mine, score, correct: score ? 10 : 0, best_streak: score ? 10 : 0 };
+    state.responses = [
+      [botRow], [], [{ token: "token", started_at: new Date(Date.now() - 35_000).toISOString() }], [],
+      [human], [], [], [{ ...botRow, status: "resolved", winner_side: score ? "challenger" : "opponent", attempt_count: 2, viewer_attempted: true }], [human],
+      [{ score: 700, correct: 7, total: 10, best_streak: 3, duration_ms: 60000 }],
+    ];
+    const response = await submitGeoChallenge(request({ ...run, score, correct: human.correct, bestStreak: human.best_streak }), ctx);
+    const data = await response.json();
+    expect(response.status).toBe(200);
+    expect(data.resolved).toBe(true);
+    expect(data.challenge.attempts).toHaveLength(2);
+    expect(data.challenge.attempts[1].bot).toBe(true);
+    expect(data.challenge.viewerOutcome).toBe(score ? "win" : "loss");
+    const resolution = state.calls.find((call) => call.text.includes("SET status='resolved'"))!;
+    expect(resolution.values[0]).toBe(score ? "alice" : null);
+    expect(resolution.values[1]).toBe(score ? "challenger" : "opponent");
+    expect(state.calls.filter((call) => call.text.includes("INSERT INTO gn_challenge_bot_attempts"))).toHaveLength(1);
+    expect(state.calls.filter((call) => call.text.includes("INSERT INTO gn_challenge_notifications"))).toHaveLength(1);
+  });
   it.each([
     ["adastra", "", ADASTRA_CATALOG_SEED_PREFIX, 10],
     ["flags", "world", GEO_CONTENT_SEED_PREFIX, 10],

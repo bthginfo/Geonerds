@@ -26,7 +26,7 @@ import { apiGeoChallenge, apiStartGeoChallenge, apiSubmitGeoChallengeAttempt } f
 import { AccountPanel } from "@/components/account/account-panel";
 import { ChallengeRules, ChallengeSummary } from "@/components/challenges/challenge-summary";
 import { AdastraSetupPhoto } from "@/components/community/adastra-feature";
-import { challengeAttemptStorageKey, challengeError, challengePlayBlock, readSavedAttempt, writeSavedAttempt, type SavedChallengeAttempt } from "@/components/challenges/challenge-ui";
+import { challengeAttemptStorageKey, challengeBotLabel, challengeError, challengePlayBlock, isBotChallenge, readSavedAttempt, writeSavedAttempt, type SavedChallengeAttempt } from "@/components/challenges/challenge-ui";
 import { notifyChallengeMutation } from "@/hooks/use-challenge-notifications";
 
 export interface PlayResult {
@@ -387,10 +387,11 @@ function GameShellContent({
       <Link href={`/challenges?invite=${encodeURIComponent(challenge.id)}`} className="mb-6 inline-flex min-h-11 items-center gap-1.5 rounded text-sm text-muted-foreground hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"><ArrowLeft className="h-4 w-4" aria-hidden />{locale === "de" ? "Zur Herausforderung" : "Back to challenge"}</Link>
       <h1 className="text-2xl font-extrabold">{t(`games.${gameId}.name`)}</h1>
       <p className="mt-2 break-words text-sm text-muted-foreground">{locale === "de" ? "Gegen" : "Against"} <strong className="text-foreground">{challenge.opponentName}</strong>{challenge.opponentIsGuest && <span> ({locale === "de" ? "Gast" : "Guest"})</span>}</p>
+      {isBotChallenge(challenge) && <p className="mt-2 text-xs font-semibold text-primary">{challengeBotLabel(challenge, locale)} · {locale === "de" ? "Training ohne Duell-Ranglistenwertung" : "Training · No duel ranking impact"}</p>}
       {(challenge.viewerIsGuest || challenge.opponentIsGuest) && <p className="mt-2 text-xs font-semibold text-primary">{locale === "de" ? "Gastspiel · Ohne Duell-Ranglistenwertung" : "Guest game · Casual, unranked duel"}</p>}
       {authorizedGuest && <p className="mt-3 text-xs leading-relaxed text-muted-foreground">{locale === "de" ? "Dein Gastzugang gilt in diesem Browser. Bewahre den Einladungslink auf, um später dein Ergebnis zu sehen." : "Your guest access works in this browser. Keep the invitation link to return to your result later."}</p>}
       <div className="mt-5"><ChallengeSummary challenge={challenge} locked /></div>
-      <div className="mt-4"><ChallengeRules /></div>
+      <div className="mt-4"><ChallengeRules bot={isBotChallenge(challenge)} /></div>
       <p className="mt-5 flex items-start gap-2 rounded-xl border border-amber-500/25 bg-amber-500/5 p-3 text-xs leading-relaxed text-muted-foreground"><LockKeyhole className="mt-0.5 h-4 w-4 shrink-0 text-amber-700 dark:text-amber-400" aria-hidden />{locale === "de" ? "Mit dem Start beginnt dein einziger Versuch. Einstellungen, Übungsmodus und Neustart sind danach gesperrt. Verlasse die Seite erst nach dem Ergebnis." : "Starting uses your one attempt. Settings, practice and replay are locked. Stay on this page until your result is saved."}</p>
       {challengeFailure && <p role="alert" className="mt-4 text-sm text-danger">{challengeError(challengeFailure, locale)}</p>}
       <Button size="lg" className="mt-6 h-auto min-h-14 w-full gap-2 px-4 py-3" disabled={starting || Boolean(challengePlayBlock(challenge, gameId))} onClick={() => void startChallenge()}>{starting ? <Loader2 className="h-5 w-5 shrink-0 animate-spin" aria-hidden /> : <Play className="h-5 w-5 shrink-0" aria-hidden />}<span className="whitespace-normal">{starting ? (locale === "de" ? "Versuch startet…" : "Starting attempt…") : (locale === "de" ? "Herausforderung starten" : "Start challenge")}</span></Button>

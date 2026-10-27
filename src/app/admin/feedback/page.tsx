@@ -2,11 +2,11 @@
 
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { ArrowLeft, Check, Inbox, Lightbulb, Loader2, RefreshCw, ShieldCheck } from "lucide-react";
+import { ArrowLeft, Bot, Check, Inbox, Lightbulb, Loader2, RefreshCw, ShieldCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useT } from "@/i18n/I18nProvider";
 import type { FeedbackFilter, FeedbackStatus, FeedbackSubmission } from "@/lib/community";
-import { apiAdminFeedback, apiSetFeedbackStatus, type AdminFeedbackResult } from "@/lib/community-online";
+import { apiAdminFeedback, apiSendBotFeedbackReply, apiSetFeedbackStatus, type AdminFeedbackResult } from "@/lib/community-online";
 import { cn, formatNumber } from "@/lib/utils";
 import { useAuth } from "@/store/auth";
 
@@ -56,7 +56,8 @@ function FeedbackInbox({ userId }: { userId: string }) {
   const [error, setError] = useState<string | null>(null);
   const [actionError, setActionError] = useState<string | null>(null);
   const [busyId, setBusyId] = useState<string | null>(null);
-  const [confirmation, setConfirmation] = useState<FeedbackStatus | null>(null);
+  const [busyReply, setBusyReply] = useState(false);
+  const [confirmation, setConfirmation] = useState<FeedbackStatus | "bot-reply" | null>(null);
   const mutationLock = useRef(false);
   const mounted = useRef(true);
 
@@ -85,15 +86,16 @@ function FeedbackInbox({ userId }: { userId: string }) {
     return () => { controller.abort(); };
   }, [filter, page, reload, userId]);
 
-  async function mark(submission: FeedbackSubmission) {
-    if (mutationLock.current || loading) return;
+  async function mark(submission: FeedbackSubmission, sendBotReply = false) {
+    if (mutationLock.current || loading || (sendBotReply && (!submission.authorName || submission.botReplySent))) return;
     mutationLock.current = true;
-    const nextStatus = submission.status === "new" ? "reviewed" : "new";
+    const nextStatus = sendBotReply ? "reviewed" : submission.status === "new" ? "reviewed" : "new";
     setBusyId(submission.id);
+    setBusyReply(sendBotReply);
     setActionError(null);
     setConfirmation(null);
     try {
-      const result = await apiSetFeedbackStatus(submission.id, nextStatus);
+      const result = sendBotReply ? await apiSendBotFeedbackReply(submission.id) : await apiSetFeedbackStatus(submission.id, nextStatus);
       if (!mounted.current || useAuth.getState().user?.id !== userId) return;
       if (!result.ok) {
         setActionError(result.error);
@@ -103,13 +105,13 @@ function FeedbackInbox({ userId }: { userId: string }) {
           if (result.error === "unauthorized") void useAuth.getState().refresh();
         }
       } else {
-        setConfirmation(nextStatus);
+        setConfirmation(sendBotReply ? "bot-reply" : nextStatus);
         setLoading(true);
         setReload((value) => value + 1);
       }
     } finally {
       mutationLock.current = false;
-      if (mounted.current) setBusyId(null);
+      if (mounted.current) { setBusyId(null); setBusyReply(false); }
     }
   }
 
@@ -130,7 +132,7 @@ function FeedbackInbox({ userId }: { userId: string }) {
         </div>
         <Button type="button" variant="outline" size="icon" disabled={busy} onClick={() => setReload((value) => value + 1)} aria-label={de ? "Einsendungen aktualisieren" : "Refresh submissions"}><RefreshCw aria-hidden="true" className={cn("h-4 w-4", loading && "animate-spin")} /></Button>
       </div>
-      {confirmation && <p role="status" className="mb-4 flex items-center gap-2 text-sm"><Check aria-hidden="true" className="h-4 w-4 shrink-0 text-emerald-700 dark:text-emerald-300" />{confirmation === "reviewed" ? (de ? "Als gelesen markiert." : "Marked as reviewed.") : (de ? "Wieder als neu markiert." : "Marked as new again.")}</p>}
+      {confirmation && <p role="status" className="mb-4 flex items-start gap-2 text-sm"><Check aria-hidden="true" className="mt-0.5 h-4 w-4 shrink-0 text-emerald-700 dark:text-emerald-300" />{confirmation === "bot-reply" ? (de ? "Bot-Update an das Konto dieser Einsendung gesendet und als gelesen markiert." : "Bot update sent to this submission’s account and marked as reviewed.") : confirmation === "reviewed" ? (de ? "Als gelesen markiert." : "Marked as reviewed.") : (de ? "Wieder als neu markiert." : "Marked as new again.")}</p>}
       {actionError && !error && <p role="alert" className="mb-4 rounded-xl border border-danger/25 bg-danger/5 p-3 text-sm leading-relaxed">{adminError(actionError, locale)}</p>}
       {loading ? <Loading label={de ? "Ideen werden geladen …" : "Loading ideas …"} /> : error ? (
         <StatePanel title={error === "forbidden" || error === "unauthorized" ? (de ? "Zugriff nicht erlaubt" : "Access not allowed") : (de ? "Ideen gerade nicht verfügbar" : "Ideas currently unavailable")}>
@@ -140,6 +142,7 @@ function FeedbackInbox({ userId }: { userId: string }) {
       ) : data?.submissions.length ? (
         <>
           <p className="mb-3 text-xs text-muted-foreground">{de ? "Neueste zuerst · Nachrichten werden nur als Text angezeigt." : "Newest first · Messages are displayed as plain text only."}</p>
+          <p className="mb-4 text-xs leading-relaxed text-muted-foreground">{de ? "Bei Feedback zum Warten auf ein Gegenüber kannst du das Bot-Update an das Konto der ausgewählten Einsendung senden. Die Nachricht bedankt sich und verlinkt direkt zum Bot-Training." : "For feedback about waiting for opponents, send the bot update to the selected submission’s account. The message thanks them and links directly to bot training."}</p>
           <div className="space-y-3">
             {data.submissions.map((submission) => <article key={submission.id} className="rounded-2xl border border-border bg-card p-4 sm:p-5">
               <header className="flex flex-wrap items-start justify-between gap-2">
@@ -147,7 +150,7 @@ function FeedbackInbox({ userId }: { userId: string }) {
                 <div className="flex min-w-0 flex-wrap items-center gap-2"><span className={cn("rounded-md px-2 py-1 text-[10px] font-bold uppercase tracking-wide", submission.status === "new" ? "bg-primary/10 text-primary" : "bg-muted text-muted-foreground")}>{submission.status === "new" ? (de ? "Neu" : "New") : (de ? "Gelesen" : "Reviewed")}</span>{submission.contributorAwarded === true && <span className="rounded-md bg-amber-500/10 px-2 py-1 text-xs font-semibold text-amber-800 dark:text-amber-300">{de ? "Contributor vergeben" : "Contributor awarded"}</span>}</div>
               </header>
               <p className="my-5 whitespace-pre-wrap text-sm leading-relaxed [overflow-wrap:anywhere]">{submission.message}</p>
-              <div className="border-t border-border/60 pt-3"><Button type="button" variant="outline" disabled={busy} className="min-h-11 w-full gap-2 px-3 sm:w-auto" onClick={() => void mark(submission)}>{busyId === submission.id ? <Loader2 aria-hidden="true" className="h-4 w-4 animate-spin" /> : submission.status === "new" ? <Check aria-hidden="true" className="h-4 w-4" /> : <Inbox aria-hidden="true" className="h-4 w-4" />}{submission.status === "new" ? (de ? "Als gelesen markieren" : "Mark reviewed") : (de ? "Als neu markieren" : "Mark new")}</Button></div>
+              <div className="flex min-w-0 flex-wrap gap-2 border-t border-border/60 pt-3"><Button type="button" variant="outline" disabled={busy} className="h-auto min-h-11 w-full gap-2 whitespace-normal px-3 py-2 sm:w-auto" onClick={() => void mark(submission)}>{busyId === submission.id && !busyReply ? <Loader2 aria-hidden="true" className="h-4 w-4 shrink-0 animate-spin" /> : submission.status === "new" ? <Check aria-hidden="true" className="h-4 w-4 shrink-0" /> : <Inbox aria-hidden="true" className="h-4 w-4 shrink-0" />}{submission.status === "new" ? (de ? "Als gelesen markieren" : "Mark reviewed") : (de ? "Als neu markieren" : "Mark new")}</Button>{submission.authorName && <Button type="button" variant="outline" disabled={busy || submission.botReplySent === true} className="h-auto min-h-11 w-full gap-2 whitespace-normal px-3 py-2 sm:w-auto" onClick={() => void mark(submission, true)}>{busyId === submission.id && busyReply ? <Loader2 aria-hidden="true" className="h-4 w-4 shrink-0 animate-spin" /> : submission.botReplySent ? <Check aria-hidden="true" className="h-4 w-4 shrink-0" /> : <Bot aria-hidden="true" className="h-4 w-4 shrink-0" />}{submission.botReplySent ? (de ? "Antwort gesendet" : "Reply sent") : (de ? "Bot-Update senden" : "Send bot update")}</Button>}</div>
             </article>)}
           </div>
         </>
@@ -176,6 +179,8 @@ function adminError(error: string, locale: string) {
   if (error === "forbidden") return de ? "Der Server erlaubt diesem Konto keinen Zugriff auf private Einsendungen." : "The server doesn't allow this account to access private submissions.";
   if (error === "not_configured") return de ? "Die Online-Datenbank ist noch nicht verbunden. Es können keine Einsendungen geladen werden." : "The online database isn't connected yet. Submissions can't be loaded.";
   if (error === "not_found") return de ? "Diese Einsendung wurde nicht gefunden. Aktualisiere die Liste." : "This submission wasn't found. Refresh the list.";
+  if (error === "author_unavailable") return de ? "Zu dieser Einsendung ist kein erreichbares Konto mehr vorhanden. Das Bot-Update wurde nicht gesendet. Aktualisiere die Liste." : "This submission no longer has an available account. The bot update was not sent. Refresh the list.";
+  if (error === "invalid_notification") return de ? "Dieses Update kann so nicht gesendet werden. Aktualisiere die Liste und nutze „Bot-Update senden“ erneut." : "This update could not be sent with these settings. Refresh the list and use Send bot update again.";
   if (error === "network_error") return de ? "Die Verbindung ist unterbrochen. Bitte versuche es erneut." : "The connection was interrupted. Please try again.";
   return de ? "Die Online-Verbindung ist gerade nicht verfügbar. Bitte versuche es später erneut." : "The online service is currently unavailable. Please try again later.";
 }

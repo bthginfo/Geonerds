@@ -22,7 +22,7 @@ const ERRORS: Record<string, Record<Locale, string>> = {
   wrong_game: { de: "Diese Herausforderung gehört zu einem anderen Spiel. Öffne sie über die Übersicht.", en: "This challenge is for a different game. Open it from the overview." },
   missing_seed: { de: "Die gemeinsamen Fragen sind noch nicht bereit. Aktualisiere deine Herausforderungen.", en: "The shared questions are not ready. Refresh your challenges." },
   invalid_request: { de: "Prüfe den Benutzernamen und die Spieleinstellungen.", en: "Check the username and game settings." },
-  no_random_opponents: { de: "Gerade ist kein zufälliges Gegenüber verfügbar. Erstelle stattdessen eine offene Herausforderung oder einen Einladungslink.", en: "No random opponent is available right now. Try an open challenge or an invite link instead." },
+  no_random_opponents: { de: "Gerade ist kein zufälliges Gegenüber verfügbar. Spiele sofort gegen einen Bot oder erstelle eine offene Herausforderung.", en: "No random opponent is available right now. Play a bot immediately or create an open challenge." },
   invitation_taken: { de: "Diese Einladung ist bereits vergeben oder geschlossen. Finde ein anderes Gegenüber in den offenen Herausforderungen.", en: "This invitation has already been claimed or closed. Find another opponent in Open challenges." },
   invalid_guest_name: { de: "Wähle einen Gastnamen mit 2–20 Zeichen: Buchstaben, Zahlen, Leerzeichen, Punkt, Unterstrich oder Bindestrich.", en: "Choose a guest name with 2–20 characters: letters, numbers, spaces, period, underscore or hyphen." },
   guest_requires_link: { de: "Als Gast kannst du nur einen Einladungslink annehmen. Für offene Herausforderungen brauchst du ein Konto.", en: "Guests can only accept invite links. Open challenges require an account." },
@@ -33,6 +33,16 @@ const ERRORS: Record<string, Record<Locale, string>> = {
 
 export function challengeError(error: string | undefined, locale: Locale): string {
   return ERRORS[error ?? ""]?.[locale] ?? (locale === "de" ? "Das hat leider nicht geklappt. Bitte versuche es erneut." : "Something went wrong. Please try again.");
+}
+
+export function isBotChallenge(challenge: Pick<GeoChallenge, "opponentIsBot" | "invitationType">): boolean {
+  return Boolean(challenge.opponentIsBot || challenge.invitationType === "bot");
+}
+
+export function challengeBotLabel(challenge: Pick<GeoChallenge, "botDifficulty">, locale: Locale): string {
+  const strength = challenge.botDifficulty ?? "medium";
+  const names = { easy: { de: "Leicht", en: "Easy" }, medium: { de: "Mittel", en: "Medium" }, hard: { de: "Schwer", en: "Hard" } };
+  return `Bot · ${names[strength][locale]}`;
 }
 
 /** Never expose the internal full-pool sentinel as "0 rounds". */

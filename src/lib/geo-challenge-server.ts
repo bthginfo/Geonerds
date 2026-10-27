@@ -12,6 +12,8 @@ import { guestTokenHash, newGuestChallengeAccess, readGuestChallengeToken, valid
 import type { RunResult } from "@/lib/types";
 import { ADASTRA_CATALOG_SEED_PREFIX } from "@/lib/adastra-catalog-version";
 import { GEO_CONTENT_SEED_PREFIX } from "@/lib/geo-content-version";
+import { BOT_NAME, MAX_BOT_ROUNDS, buildBotAttempt } from "@/lib/challenge-bots";
+import type { Difficulty } from "@/lib/types";
 
 type Query = postgres.Sql | postgres.TransactionSql;
 type Row = Record<string, unknown>;
@@ -92,7 +94,8 @@ export function serializeGeoChallenge(row: Row, viewerId: string, attempts?: Geo
   const invited = sent || row.opponent_id === viewerId || guest;
   const role = sent ? "challenger" : invited ? "opponent" : "visitor";
   const winnerSide = row.winner_side ?? (row.winner_id ? row.winner_id === row.challenger_id ? "challenger" : "opponent" : null);
-  const rivalName = row.opponent_name ?? row.guest_name ?? "";
+  const bot = inviteType(row) === "bot";
+  const rivalName = bot ? BOT_NAME : row.opponent_name ?? row.guest_name ?? "";
   return {
     id: String(row.id), status, gameId: row.game_id as GeoChallenge["gameId"],
     difficulty: row.difficulty as GeoChallenge["difficulty"], mode: row.mode as GeoChallenge["mode"],
@@ -105,6 +108,7 @@ export function serializeGeoChallenge(row: Row, viewerId: string, attempts?: Geo
     winnerName: invited && winnerSide ? String(winnerSide === "challenger" ? row.challenger_name : rivalName) : null,
     viewerOutcome: !invited || status !== "resolved" ? null : !winnerSide ? "draw" : winnerSide === role ? "win" : "loss",
     invitationType: inviteType(row), viewerIsGuest: guest, opponentIsGuest: sent && Boolean(row.guest_name),
+    ...(bot ? { opponentIsBot: true, botDifficulty: row.bot_difficulty as Difficulty } : {}),
     canAccept: status === "pending" && new Date(String(row.expires_at)).getTime() > Date.now()
       && (role === "opponent" || (role === "visitor" && sharedInvite(row) && !row.opponent_id && !row.guest_name)),
     ...(sharedInvite(row) ? { sharePath: `/challenges?invite=${encodeURIComponent(String(row.id))}` } : {}),
@@ -141,7 +145,8 @@ async function load(sql: Query, id: string, viewer: Viewer): Promise<GeoChalleng
   const rows = await sql`
     SELECT c.*,a.name AS challenger_name,b.name AS opponent_name,
       ((SELECT COUNT(*)::int FROM gn_challenge_attempts t WHERE t.challenge_id=c.id)
-        +(SELECT COUNT(*)::int FROM gn_challenge_guest_attempts t WHERE t.challenge_id=c.id)) AS attempt_count,
+        +(SELECT COUNT(*)::int FROM gn_challenge_guest_attempts t WHERE t.challenge_id=c.id)
+        +(SELECT COUNT(*)::int FROM gn_challenge_bot_attempts t WHERE t.challenge_id=c.id)) AS attempt_count,
       (EXISTS(SELECT 1 FROM gn_challenge_attempts t WHERE t.challenge_id=c.id AND t.user_id=${viewer.userId})
         OR (c.guest_token_hash=${guestHash} AND EXISTS(SELECT 1 FROM gn_challenge_guest_attempts t WHERE t.challenge_id=c.id))) AS viewer_attempted,
       (EXISTS(SELECT 1 FROM gn_challenge_starts s WHERE s.challenge_id=c.id AND s.user_id=${viewer.userId})
@@ -165,6 +170,11 @@ async function load(sql: Query, id: string, viewer: Viewer): Promise<GeoChalleng
     const guestRows = await sql`SELECT * FROM gn_challenge_guest_attempts WHERE challenge_id=${id}`;
     for (const t of guestRows) attempts.push({ name: String(row.guest_name), score: Number(t.score), correct: Number(t.correct),
       total: Number(t.total), bestStreak: Number(t.best_streak), durationMs: Number(t.duration_ms), mine: guest, guest: true });
+  }
+  if (inviteType(row) === "bot" && row.status === "resolved") {
+    const botRows = await sql`SELECT * FROM gn_challenge_bot_attempts WHERE challenge_id=${id}`;
+    for (const t of botRows) attempts.push({ name: BOT_NAME, score: Number(t.score), correct: Number(t.correct),
+      total: Number(t.total), bestStreak: Number(t.best_streak), durationMs: Number(t.duration_ms), mine: false, bot: true });
   }
   return serializeGeoChallenge(row, viewer.userId ?? "", attempts, guest);
 }
@@ -203,7 +213,8 @@ export async function listGeoChallenges() {
     const rows = await sql`
       SELECT c.*,a.name AS challenger_name,b.name AS opponent_name,
         ((SELECT COUNT(*)::int FROM gn_challenge_attempts t WHERE t.challenge_id=c.id)
-          +(SELECT COUNT(*)::int FROM gn_challenge_guest_attempts t WHERE t.challenge_id=c.id)) AS attempt_count,
+          +(SELECT COUNT(*)::int FROM gn_challenge_guest_attempts t WHERE t.challenge_id=c.id)
+          +(SELECT COUNT(*)::int FROM gn_challenge_bot_attempts t WHERE t.challenge_id=c.id)) AS attempt_count,
         EXISTS(SELECT 1 FROM gn_challenge_attempts t WHERE t.challenge_id=c.id AND t.user_id=${session.uid}) AS viewer_attempted,
         EXISTS(SELECT 1 FROM gn_challenge_starts s WHERE s.challenge_id=c.id AND s.user_id=${session.uid}) AS viewer_started
       FROM gn_challenges c JOIN gn_users a ON a.id=c.challenger_id LEFT JOIN gn_users b ON b.id=c.opponent_id
@@ -239,7 +250,8 @@ export async function createGeoChallenge(req: Request) {
     const config = parseGeoChallengeConfig(body);
     if (!config) return failure("invalid_config");
     const invitationType = config.invitationType ?? "direct";
-    const hourly = await rateLimit(`geo:invitations-hour:${viewer.userId}`, 12, 3600);
+    const bot = invitationType === "bot";
+    const hourly = await rateLimit(`geo:${bot ? "bot-games" : "invitations"}-hour:${viewer.userId}`, bot ? 120 : 12, 3600);
     if (!hourly.ok) return rateFailure(hourly.retryAfter);
     const sql = await getDb();
     return sql.begin(async (tx) => {
@@ -273,11 +285,12 @@ export async function createGeoChallenge(req: Request) {
       }
       const id = newId();
       const seed = `${config.gameId === "adastra" ? ADASTRA_CATALOG_SEED_PREFIX : GEO_CONTENT_SEED_PREFIX}${randomBytes(24).toString("base64url")}`;
-      const expiresAt = new Date(Date.now() + CHALLENGE_INVITE_TTL_MS);
-      await tx`INSERT INTO gn_challenges (id,challenger_id,opponent_id,invitation_type,game_id,difficulty,mode,rounds,timed,variant,seed,expires_at)
-        VALUES (${id},${viewer.userId},${opponent ? String(opponent.id) : null},${invitationType},${config.gameId},${config.difficulty},${config.mode},${config.rounds},${config.timed},${config.variant},${seed},${expiresAt})`;
+      const expiresAt = new Date(Date.now() + (bot ? CHALLENGE_PLAY_TTL_MS : CHALLENGE_INVITE_TTL_MS));
+      const botSeed = bot ? randomBytes(32).toString("base64url") : null;
+      await tx`INSERT INTO gn_challenges (id,challenger_id,opponent_id,invitation_type,game_id,difficulty,mode,rounds,timed,variant,seed,expires_at,bot_difficulty,bot_seed,status,accepted_at)
+        VALUES (${id},${viewer.userId},${opponent ? String(opponent.id) : null},${invitationType},${config.gameId},${config.difficulty},${config.mode},${config.rounds},${config.timed},${config.variant},${seed},${expiresAt},${config.botDifficulty ?? null},${botSeed},${bot ? "active" : "pending"},${bot ? new Date() : null})`;
       if (opponent) await notify(tx, opponent.id, { id, game_id: config.gameId }, "invited", String(creator.name));
-      return reply({ ok: true, id, ...(opponent ? { opponentName: String(opponent.name) } : { sharePath: `/challenges?invite=${id}` }) }, 201);
+      return reply({ ok: true, id, ...(bot ? { opponentName: BOT_NAME } : opponent ? { opponentName: String(opponent.name) } : { sharePath: `/challenges?invite=${id}` }) }, 201);
     });
   });
 }
@@ -395,6 +408,8 @@ export async function submitGeoChallenge(req: Request, { params }: RouteContext)
       const config: GeoChallengeConfig = { gameId: row.game_id as GeoChallengeConfig["gameId"], difficulty: row.difficulty as GeoChallengeConfig["difficulty"],
         mode: row.mode as GeoChallengeConfig["mode"], rounds: Number(row.rounds), timed: Boolean(row.timed), variant: String(row.variant) };
       if (!validGeoChallengeResult(body, config)) return { error: "invalid_result", status: 400 };
+      const bot = inviteType(row) === "bot";
+      if (bot && Number(body.total) > MAX_BOT_ROUNDS) return { error: "invalid_result", status: 400 };
       const guest = isGuest(row, viewer);
       const existing = guest ? await tx`SELECT * FROM gn_challenge_guest_attempts WHERE challenge_id=${id}`
         : await tx`SELECT * FROM gn_challenge_attempts WHERE challenge_id=${id} AND user_id=${viewer.userId}`;
@@ -420,7 +435,13 @@ export async function submitGeoChallenge(req: Request, { params }: RouteContext)
       const attempts = await tx`SELECT * FROM gn_challenge_attempts WHERE challenge_id=${id}`;
       const guestAttempts = row.guest_name ? await tx`SELECT * FROM gn_challenge_guest_attempts WHERE challenge_id=${id}` : [];
       const a = attempts.find((attempt) => attempt.user_id === row.challenger_id);
-      const b = row.guest_name ? guestAttempts[0] : attempts.find((attempt) => attempt.user_id === row.opponent_id);
+      let b = row.guest_name ? guestAttempts[0] : attempts.find((attempt) => attempt.user_id === row.opponent_id);
+      if (bot) {
+        const opponent = buildBotAttempt(config, row.bot_difficulty as Difficulty, String(row.bot_seed ?? ""), run.total);
+        await tx`INSERT INTO gn_challenge_bot_attempts (challenge_id,score,correct,total,best_streak,duration_ms)
+          VALUES (${id},${opponent.score},${opponent.correct},${opponent.total},${opponent.bestStreak},${opponent.durationMs})`;
+        b = { score: opponent.score, correct: opponent.correct, total: opponent.total, duration_ms: opponent.durationMs };
+      }
       if (a && b) {
         const compare = compareGeoAttempts({ score: Number(a.score), correct: Number(a.correct), durationMs: Number(a.duration_ms) },
           { score: Number(b.score), correct: Number(b.correct), durationMs: Number(b.duration_ms) });

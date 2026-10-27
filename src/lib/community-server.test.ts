@@ -129,7 +129,7 @@ describe("private feedback administration", () => {
     expect(response.headers.get("Cache-Control")).toBe("private, no-store");
     expect(response.headers.get("Vary")).toBe("Cookie");
     expect(await response.json()).toEqual({ configured: true, submissions: [{
-      id, authorName: "Alice", message, status: "new", createdAt: "2026-10-05T10:00:00.000Z", reviewedAt: null, contributorAwarded: false,
+      id, authorName: "Alice", message, status: "new", createdAt: "2026-10-05T10:00:00.000Z", reviewedAt: null, contributorAwarded: false, botReplySent: false,
     }], total: 2, allCount: 5, newCount: 2, hasMore: true });
     expect(state.calls[2].text).not.toContain("SELECT f.user_id");
   });
@@ -166,6 +166,40 @@ describe("private feedback administration", () => {
     expect((await updateCommunityFeedback(req({ status: "reviewed" }, "PATCH", "https://evil.example"), ctx)).status).toBe(403);
     expect(state.calls).toHaveLength(count);
   });
+  it("sends a single account notification to the actual feedback author, without granting an unrequested badge", async () => {
+    state.session = { uid: "creator", name: "TheCreator" };
+    for (let retry = 0; retry < 2; retry++) {
+      state.responses = [[{ id: "creator" }], [{ id, user_id: "actual-author" }], [], []];
+      const response = await updateCommunityFeedback(req({ status: "reviewed", notifyFeature: "bot-challenges", userId: "attacker", authorName: "TheCreator" }, "PATCH"), ctx);
+      expect(response.status).toBe(200);
+      expect(await response.json()).toEqual({ ok: true, botReplySent: true });
+    }
+    const writes = state.calls.filter((call) => call.text.includes("INSERT INTO gn_community_notifications"));
+    expect(writes).toHaveLength(2);
+    for (const write of writes) {
+      expect(write.values).toContain("actual-author");
+      expect(write.values).not.toContain("attacker");
+      expect(write.text).toContain("ON CONFLICT (user_id,kind,game_id) DO NOTHING");
+      expect(write.text).not.toContain("read_at=");
+    }
+    expect(writes[0].values[0]).toBe(writes[1].values[0]);
+    expect(state.calls.some((call) => call.text.includes("INSERT INTO gn_badge_awards"))).toBe(false);
+  });
+  it("does not claim delivery to an anonymous/deleted author or a missing submission", async () => {
+    state.session = { uid: "creator", name: "TheCreator" };
+    state.responses = [[{ id: "creator" }], [{ id, user_id: null }]];
+    expect((await updateCommunityFeedback(req({ status: "reviewed", notifyFeature: "bot-challenges" }, "PATCH"), ctx)).status).toBe(409);
+    state.responses = [[{ id: "creator" }], []];
+    expect((await updateCommunityFeedback(req({ status: "reviewed", notifyFeature: "bot-challenges" }, "PATCH"), ctx)).status).toBe(404);
+    expect(state.calls.some((call) => call.text.includes("INSERT INTO gn_community_notifications"))).toBe(false);
+  });
+  it("rejects unsupported notification features and ordinary users", async () => {
+    state.session = { uid: "creator", name: "TheCreator" };
+    state.responses = [[{ id: "creator" }]];
+    expect((await updateCommunityFeedback(req({ status: "reviewed", notifyFeature: "arbitrary" }, "PATCH"), ctx)).status).toBe(400);
+    state.session = { uid: "alice", name: "TheCreator" }; state.responses = [[]];
+    expect((await updateCommunityFeedback(req({ status: "reviewed", notifyFeature: "bot-challenges" }, "PATCH"), ctx)).status).toBe(403);
+  });
 });
 
 describe("public duel standings", () => {
@@ -187,6 +221,7 @@ describe("public duel standings", () => {
     expect(query.text).toContain("c.status='resolved' AND c.resolved_at IS NOT NULL");
     expect(query.text).toContain("a.user_id=c.challenger_id");
     expect(query.text).toContain("b.user_id=c.opponent_id");
+    expect(query.text).toContain("c.invitation_type<>'bot'");
     expect(query.text).toContain("c.resolved_at>=date_trunc('month',now())");
     expect(query.text).toContain("UNION ALL");
     expect(query.text).toContain("COUNT(DISTINCT o.rival_id)");

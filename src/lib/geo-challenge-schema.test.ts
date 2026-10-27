@@ -18,5 +18,9 @@ describe("All-rounds schema upgrade", () => {
     expect(upgrade).toContain("ADD CONSTRAINT gn_challenges_rounds_all_check");
     expect(upgrade).toContain("CHECK (rounds IN (0,10,25,50))");
     expect(queries.join("\n")).not.toMatch(/SET\s+rounds|DROP TABLE|DELETE FROM/);
+    expect(queries.some((text) => text.includes("DROP CONSTRAINT IF EXISTS gn_challenges_invitation_type_check"))).toBe(true);
+    expect(queries.some((text) => text.includes("ADD CONSTRAINT gn_challenges_invitation_type_check") && text.includes("'bot'"))).toBe(true);
+    expect(queries.some((text) => text.includes("ADD COLUMN IF NOT EXISTS bot_seed"))).toBe(true);
+    expect(queries.some((text) => text.includes("CREATE TABLE IF NOT EXISTS gn_challenge_bot_attempts"))).toBe(true);
   });
 });

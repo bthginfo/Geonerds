@@ -66,6 +66,14 @@ export function apiSetFeedbackStatus(id: string, status: FeedbackStatus): Promis
   });
 }
 
+/** The admin chooses a submission; the server resolves its real author, never a supplied name. */
+export function apiSendBotFeedbackReply(id: string): Promise<({ ok: true; botReplySent: true }) | CommunityRequestError> {
+  return request(`/api/admin/feedback/${encodeURIComponent(id)}`, {
+    method: "PATCH", headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ status: "reviewed", notifyFeature: "bot-challenges" }),
+  });
+}
+
 export function apiDuelStandings(game: GeoChallengeGameId | "all", period: "all" | "month", page = 0, signal?: AbortSignal): Promise<DuelStandingsResult> {
   const params = new URLSearchParams({ game, period, limit: "100", offset: String(page * 100) });
   return request(`/api/leaderboard/duels?${params}`, { signal });

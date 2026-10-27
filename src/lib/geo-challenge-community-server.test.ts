@@ -44,8 +44,8 @@ describe("community challenge invitations",()=>{
     expect(await response.json()).toEqual({ok:true,id:"new-invite",sharePath:"/challenges?invite=new-invite"});
     const insert=state.calls.find(c=>c.text.includes("INSERT INTO gn_challenges"))!;
     expect(insert.values[2]).toBeNull();
-    expect((insert.values.at(-1) as Date).getTime()-before).toBeGreaterThanOrEqual(CHALLENGE_INVITE_TTL_MS);
-    expect((insert.values.at(-1) as Date).getTime()-before).toBeLessThan(CHALLENGE_INVITE_TTL_MS+2000);
+    expect((insert.values[11] as Date).getTime()-before).toBeGreaterThanOrEqual(CHALLENGE_INVITE_TTL_MS);
+    expect((insert.values[11] as Date).getTime()-before).toBeLessThan(CHALLENGE_INVITE_TTL_MS+2000);
     expect(state.calls[0].text).toContain("FOR UPDATE");
   });
   it("chooses a random registered opponent on the server and notifies that account",async()=>{
