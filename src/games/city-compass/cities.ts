@@ -1,7 +1,7 @@
 import capitals from "../../../public/geo/capitals.json";
 import { COUNTRIES } from "@/data/countries";
 import { CAPITAL_DE } from "@/games/aliases";
-import { PLACES, LEGACY_PLACES, type Place } from "@/games/pin/places";
+import { PLACES, V2_PLACES, LEGACY_PLACES, type Place } from "@/games/pin/places";
 import type { Difficulty, Locale } from "@/lib/types";
 
 export interface CompassCity {
@@ -45,11 +45,12 @@ function citiesFromPlaces(places: readonly Place[]): CompassCity[] { return [
   ...places.flatMap((place) => {
     const cca3 = place.cca3 ?? EXTRA_CITY_CODES[place.en];
     if (!cca3) return [];
-    return [{ id: `city:${place.en}`, name: { en: place.en, de: place.de }, lat: place.lat, lng: place.lng, cca3, tier: place.cca3 ? 2 : 1 }];
+    return [{ id: `city:${place.en}`, name: { en: place.en, de: place.de }, lat: place.lat, lng: place.lng, cca3, tier: place.tier ?? (place.cca3 ? 2 : 1) }];
   }),
 ]; }
 
 export const COMPASS_CITIES = citiesFromPlaces(PLACES);
+export const V2_COMPASS_CITIES = citiesFromPlaces(V2_PLACES);
 export const LEGACY_COMPASS_CITIES = citiesFromPlaces(LEGACY_PLACES);
 
 export function cityLabel(city: CompassCity, locale: Locale): string { return city.name[locale]; }

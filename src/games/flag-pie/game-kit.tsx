@@ -9,6 +9,7 @@ import { useT } from "@/i18n/I18nProvider";
 import { scoreForAnswer } from "@/lib/scoring";
 import { matchAnswer } from "@/lib/fuzzy";
 import { sound } from "@/lib/sound";
+import { haptic } from "@/lib/haptics";
 import { cn } from "@/lib/utils";
 import { initialSession, recordVisualRound, visualResult } from "./session";
 
@@ -44,8 +45,8 @@ export function useVisualSession({ total, hits, timeLimitMs = 20000, ...handlers
     statsRef.current = next;
     setStats(next);
     setAnswer({ correct, earned, timedOut });
-    if (correct) sound.correct();
-    else sound.wrong();
+    if (correct) { sound.correct(); haptic.success(); }
+    else { sound.wrong(); haptic.error(); }
   }, [handlers.practice, handlers.difficulty, handlers.timed, hits, index, total, timeLimitMs]);
 
   useEffect(() => {
@@ -111,7 +112,7 @@ export function VisualGameFrame({ gameId, session, handlers, children, wide = fa
   );
 }
 
-export function AnswerPanel({ mode, options, correctId, accepted, answered, onAnswer, placeholderKey = "type.placeholder" }: {
+interface AnswerPanelProps {
   mode: "choice" | "type";
   options: { id: string; label: string }[];
   correctId: string;
@@ -119,20 +120,36 @@ export function AnswerPanel({ mode, options, correctId, accepted, answered, onAn
   answered: boolean;
   onAnswer: (correct: boolean) => void;
   placeholderKey?: string;
-}) {
+}
+
+export function AnswerPanel(props: AnswerPanelProps) {
+  return <AnswerPanelRound key={props.correctId} {...props} />;
+}
+
+function AnswerPanelRound({ mode, options, correctId, accepted, answered, onAnswer, placeholderKey = "type.placeholder" }: AnswerPanelProps) {
   const { t } = useT();
   const [selected, setSelected] = useState<string | null>(null);
   const [typed, setTyped] = useState("");
   const [hint, setHint] = useState<string | null>(null);
+  const spellingRetryRef = useRef(false);
+  const answerLockRef = useRef(false);
+  const inputId = `visual-answer-${correctId}`;
+
+  function answer(correct: boolean) {
+    if (answered || answerLockRef.current) return;
+    answerLockRef.current = true;
+    onAnswer(correct);
+  }
 
   function submit() {
-    if (answered || !typed.trim()) return;
+    if (answered || answerLockRef.current || !typed.trim()) return;
     const result = matchAnswer(typed, accepted);
-    if (result.status === "near") {
-      setHint(t("type.almost", { guess: result.suggestion ?? typed }));
+    if (result.status === "near" && !spellingRetryRef.current) {
+      spellingRetryRef.current = true;
+      setHint(t("refresh.quiz.retry"));
       return;
     }
-    onAnswer(result.status === "correct");
+    answer(result.status === "correct");
   }
 
   if (mode === "choice") return (
@@ -141,7 +158,7 @@ export function AnswerPanel({ mode, options, correctId, accepted, answered, onAn
         <button
           key={option.id}
           disabled={answered}
-          onClick={() => { setSelected(option.id); onAnswer(option.id === correctId); }}
+          onClick={() => { if (answered || answerLockRef.current) return; setSelected(option.id); answer(option.id === correctId); }}
           className={cn(
             "flex min-h-14 items-center gap-3 rounded-xl border-2 px-4 py-3 text-left text-sm font-semibold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-background",
             !answered && "border-border bg-card hover:border-primary/60 hover:bg-primary/5 active:scale-[0.98]",
@@ -161,9 +178,9 @@ export function AnswerPanel({ mode, options, correctId, accepted, answered, onAn
 
   return (
     <form onSubmit={(event) => { event.preventDefault(); submit(); }}>
-      <label className="sr-only" htmlFor="visual-answer">{t(placeholderKey)}</label>
+      <label className="sr-only" htmlFor={inputId}>{t(placeholderKey)}</label>
       <div className="flex gap-2">
-        <input id="visual-answer" value={typed} onChange={(event) => { setTyped(event.target.value); setHint(null); }}
+        <input id={inputId} value={typed} onChange={(event) => { setTyped(event.target.value); setHint(null); }}
           disabled={answered} autoComplete="off" autoCorrect="off" spellCheck={false} autoCapitalize="words"
           placeholder={t(placeholderKey)} className="h-14 min-w-0 flex-1 rounded-xl border-2 border-border bg-card px-4 text-base outline-none focus:border-primary disabled:opacity-60" />
         <Button type="submit" size="lg" disabled={answered || !typed.trim()} className="px-4" aria-label={t("type.submit")}>

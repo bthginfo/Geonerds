@@ -13,7 +13,6 @@ import { sound } from "@/lib/sound";
 import { haptic } from "@/lib/haptics";
 import { cn } from "@/lib/utils";
 import { buildConnectionPuzzle, type ConnectionRelation } from "./generator";
-import { useGameTimeouts } from "@/games/use-game-timeouts";
 
 const RELATION_ICON = {
   border: Map,
@@ -42,14 +41,12 @@ export function ConnectionsGame({ difficulty, practice, onFinish, onExit }: Play
   const answerLockRef = useRef(false);
   const finishRef = useRef(false);
   const wrongRef = useRef(new Set<string>());
-  const { schedule, clearTimers } = useGameTimeouts();
 
   useEffect(() => {
     if (puzzle) setChain([puzzle.start]);
   }, [puzzle]);
 
   function regenerate() {
-    clearTimers();
     answerLockRef.current = false;
     finishRef.current = false;
     wrongRef.current = new Set();
@@ -112,7 +109,6 @@ export function ConnectionsGame({ difficulty, practice, onFinish, onExit }: Play
         if (nextEnergy <= 0) {
           answerLockRef.current = true;
           setLocked(true);
-          schedule(() => finish(score, stepIndex), 700);
         }
       }
       return;
@@ -133,18 +129,22 @@ export function ConnectionsGame({ difficulty, practice, onFinish, onExit }: Play
     setBestStreak(nextBest);
     setFeedback(t(`connections.correct.${step.relation}`, { value: step.evidence }));
 
-    schedule(() => {
-      if (stepIndex + 1 >= puzzle!.steps.length) {
-        finish(nextScore, puzzle!.steps.length, nextChain.slice(1).map((country) => country.cca3), nextBest);
-        return;
-      }
-      setStepIndex(stepIndex + 1);
-      answerLockRef.current = false;
-      wrongRef.current = new Set();
-      setWrong(new Set());
-      setFeedback(null);
-      setLocked(false);
-    }, 850);
+  }
+
+  function next() {
+    if (!locked || !answerLockRef.current || finishRef.current) return;
+    // Release the answer lock once per explicit advance, never on a timer.
+    answerLockRef.current = false;
+    if (!practice && energy <= 0) { finish(score, stepIndex); return; }
+    if (stepIndex + 1 >= puzzle!.steps.length) {
+      finish(score, puzzle!.steps.length, chain.slice(1).map((country) => country.cca3), bestStreak);
+      return;
+    }
+    setStepIndex((index) => index + 1);
+    wrongRef.current = new Set();
+    setWrong(new Set());
+    setFeedback(null);
+    setLocked(false);
   }
 
   return (
@@ -154,7 +154,7 @@ export function ConnectionsGame({ difficulty, practice, onFinish, onExit }: Play
         {!practice && <StreakPill value={streak} />}
         {!practice && <ScorePill value={score} />}
       </GameTopBar>
-      <ProgressBar value={stepIndex / puzzle.steps.length} />
+      <ProgressBar value={(stepIndex + (locked && energy > 0 ? 1 : 0)) / puzzle.steps.length} />
 
       <main className="mx-auto flex w-full max-w-2xl flex-1 flex-col px-4 py-5 sm:py-7">
         <div className="mb-5 overflow-x-auto pb-2" aria-label={t("connections.chainLabel")}>
@@ -171,7 +171,7 @@ export function ConnectionsGame({ difficulty, practice, onFinish, onExit }: Play
                   <div className="flex h-14 w-14 items-center justify-center rounded-2xl border-2 border-primary/30 bg-card shadow-[0_6px_18px_rgba(15,23,42,.12)] lg:h-16 lg:w-16">
                     <FlagImage code={country.flag} alt="" hideText className="aspect-[4/3] w-9 shadow-sm lg:w-11" />
                   </div>
-                  <span className="hidden max-w-24 truncate text-[11px] font-bold text-muted-foreground lg:block">
+                  <span className="max-w-24 break-words text-center text-xs font-medium text-muted-foreground">
                     {countryName(country, locale)}
                   </span>
                 </div>
@@ -244,7 +244,7 @@ export function ConnectionsGame({ difficulty, practice, onFinish, onExit }: Play
                 exit={{ opacity: 0 }}
                 className={cn(
                   "flex items-center gap-2 rounded-xl border px-3 py-2.5 text-sm font-semibold",
-                  locked ? "border-success/30 bg-success/10 text-success" : "border-danger/30 bg-danger/10 text-danger"
+                  locked && (practice || energy > 0) ? "border-success/30 bg-success/10 text-success" : "border-danger/30 bg-danger/10 text-danger"
                 )}
               >
                 <Shield className="h-4 w-4 shrink-0" /> {feedback}
@@ -252,6 +252,7 @@ export function ConnectionsGame({ difficulty, practice, onFinish, onExit }: Play
             )}
           </AnimatePresence>
         </div>
+        {locked && <Button className="mt-3 h-auto min-h-12 w-full gap-2 py-3" onClick={next}>{energy <= 0 || stepIndex + 1 >= puzzle.steps.length ? (locale === "de" ? "Ergebnis ansehen" : "View results") : t("common.next")}<ArrowRight className="h-4 w-4" aria-hidden /></Button>}
       </main>
     </div>
   );

@@ -1,14 +1,14 @@
 import { describe, expect, it } from "vitest";
 import { COUNTRIES, getCountryByCca3 } from "@/data/countries";
 import { LANDMARKS, LEGACY_LANDMARKS } from "@/data/landmarks";
-import { CITIES, LEGACY_CITIES } from "@/games/capitals/cities";
-import { ITEMS, LEGACY_ORIGIN_ITEMS } from "@/games/origin/items";
+import { CITIES, V2_CITIES, LEGACY_CITIES } from "@/games/capitals/cities";
+import { ITEMS, V2_ORIGIN_ITEMS, LEGACY_ORIGIN_ITEMS } from "@/games/origin/items";
 import { PEAKS, LEGACY_PEAKS } from "@/games/mountains/peaks";
-import { PLACES, LEGACY_PLACES } from "@/games/pin/places";
-import { COMPASS_CITIES, LEGACY_COMPASS_CITIES } from "@/games/city-compass/cities";
-import { FACT_QUESTIONS } from "./fact-questions";
+import { PLACES, V2_PLACES, LEGACY_PLACES } from "@/games/pin/places";
+import { COMPASS_CITIES, V2_COMPASS_CITIES, LEGACY_COMPASS_CITIES } from "@/games/city-compass/cities";
+import { FACT_QUESTIONS, V2_FACT_QUESTIONS, factQuestionsForSeed } from "./fact-questions";
 import { triviaClues } from "./facts";
-import { GEO_CONTENT_SEED_PREFIX, isLegacyGeoSeed } from "./geo-content-version";
+import { GEO_CONTENT_SEED_PREFIX, isLegacyGeoSeed, isPreviousGeoSeed } from "./geo-content-version";
 import { createSeededRandom } from "./random";
 
 describe("expanded geography content and old duel compatibility", () => {
@@ -19,11 +19,17 @@ describe("expanded geography content and old duel compatibility", () => {
     expect(LEGACY_COMPASS_CITIES).toHaveLength(247);
     expect(Object.values(LEGACY_CITIES).flat()).toHaveLength(166);
     expect(LANDMARKS.length - LEGACY_LANDMARKS.length).toBe(60);
-    expect(FACT_QUESTIONS).toHaveLength(180);
-    expect(ITEMS).toHaveLength(225);
+    expect(V2_FACT_QUESTIONS).toHaveLength(180);
+    expect(FACT_QUESTIONS).toHaveLength(212);
+    expect(V2_ORIGIN_ITEMS).toHaveLength(225);
+    expect(ITEMS).toHaveLength(257);
     expect(PEAKS).toHaveLength(84);
-    expect(PLACES).toHaveLength(148);
-    expect(COMPASS_CITIES).toHaveLength(271);
+    expect(V2_PLACES).toHaveLength(148);
+    expect(PLACES).toHaveLength(158);
+    expect(V2_COMPASS_CITIES).toHaveLength(271);
+    expect(COMPASS_CITIES).toHaveLength(281);
+    expect(Object.values(V2_CITIES).flat()).toHaveLength(291);
+    expect(Object.values(CITIES).flat().length).toBeGreaterThan(Object.values(V2_CITIES).flat().length);
     expect(Object.values(CITIES).flat().length).toBeGreaterThanOrEqual(290);
     expect(Object.keys(CITIES).length).toBeGreaterThanOrEqual(90);
     for (const [code, cities] of Object.entries(CITIES)) {
@@ -47,6 +53,10 @@ describe("expanded geography content and old duel compatibility", () => {
     expect(isLegacyGeoSeed(`${GEO_CONTENT_SEED_PREFIX}new-invitation`)).toBe(false);
     expect(isLegacyGeoSeed("ordinary-run-uuid")).toBe(false);
     expect(isLegacyGeoSeed(undefined)).toBe(false);
+    expect(isPreviousGeoSeed("geo-v2:existing-invitation")).toBe(true);
+    expect(isPreviousGeoSeed(`${GEO_CONTENT_SEED_PREFIX}new-invitation`)).toBe(false);
+    expect(factQuestionsForSeed("geo-v2:existing-invitation")).toBe(V2_FACT_QUESTIONS);
+    expect(factQuestionsForSeed(`${GEO_CONTENT_SEED_PREFIX}new-invitation`)).toBe(FACT_QUESTIONS);
   });
 
   it("provides four distinct seeded clues in both languages across the full country pool", () => {

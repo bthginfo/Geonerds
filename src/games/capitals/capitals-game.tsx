@@ -8,11 +8,11 @@ import { FlagImage } from "@/components/flag-image";
 import { COUNTRIES, poolForDifficulty, withCapital, countryName } from "@/data/countries";
 import { capitalAccepted, capitalLabel, countryAccepted } from "@/games/aliases";
 import { makeChoices, pickQuestions } from "@/games/round-utils";
-import { CITIES, LEGACY_CITIES, type CityEntry } from "./cities";
+import { CITIES, V2_CITIES, LEGACY_CITIES, type CityEntry } from "./cities";
 import { sample, shuffle, pickOne } from "@/lib/utils";
 import { useT } from "@/i18n/I18nProvider";
 import { createSeededRandom } from "@/lib/random";
-import { isLegacyGeoSeed } from "@/lib/geo-content-version";
+import { isLegacyGeoSeed, isPreviousGeoSeed } from "@/lib/geo-content-version";
 
 function cityLabel(c: CityEntry, locale: Locale): string {
   return locale === "de" && c.de ? c.de : c.en;
@@ -30,7 +30,11 @@ export function CapitalsGame({ difficulty, mode, variant, scope, roundCount, tim
     const random = seed ? createSeededRandom(seed) : Math.random;
     if (cityMode) {
       const source = scope ? COUNTRIES.filter((c) => c.region === scope) : poolForDifficulty(difficulty);
-      const citySource = legacyCityMode ? LEGACY_CITIES : CITIES;
+      const catalog = legacyCityMode ? LEGACY_CITIES : isPreviousGeoSeed(seed) ? V2_CITIES : CITIES;
+      const maxCityTier = difficulty === "easy" ? 1 : difficulty === "medium" ? 2 : 3;
+      const citySource = Object.fromEntries(Object.entries(catalog).map(([code, cities]) => [code,
+        cities.filter((city) => (city.tier ?? 1) <= maxCityTier),
+      ]));
       const pool = source.filter((c) => citySource[c.cca3]?.length);
       if (!legacyCityMode) {
         // Every city is a target, rather than just one randomly selected city per

@@ -21,6 +21,7 @@ import { useT } from "@/i18n/I18nProvider";
 import { createSeededRandom } from "@/lib/random";
 import { GameLoadState } from "@/games/load-state";
 import { isLegacyGeoSeed } from "@/lib/geo-content-version";
+import { regionLabel, subregionLabel } from "@/lib/regions";
 
 const PER_ROUND_BUDGET_MS = 15000;
 
@@ -58,13 +59,13 @@ export function NeighborsGame({ difficulty, mode, roundCount, timed, scope, prac
       const nbs = neighborsOf(answer);
       // Ordered from vague → revealing, so each extra clue helps more.
       const clues: Clue[] = [];
-      clues.push({ icon: Globe2, label: t("neighbors.clue.region"), node: answer.region });
+      clues.push({ icon: Globe2, label: t("neighbors.clue.region"), node: regionLabel(answer.region, locale) });
       clues.push({
         icon: Waves,
         label: t("neighbors.clue.coast"),
         node: answer.landlocked ? t("neighbors.clue.coastNo") : t("neighbors.clue.coastYes"),
       });
-      if (answer.subregion) clues.push({ icon: Compass, label: t("neighbors.clue.subregion"), node: answer.subregion });
+      if (answer.subregion) clues.push({ icon: Compass, label: t("neighbors.clue.subregion"), node: subregionLabel(answer.subregion, locale) });
       if (answer.population > 0)
         clues.push({ icon: Users, label: t("neighbors.clue.population"), node: t("neighbors.clue.people", { n: roundPeople(answer.population) }) });
       if (answer.area > 0)

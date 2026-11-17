@@ -1,3 +1,5 @@
+import { HERITAGE_CITIES } from "@/data/heritage-cities";
+
 /**
  * Major non-capital cities, keyed by country (cca3).
  * Used by the "Cities" mode of the Capitals & Cities game.
@@ -6,6 +8,7 @@
 export interface CityEntry {
   en: string;
   de?: string;
+  tier?: 1 | 2 | 3;
 }
 
 export const LEGACY_CITIES: Record<string, CityEntry[]> = {
@@ -140,9 +143,16 @@ const AMBIGUOUS_CITY_NAMES = new Set([
   "Cartago", "Saint-Louis", "George Town", "Lagos",
 ]);
 
-export const CITIES: Record<string, CityEntry[]> = Object.fromEntries(
+export const V2_CITIES: Record<string, CityEntry[]> = Object.fromEntries(
   [...new Set([...Object.keys(LEGACY_CITIES), ...Object.keys(EXTRA_CITIES)])].map((code) => [
     code, [...(LEGACY_CITIES[code] ?? []), ...(EXTRA_CITIES[code] ?? [])].filter((city) => !AMBIGUOUS_CITY_NAMES.has(city.en)),
+  ]),
+);
+
+export const CITIES: Record<string, CityEntry[]> = Object.fromEntries(
+  [...new Set([...Object.keys(V2_CITIES), ...HERITAGE_CITIES.map((city) => city.cca3)])].map((code) => [code,
+    [...(V2_CITIES[code] ?? []), ...HERITAGE_CITIES.filter((city) => city.cca3 === code &&
+      !(V2_CITIES[code] ?? []).some((existing) => existing.en === city.en)).map(({ en, de }) => ({ en, de, tier: 3 as const }))],
   ]),
 );
 

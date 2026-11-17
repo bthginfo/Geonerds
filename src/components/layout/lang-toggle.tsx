@@ -8,17 +8,18 @@ export function LangToggle() {
   const setLocale = useSettings((s) => s.setLocale);
 
   return (
-    <div className="inline-flex items-center rounded-lg border border-border bg-card p-0.5 text-xs font-semibold">
+    <div role="group" aria-label={locale === "de" ? "Sprache" : "Language"} className="inline-flex shrink-0 items-center rounded-xl bg-muted/80 p-0.5 text-xs font-semibold">
       {(["en", "de"] as const).map((l) => (
         <button
           key={l}
+          type="button"
           onClick={() => setLocale(l)}
           aria-pressed={locale === l}
           aria-label={l === "en" ? "English" : "Deutsch"}
           className={
-            "rounded-md px-2.5 py-1.5 uppercase transition-colors " +
+            "inline-flex min-h-11 min-w-11 items-center justify-center rounded-[10px] px-2 uppercase transition-colors " +
             (locale === l
-              ? "bg-primary text-primary-foreground"
+              ? "bg-card text-foreground shadow-sm"
               : "text-muted-foreground hover:text-foreground")
           }
         >

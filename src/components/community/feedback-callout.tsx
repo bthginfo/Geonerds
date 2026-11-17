@@ -75,16 +75,16 @@ export function FeedbackCallout() {
 
   return (
     <>
-      <section aria-labelledby="feedback-callout-title" className="mx-auto mb-5 grid w-full max-w-2xl grid-cols-[2.25rem_minmax(0,1fr)] items-start gap-x-3 gap-y-2 rounded-2xl border border-accent/25 bg-accent/5 px-3 py-3 sm:mb-7 sm:grid-cols-[2.25rem_minmax(0,1fr)_auto] sm:items-center sm:px-4 sm:py-3.5 dark:border-accent/20 dark:bg-accent/8">
-        <span aria-hidden="true" className="flex h-9 w-9 items-center justify-center rounded-xl bg-accent/15 text-accent-foreground dark:text-accent">
+      <section aria-labelledby="feedback-callout-title" className="mb-6 flex w-full flex-wrap items-center gap-x-3 gap-y-1 rounded-2xl bg-primary/5 px-4 py-2.5 sm:flex-nowrap">
+        <span aria-hidden="true" className="hidden shrink-0 text-primary sm:block">
           <MessageCircleHeart className="h-[18px] w-[18px]" />
         </span>
-        <div className="min-w-0">
+        <div className="min-w-0 flex-1 basis-48">
           <h2 id="feedback-callout-title" className="text-sm font-semibold leading-5 text-foreground">{locale === "de" ? "Deine Ideen machen GeoNerds besser" : "Your ideas make GeoNerds better"}</h2>
-          <p className="mt-1 text-xs leading-5 text-muted-foreground">{locale === "de" ? "Ein neues Spiel, ein Wunsch oder eine kleine Verbesserung? Erzähl uns davon – jede Idee hilft." : "A new game, a wish or a small improvement? Tell us about it — every idea helps."}</p>
+          <p className="mt-0.5 text-xs leading-5 text-muted-foreground">{locale === "de" ? "Was fehlt dir noch? Teile einen Wunsch, eine Spielidee oder eine Verbesserung." : "What's missing? Share a wish, a game idea, or a small improvement."}</p>
         </div>
-        <div className="col-start-2 flex min-w-0 flex-col items-start gap-1 sm:col-start-3 sm:row-start-1 sm:items-end">
-          <Button type="button" variant="ghost" size="sm" onClick={() => setOpen(true)} className="h-11 shrink-0 whitespace-nowrap rounded-lg border border-accent/25 bg-accent/15 px-3.5 text-xs font-semibold text-accent-foreground hover:bg-accent/25 dark:text-accent">{locale === "de" ? "Idee teilen" : "Share an idea"}</Button>
+        <div className="flex min-w-0 flex-wrap items-center gap-1 sm:flex-col sm:items-end">
+          <Button type="button" variant="ghost" size="sm" onClick={() => setOpen(true)} className="shrink-0 whitespace-nowrap text-xs text-primary hover:bg-primary/10">{locale === "de" ? "Idee teilen" : "Share an idea"}</Button>
           {isCreator && <Link href="/admin/feedback" className="inline-flex min-h-8 max-w-full items-center gap-1 rounded-md text-[11px] leading-4 text-muted-foreground hover:text-foreground hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"><span className="min-w-0">{locale === "de" ? "Einsendungen ansehen" : "View submissions"}</span><ArrowUpRight aria-hidden="true" className="h-3.5 w-3.5 shrink-0" /></Link>}
         </div>
       </section>
@@ -124,7 +124,7 @@ export function FeedbackCallout() {
                 setMessage(value);
                 setError(null);
               }}
-              className="min-h-36 w-full resize-y rounded-xl border border-border bg-background p-3 text-sm leading-relaxed outline-none transition-colors placeholder:text-muted-foreground focus:border-primary focus:ring-2 focus:ring-ring/20 disabled:opacity-60"
+              className="geo-control min-h-36 w-full resize-y text-base leading-relaxed disabled:opacity-60"
             />
             <p id={`${textareaId}-count`} className="mt-2 flex flex-wrap justify-between gap-x-3 gap-y-1 text-[11px] text-muted-foreground"><span>{locale === "de" ? `Mindestens ${FEEDBACK_MIN_LENGTH} Zeichen` : `At least ${FEEDBACK_MIN_LENGTH} characters`}</span><span className="tabular-nums">{formatNumber(message.length, locale)} / {formatNumber(FEEDBACK_MAX_LENGTH, locale)}</span></p>
             <p className="mt-4 break-words text-xs leading-relaxed text-muted-foreground">{user ? <>{locale === "de" ? "Du sendest als " : "Sending as "}<span className="font-semibold text-foreground">{user.name}</span>.</> : locale === "de" ? "Du sendest anonym. Keine E-Mail oder Anmeldung nötig." : "Sending anonymously. No email or sign-in needed."}</p>

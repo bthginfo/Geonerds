@@ -2,7 +2,7 @@ import type { Country, Difficulty, Locale } from "@/lib/types";
 import { COUNTRIES, getCountryByCca3, countryName } from "@/data/countries";
 import { capitalLabel } from "@/games/aliases";
 import { sample, shuffle } from "@/lib/utils";
-import { subregionLabel } from "@/lib/regions";
+import { regionLabel, subregionLabel } from "@/lib/regions";
 
 export interface Theme {
   id: string;
@@ -90,7 +90,20 @@ export function generateThemes(difficulty: Difficulty, locale: Locale, count: nu
   const regions = Array.from(new Set(pool.map((c) => c.region).filter(Boolean)));
   for (const r of regions) {
     const codes = pool.filter((c) => c.region === r && c.landlocked).map((c) => c.cca3);
-    add(`landlocked-${r}`, t(locale, `Landlocked countries in ${r}`, `Binnenländer in ${r}`), codes);
+    add(`landlocked-${r}`, t(locale, `Landlocked countries in ${r}`, `Binnenländer in ${regionLabel(r, locale)}`), codes);
+  }
+
+  // Complete intersections make fresh sets without inventing hand-picked
+  // exceptions. Difficulty limits answer-set size, not geographic correctness.
+  for (const r of regions) {
+    for (const borderCount of [1, 2, 3, 4, 5]) {
+      add(`neighbour-count-${r}-${borderCount}`,
+        t(locale, `Countries in ${r} with exactly ${borderCount} land neighbour${borderCount === 1 ? "" : "s"}`,
+          `Länder in ${regionLabel(r, locale)} mit genau ${borderCount} Landnachbarn`),
+        pool.filter((c) => c.region === r && c.borders.length === borderCount).map((c) => c.cca3));
+    }
+    add(`no-borders-${r}`, t(locale, `Countries in ${r} with no land borders`, `Länder in ${regionLabel(r, locale)} ohne Landgrenzen`),
+      pool.filter((c) => c.region === r && c.borders.length === 0 && !c.landlocked).map((c) => c.cca3));
   }
 
   // Borders a hub country.

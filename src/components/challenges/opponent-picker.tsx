@@ -164,7 +164,7 @@ function OpponentField({ value, onChange, disabled = false, userId, selfName }: 
       value={value}
       onChange={(event) => { setSelectedName(""); onChange(event.target.value); }}
       aria-describedby={`${id}-help`}
-      className="mt-1.5 min-h-11 w-full rounded-xl border border-border bg-background px-3 py-2 text-sm outline-none focus:border-primary focus:ring-2 focus:ring-ring/20"
+      className="geo-control mt-2 w-full min-w-0"
       placeholder={locale === "de" ? "z. B. AtlasFan" : "e.g. AtlasFan"}
     />
     <p id={`${id}-help`} className="mt-1.5 text-[11px] leading-relaxed text-muted-foreground">{locale === "de" ? "Nutze den bestehenden GeoNerds-Kontonamen, keine E-Mail-Adresse." : "Use an existing GeoNerds account name, not an email address."}</p>
@@ -185,7 +185,7 @@ function OpponentField({ value, onChange, disabled = false, userId, selfName }: 
       <label htmlFor={`${id}-search`} className="mt-3 block text-xs font-semibold">{locale === "de" ? "Nach Benutzername suchen" : "Search by username"}</label>
       <div className="relative mt-1.5">
         <Search aria-hidden="true" className="pointer-events-none absolute left-3 top-3.5 h-4 w-4 text-muted-foreground" />
-        <input ref={searchRef} id={`${id}-search`} type="search" autoComplete="off" autoCapitalize="none" maxLength={20} disabled={disabled} value={query} onChange={(event) => searchPlayers(event.target.value)} onKeyDown={(event) => { if (event.key === "Enter") { event.preventDefault(); event.stopPropagation(); } if (event.key === "Escape") { event.preventDefault(); closePicker(); } }} placeholder={locale === "de" ? "Name oder Teil des Namens" : "Name or part of a name"} className="min-h-11 w-full min-w-0 rounded-xl border border-border bg-background py-2 pl-9 pr-3 text-sm outline-none focus:border-primary focus:ring-2 focus:ring-ring/20" />
+        <input ref={searchRef} id={`${id}-search`} type="search" autoComplete="off" autoCapitalize="none" maxLength={20} disabled={disabled} value={query} onChange={(event) => searchPlayers(event.target.value)} onKeyDown={(event) => { if (event.key === "Enter") { event.preventDefault(); event.stopPropagation(); } if (event.key === "Escape") { event.preventDefault(); closePicker(); } }} placeholder={locale === "de" ? "Name oder Teil des Namens" : "Name or part of a name"} className="geo-control w-full min-w-0 pl-9" />
       </div>
 
       <p role="status" aria-live="polite" className="mt-3 flex min-h-4 items-center gap-1.5 text-[11px] leading-relaxed text-muted-foreground">

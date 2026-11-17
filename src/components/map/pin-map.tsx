@@ -1,11 +1,12 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useId, useMemo, useRef, useState } from "react";
 import { geoNaturalEarth1, geoPath, type GeoProjection } from "d3-geo";
 import { select } from "d3-selection";
 import { zoom, zoomIdentity, type ZoomBehavior } from "d3-zoom";
-import { Plus, Minus } from "lucide-react";
+import { Plus, Minus, Crosshair, Loader2, RotateCcw } from "lucide-react";
 import { loadCountries, type CountryFeature } from "@/lib/geo";
+import { useT } from "@/i18n/I18nProvider";
 
 const W = 980;
 const H = 500;
@@ -35,16 +36,35 @@ export function PinMap({
   initialScale?: number;
   controls?: boolean;
 }) {
+  const { locale } = useT();
+  const instructionsId = useId();
   const [features, setFeatures] = useState<CountryFeature[] | null>(null);
+  const [loadFailed, setLoadFailed] = useState(false);
+  const [loadAttempt, setLoadAttempt] = useState(0);
   const [t, setT] = useState({ k: 1, x: 0, y: 0 });
   const svgRef = useRef<SVGSVGElement>(null);
   const gRef = useRef<SVGGElement>(null);
   const zoomRef = useRef<ZoomBehavior<SVGSVGElement, unknown> | null>(null);
-  const tapRef = useRef<{ x: number; y: number; time: number } | null>(null);
+  const tapRef = useRef<{ x: number; y: number; time: number; pointerId: number } | null>(null);
+  const pointersRef = useRef(new Set<number>());
 
   useEffect(() => {
-    loadCountries("50m").then(setFeatures);
+    const release = (event: PointerEvent) => { pointersRef.current.delete(event.pointerId); tapRef.current = null; };
+    window.addEventListener("pointerup", release);
+    window.addEventListener("pointercancel", release);
+    return () => { window.removeEventListener("pointerup", release); window.removeEventListener("pointercancel", release); };
   }, []);
+
+  useEffect(() => {
+    let active = true;
+    setLoadFailed(false);
+    loadCountries("50m").then((countries) => {
+      if (!active) return;
+      if (!countries.length) { setLoadFailed(true); return; }
+      setFeatures(countries);
+    }).catch(() => { if (active) setLoadFailed(true); });
+    return () => { active = false; };
+  }, [loadAttempt]);
 
   const { paths, projection } = useMemo(() => {
     if (!features) return { paths: [] as string[], projection: null as GeoProjection | null };
@@ -107,12 +127,15 @@ export function PinMap({
   }
 
   function onPointerDown(e: React.PointerEvent) {
-    tapRef.current = { x: e.clientX, y: e.clientY, time: Date.now() };
+    if (e.pointerType === "mouse" && e.button !== 0) return;
+    pointersRef.current.add(e.pointerId);
+    tapRef.current = pointersRef.current.size === 1 ? { x: e.clientX, y: e.clientY, time: Date.now(), pointerId: e.pointerId } : null;
   }
   function onPointerUp(e: React.PointerEvent) {
+    pointersRef.current.delete(e.pointerId);
     const start = tapRef.current;
     tapRef.current = null;
-    if (!start || locked) return;
+    if (!start || start.pointerId !== e.pointerId || pointersRef.current.size > 0 || locked) return;
     if (Math.hypot(e.clientX - start.x, e.clientY - start.y) > 8 || Date.now() - start.time > 500) return;
     const svg = svgRef.current;
     const g = gRef.current;
@@ -125,7 +148,26 @@ export function PinMap({
     if (!ctm) return;
     const local = pt.matrixTransform(ctm.inverse());
     const geo = proj.invert?.([local.x, local.y]);
-    if (geo) onPin(geo[0], geo[1]);
+    if (geo && geo.every(Number.isFinite) && Math.abs(geo[0]) <= 180 && Math.abs(geo[1]) <= 90) onPin(geo[0], geo[1]);
+  }
+
+  function pinAtCenter() {
+    if (locked || !projection) return;
+    const geo = projection.invert?.([(W / 2 - t.x) / t.k, (H / 2 - t.y) / t.k]);
+    if (geo && geo.every(Number.isFinite) && Math.abs(geo[0]) <= 180 && Math.abs(geo[1]) <= 90) onPin(geo[0], geo[1]);
+  }
+
+  function handleKey(event: React.KeyboardEvent<SVGSVGElement>) {
+    if (!svgRef.current || !zoomRef.current || !features || loadFailed) return;
+    const directions: Record<string, [number, number]> = { ArrowLeft: [40 / t.k, 0], ArrowRight: [-40 / t.k, 0], ArrowUp: [0, 40 / t.k], ArrowDown: [0, -40 / t.k] };
+    if (directions[event.key]) {
+      event.preventDefault();
+      select(svgRef.current).call(zoomRef.current.translateBy, ...directions[event.key]);
+    } else if (event.key === "+" || event.key === "=" || event.key === "-") {
+      event.preventDefault(); zoomBy(event.key === "-" ? 0.5 : 2);
+    } else if (event.key === "Enter" && !locked) {
+      event.preventDefault(); pinAtCenter();
+    }
   }
 
   const userXY = projection && userPin ? projection(userPin) : null;
@@ -141,8 +183,12 @@ export function PinMap({
         style={{ touchAction: "none" }}
         onPointerDown={onPointerDown}
         onPointerUp={onPointerUp}
+        onPointerCancel={(event) => { pointersRef.current.delete(event.pointerId); tapRef.current = null; }}
+        onKeyDown={handleKey}
+        tabIndex={0}
         role="application"
-        aria-label="World map"
+        aria-label={locale === "de" ? "Interaktive Weltkarte" : "Interactive world map"}
+        aria-describedby={instructionsId}
       >
         <rect x={0} y={0} width={W} height={H} className="fill-transparent" />
         <g ref={gRef} transform={`translate(${t.x},${t.y}) scale(${t.k})`}>
@@ -175,15 +221,20 @@ export function PinMap({
           )}
         </g>
       </svg>
+      {!locked && features && <Crosshair className="pointer-events-none absolute left-1/2 top-1/2 h-5 w-5 -translate-x-1/2 -translate-y-1/2 text-primary/70" aria-hidden />}
+
+      <p id={instructionsId} className="sr-only">{locale === "de" ? "Verschiebe die Karte mit den Pfeiltasten, zoome mit Plus und Minus. Mit Enter setzt du den Pin in die Kartenmitte." : "Pan with arrow keys, zoom with plus and minus. Press Enter to place your pin at the center of the map."}</p>
+      {(!features || loadFailed) && <div className="absolute inset-0 z-20 flex items-center justify-center bg-background/95 p-5"><div className="max-w-xs text-center" role={loadFailed ? "alert" : "status"}>{loadFailed ? <><p className="text-sm leading-relaxed">{locale === "de" ? "Die Karte konnte nicht geladen werden. Prüfe deine Verbindung und versuche es erneut." : "The map could not load. Check your connection and try again."}</p><button type="button" onClick={() => setLoadAttempt((attempt) => attempt + 1)} className="mt-3 inline-flex min-h-11 items-center gap-2 rounded-xl bg-primary px-4 text-sm font-semibold text-primary-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"><RotateCcw className="h-4 w-4" aria-hidden />{locale === "de" ? "Erneut versuchen" : "Try again"}</button></> : <p className="flex items-center gap-2 text-sm text-muted-foreground"><Loader2 className="h-4 w-4 animate-spin" aria-hidden />{locale === "de" ? "Karte wird geladen…" : "Loading map…"}</p>}</div></div>}
 
       {controls && <div className="pin-map-controls absolute bottom-3 right-3 z-10 flex flex-col overflow-hidden rounded-xl border border-border bg-card/90 shadow-md backdrop-blur">
-        <button type="button" onClick={() => zoomBy(2)} aria-label="Zoom in" className="flex h-11 w-11 items-center justify-center hover:bg-muted active:scale-95">
+        <button type="button" onClick={() => zoomBy(2)} disabled={!features} aria-label={locale === "de" ? "Vergrößern" : "Zoom in"} className="flex h-11 w-11 items-center justify-center hover:bg-muted focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-primary active:scale-95 disabled:opacity-40">
           <Plus className="h-5 w-5" />
         </button>
         <div className="h-px bg-border" />
-        <button type="button" onClick={() => zoomBy(0.5)} aria-label="Zoom out" className="flex h-11 w-11 items-center justify-center hover:bg-muted active:scale-95">
+        <button type="button" onClick={() => zoomBy(0.5)} disabled={!features} aria-label={locale === "de" ? "Verkleinern" : "Zoom out"} className="flex h-11 w-11 items-center justify-center hover:bg-muted focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-primary active:scale-95 disabled:opacity-40">
           <Minus className="h-5 w-5" />
         </button>
+        {!locked && <><div className="h-px bg-border" /><button type="button" onClick={pinAtCenter} disabled={!features} aria-label={locale === "de" ? "Pin in die Kartenmitte setzen" : "Place pin at map center"} title={locale === "de" ? "Pin in die Kartenmitte setzen" : "Place pin at map center"} className="flex h-11 w-11 items-center justify-center text-primary hover:bg-muted focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-primary active:scale-95 disabled:opacity-40"><Crosshair className="h-5 w-5" aria-hidden /></button></>}
       </div>}
     </>
   );

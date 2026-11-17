@@ -1,10 +1,11 @@
 "use client";
 
 import Link from "next/link";
-import { motion } from "framer-motion";
+import { motion, useReducedMotion } from "framer-motion";
 import { X, Heart, Flame, Clock, Star } from "lucide-react";
 import { useT } from "@/i18n/I18nProvider";
 import { formatNumber, formatTime, cn } from "@/lib/utils";
+import { GameHelpButton } from "./game-help";
 
 export function GameTopBar({
   title,
@@ -18,39 +19,42 @@ export function GameTopBar({
   /** Hide the visual title below 420px when a game needs a wider status cluster. */
   compactMobileTitle?: boolean;
 }) {
+  const { locale } = useT();
+  const exitLabel = locale === "de" ? "Spiel verlassen" : "Exit game";
   return (
     <div
-      className="sticky top-0 z-30 border-b border-border/60 bg-background/85 backdrop-blur-md"
-      role="banner"
+      className="geo-glass sticky top-0 z-30 border-b border-border/60"
+      role="region"
       aria-label={title}
     >
-      <div className="mx-auto grid h-14 w-full max-w-3xl grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-1.5 px-3 sm:gap-2">
+      <div className="mx-auto flex min-h-14 w-full max-w-3xl flex-wrap items-center gap-x-1 gap-y-1 px-3 py-1.5 sm:gap-x-2">
         {onExit ? (
           <button
             onClick={onExit}
-            aria-label="Exit"
-            className="col-start-1 inline-flex h-11 w-11 items-center justify-center rounded-lg text-muted-foreground hover:bg-muted hover:text-foreground"
+            aria-label={exitLabel}
+            className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-xl text-muted-foreground hover:bg-muted hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
           >
             <X className="h-5 w-5" />
           </button>
         ) : (
           <Link
             href="/"
-            aria-label="Exit"
-            className="col-start-1 inline-flex h-11 w-11 items-center justify-center rounded-lg text-muted-foreground hover:bg-muted hover:text-foreground"
+            aria-label={exitLabel}
+            className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-xl text-muted-foreground hover:bg-muted hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
           >
             <X className="h-5 w-5" />
           </Link>
         )}
         <div
           className={cn(
-            "col-start-2 min-w-0 truncate text-xs font-semibold min-[420px]:text-sm",
-            compactMobileTitle && "max-[419px]:hidden"
+            "min-w-0 flex-1 break-words text-sm font-semibold",
+            compactMobileTitle && "max-[419px]:text-xs"
           )}
         >
           {title}
         </div>
-        <div className="col-start-3 flex min-w-max items-center justify-end gap-1 sm:gap-1.5">{children}</div>
+        <GameHelpButton />
+        <div className="flex min-w-0 basis-full flex-wrap items-center justify-end gap-1.5 pb-1 sm:basis-auto sm:pb-0">{children}</div>
       </div>
     </div>
   );
@@ -58,36 +62,41 @@ export function GameTopBar({
 
 export function ScorePill({ value }: { value: number }) {
   const { locale } = useT();
+  const reducedMotion = useReducedMotion();
   return (
     <motion.div
       key={value}
       initial={{ scale: 1 }}
-      animate={{ scale: [1, 1.15, 1] }}
+      animate={{ scale: reducedMotion ? 1 : [1, 1.08, 1] }}
       transition={{ duration: 0.3 }}
-      className="flex min-w-0 items-center gap-1 rounded-full bg-primary/10 px-1.5 py-1 text-xs font-bold tabular-nums text-primary min-[420px]:px-2.5 min-[420px]:text-sm"
+      aria-label={`${locale === "de" ? "Punkte" : "Score"}: ${formatNumber(value, locale)}`}
+      className="flex min-w-0 items-center gap-1 rounded-full bg-primary/10 px-2.5 py-1 text-xs font-semibold tabular-nums text-primary min-[420px]:text-sm"
     >
-      <Star className="h-3.5 w-3.5" />
+      <Star className="h-3.5 w-3.5 shrink-0" aria-hidden />
       {formatNumber(value, locale)}
     </motion.div>
   );
 }
 
 export function StreakPill({ value }: { value: number }) {
+  const { locale } = useT();
   if (value < 2) return null;
   return (
-    <div className="flex items-center gap-1 rounded-full bg-orange-500/15 px-1.5 py-1 text-xs font-bold tabular-nums text-orange-500 min-[420px]:px-2.5 min-[420px]:text-sm">
-      <Flame className="h-3.5 w-3.5" />
+    <div aria-label={`${locale === "de" ? "Serie" : "Streak"}: ${value}`} className="flex items-center gap-1 rounded-full bg-orange-500/10 px-2.5 py-1 text-xs font-semibold tabular-nums text-orange-700 dark:text-orange-300 min-[420px]:text-sm">
+      <Flame className="h-3.5 w-3.5" aria-hidden />
       {value}
     </div>
   );
 }
 
 export function LivesPill({ lives, max }: { lives: number; max: number }) {
+  const { locale } = useT();
   return (
-    <div className="flex items-center gap-0 rounded-full bg-muted px-1 py-1 min-[420px]:gap-0.5 min-[420px]:px-2">
+    <div aria-label={locale === "de" ? `${lives} von ${max} Leben` : `${lives} of ${max} lives`} className="flex items-center gap-0.5 rounded-full bg-muted px-2 py-1">
       {Array.from({ length: max }).map((_, i) => (
         <Heart
           key={i}
+          aria-hidden
           className={cn(
             "h-3.5 w-3.5 min-[420px]:h-4 min-[420px]:w-4",
             i < lives ? "fill-danger text-danger" : "text-muted-foreground/40"
@@ -99,35 +108,41 @@ export function LivesPill({ lives, max }: { lives: number; max: number }) {
 }
 
 export function TimerPill({ ms, danger }: { ms: number; danger?: boolean }) {
+  const { locale } = useT();
   return (
     <div
+      aria-label={`${locale === "de" ? "Verbleibende Zeit" : "Time remaining"}: ${formatTime(ms)}`}
       className={cn(
         "flex items-center gap-1 rounded-full px-1.5 py-1 text-xs font-bold tabular-nums min-[420px]:px-2.5 min-[420px]:text-sm",
         danger ? "bg-danger/15 text-danger" : "bg-muted text-foreground"
       )}
     >
-      <Clock className="h-3.5 w-3.5" />
+      <Clock className="h-3.5 w-3.5" aria-hidden />
       {formatTime(ms)}
     </div>
   );
 }
 
 export function RoundPill({ current, total }: { current: number; total: number }) {
+  const { locale } = useT();
   return (
-    <div className="rounded-full bg-muted px-1.5 py-1 text-xs font-semibold tabular-nums text-muted-foreground min-[420px]:px-2.5 min-[420px]:text-sm">
+    <div aria-label={locale === "de" ? `Runde ${current} von ${total}` : `Round ${current} of ${total}`} className="rounded-full bg-muted px-2.5 py-1 text-xs font-semibold tabular-nums text-foreground min-[420px]:text-sm">
       {current}/{total}
     </div>
   );
 }
 
 export function ProgressBar({ value }: { value: number }) {
+  const { locale } = useT();
+  const reducedMotion = useReducedMotion();
+  const progress = Number.isFinite(value) ? Math.min(1, Math.max(0, value)) : 0;
   return (
-    <div className="h-1.5 w-full overflow-hidden rounded-full bg-muted">
+    <div role="progressbar" aria-label={locale === "de" ? "Spielfortschritt" : "Game progress"} aria-valuemin={0} aria-valuemax={100} aria-valuenow={Math.round(progress * 100)} className="h-1.5 w-full overflow-hidden rounded-full bg-muted">
       <motion.div
         className="h-full rounded-full bg-primary"
         initial={false}
-        animate={{ width: `${Math.min(100, Math.max(0, value)) * 100}%` }}
-        transition={{ duration: 0.3 }}
+        animate={{ width: `${progress * 100}%` }}
+        transition={{ duration: reducedMotion ? 0 : 0.2 }}
       />
     </div>
   );

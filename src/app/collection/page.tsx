@@ -149,23 +149,23 @@ export default function CollectionPage() {
   const continents = useMemo(() => continentProgress(hits, locale), [hits, locale]);
 
   return (
-    <div className="mx-auto w-full max-w-3xl px-4 py-8 pb-24">
-      <Link href="/profile" className="mb-4 inline-flex items-center gap-1.5 text-sm font-medium text-muted-foreground hover:text-foreground">
+    <div className="mx-auto w-full min-w-0 max-w-3xl px-4 py-6 pb-28 sm:py-8">
+      <Link href="/profile" className="mb-3 inline-flex min-h-11 items-center gap-1.5 rounded-xl text-sm font-medium text-muted-foreground hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
         <ArrowLeft className="h-4 w-4" />
         {t("nav.profile")}
       </Link>
 
-      <div className="rounded-3xl border border-border bg-card p-5 shadow-sm">
+      <div className="geo-surface p-5">
         <div className="flex items-center gap-3">
-          <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-amber-500 to-orange-600 text-white shadow">
+          <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
             <Sparkles className="h-6 w-6" />
           </span>
           <div>
-            <h1 className="text-xl font-bold">{t("collection.title")}</h1>
-            <p className="text-sm text-muted-foreground">{t("collection.subtitle")}</p>
+            <h1 className="text-2xl font-bold tracking-tight">{t("collection.title")}</h1>
+            <p className="mt-1 text-sm leading-relaxed text-muted-foreground">{t("collection.subtitle")}</p>
           </div>
         </div>
-        <div className="mt-4 grid grid-cols-4 gap-2 text-center text-sm">
+        <div className="mt-5 grid grid-cols-2 gap-3 border-t border-border pt-4 text-center text-sm sm:grid-cols-4">
           <div className="flex-1 rounded-xl bg-success/10 py-2">
             <div className="text-lg font-extrabold text-success">{stats.unlocked}</div>
             <div className="text-[11px] text-muted-foreground">{t("collection.unlocked")}</div>
@@ -186,12 +186,12 @@ export default function CollectionPage() {
       </div>
 
       {/* View toggle */}
-      <div className="mt-5 grid grid-cols-2 gap-1 rounded-2xl bg-muted p-1 text-sm font-semibold">
+      <div className="geo-segmented mt-5 grid grid-cols-2" aria-label={L("Collection view", "Sammlungsansicht")}>
         <button
           onClick={() => setView("countries")}
+          aria-pressed={view === "countries"}
           className={cn(
-            "flex items-center justify-center gap-1.5 rounded-xl py-2 transition",
-            view === "countries" ? "bg-card shadow-sm" : "text-muted-foreground"
+            "geo-segment flex items-center justify-center gap-1.5"
           )}
         >
           <Sparkles className="h-4 w-4" />
@@ -199,9 +199,9 @@ export default function CollectionPage() {
         </button>
         <button
           onClick={() => setView("continents")}
+          aria-pressed={view === "continents"}
           className={cn(
-            "flex items-center justify-center gap-1.5 rounded-xl py-2 transition",
-            view === "continents" ? "bg-card shadow-sm" : "text-muted-foreground"
+            "geo-segment flex items-center justify-center gap-1.5"
           )}
         >
           <Globe2 className="h-4 w-4" />
@@ -264,24 +264,25 @@ export default function CollectionPage() {
         </div>
       ) : (
       <>
-      <div className="mt-5 space-y-2 rounded-2xl border border-border bg-card p-3">
+      <div className="geo-surface mt-5 space-y-3 p-3 sm:p-4">
         <label className="flex min-h-11 items-center gap-2 rounded-xl bg-muted px-3">
           <Search className="h-4 w-4 text-muted-foreground" />
-          <input aria-label={t("collection.searchLabel")} value={query} onChange={(event) => setQuery(event.target.value)} placeholder={L("Search discovered countries", "Entdeckte Länder suchen")} className="min-w-0 flex-1 bg-transparent text-sm outline-none" />
+          <input type="search" aria-label={t("collection.searchLabel")} value={query} onChange={(event) => setQuery(event.target.value)} placeholder={L("Search discovered countries", "Entdeckte Länder suchen")} className="min-h-11 min-w-0 flex-1 bg-transparent text-base outline-none" />
         </label>
-        <div className="grid grid-cols-3 gap-2">
-          <select aria-label={L("Continent", "Kontinent")} value={continent} onChange={(event) => setContinent(event.target.value)} className="min-h-11 rounded-xl border border-border bg-background px-2 text-xs">
+        <details><summary className="flex min-h-11 cursor-pointer items-center text-sm font-medium text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">{L("Filter & sort", "Filtern & sortieren")}{(continent !== "all" || status !== "all" || sort !== "number") && <span className="ml-2 rounded-md bg-primary/10 px-2 py-0.5 text-xs">{L("Active", "Aktiv")}</span>}</summary><div className="mt-2 grid min-w-0 grid-cols-1 gap-3 sm:grid-cols-3">
+          <label className="block min-w-0 text-xs font-medium text-muted-foreground">{L("Continent", "Kontinent")}<select aria-label={L("Continent", "Kontinent")} value={continent} onChange={(event) => setContinent(event.target.value)} className="geo-control mt-2 w-full min-w-0">
             <option value="all">{L("All continents", "Alle Kontinente")}</option>
             {["Europe", "Asia", "Africa", "Americas", "Oceania"].map((region) => <option key={region} value={region}>{continentName(region, locale)}</option>)}
-          </select>
-          <select aria-label={L("Status", "Status")} value={status} onChange={(event) => setStatus(event.target.value as "all" | DexState)} className="min-h-11 rounded-xl border border-border bg-background px-2 text-xs">
+          </select></label>
+          <label className="block min-w-0 text-xs font-medium text-muted-foreground">{L("Status", "Status")}<select aria-label={L("Status", "Status")} value={status} onChange={(event) => setStatus(event.target.value as "all" | DexState)} className="geo-control mt-2 w-full min-w-0">
             <option value="all">{L("All statuses", "Alle Status")}</option>
             <option value="locked">{L("Unknown", "Unbekannt")}</option><option value="discovered">{L("Discovered", "Entdeckt")}</option><option value="researched">{L("Researched", "Erforscht")}</option><option value="unlocked">{L("Unlocked", "Freigeschaltet")}</option><option value="mastered">{L("Mastered", "Gemeistert")}</option>
-          </select>
-          <select aria-label={L("Sort", "Sortierung")} value={sort} onChange={(event) => setSort(event.target.value as typeof sort)} className="min-h-11 rounded-xl border border-border bg-background px-2 text-xs">
+          </select></label>
+          <label className="block min-w-0 text-xs font-medium text-muted-foreground">{L("Sort", "Sortierung")}<select aria-label={L("Sort", "Sortierung")} value={sort} onChange={(event) => setSort(event.target.value as typeof sort)} className="geo-control mt-2 w-full min-w-0">
             <option value="number">{L("Number", "Nummer")}</option><option value="name">{L("Name", "Name")}</option><option value="progress">{L("Progress", "Fortschritt")}</option>
-          </select>
-        </div>
+          </select></label>
+        </div></details>
+        <div className="flex flex-wrap items-center justify-between gap-2"><p role="status" className="text-xs text-muted-foreground">{sorted.length} {L("countries in this view", "Länder in dieser Ansicht")}</p>{(query || continent !== "all" || status !== "all" || sort !== "number") && <button type="button" onClick={() => { setQuery(""); setContinent("all"); setStatus("all"); setSort("number"); }} className="inline-flex min-h-11 items-center rounded-lg text-xs font-semibold text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">{L("Reset filters", "Filter zurücksetzen")}</button>}</div>
       </div>
       <div className="mt-5 grid grid-cols-3 gap-2.5 sm:grid-cols-4">
         {sorted.map((c) => {

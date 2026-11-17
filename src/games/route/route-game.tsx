@@ -275,12 +275,12 @@ export function RouteGame({ difficulty, mode, roundCount, timed, scope, seed, pr
                       key={ccn3}
                       onClick={() => pickStep(ccn3)}
                       className={cn(
-                        "flex items-center gap-2 rounded-xl border-2 px-3 py-2.5 text-left text-sm font-semibold transition-all active:scale-[0.98]",
+                        "flex min-h-12 min-w-0 items-center gap-2 rounded-xl border px-3 py-2.5 text-left text-sm font-semibold transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary active:scale-[0.98]",
                         isFlash ? "animate-shake border-danger bg-danger/15" : "border-border bg-card hover:border-primary/50 hover:bg-muted/50"
                       )}
                     >
                       <FlagImage code={c.flag} alt="" className="aspect-[4/3] w-6 shrink-0" rounded={false} />
-                      <span className="truncate">{countryName(c, locale)}</span>
+                      <span className="min-w-0 break-words">{countryName(c, locale)}</span>
                     </button>
                   );
                 })}

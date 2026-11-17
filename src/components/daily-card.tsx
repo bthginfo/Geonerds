@@ -20,13 +20,13 @@ export function DailyCard() {
   return (
     <Link
       href="/daily"
-      className="group flex w-full items-center gap-3 rounded-xl border border-border bg-card/70 px-4 py-3 transition-colors hover:border-orange-500/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+      className="geo-game-row group flex min-h-20 w-full items-center gap-3 px-4 py-3 focus-visible:outline-offset-[-3px]"
     >
-      <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-orange-500/10 text-orange-700 dark:text-orange-300">
+      <span className="shrink-0 text-orange-700 dark:text-orange-300">
         <CalendarDays aria-hidden="true" className="h-5 w-5" />
       </span>
       <div className="min-w-0 flex-1">
-        <div className="flex flex-wrap items-center gap-2 text-sm font-bold">
+        <div className="flex flex-wrap items-center gap-2 text-sm font-semibold">
           {t("daily.title")}
           {streak > 0 && (
             <span className="inline-flex items-center gap-0.5 text-xs font-bold text-orange-500">
@@ -35,7 +35,7 @@ export function DailyCard() {
             </span>
           )}
         </div>
-        <div className="text-xs text-muted-foreground">
+        <div className="mt-1 text-xs leading-relaxed text-muted-foreground">
           {done ? (
             <span className="inline-flex items-center gap-1 text-success">
               <Check className="h-3.5 w-3.5" />
@@ -46,7 +46,7 @@ export function DailyCard() {
           )}
         </div>
       </div>
-      <ChevronRight className="h-5 w-5 shrink-0 text-muted-foreground transition-transform group-hover:translate-x-0.5" />
+      <ChevronRight aria-hidden="true" className="h-4 w-4 shrink-0 text-muted-foreground" />
     </Link>
   );
 }

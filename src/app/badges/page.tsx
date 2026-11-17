@@ -1,7 +1,8 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { Award, Lock } from "lucide-react";
+import Link from "next/link";
+import { ArrowLeft, Award, Check, Lock } from "lucide-react";
 import { useT } from "@/i18n/I18nProvider";
 import { useAllRuns } from "@/hooks/use-scores";
 import { useDex } from "@/store/dex";
@@ -25,7 +26,8 @@ export default function BadgesPage() {
   const closest = useMemo(() => BADGES.map((badge) => ({ badge, progress: badgeProgress(badge, stats) })).filter((item) => !item.badge.earned(stats) && item.progress && item.progress.target > 0).sort((a,b) => (b.progress!.current / b.progress!.target) - (a.progress!.current / a.progress!.target)).slice(0, 3), [stats]);
 
   return (
-    <div className="mx-auto w-full max-w-2xl px-4 py-8 pb-24">
+    <div className="mx-auto w-full min-w-0 max-w-3xl px-4 py-6 pb-28 sm:py-8">
+      <Link href="/profile" className="mb-3 inline-flex min-h-11 items-center gap-2 rounded-xl text-sm text-muted-foreground hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"><ArrowLeft className="h-4 w-4" aria-hidden />{t("nav.profile")}</Link>
       <div className="mb-1 flex items-center gap-2">
         <Award className="h-6 w-6 text-warning" />
         <h1 className="text-2xl font-bold">{t("badges.title")}</h1>
@@ -38,9 +40,9 @@ export default function BadgesPage() {
             {t("badges.progress", { earned: earnedCount, total: BADGES.length })}
           </span>
         </div>
-        <div className="h-2.5 overflow-hidden rounded-full bg-muted">
+        <div role="progressbar" aria-label={t("badges.title")} aria-valuemin={0} aria-valuemax={BADGES.length} aria-valuenow={earnedCount} className="h-2.5 overflow-hidden rounded-full bg-muted">
           <div
-            className="h-full rounded-full bg-gradient-to-r from-sky-500 to-indigo-600 transition-all"
+            className="h-full rounded-full bg-primary transition-[width] motion-reduce:transition-none"
             style={{ width: `${(earnedCount / BADGES.length) * 100}%` }}
           />
         </div>
@@ -51,9 +53,9 @@ export default function BadgesPage() {
         <div className="mt-3 space-y-3">{closest.map(({badge, progress}) => <div key={badge.id}><div className="flex justify-between gap-3 text-xs"><span className="font-semibold">{badgeName(badge, locale)}</span><span className="tabular-nums text-muted-foreground">{progress!.current}/{progress!.target}</span></div><div className="mt-1 h-1.5 overflow-hidden rounded-full bg-muted"><div className="h-full rounded-full bg-amber-500" style={{width:`${Math.min(100, progress!.current/progress!.target*100)}%`}} /></div></div>)}</div>
       </section>}
 
-      <div className="mb-4 flex gap-2 overflow-x-auto pb-1" aria-label={L("Badge categories", "Badge-Kategorien")}>{(["all", "journey", "skill", "mastery", "collection", "challenge"] as const).map((item) => <button key={item} onClick={() => setCategory(item)} className={cn("min-h-11 shrink-0 rounded-xl border px-3 text-xs font-bold capitalize", category === item ? "border-primary bg-primary text-primary-foreground" : "border-border bg-card")}>{item === "all" ? L("All", "Alle") : item === "journey" ? L("Journey", "Reise") : item === "skill" ? L("Skill", "Können") : item === "mastery" ? L("Mastery", "Meisterschaft") : item === "collection" ? L("Collection", "Sammlung") : L("Challenge", "Herausforderung")}</button>)}</div>
+      <div className="mb-4 flex max-w-full gap-2 overflow-x-auto pb-1" aria-label={L("Badge categories", "Badge-Kategorien")}>{(["all", "journey", "skill", "mastery", "collection", "challenge"] as const).map((item) => <button key={item} type="button" aria-pressed={category === item} onClick={() => setCategory(item)} className={cn("min-h-11 shrink-0 rounded-xl px-3 text-xs font-semibold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring", category === item ? "bg-primary/10 text-primary" : "bg-card text-muted-foreground hover:text-foreground")}>{item === "all" ? L("All", "Alle") : item === "journey" ? L("Journey", "Reise") : item === "skill" ? L("Skill", "Können") : item === "mastery" ? L("Mastery", "Meisterschaft") : item === "collection" ? L("Collection", "Sammlung") : L("Challenge", "Herausforderung")}</button>)}</div>
 
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
         {shown.map((b) => {
           const earned = b.earned(stats);
           const Icon = earned ? b.icon : Lock;
@@ -63,27 +65,27 @@ export default function BadgesPage() {
             <div
               key={b.id}
               className={cn(
-                "flex flex-col items-center rounded-2xl border p-4 text-center transition-all",
+                "flex min-w-0 flex-col rounded-xl border p-4 transition-colors",
                 earned
-                  ? tier === "mythic" ? "border-violet-400 bg-violet-500/10 shadow-sm" : tier === "gold" ? "border-amber-400 bg-amber-500/10 shadow-sm" : tier === "silver" ? "border-slate-400 bg-slate-400/10 shadow-sm" : "border-orange-700/50 bg-card shadow-sm"
-                  : "border-dashed border-border/70 bg-card/40 opacity-60"
+                  ? tier === "mythic" ? "border-violet-400/30 bg-violet-500/5" : tier === "gold" ? "border-amber-400/30 bg-amber-500/5" : "border-border bg-card"
+                  : "border-border bg-card"
               )}
             >
               <span
                 className={cn(
-                  "flex h-12 w-12 items-center justify-center rounded-2xl",
+                  "flex h-11 w-11 items-center justify-center rounded-xl",
                   earned
-                    ? "bg-gradient-to-br from-amber-400 to-orange-500 text-white shadow"
+                    ? "bg-warning/10 text-warning"
                     : "bg-muted text-muted-foreground"
                 )}
               >
                 <Icon className="h-6 w-6" />
               </span>
               <div className="mt-2.5 text-sm font-bold leading-tight">{badgeName(b, locale)}</div>
-              <div className="mt-1 text-[11px] leading-snug text-muted-foreground">
+              <div className="mt-2 text-sm leading-relaxed text-muted-foreground">
                 {badgeDesc(b, locale)}
               </div>
-              <div className="mt-2 text-[9px] font-black uppercase tracking-widest text-muted-foreground">{tier}</div>
+              <div className="mt-3 flex flex-wrap items-center gap-2 text-xs font-medium text-muted-foreground"><span>{tier === "mythic" ? L("Mythic", "Mythisch") : tier === "gold" ? L("Gold", "Gold") : tier === "silver" ? L("Silver", "Silber") : L("Bronze", "Bronze")}</span>{earned ? <span className="inline-flex items-center gap-1 text-success"><Check className="h-3.5 w-3.5" aria-hidden />{L("Earned", "Erreicht")}</span> : <span>{L("Not unlocked yet", "Noch nicht freigeschaltet")}</span>}</div>
               {progress && <div className="mt-2 w-full"><div className="h-1.5 overflow-hidden rounded-full bg-muted"><div className="h-full rounded-full bg-primary" style={{width:`${Math.min(100, progress.current/progress.target*100)}%`}} /></div><div className="mt-1 text-[10px] tabular-nums text-muted-foreground">{progress.current}/{progress.target}</div></div>}
             </div>
           );

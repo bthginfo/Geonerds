@@ -29,6 +29,17 @@ describe("complete Name All answer sets", () => {
     expect(themes.find((theme) => theme.id === "smallest")?.targets).toContain("VAT");
   });
 
+  it("adds complete regional neighbour-count sets, not selected examples", () => {
+    const themes = generateThemes("hard", "en", Infinity, "type", createSeededRandom("new-themes"));
+    const added = themes.filter((theme) => theme.id.startsWith("neighbour-count-"));
+    expect(added.length).toBeGreaterThan(4);
+    for (const theme of added) {
+      const [, , region, count] = theme.id.split("-");
+      expect([...theme.targets].sort()).toEqual(COUNTRIES.filter((country) => country.region === region &&
+        country.borders.length === Number(count)).map((country) => country.cca3).sort());
+    }
+  });
+
   it("adds complete coastline groups, localizes subregions and replays a seeded run", () => {
     const themes = generateThemes("easy", "de", Infinity, "choice", createSeededRandom("coasts"));
     expect(themes.find((theme) => theme.id === "geo-red-sea")?.targets.sort()).toEqual(["DJI", "EGY", "ERI", "ISR", "JOR", "SAU", "SDN", "YEM"].sort());

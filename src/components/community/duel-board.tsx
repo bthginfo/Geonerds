@@ -41,7 +41,7 @@ export function DuelBoard({ game, period, page, onPage }: {
 
   return (
     <section aria-label={de ? "Duell-Bestenliste" : "Duel standings"}>
-      <div className="mb-5 flex flex-wrap items-center justify-between gap-x-4 gap-y-2 rounded-xl border border-primary/20 bg-primary/5 px-4 py-3">
+      <div className="geo-inset mb-5 flex flex-wrap items-center justify-between gap-x-4 gap-y-2 px-4 py-3">
         <div className="text-xs leading-relaxed"><p className="font-semibold">{de ? "Gleiche Fragen. Echte Begegnungen." : "Same questions. Real encounters."}</p><p className="mt-1 text-muted-foreground">{de ? `${DUEL_WIN_POINTS} Punkte pro Sieg · ${DUEL_DRAW_POINTS} Punkt pro Remis` : `${DUEL_WIN_POINTS} points per win · ${DUEL_DRAW_POINTS} point per draw`}</p><p className="mt-1 text-muted-foreground">{de ? "Nur abgeschlossene Duelle zählen. Bei Gleichstand wird der Rang geteilt." : "Only completed duels count. Equal results share a rank."}</p></div>
         <Link href="/challenges" className="inline-flex min-h-11 items-center gap-1 text-xs font-semibold text-primary hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">{de ? "Zu den Herausforderungen" : "Go to challenges"}<ArrowUpRight aria-hidden="true" className="h-3.5 w-3.5" /></Link>
       </div>
@@ -66,12 +66,12 @@ export function DuelBoard({ game, period, page, onPage }: {
         </BoardState>
       ) : (
         <>
-          {champion && <div className="mb-3 flex items-center gap-3 rounded-2xl border border-warning/40 bg-gradient-to-br from-warning/15 to-amber-500/10 p-3 sm:p-4">
-            <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-amber-400 to-orange-500 text-white shadow"><Crown aria-hidden="true" className="h-6 w-6" /></span>
-            <div className="min-w-0 flex-1"><p className="text-[10px] font-semibold uppercase tracking-wide text-amber-800 dark:text-amber-300">{sharedLead ? (de ? "Geteilte Führung" : "Shared lead") : period === "month" ? (de ? "Duell-Champion des Monats" : "Duel champion this month") : (de ? "Duell-Champion" : "Duel champion")}</p><Link href={`/u/${encodeURIComponent(champion.name)}`} className="mt-1 block break-words text-lg font-bold leading-tight hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">{champion.name}</Link></div>
+          {champion && <div className="mb-4 flex items-center gap-3 rounded-xl bg-warning/10 p-4">
+            <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl text-warning"><Crown aria-hidden="true" className="h-6 w-6" /></span>
+            <div className="min-w-0 flex-1"><p className="text-xs font-medium text-warning">{sharedLead ? (de ? "Geteilte Führung" : "Shared lead") : period === "month" ? (de ? "Duell-Champion des Monats" : "Duel champion this month") : (de ? "Duell-Champion" : "Duel champion")}</p><Link href={`/u/${encodeURIComponent(champion.name)}`} className="mt-1 block break-words text-lg font-bold leading-tight hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">{champion.name}</Link></div>
             <div className="shrink-0 text-right"><p className="text-xl font-extrabold tabular-nums">{formatNumber(champion.points, locale)}</p><p className="text-[10px] text-muted-foreground">{de ? "Punkte" : "points"}</p></div>
           </div>}
-          <ol className="overflow-hidden rounded-2xl border border-border bg-card" aria-label={de ? "Platzierungen" : "Rankings"}>
+          <ol className="geo-surface overflow-hidden" aria-label={de ? "Platzierungen" : "Rankings"}>
             {standings.map((standing, index) => <DuelRow key={standing.name} standing={standing} own={user?.name.toLowerCase() === standing.name.toLowerCase()} last={index === standings.length - 1} locale={locale} />)}
           </ol>
           {(page > 0 || result.hasMore) && <nav aria-label={de ? "Duell-Bestenliste: Seiten" : "Duel leaderboard pagination"} className="mt-4 flex items-center justify-between gap-2"><Button type="button" variant="outline" className="min-h-11 px-3" disabled={page === 0} onClick={() => onPage(page - 1)}>{t("leaderboard.prev")}</Button><span className="text-xs tabular-nums text-muted-foreground">{t("leaderboard.page", { n: page + 1 })}</span><Button type="button" variant="outline" className="min-h-11 px-3" disabled={!result.hasMore} onClick={() => onPage(page + 1)}>{t("leaderboard.next")}</Button></nav>}
@@ -94,10 +94,11 @@ function DuelRow({ standing, own, last, locale }: { standing: DuelStanding; own:
 
   return <li className={cn("p-4", !last && "border-b border-border/60", own && "bg-primary/5")}>
     <div className="flex items-center gap-3"><span aria-label={`${de ? "Rang" : "Rank"} ${standing.rank}`} className={cn("w-7 shrink-0 text-center text-sm font-bold tabular-nums", standing.rank === 1 ? "text-amber-800 dark:text-amber-300" : "text-muted-foreground")}>{standing.rank}</span><div className="min-w-0 flex-1"><Link href={`/u/${encodeURIComponent(standing.name)}`} className="break-words text-sm font-semibold hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">{standing.name}</Link>{own && <span className="ml-2 inline-block rounded-md bg-primary/10 px-1.5 py-0.5 text-[10px] font-bold text-primary">{de ? "Du" : "You"}</span>}</div><div className="shrink-0 text-right"><p className="font-extrabold tabular-nums">{formatNumber(standing.points, locale)}</p><p className="text-[10px] text-muted-foreground">{de ? "Punkte" : "points"}</p></div></div>
-    <dl className="mt-3 grid grid-cols-3 gap-x-3 gap-y-3 border-t border-border/50 pt-3 sm:grid-cols-6 sm:pl-10">{stats.map((stat) => <div key={stat.label} className="min-w-0"><dt className="break-words text-[10px] text-muted-foreground">{stat.label}</dt><dd className="mt-0.5 text-sm font-semibold tabular-nums">{typeof stat.value === "number" ? formatNumber(stat.value, locale) : stat.value}</dd></div>)}</dl>
+    <dl className="mt-3 grid grid-cols-3 gap-x-3 gap-y-3 border-t border-border/50 pt-3 sm:pl-10">{stats.slice(0, 3).map((stat) => <div key={stat.label} className="min-w-0"><dt className="break-words text-xs text-muted-foreground">{stat.label}</dt><dd className="mt-1 text-sm font-semibold tabular-nums">{typeof stat.value === "number" ? formatNumber(stat.value, locale) : stat.value}</dd></div>)}</dl>
+    <details className="mt-1 sm:ml-10"><summary className="flex min-h-11 cursor-pointer items-center text-xs font-medium text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">{de ? "Mehr Statistik" : "More stats"}</summary><dl className="grid grid-cols-3 gap-3 pb-2">{stats.slice(3).map((stat) => <div key={stat.label} className="min-w-0"><dt className="text-xs text-muted-foreground">{stat.label}</dt><dd className="mt-1 text-sm font-semibold tabular-nums">{typeof stat.value === "number" ? formatNumber(stat.value, locale) : stat.value}</dd></div>)}</dl></details>
   </li>;
 }
 
 function BoardState({ title, children }: { title: string; children: React.ReactNode }) {
-  return <div className="rounded-2xl border border-dashed border-border bg-card/50 p-5 text-center sm:p-8"><h2 className="mb-3 text-lg font-bold">{title}</h2><div className="text-sm leading-relaxed text-muted-foreground">{children}</div></div>;
+  return <div className="geo-surface p-5 text-center sm:p-8"><h2 className="mb-3 text-lg font-bold">{title}</h2><div className="text-sm leading-relaxed text-muted-foreground">{children}</div></div>;
 }

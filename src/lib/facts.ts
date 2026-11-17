@@ -1,7 +1,7 @@
 import type { Country, Locale } from "./types";
 import { getCountryByCca3 } from "@/data/countries";
 import { COUNTRY_FACTS } from "./country-facts";
-import { FACT_QUESTIONS } from "./fact-questions";
+import { FACT_QUESTIONS, type FactQuestion } from "./fact-questions";
 import { simplifyCurrency } from "./currency";
 import { formatNumber, pickOne, shuffle } from "./utils";
 
@@ -105,8 +105,8 @@ function capitalInitialPhrase(c: Country, locale: Locale): string | null {
     : `The English name of its capital starts with “${c.capital.charAt(0)}”.`;
 }
 
-function curatedPlaceClue(c: Country, locale: Locale, random: () => number): string | null {
-  const questions = FACT_QUESTIONS.filter((question) => question.cca3 === c.cca3);
+function curatedPlaceClue(c: Country, locale: Locale, random: () => number, catalog: readonly FactQuestion[]): string | null {
+  const questions = catalog.filter((question) => question.cca3 === c.cca3);
   return questions.length ? pickOne(questions, random).q[locale] : null;
 }
 
@@ -223,7 +223,7 @@ function firstNonNull(gens: Array<() => string | null>, random: () => number): s
  *   1) continent  2) a distinctive stat  3) a culture clue (dish/language/currency)
  *   4) the capital city (near give-away, so the round is always solvable).
  */
-export function triviaClues(c: Country, locale: Locale, random: () => number = Math.random, legacy = false): string[] {
+export function triviaClues(c: Country, locale: Locale, random: () => number = Math.random, legacy = false, factCatalog: readonly FactQuestion[] = FACT_QUESTIONS): string[] {
   // Each tier picks randomly among several categories for variety, while the
   // overall order escalates from vague (continent) to easy (capital).
   const tier1 = firstNonNull([
@@ -246,7 +246,7 @@ export function triviaClues(c: Country, locale: Locale, random: () => number = M
     () => languagesPhrase(c, locale),
     () => currencyPhrase(c, locale),
     () => neighbourPhrase(c, locale),
-    ...(!legacy ? [() => capitalInitialPhrase(c, locale), () => curatedPlaceClue(c, locale, random)] : []),
+    ...(!legacy ? [() => capitalInitialPhrase(c, locale), () => curatedPlaceClue(c, locale, random, factCatalog)] : []),
   ], random);
   // Build the first three clues, backfilling so we have three distinct ones…
   const core: string[] = [tier1, tier2, tier3].filter((x): x is string => !!x);

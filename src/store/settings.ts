@@ -16,7 +16,7 @@ export const useSettings = create<SettingsState>()(
   persist(
     (set, get) => ({
       locale: "en",
-      sound: true,
+      sound: false,
       haptics: true,
       setLocale: (locale) => set({ locale }),
       toggleLocale: () => set({ locale: get().locale === "en" ? "de" : "en" }),

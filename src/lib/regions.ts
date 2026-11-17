@@ -12,3 +12,11 @@ const SUBREGIONS_DE: Record<string, string> = {
 export function subregionLabel(value: string, locale: Locale): string {
   return locale === "de" ? SUBREGIONS_DE[value] ?? value : value;
 }
+
+const REGIONS_DE: Record<string, string> = {
+  Africa: "Afrika", Americas: "Amerika", Asia: "Asien", Europe: "Europa", Oceania: "Ozeanien", Antarctic: "Antarktis",
+};
+
+export function regionLabel(value: string, locale: Locale): string {
+  return locale === "de" ? REGIONS_DE[value] ?? value : value;
+}

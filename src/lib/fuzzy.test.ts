@@ -48,6 +48,21 @@ describe("matchAnswer", () => {
     expect(matchAnswer("Niger", ["Nigeria"]).status).not.toBe("correct");
   });
 
+  it.each([
+    ["Iran", "Iraq"], ["Iraq", "Iran"], ["Mali", "Malta"],
+    ["Nigeria", "Niger"], ["Austria", "Australia"],
+    ["Rome", "Lomé"], ["Rom", "Lomé"],
+  ])("rejects the correctly spelled different place %s for %s", (guess, answer) => {
+    expect(matchAnswer(guess, [answer]).status).toBe("wrong");
+  });
+
+  it("keeps actual misspellings and accepted multilingual aliases playable", () => {
+    expect(matchAnswer("Irna", ["Iran"]).status).toBe("near");
+    expect(matchAnswer("Ira", ["Iran"]).status).toBe("correct");
+    expect(matchAnswer("Großbritannien", ["Great Britain", "Großbritannien"]).status).toBe("correct");
+    expect(normalize("Großbritannien")).toBe("grossbritannien");
+  });
+
   it("offers a near suggestion for close-but-not-quite", () => {
     const res = matchAnswer("Azerbaijhann", ["Azerbaijan"]);
     expect(["near", "correct"]).toContain(res.status);

@@ -33,8 +33,8 @@ export function scoreForAnswer({
 }: AnswerScoreInput): number {
   if (!correct) return -WRONG_PENALTY;
   let speedBonus = 0;
-  if (timed && timeLimitMs > 0) {
-    const ratio = Math.max(0, (timeLimitMs - timeMs) / timeLimitMs);
+  if (timed && Number.isFinite(timeLimitMs) && timeLimitMs > 0 && Number.isFinite(timeMs)) {
+    const ratio = Math.min(1, Math.max(0, (timeLimitMs - timeMs) / timeLimitMs));
     speedBonus = Math.round(MAX_SPEED_BONUS * ratio);
   }
   return Math.round((BASE_POINTS + speedBonus) * DIFFICULTY_MULTIPLIER[difficulty]);
@@ -42,18 +42,19 @@ export function scoreForAnswer({
 
 /** Points for the Draw / Trace games based on shape overlap (0..1). */
 export function scoreForDrawing(overlap: number, difficulty: Difficulty): number {
-  const clamped = Math.min(1, Math.max(0, overlap));
+  const clamped = Number.isFinite(overlap) ? Math.min(1, Math.max(0, overlap)) : 0;
   return Math.round(clamped * 250 * DIFFICULTY_MULTIPLIER[difficulty]);
 }
 
 /** Points for a Trivia answer given clues revealed (1..4): fewer = more. */
 export const TRIVIA_REVEAL_FACTOR = [1, 0.7, 0.45, 0.25];
 export function scoreForTrivia(revealed: number, difficulty: Difficulty): number {
-  const factor = TRIVIA_REVEAL_FACTOR[Math.min(Math.max(revealed, 1), 4) - 1];
+  const count = Number.isFinite(revealed) ? Math.min(Math.max(Math.floor(revealed), 1), 4) : 4;
+  const factor = TRIVIA_REVEAL_FACTOR[count - 1];
   return Math.round(BASE_POINTS * factor * DIFFICULTY_MULTIPLIER[difficulty]);
 }
 
 export function accuracy(correct: number, total: number): number {
-  if (total <= 0) return 0;
-  return Math.round((correct / total) * 100);
+  if (!Number.isFinite(total) || total <= 0 || !Number.isFinite(correct)) return 0;
+  return Math.round(Math.min(1, Math.max(0, correct / total)) * 100);
 }

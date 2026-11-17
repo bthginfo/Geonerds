@@ -299,6 +299,7 @@ export function DrawGame({ difficulty, roundCount, practice, onFinish, onExit }:
 
         <div className="relative mt-4 aspect-square w-full max-w-sm overflow-hidden rounded-2xl border-2 border-border bg-card">
           <canvas
+            aria-label={locale === "de" ? "Zeichenfläche für den Länderumriss" : "Country outline drawing canvas"}
             ref={canvasRef}
             width={R}
             height={R}
@@ -321,6 +322,8 @@ export function DrawGame({ difficulty, roundCount, practice, onFinish, onExit }:
             </div>
           )}
         </div>
+
+        {revealed && <p role="status" className="mt-3 flex w-full max-w-sm flex-wrap justify-center gap-x-4 gap-y-1 text-xs font-medium"><span className="inline-flex items-center gap-2"><span className="h-0.5 w-5 bg-blue-500" aria-hidden />{locale === "de" ? "Deine Zeichnung" : "Your drawing"}</span><span className="inline-flex items-center gap-2"><span className="h-0.5 w-5 bg-emerald-500" aria-hidden />{locale === "de" ? "Richtiger Umriss" : "Actual outline"}</span></p>}
 
         <div className="mt-5 flex w-full max-w-sm gap-2">
           {!revealed ? (

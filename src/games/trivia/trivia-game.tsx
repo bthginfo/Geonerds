@@ -20,6 +20,7 @@ import { useT } from "@/i18n/I18nProvider";
 import { createSeededRandom } from "@/lib/random";
 import { GameLoadState } from "@/games/load-state";
 import { isLegacyGeoSeed } from "@/lib/geo-content-version";
+import { factQuestionsForSeed } from "@/lib/fact-questions";
 
 const MAX_CLUES = 4;
 const PER_ROUND_BUDGET_MS = 15000;
@@ -44,7 +45,7 @@ export function TriviaGame({ difficulty, mode, roundCount, timed, scope, practic
       const options = shuffle([answer, ...distractors], random).map((c) => ({ id: c.cca3, label: countryName(c, locale) }));
       return {
         answer,
-        clues: triviaClues(answer, locale, random, isLegacyGeoSeed(seed)).slice(0, MAX_CLUES),
+        clues: triviaClues(answer, locale, random, isLegacyGeoSeed(seed), factQuestionsForSeed(seed)).slice(0, MAX_CLUES),
         options,
         accepted: countryAccepted(answer),
       };

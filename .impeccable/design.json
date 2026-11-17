@@ -1,0 +1,567 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-11-17T00:00:00Z",
+  "title": "Design System: GeoNerds",
+  "extensions": {
+    "colorMeta": {
+      "primary": {
+        "role": "primary",
+        "displayName": "Clear Action Blue",
+        "canonical": "oklch(0.535 0.21 258)",
+        "tonalRamp": [
+          "oklch(0.150 0.21 258)",
+          "oklch(0.264 0.21 258)",
+          "oklch(0.379 0.21 258)",
+          "oklch(0.493 0.21 258)",
+          "oklch(0.607 0.21 258)",
+          "oklch(0.721 0.21 258)",
+          "oklch(0.836 0.21 258)",
+          "oklch(0.950 0.21 258)"
+        ]
+      },
+      "primary-foreground": {
+        "role": "neutral",
+        "displayName": "Action Ink",
+        "canonical": "oklch(1 0 0)",
+        "tonalRamp": [
+          "oklch(0.150 0 0)",
+          "oklch(0.264 0 0)",
+          "oklch(0.379 0 0)",
+          "oklch(0.493 0 0)",
+          "oklch(0.607 0 0)",
+          "oklch(0.721 0 0)",
+          "oklch(0.836 0 0)",
+          "oklch(0.950 0 0)"
+        ]
+      },
+      "background": {
+        "role": "neutral",
+        "displayName": "Cool Ground",
+        "canonical": "oklch(0.974 0.006 255)",
+        "tonalRamp": [
+          "oklch(0.150 0.006 255)",
+          "oklch(0.264 0.006 255)",
+          "oklch(0.379 0.006 255)",
+          "oklch(0.493 0.006 255)",
+          "oklch(0.607 0.006 255)",
+          "oklch(0.721 0.006 255)",
+          "oklch(0.836 0.006 255)",
+          "oklch(0.950 0.006 255)"
+        ]
+      },
+      "foreground": {
+        "role": "neutral",
+        "displayName": "Reading Ink",
+        "canonical": "oklch(0.235 0.018 255)",
+        "tonalRamp": [
+          "oklch(0.150 0.018 255)",
+          "oklch(0.264 0.018 255)",
+          "oklch(0.379 0.018 255)",
+          "oklch(0.493 0.018 255)",
+          "oklch(0.607 0.018 255)",
+          "oklch(0.721 0.018 255)",
+          "oklch(0.836 0.018 255)",
+          "oklch(0.950 0.018 255)"
+        ]
+      },
+      "card": {
+        "role": "neutral",
+        "displayName": "Solid Surface",
+        "canonical": "oklch(1 0 0)",
+        "tonalRamp": [
+          "oklch(0.150 0 0)",
+          "oklch(0.264 0 0)",
+          "oklch(0.379 0 0)",
+          "oklch(0.493 0 0)",
+          "oklch(0.607 0 0)",
+          "oklch(0.721 0 0)",
+          "oklch(0.836 0 0)",
+          "oklch(0.950 0 0)"
+        ]
+      },
+      "muted": {
+        "role": "neutral",
+        "displayName": "Inset Neutral",
+        "canonical": "oklch(0.94 0.009 255)",
+        "tonalRamp": [
+          "oklch(0.150 0.009 255)",
+          "oklch(0.264 0.009 255)",
+          "oklch(0.379 0.009 255)",
+          "oklch(0.493 0.009 255)",
+          "oklch(0.607 0.009 255)",
+          "oklch(0.721 0.009 255)",
+          "oklch(0.836 0.009 255)",
+          "oklch(0.950 0.009 255)"
+        ]
+      },
+      "muted-foreground": {
+        "role": "neutral",
+        "displayName": "Quiet Ink",
+        "canonical": "oklch(0.47 0.022 255)",
+        "tonalRamp": [
+          "oklch(0.150 0.022 255)",
+          "oklch(0.264 0.022 255)",
+          "oklch(0.379 0.022 255)",
+          "oklch(0.493 0.022 255)",
+          "oklch(0.607 0.022 255)",
+          "oklch(0.721 0.022 255)",
+          "oklch(0.836 0.022 255)",
+          "oklch(0.950 0.022 255)"
+        ]
+      },
+      "border": {
+        "role": "neutral",
+        "displayName": "Quiet Separator",
+        "canonical": "oklch(0.885 0.012 255)",
+        "tonalRamp": [
+          "oklch(0.150 0.012 255)",
+          "oklch(0.264 0.012 255)",
+          "oklch(0.379 0.012 255)",
+          "oklch(0.493 0.012 255)",
+          "oklch(0.607 0.012 255)",
+          "oklch(0.721 0.012 255)",
+          "oklch(0.836 0.012 255)",
+          "oklch(0.950 0.012 255)"
+        ]
+      },
+      "success": {
+        "role": "secondary",
+        "displayName": "Correct Green",
+        "canonical": "oklch(0.49 0.135 153)",
+        "tonalRamp": [
+          "oklch(0.150 0.135 153)",
+          "oklch(0.264 0.135 153)",
+          "oklch(0.379 0.135 153)",
+          "oklch(0.493 0.135 153)",
+          "oklch(0.607 0.135 153)",
+          "oklch(0.721 0.135 153)",
+          "oklch(0.836 0.135 153)",
+          "oklch(0.950 0.135 153)"
+        ]
+      },
+      "danger": {
+        "role": "secondary",
+        "displayName": "Error Red",
+        "canonical": "oklch(0.55 0.21 25)",
+        "tonalRamp": [
+          "oklch(0.150 0.21 25)",
+          "oklch(0.264 0.21 25)",
+          "oklch(0.379 0.21 25)",
+          "oklch(0.493 0.21 25)",
+          "oklch(0.607 0.21 25)",
+          "oklch(0.721 0.21 25)",
+          "oklch(0.836 0.21 25)",
+          "oklch(0.950 0.21 25)"
+        ]
+      },
+      "warning": {
+        "role": "secondary",
+        "displayName": "Attention Amber",
+        "canonical": "oklch(0.57 0.13 65)",
+        "tonalRamp": [
+          "oklch(0.150 0.13 65)",
+          "oklch(0.264 0.13 65)",
+          "oklch(0.379 0.13 65)",
+          "oklch(0.493 0.13 65)",
+          "oklch(0.607 0.13 65)",
+          "oklch(0.721 0.13 65)",
+          "oklch(0.836 0.13 65)",
+          "oklch(0.950 0.13 65)"
+        ]
+      },
+      "glass": {
+        "role": "neutral",
+        "displayName": "Structural Glass",
+        "canonical": "oklch(0.995 0.003 255 / 0.83)",
+        "tonalRamp": [
+          "oklch(0.150 0.003 255 / 0.83)",
+          "oklch(0.264 0.003 255 / 0.83)",
+          "oklch(0.379 0.003 255 / 0.83)",
+          "oklch(0.493 0.003 255 / 0.83)",
+          "oklch(0.607 0.003 255 / 0.83)",
+          "oklch(0.721 0.003 255 / 0.83)",
+          "oklch(0.836 0.003 255 / 0.83)",
+          "oklch(0.950 0.003 255 / 0.83)"
+        ]
+      },
+      "dark-primary": {
+        "role": "primary",
+        "displayName": "Dark Clear Action Blue",
+        "canonical": "oklch(0.71 0.155 253)",
+        "tonalRamp": [
+          "oklch(0.150 0.155 253)",
+          "oklch(0.264 0.155 253)",
+          "oklch(0.379 0.155 253)",
+          "oklch(0.493 0.155 253)",
+          "oklch(0.607 0.155 253)",
+          "oklch(0.721 0.155 253)",
+          "oklch(0.836 0.155 253)",
+          "oklch(0.950 0.155 253)"
+        ]
+      },
+      "dark-primary-foreground": {
+        "role": "neutral",
+        "displayName": "Dark Action Ink",
+        "canonical": "oklch(0.18 0.035 255)",
+        "tonalRamp": [
+          "oklch(0.150 0.035 255)",
+          "oklch(0.264 0.035 255)",
+          "oklch(0.379 0.035 255)",
+          "oklch(0.493 0.035 255)",
+          "oklch(0.607 0.035 255)",
+          "oklch(0.721 0.035 255)",
+          "oklch(0.836 0.035 255)",
+          "oklch(0.950 0.035 255)"
+        ]
+      },
+      "dark-background": {
+        "role": "neutral",
+        "displayName": "Dark Cool Ground",
+        "canonical": "oklch(0.165 0.012 255)",
+        "tonalRamp": [
+          "oklch(0.150 0.012 255)",
+          "oklch(0.264 0.012 255)",
+          "oklch(0.379 0.012 255)",
+          "oklch(0.493 0.012 255)",
+          "oklch(0.607 0.012 255)",
+          "oklch(0.721 0.012 255)",
+          "oklch(0.836 0.012 255)",
+          "oklch(0.950 0.012 255)"
+        ]
+      },
+      "dark-foreground": {
+        "role": "neutral",
+        "displayName": "Dark Reading Ink",
+        "canonical": "oklch(0.965 0.006 255)",
+        "tonalRamp": [
+          "oklch(0.150 0.006 255)",
+          "oklch(0.264 0.006 255)",
+          "oklch(0.379 0.006 255)",
+          "oklch(0.493 0.006 255)",
+          "oklch(0.607 0.006 255)",
+          "oklch(0.721 0.006 255)",
+          "oklch(0.836 0.006 255)",
+          "oklch(0.950 0.006 255)"
+        ]
+      },
+      "dark-card": {
+        "role": "neutral",
+        "displayName": "Dark Solid Surface",
+        "canonical": "oklch(0.225 0.014 255)",
+        "tonalRamp": [
+          "oklch(0.150 0.014 255)",
+          "oklch(0.264 0.014 255)",
+          "oklch(0.379 0.014 255)",
+          "oklch(0.493 0.014 255)",
+          "oklch(0.607 0.014 255)",
+          "oklch(0.721 0.014 255)",
+          "oklch(0.836 0.014 255)",
+          "oklch(0.950 0.014 255)"
+        ]
+      },
+      "dark-muted": {
+        "role": "neutral",
+        "displayName": "Dark Inset Neutral",
+        "canonical": "oklch(0.28 0.015 255)",
+        "tonalRamp": [
+          "oklch(0.150 0.015 255)",
+          "oklch(0.264 0.015 255)",
+          "oklch(0.379 0.015 255)",
+          "oklch(0.493 0.015 255)",
+          "oklch(0.607 0.015 255)",
+          "oklch(0.721 0.015 255)",
+          "oklch(0.836 0.015 255)",
+          "oklch(0.950 0.015 255)"
+        ]
+      },
+      "dark-muted-foreground": {
+        "role": "neutral",
+        "displayName": "Dark Quiet Ink",
+        "canonical": "oklch(0.735 0.016 255)",
+        "tonalRamp": [
+          "oklch(0.150 0.016 255)",
+          "oklch(0.264 0.016 255)",
+          "oklch(0.379 0.016 255)",
+          "oklch(0.493 0.016 255)",
+          "oklch(0.607 0.016 255)",
+          "oklch(0.721 0.016 255)",
+          "oklch(0.836 0.016 255)",
+          "oklch(0.950 0.016 255)"
+        ]
+      },
+      "dark-border": {
+        "role": "neutral",
+        "displayName": "Dark Quiet Separator",
+        "canonical": "oklch(0.335 0.016 255)",
+        "tonalRamp": [
+          "oklch(0.150 0.016 255)",
+          "oklch(0.264 0.016 255)",
+          "oklch(0.379 0.016 255)",
+          "oklch(0.493 0.016 255)",
+          "oklch(0.607 0.016 255)",
+          "oklch(0.721 0.016 255)",
+          "oklch(0.836 0.016 255)",
+          "oklch(0.950 0.016 255)"
+        ]
+      },
+      "dark-success": {
+        "role": "secondary",
+        "displayName": "Dark Correct Green",
+        "canonical": "oklch(0.72 0.17 152)",
+        "tonalRamp": [
+          "oklch(0.150 0.17 152)",
+          "oklch(0.264 0.17 152)",
+          "oklch(0.379 0.17 152)",
+          "oklch(0.493 0.17 152)",
+          "oklch(0.607 0.17 152)",
+          "oklch(0.721 0.17 152)",
+          "oklch(0.836 0.17 152)",
+          "oklch(0.950 0.17 152)"
+        ]
+      },
+      "dark-danger": {
+        "role": "secondary",
+        "displayName": "Dark Error Red",
+        "canonical": "oklch(0.66 0.22 25)",
+        "tonalRamp": [
+          "oklch(0.150 0.22 25)",
+          "oklch(0.264 0.22 25)",
+          "oklch(0.379 0.22 25)",
+          "oklch(0.493 0.22 25)",
+          "oklch(0.607 0.22 25)",
+          "oklch(0.721 0.22 25)",
+          "oklch(0.836 0.22 25)",
+          "oklch(0.950 0.22 25)"
+        ]
+      },
+      "dark-warning": {
+        "role": "secondary",
+        "displayName": "Dark Attention Amber",
+        "canonical": "oklch(0.82 0.16 80)",
+        "tonalRamp": [
+          "oklch(0.150 0.16 80)",
+          "oklch(0.264 0.16 80)",
+          "oklch(0.379 0.16 80)",
+          "oklch(0.493 0.16 80)",
+          "oklch(0.607 0.16 80)",
+          "oklch(0.721 0.16 80)",
+          "oklch(0.836 0.16 80)",
+          "oklch(0.950 0.16 80)"
+        ]
+      },
+      "dark-glass": {
+        "role": "neutral",
+        "displayName": "Dark Structural Glass",
+        "canonical": "oklch(0.235 0.015 255 / 0.87)",
+        "tonalRamp": [
+          "oklch(0.150 0.015 255 / 0.87)",
+          "oklch(0.264 0.015 255 / 0.87)",
+          "oklch(0.379 0.015 255 / 0.87)",
+          "oklch(0.493 0.015 255 / 0.87)",
+          "oklch(0.607 0.015 255 / 0.87)",
+          "oklch(0.721 0.015 255 / 0.87)",
+          "oklch(0.836 0.015 255 / 0.87)",
+          "oklch(0.950 0.015 255 / 0.87)"
+        ]
+      }
+    },
+    "typographyMeta": {
+      "display": {
+        "displayName": "Home Display",
+        "purpose": "The compact home heading, not a promotional hero."
+      },
+      "headline": {
+        "displayName": "Setup Headline",
+        "purpose": "Game titles on the shared setup view."
+      },
+      "body": {
+        "displayName": "Relaxed Supporting Copy",
+        "purpose": "Short explanations and summaries."
+      },
+      "label": {
+        "displayName": "Control Label",
+        "purpose": "Shared medium buttons and semibold labels."
+      }
+    },
+    "shadows": [
+      {
+        "name": "chrome-light",
+        "value": "0 8px 28px oklch(0.25 0.025 255 / 0.09)",
+        "purpose": "Floating chrome in the light theme."
+      },
+      {
+        "name": "chrome-dark",
+        "value": "0 10px 32px oklch(0.08 0.015 255 / 0.3)",
+        "purpose": "Floating chrome in the dark theme."
+      },
+      {
+        "name": "segment-selected",
+        "value": "0 2px 5px oklch(0.2 0.02 255 / 0.09)",
+        "purpose": "Selected segment on the inset track."
+      }
+    ],
+    "motion": [
+      {
+        "name": "button-state",
+        "value": "150ms",
+        "purpose": "Shared button background, color, filter and transform changes."
+      },
+      {
+        "name": "row-state",
+        "value": "160ms ease-out",
+        "purpose": "Library row background changes."
+      },
+      {
+        "name": "segment-state",
+        "value": "180ms ease-out",
+        "purpose": "Segment background, color and shadow changes."
+      },
+      {
+        "name": "help-panel",
+        "value": "200ms cubic-bezier(0.16, 1, 0.3, 1)",
+        "purpose": "Help dialog panel transition; reduced motion uses zero duration."
+      },
+      {
+        "name": "button-press",
+        "value": "scale(0.98)",
+        "purpose": "Short tactile response; removed under reduced motion."
+      }
+    ],
+    "breakpoints": [
+      {
+        "name": "compact-hud",
+        "value": "420px"
+      },
+      {
+        "name": "small",
+        "value": "640px"
+      },
+      {
+        "name": "desktop-navigation",
+        "value": "1024px"
+      }
+    ]
+  },
+  "components": [
+    {
+      "name": "Primary Button",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "The shared Button's primary variant at its default medium size; no framework runtime is required.",
+      "html": "<button class=\"ds-button\" type=\"button\">Start playing</button>",
+      "css": ".ds-button{display:inline-flex;max-width:100%;min-height:44px;align-items:center;justify-content:center;gap:8px;border:0;border-radius:12px;padding:10px 20px;font-family:var(--font-sans,Geist,ui-sans-serif,system-ui,sans-serif);font-size:.875rem;font-weight:600;line-height:1.375;text-align:center;cursor:pointer;user-select:none;transition:background-color 150ms,color 150ms,filter 150ms,transform 150ms}.ds-button:active:not(:disabled){transform:scale(.98)}.ds-button:focus-visible{outline:0;box-shadow:0 0 0 2px var(--background,oklch(.974 .006 255)),0 0 0 4px var(--ring,oklch(.535 .21 258))}.ds-button:disabled{opacity:.45;pointer-events:none}@media(prefers-reduced-motion:reduce){.ds-button{transition-duration:.01ms}.ds-button:active:not(:disabled){transform:none}}.ds-button{background:var(--primary,oklch(.535 .21 258));color:var(--primary-foreground,oklch(1 0 0))}.ds-button:hover:not(:disabled){filter:brightness(1.1)}"
+    },
+    {
+      "name": "Secondary Button",
+      "kind": "button",
+      "refersTo": "button-secondary",
+      "description": "The shared Button's secondary variant at its default medium size; no framework runtime is required.",
+      "html": "<button class=\"ds-button\" type=\"button\">Try again</button>",
+      "css": ".ds-button{display:inline-flex;max-width:100%;min-height:44px;align-items:center;justify-content:center;gap:8px;border:0;border-radius:12px;padding:10px 20px;font-family:var(--font-sans,Geist,ui-sans-serif,system-ui,sans-serif);font-size:.875rem;font-weight:600;line-height:1.375;text-align:center;cursor:pointer;user-select:none;transition:background-color 150ms,color 150ms,filter 150ms,transform 150ms}.ds-button:active:not(:disabled){transform:scale(.98)}.ds-button:focus-visible{outline:0;box-shadow:0 0 0 2px var(--background,oklch(.974 .006 255)),0 0 0 4px var(--ring,oklch(.535 .21 258))}.ds-button:disabled{opacity:.45;pointer-events:none}@media(prefers-reduced-motion:reduce){.ds-button{transition-duration:.01ms}.ds-button:active:not(:disabled){transform:none}}.ds-button{background:var(--muted,oklch(.94 .009 255));color:var(--foreground,oklch(.235 .018 255))}.ds-button:hover:not(:disabled){background:color-mix(in oklch,var(--muted,oklch(.94 .009 255)) 70%,transparent)}"
+    },
+    {
+      "name": "Ghost Button",
+      "kind": "button",
+      "refersTo": "button-ghost",
+      "description": "The shared Button's ghost variant at its default medium size; no framework runtime is required.",
+      "html": "<button class=\"ds-button\" type=\"button\">Not now</button>",
+      "css": ".ds-button{display:inline-flex;max-width:100%;min-height:44px;align-items:center;justify-content:center;gap:8px;border:0;border-radius:12px;padding:10px 20px;font-family:var(--font-sans,Geist,ui-sans-serif,system-ui,sans-serif);font-size:.875rem;font-weight:600;line-height:1.375;text-align:center;cursor:pointer;user-select:none;transition:background-color 150ms,color 150ms,filter 150ms,transform 150ms}.ds-button:active:not(:disabled){transform:scale(.98)}.ds-button:focus-visible{outline:0;box-shadow:0 0 0 2px var(--background,oklch(.974 .006 255)),0 0 0 4px var(--ring,oklch(.535 .21 258))}.ds-button:disabled{opacity:.45;pointer-events:none}@media(prefers-reduced-motion:reduce){.ds-button{transition-duration:.01ms}.ds-button:active:not(:disabled){transform:none}}.ds-button{background:transparent;color:var(--foreground,oklch(.235 .018 255))}.ds-button:hover:not(:disabled){background:var(--muted,oklch(.94 .009 255))}"
+    },
+    {
+      "name": "Outline Button",
+      "kind": "button",
+      "refersTo": "button-outline",
+      "description": "The shared Button's outline variant at its default medium size; no framework runtime is required.",
+      "html": "<button class=\"ds-button\" type=\"button\">View details</button>",
+      "css": ".ds-button{display:inline-flex;max-width:100%;min-height:44px;align-items:center;justify-content:center;gap:8px;border:0;border-radius:12px;padding:10px 20px;font-family:var(--font-sans,Geist,ui-sans-serif,system-ui,sans-serif);font-size:.875rem;font-weight:600;line-height:1.375;text-align:center;cursor:pointer;user-select:none;transition:background-color 150ms,color 150ms,filter 150ms,transform 150ms}.ds-button:active:not(:disabled){transform:scale(.98)}.ds-button:focus-visible{outline:0;box-shadow:0 0 0 2px var(--background,oklch(.974 .006 255)),0 0 0 4px var(--ring,oklch(.535 .21 258))}.ds-button:disabled{opacity:.45;pointer-events:none}@media(prefers-reduced-motion:reduce){.ds-button{transition-duration:.01ms}.ds-button:active:not(:disabled){transform:none}}.ds-button{border:1px solid var(--border,oklch(.885 .012 255));background:var(--card,oklch(1 0 0));color:var(--foreground,oklch(.235 .018 255))}.ds-button:hover:not(:disabled){background:var(--muted,oklch(.94 .009 255))}"
+    },
+    {
+      "name": "Danger Button",
+      "kind": "button",
+      "refersTo": "button-danger",
+      "description": "The shared Button's danger variant at its default medium size; no framework runtime is required.",
+      "html": "<button class=\"ds-button\" type=\"button\">Exit game</button>",
+      "css": ".ds-button{display:inline-flex;max-width:100%;min-height:44px;align-items:center;justify-content:center;gap:8px;border:0;border-radius:12px;padding:10px 20px;font-family:var(--font-sans,Geist,ui-sans-serif,system-ui,sans-serif);font-size:.875rem;font-weight:600;line-height:1.375;text-align:center;cursor:pointer;user-select:none;transition:background-color 150ms,color 150ms,filter 150ms,transform 150ms}.ds-button:active:not(:disabled){transform:scale(.98)}.ds-button:focus-visible{outline:0;box-shadow:0 0 0 2px var(--background,oklch(.974 .006 255)),0 0 0 4px var(--ring,oklch(.535 .21 258))}.ds-button:disabled{opacity:.45;pointer-events:none}@media(prefers-reduced-motion:reduce){.ds-button{transition-duration:.01ms}.ds-button:active:not(:disabled){transform:none}}.ds-button{background:var(--danger,oklch(.55 .21 25));color:white}.ds-button:hover:not(:disabled){filter:brightness(1.1)}:host-context(.dark) .ds-button{color:var(--color-red-950,oklch(.258 .092 26.042))}"
+    },
+    {
+      "name": "Success Button",
+      "kind": "button",
+      "refersTo": "button-success",
+      "description": "The shared Button's success variant at its default medium size; no framework runtime is required.",
+      "html": "<button class=\"ds-button\" type=\"button\">Continue</button>",
+      "css": ".ds-button{display:inline-flex;max-width:100%;min-height:44px;align-items:center;justify-content:center;gap:8px;border:0;border-radius:12px;padding:10px 20px;font-family:var(--font-sans,Geist,ui-sans-serif,system-ui,sans-serif);font-size:.875rem;font-weight:600;line-height:1.375;text-align:center;cursor:pointer;user-select:none;transition:background-color 150ms,color 150ms,filter 150ms,transform 150ms}.ds-button:active:not(:disabled){transform:scale(.98)}.ds-button:focus-visible{outline:0;box-shadow:0 0 0 2px var(--background,oklch(.974 .006 255)),0 0 0 4px var(--ring,oklch(.535 .21 258))}.ds-button:disabled{opacity:.45;pointer-events:none}@media(prefers-reduced-motion:reduce){.ds-button{transition-duration:.01ms}.ds-button:active:not(:disabled){transform:none}}.ds-button{background:var(--success,oklch(.49 .135 153));color:white}.ds-button:hover:not(:disabled){filter:brightness(1.1)}:host-context(.dark) .ds-button{color:var(--color-emerald-950,oklch(.262 .051 172.552))}"
+    },
+    {
+      "name": "Text Field",
+      "kind": "input",
+      "refersTo": "input",
+      "description": "The reusable geo-control field treatment, including source-defined placeholder and focus behavior.",
+      "html": "<input class=\"ds-input\" type=\"text\" aria-label=\"Country name\" placeholder=\"Country name\">",
+      "css": ".ds-input{min-height:44px;max-width:100%;border-radius:12px;border:1px solid var(--input,oklch(.895 .012 255));background:var(--card,oklch(1 0 0));color:var(--foreground,oklch(.235 .018 255));font-family:var(--font-sans,Geist,ui-sans-serif,system-ui,sans-serif);font-size:1rem;line-height:1.4;padding:10px 12px;caret-color:var(--primary,oklch(.535 .21 258))}.ds-input::placeholder{color:var(--muted-foreground,oklch(.47 .022 255));opacity:1}.ds-input:focus-visible{border-color:var(--primary,oklch(.535 .21 258));outline:2px solid var(--ring,oklch(.535 .21 258));outline-offset:3px}"
+    },
+    {
+      "name": "Floating Mobile Navigation",
+      "kind": "nav",
+      "refersTo": "navigation",
+      "description": "A representative pair of the actual five mobile navigation destinations; structural glass, active route, labels and SVG icons.",
+      "html": "<nav class=\"ds-nav\" aria-label=\"Main navigation\"><a class=\"ds-nav-link\" href=\"/\" aria-current=\"page\"><svg class=\"ds-nav-icon\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2.4\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"m3 10 9-7 9 7v10a1 1 0 0 1-1 1h-6v-7h-4v7H4a1 1 0 0 1-1-1Z\"/></svg><span>Home</span></a><a class=\"ds-nav-link\" href=\"/profile\"><svg class=\"ds-nav-icon\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.8\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><circle cx=\"12\" cy=\"8\" r=\"5\"/><path d=\"M20 21a8 8 0 0 0-16 0\"/></svg><span>Profile</span></a></nav>",
+      "css": ".ds-nav{display:flex;width:100%;max-width:448px;align-items:stretch;border-radius:22px;padding:6px;background:var(--glass,oklch(.995 .003 255/.83));backdrop-filter:blur(24px) saturate(1.6);-webkit-backdrop-filter:blur(24px) saturate(1.6);box-shadow:var(--elevation,0 8px 28px oklch(.25 .025 255/.09)),inset 0 1px 0 var(--glass-highlight,oklch(1 0 0/.9));font-family:var(--font-sans,Geist,ui-sans-serif,system-ui,sans-serif)}.ds-nav-link{display:flex;min-height:56px;min-width:0;flex:1;flex-direction:column;align-items:center;justify-content:center;gap:4px;border-radius:16px;padding:0 2px;color:var(--muted-foreground,oklch(.47 .022 255));text-decoration:none;font-size:10px;font-weight:600;line-height:1.25;transition:color 150ms,background-color 150ms}.ds-nav-link[aria-current=page]{background:color-mix(in oklch,var(--primary,oklch(.535 .21 258)) 10%,transparent);color:var(--primary,oklch(.535 .21 258))}.ds-nav-link:hover:not([aria-current=page]){background:color-mix(in oklch,var(--muted,oklch(.94 .009 255)) 70%,transparent);color:var(--foreground,oklch(.235 .018 255))}.ds-nav-link:focus-visible{outline:2px solid var(--ring,oklch(.535 .21 258));outline-offset:3px}.ds-nav-icon{width:20px;height:20px}@media(prefers-reduced-transparency:reduce){.ds-nav{background:var(--card,oklch(1 0 0));backdrop-filter:none;-webkit-backdrop-filter:none}}@supports not(backdrop-filter:blur(1px)){.ds-nav{background:var(--card,oklch(1 0 0))}}@media(prefers-reduced-motion:reduce){.ds-nav-link{transition-duration:.01ms}}"
+    },
+    {
+      "name": "Category Filter Chip",
+      "kind": "chip",
+      "refersTo": "category-chip-selected",
+      "description": "The home category control: 32px visible pill inside a 44px minimum hit area, with a selected-state semantic.",
+      "html": "<div class=\"ds-chip-group\" role=\"group\" aria-label=\"Filter game topics\"><button class=\"ds-chip\" type=\"button\" aria-pressed=\"true\"><span>All games</span></button><button class=\"ds-chip\" type=\"button\" aria-pressed=\"false\"><span>Flags</span></button></div>",
+      "css": ".ds-chip-group{display:flex;align-items:center;font-family:var(--font-sans,Geist,ui-sans-serif,system-ui,sans-serif)}.ds-chip{display:flex;min-height:44px;flex-shrink:0;align-items:center;border:0;border-radius:9999px;padding:6px 4px;background:transparent;cursor:pointer}.ds-chip span{display:inline-flex;min-height:32px;align-items:center;white-space:nowrap;border-radius:9999px;padding:0 12px;color:var(--muted-foreground,oklch(.47 .022 255));font-size:.75rem;font-weight:600;line-height:1.333333;transition:color 150ms,background-color 150ms}.ds-chip[aria-pressed=true] span{background:var(--primary,oklch(.535 .21 258));color:var(--primary-foreground,oklch(1 0 0))}.ds-chip[aria-pressed=false]:hover span{background:var(--muted,oklch(.94 .009 255));color:var(--foreground,oklch(.235 .018 255))}.ds-chip:focus-visible{outline:2px solid var(--ring,oklch(.535 .21 258));outline-offset:0}@media(prefers-reduced-motion:reduce){.ds-chip span{transition-duration:.01ms}}"
+    },
+    {
+      "name": "Solid Card",
+      "kind": "card",
+      "refersTo": "card",
+      "description": "The actual shared Card primitive; padding belongs to the consuming view rather than to this component.",
+      "html": "<div class=\"ds-card\"><div class=\"ds-card-example-content\"><strong>Quick start</strong><p>Pick your settings and start playing.</p></div></div>",
+      "css": ".ds-card{border-radius:16px;background:var(--card,oklch(1 0 0));color:var(--card-foreground,var(--foreground,oklch(.235 .018 255)));font-family:var(--font-sans,Geist,ui-sans-serif,system-ui,sans-serif)}.ds-card-example-content{padding:16px}.ds-card-example-content strong{font-size:.875rem;font-weight:600}.ds-card-example-content p{margin:8px 0 0;font-size:.75rem;line-height:1.625;color:var(--muted-foreground,oklch(.47 .022 255))}"
+    }
+  ],
+  "narrative": {
+    "northStar": "Restrained iOS / Liquid Glass",
+    "overview": "GeoNerds uses a quiet, cool-neutral interface for choosing and playing geography games. Familiar controls, clear task hierarchy and accurate state feedback carry the experience. This is a web interface inspired by iOS, not a claim of native Apple behavior or certification.\n\nGlass is structural: it distinguishes sticky navigation and game toolbars from opaque game content. The existing GeoNerds name, globe logo, real flags, geographic geometry and sourced imagery retain their identity; no decorative raster was added for this redesign. The user-pinned direction takes precedence over generic stylistic preferences.",
+    "keyCharacteristics": [
+      "Cool light and dark grounds with blue actions and semantic feedback colors.",
+      "Opaque grouped content; translucent floating chrome with an opaque fallback.",
+      "Compact Geist hierarchy, rounded controls and wrapping task status.",
+      "Short state transitions, safe-area-aware navigation and reduced-motion support."
+    ],
+    "rules": [
+      {
+        "name": "The State Pairing Rule",
+        "body": "Select foreground and background from the same theme; do not assume white text is correct on every accent in dark mode.",
+        "section": "colors"
+      },
+      {
+        "name": "The Task Hierarchy Rule",
+        "body": "The game name, question and next action must outrank metadata; preserve text wrapping instead of shrinking the entire interface.",
+        "section": "typography"
+      },
+      {
+        "name": "The Chrome-Only Glass Rule",
+        "body": "Keep translucent material on floating navigation and toolbars; keep questions, maps and answer content on opaque reading surfaces.",
+        "section": "elevation"
+      }
+    ],
+    "dos": [
+      "**Do** use the existing theme variables and pair foregrounds with their matching surfaces.",
+      "**Do** keep task content opaque and reserve glass for navigation or toolbars.",
+      "**Do** preserve meaningful labels, visible keyboard focus, wrapping text and safe-area spacing.",
+      "**Do** retain authentic GeoNerds identity, flags, geographic outlines and source credits.",
+      "**Do** honor reduced-motion and reduced-transparency preferences."
+    ],
+    "donts": [
+      "**Don't** turn every content card into a blurred glass panel.",
+      "**Don't** replace the pinned restrained direction with decorative auroras or page entrance choreography.",
+      "**Don't** encode correct, incorrect, selected or training state through color alone.",
+      "**Don't** treat this document as proof of measured contrast, browser completeness or flawless native iOS behavior."
+    ]
+  }
+}

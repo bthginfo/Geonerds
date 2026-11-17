@@ -2,8 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import { motion } from "framer-motion";
-import { Sparkles, Gamepad2, Swords, ArrowUpRight, Search, X } from "lucide-react";
+import { ArrowRight, Search, Swords, X } from "lucide-react";
 import { GAMES } from "@/games/registry";
 import { getGameCategories } from "@/games/categories";
 import { nextFeatureTransition } from "@/games/featured";
@@ -18,16 +17,12 @@ import { cn, formatNumber } from "@/lib/utils";
 import { FieldJournal } from "@/components/field-journal";
 import { useProgression } from "@/store/progression";
 import { FeedbackCallout } from "@/components/community/feedback-callout";
-import { AdastraFeature } from "@/components/community/adastra-feature";
 import { CommunityNotification } from "@/components/community/community-notification";
 
 const CATEGORY_LABELS: Record<string, { de: string; en: string }> = {
-  all: { de: "Alle", en: "All" },
-  new: { de: "Neu", en: "New" },
-  flags: { de: "Flaggen", en: "Flags" },
-  maps: { de: "Karten", en: "Maps" },
-  logic: { de: "Logik", en: "Logic" },
-  knowledge: { de: "Wissen", en: "Knowledge" },
+  all: { de: "Alle", en: "All" }, new: { de: "Neu", en: "New" },
+  flags: { de: "Flaggen", en: "Flags" }, maps: { de: "Karten", en: "Maps" },
+  logic: { de: "Logik", en: "Logic" }, knowledge: { de: "Wissen", en: "Knowledge" },
   expeditions: { de: "Routen", en: "Routes" },
 };
 
@@ -37,7 +32,6 @@ export default function Home() {
   const progression = useProgression();
   const [category, setCategory] = useState("all");
   const [query, setQuery] = useState("");
-  // SSR always uses permanent categories; client time is applied after hydration.
   const [catalogNow, setCatalogNow] = useState<number | null>(null);
   useEffect(() => {
     let timer: ReturnType<typeof setTimeout> | undefined;
@@ -46,7 +40,6 @@ export default function Home() {
       const now = Date.now();
       setCatalogNow(now);
       const next = nextFeatureTransition(GAMES, now);
-      // Browsers cap timeouts at ~24.8 days; safely re-arm longer promotion windows.
       if (next !== null) timer = setTimeout(refresh, Math.min(next - now, 2_147_483_647));
     };
     const onVisible = () => { if (!document.hidden) refresh(); };
@@ -57,131 +50,70 @@ export default function Home() {
   }, []);
   const categories = useMemo(() => getGameCategories(catalogNow), [catalogNow]);
   const activeCategory = category === "new" && !categories.some((group) => group.id === "new") ? "all" : category;
-
   const sections = useMemo(() => categories.filter((group) => activeCategory === "all" || group.id === activeCategory).map((group) => ({
     ...group,
     entries: group.games.flatMap((id) => {
       const game = GAMES.find((entry) => entry.id === id);
       if (!game) return [];
-      const searchText = `${t(`games.${id}.name`)} ${t(`games.${id}.short`)} ${group.name[locale]}`.toLocaleLowerCase(locale);
-      return searchText.includes(query.trim().toLocaleLowerCase(locale)) ? [game] : [];
+      const searchable = `${t(`games.${id}.name`)} ${t(`games.${id}.short`)} ${group.name[locale]}`.toLocaleLowerCase(locale);
+      return searchable.includes(query.trim().toLocaleLowerCase(locale)) ? [game] : [];
     }),
   })).filter((group) => group.entries.length > 0), [categories, activeCategory, query, t, locale]);
   const visibleCount = sections.reduce((count, group) => count + group.entries.length, 0);
-  const newSection = sections.find((group) => group.id === "new");
-  const legacySections = sections.filter((group) => group.id !== "new");
-
   const gamesPlayed = progression.totalRuns || runs?.length || 0;
-  const totalPoints = progression.totalScore || runs?.reduce((s, r) => s + r.score, 0) || 0;
+  const totalPoints = progression.totalScore || runs?.reduce((sum, run) => sum + run.score, 0) || 0;
 
   return (
-    <div className="geo-aurora flex flex-1 flex-col">
-      <section className="mx-auto w-full max-w-5xl px-4 pt-3 pb-6 sm:pt-5">
-        <FeedbackCallout />
-        <CommunityNotification />
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.4 }}
-          className="flex flex-col items-center text-center"
-        >
-          <span className="mb-4 inline-flex items-center gap-1.5 rounded-full border border-border bg-card px-3 py-1 text-xs font-medium text-muted-foreground">
-            <Sparkles className="h-3.5 w-3.5 text-accent" />
-            {t("app.tagline")}
-          </span>
-          <h1 className="max-w-2xl text-balance text-4xl font-extrabold tracking-tight sm:text-5xl">
-            {t("home.heroTitle")}
-          </h1>
-          <p className="mt-4 max-w-xl text-pretty text-base text-muted-foreground sm:text-lg">
-            {t("home.heroSubtitle")}
-          </p>
-          <div className="mt-7">
-            <Link href="#games" className="inline-flex min-h-14 items-center justify-center gap-2 rounded-lg bg-primary px-7 text-base font-semibold text-primary-foreground shadow-sm shadow-primary/20 transition-all duration-150 hover:brightness-110 active:scale-[0.97] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background">
-              <Gamepad2 aria-hidden="true" className="h-5 w-5" />
-              {t("home.cta")}
-            </Link>
-          </div>
-        </motion.div>
-
-        {gamesPlayed > 0 && (
-          <div className="mx-auto mt-10 grid max-w-md grid-cols-2 gap-3">
-            <StatTile label={t("home.gamesPlayed")} value={formatNumber(gamesPlayed, locale)} />
-            <StatTile label={t("home.totalPoints")} value={formatNumber(totalPoints, locale)} />
-          </div>
-        )}
-
-        {newSection && <section id="new-games" className="mx-auto mt-7 w-full max-w-3xl scroll-mt-20" aria-labelledby="category-new">
-          <div className="mb-3 flex items-center gap-2"><Sparkles className="h-4 w-4 text-primary" aria-hidden /><h2 id="category-new" className="text-base font-bold">{newSection.name[locale]}</h2><span className="rounded bg-primary/10 px-1.5 py-0.5 text-[10px] font-semibold text-primary">{newSection.entries.length}</span></div>
-          {newSection.entries.map((game) => game.id === "adastra" ? <AdastraFeature key={game.id} /> : <GameCard key={game.id} game={game} />)}
-        </section>}
-
-        <div className="mx-auto mt-6 w-full max-w-2xl">
-        <Link href="/challenges" className="group flex items-center gap-3 rounded-xl border border-border bg-card/70 px-4 py-3 transition-colors hover:border-primary/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
-          <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary"><Swords aria-hidden="true" className="h-5 w-5" /></span>
-          <div className="min-w-0 flex-1">
-            <h2 className="text-sm font-bold">{locale === "de" ? "Fordere jemanden heraus" : "Challenge a fellow explorer"}</h2>
-            <p className="mt-0.5 text-xs text-muted-foreground">{locale === "de" ? "Gleiche Fragen. Ihr spielt in eurem Tempo." : "Same questions. Play at your own pace."}</p>
-          </div>
-          <ArrowUpRight className="h-5 w-5 shrink-0 text-primary transition-transform group-hover:-translate-y-0.5 group-hover:translate-x-0.5" />
-        </Link>
-
-        <div className="mt-3 grid gap-3 sm:grid-cols-2"><DailyCard /><WeeklyCard /></div>
-        <FieldJournal />
+    <div className="geo-page flex-1">
+      <CommunityNotification />
+      <div className="mb-6 flex flex-wrap items-end justify-between gap-3">
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight">{locale === "de" ? "Einfach die Welt entdecken." : "A little more world. Every day."}</h1>
+          <p className="mt-2 max-w-xl text-sm leading-relaxed text-muted-foreground">{locale === "de" ? "Wähle ein Spiel, finde deinen Rhythmus und lerne mit jeder Runde dazu." : "Pick a game, find your rhythm, and learn something with every round."}</p>
         </div>
-      </section>
+        {gamesPlayed > 0 && <p className="text-xs leading-relaxed text-muted-foreground"><span className="font-semibold tabular-nums text-foreground">{formatNumber(gamesPlayed, locale)}</span> {t("home.gamesPlayed")}<span aria-hidden="true" className="mx-2">·</span><span className="font-semibold tabular-nums text-foreground">{formatNumber(totalPoints, locale)}</span> {t("home.totalPoints")}</p>}
+      </div>
 
-      <section id="games" className="mx-auto w-full max-w-5xl scroll-mt-20 px-4 pb-24 pt-4">
-        <div className="flex flex-wrap items-end justify-between gap-3">
-          <div>
-            <p className="text-xs font-semibold uppercase tracking-widest text-primary">{locale === "de" ? "Dein Spielfeld ist die Welt" : "The world is your playground"}</p>
-            <h2 className="mt-2 text-2xl font-extrabold tracking-tight sm:text-3xl">{t("home.chooseGame")}</h2>
+      <FeedbackCallout />
+
+      <div className="grid items-start gap-8 lg:grid-cols-[minmax(0,1fr)_280px] lg:gap-7">
+        <section id="games" className="min-w-0 scroll-mt-24" aria-labelledby="game-library-title">
+          <div className="mb-3 flex items-baseline justify-between gap-3">
+            <h2 id="game-library-title" className="text-xl font-bold tracking-tight">{t("home.chooseGame")}</h2>
+            <p aria-live="polite" className="text-xs tabular-nums text-muted-foreground">{t(visibleCount === 1 ? "home.gamesFound.one" : "home.gamesFound.other", { n: visibleCount })}</p>
           </div>
-          <p className="text-sm text-muted-foreground">{GAMES.length} {locale === "de" ? "Spiele" : "games"} · {categories.length} {locale === "de" ? "Themen" : "themes"}</p>
-        </div>
 
-        <div className="mt-4 flex flex-wrap gap-2" aria-label={locale === "de" ? "Spielthemen filtern" : "Filter game themes"}>
-          {[{ id: "all", name: { de: "Alle Spiele", en: "All games" } }, ...categories].map((group) => (
-            <button key={group.id} type="button" aria-label={group.name[locale]} title={group.name[locale]} aria-pressed={activeCategory === group.id} onClick={() => { setCategory(group.id); if (group.id === "new") requestAnimationFrame(() => document.getElementById("new-games")?.scrollIntoView({ block: "start" })); }} className={cn("h-8 whitespace-nowrap rounded-full border px-2 text-xs font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background", activeCategory === group.id ? "border-primary/40 bg-primary/10 text-primary" : "border-border/60 bg-card/40 text-muted-foreground hover:border-primary/50 hover:text-foreground")}>{CATEGORY_LABELS[group.id]?.[locale] ?? group.name[locale]}</button>
-          ))}
-        </div>
-        <div className="relative mt-3 max-w-md">
-          <label htmlFor="game-search" className="sr-only">{locale === "de" ? "Spiele suchen" : "Search games"}</label>
-          <Search className="pointer-events-none absolute left-3 top-3.5 h-4 w-4 text-muted-foreground" />
-          <input id="game-search" type="search" value={query} onChange={(event) => setQuery(event.target.value)} placeholder={locale === "de" ? "Finde dein nächstes Spiel…" : "Find your next game…"} className="h-11 w-full rounded-xl border border-border bg-card pl-10 pr-11 text-sm outline-none focus:border-primary focus:ring-2 focus:ring-ring/20" />
-          {query && <button type="button" onClick={() => setQuery("")} aria-label={locale === "de" ? "Suche leeren" : "Clear search"} className="absolute right-0 top-0 flex h-11 w-11 items-center justify-center rounded-xl text-muted-foreground hover:text-foreground"><X className="h-4 w-4" /></button>}
-        </div>
-        <p aria-live="polite" className="mt-2 text-xs text-muted-foreground">{t(visibleCount === 1 ? "home.gamesFound.one" : "home.gamesFound.other", { n: visibleCount })}</p>
-        {newSection && legacySections.length === 0 && <Link href="#new-games" className="mt-2 inline-flex min-h-11 items-center gap-1 text-sm font-semibold text-primary hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">{locale === "de" ? "Neue Spiele oben entdecken" : "Explore new games above"}<ArrowUpRight className="h-4 w-4" aria-hidden /></Link>}
+          <div className="relative">
+            <label htmlFor="game-search" className="sr-only">{locale === "de" ? "Spiele suchen" : "Search games"}</label>
+            <Search aria-hidden="true" className="pointer-events-none absolute left-3.5 top-3.5 h-5 w-5 text-muted-foreground" />
+            <input id="game-search" type="search" value={query} onChange={(event) => setQuery(event.target.value)} placeholder={locale === "de" ? "Spiel oder Thema suchen" : "Search games or topics"} autoComplete="off" className="h-12 w-full rounded-2xl bg-muted/80 pl-11 pr-12 text-base text-foreground outline-none placeholder:text-muted-foreground focus-visible:ring-2 focus-visible:ring-ring" />
+            {query && <button type="button" onClick={() => { setQuery(""); document.getElementById("game-search")?.focus(); }} aria-label={locale === "de" ? "Suche leeren" : "Clear search"} className="absolute right-0.5 top-0.5 flex h-11 w-11 items-center justify-center rounded-xl text-muted-foreground hover:text-foreground"><X aria-hidden="true" className="h-4 w-4" /></button>}
+          </div>
 
-        <div className="mt-8 space-y-10 sm:space-y-12">
-          {legacySections.map((group) => {
-            const Icon = group.icon;
-            const ordinal = categories.findIndex((entry) => entry.id === group.id) + 1;
-            return <section key={group.id} aria-labelledby={`category-${group.id}`} className="scroll-mt-24">
-              <div className="mb-4 flex items-start gap-3 border-b border-border/70 pb-4">
-                <span className="mt-0.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary"><Icon className="h-5 w-5" /></span>
-                <div className="min-w-0 flex-1">
-                  <div className="flex flex-wrap items-center gap-x-3 gap-y-1"><h3 id={`category-${group.id}`} className="text-lg font-bold sm:text-xl">{group.name[locale]}</h3><span className="rounded-md bg-muted px-2 py-0.5 text-xs font-semibold tabular-nums text-muted-foreground">{group.entries.length}</span></div>
-                  <p className="mt-1 max-w-xl text-sm leading-relaxed text-muted-foreground">{group.description[locale]}</p>
-                </div>
-                <span aria-hidden="true" className="hidden text-3xl font-extrabold tabular-nums text-primary/20 sm:block">0{ordinal}</span>
+          <div className="geo-category-scroll -mx-1 mt-2 flex overflow-x-auto px-1 pb-1" role="group" aria-label={locale === "de" ? "Spielthemen filtern" : "Filter game topics"}>
+            {[{ id: "all", name: { de: "Alle Spiele", en: "All games" } }, ...categories].map((group) => <button key={group.id} type="button" aria-label={group.name[locale]} title={group.name[locale]} aria-pressed={activeCategory === group.id} onClick={() => setCategory(group.id)} className="flex min-h-11 shrink-0 items-center rounded-full px-1 py-1.5 focus-visible:outline-offset-0"><span className={cn("inline-flex min-h-8 items-center whitespace-nowrap rounded-full px-3 text-xs font-semibold transition-colors", activeCategory === group.id ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:bg-muted hover:text-foreground")}>{CATEGORY_LABELS[group.id]?.[locale] ?? group.name[locale]}</span></button>)}
+          </div>
+
+          <div className="mt-4 space-y-7">
+            {sections.map((group) => <section key={group.id} id={group.id === "new" ? "new-games" : undefined} aria-labelledby={`category-${group.id}`} className="scroll-mt-24">
+              <div className="mb-2.5 flex items-baseline justify-between gap-3 px-1">
+                <h3 id={`category-${group.id}`} className="text-sm font-semibold text-muted-foreground">{group.name[locale]}</h3>
+                <span className="text-xs tabular-nums text-muted-foreground">{group.entries.length}</span>
               </div>
-              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">{group.entries.map((game, index) => <GameCard key={game.id} game={game} index={index} />)}</div>
-            </section>;
-          })}
-          {sections.length === 0 && <div className="rounded-2xl border border-dashed border-border bg-card/70 p-8 text-center"><p className="font-semibold">{locale === "de" ? "Noch kein Treffer" : "No games found"}</p><p className="mt-2 text-sm text-muted-foreground">{locale === "de" ? "Versuche ein anderes Wort oder zeige alle Themen." : "Try a different word or explore every theme."}</p><Button variant="outline" className="mt-4" onClick={() => { setQuery(""); setCategory("all"); }}>{locale === "de" ? "Alle Spiele zeigen" : "Show all games"}</Button></div>}
-        </div>
-        <SupportCard />
-      </section>
-    </div>
-  );
-}
+              <div className="overflow-hidden rounded-2xl bg-card">{group.entries.map((game) => <GameCard key={game.id} game={game} />)}</div>
+            </section>)}
+            {sections.length === 0 && <div className="geo-surface px-5 py-10 text-center"><Search aria-hidden="true" className="mx-auto mb-3 h-7 w-7 text-muted-foreground" /><h3 className="font-semibold">{locale === "de" ? "Kein passendes Spiel gefunden" : "No matching games"}</h3><p className="mx-auto mt-2 max-w-xs text-sm leading-relaxed text-muted-foreground">{locale === "de" ? "Versuche ein anderes Wort oder öffne wieder alle Themen." : "Try another search, or bring every topic back."}</p><Button variant="secondary" className="mt-5" onClick={() => { setQuery(""); setCategory("all"); }}>{locale === "de" ? "Alle Spiele zeigen" : "Show all games"}</Button></div>}
+          </div>
+        </section>
 
-function StatTile({ label, value }: { label: string; value: string }) {
-  return (
-    <div className="rounded-xl border border-border bg-card/70 p-4 text-center backdrop-blur-sm">
-      <div className="text-2xl font-bold tabular-nums">{value}</div>
-      <div className="mt-0.5 text-xs text-muted-foreground">{label}</div>
+        <aside aria-label={locale === "de" ? "Deine Herausforderungen und Fortschritte" : "Your challenges and progress"} className="min-w-0 space-y-3 lg:sticky lg:top-24">
+          <h2 className="mb-3 px-1 text-sm font-semibold text-muted-foreground">{locale === "de" ? "Heute für dich" : "Your next adventure"}</h2>
+          <div className="overflow-hidden rounded-2xl bg-card"><DailyCard /><WeeklyCard /><Link href="/challenges" className="geo-game-row group flex min-h-20 items-center gap-3 px-4 py-3"><Swords aria-hidden="true" className="h-5 w-5 shrink-0 text-primary" /><div className="min-w-0 flex-1"><h3 className="text-sm font-semibold">{locale === "de" ? "Lust auf ein Duell?" : "Ready for a duel?"}</h3><p className="mt-1 text-xs leading-relaxed text-muted-foreground">{locale === "de" ? "Mit anderen GeoNerds oder sofort gegen einen Bot." : "Play another GeoNerd, or start with a bot now."}</p></div><ArrowRight aria-hidden="true" className="h-4 w-4 shrink-0 text-muted-foreground" /></Link></div>
+          <FieldJournal />
+          <Link href="/collection" className="group flex min-h-12 items-center justify-between gap-3 rounded-xl px-3 py-2 text-sm font-semibold text-primary hover:bg-primary/5">{locale === "de" ? "Deine Ländersammlung" : "Your country collection"}<ArrowRight aria-hidden="true" className="h-4 w-4" /></Link>
+          <SupportCard />
+        </aside>
+      </div>
     </div>
   );
 }

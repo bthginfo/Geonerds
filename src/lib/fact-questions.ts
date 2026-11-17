@@ -1,4 +1,6 @@
 import { LANDMARKS } from "@/data/landmarks";
+import { HERITAGE_DISCOVERIES } from "@/data/heritage-discoveries";
+import { isPreviousGeoSeed } from "./geo-content-version";
 
 /**
  * Curated "did you know" geography questions with a single, unambiguous country
@@ -14,7 +16,7 @@ export interface FactQuestion {
   source?: string;
 }
 
-export const FACT_QUESTIONS: FactQuestion[] = [
+export const V2_FACT_QUESTIONS: FactQuestion[] = [
   // ── Superlatives ────────────────────────────────────────────
   { q: { en: "Which country is the largest in the world by area?", de: "Welches Land ist das flächengrößte der Welt?" }, cca3: "RUS", tier: 1 },
   { q: { en: "Which country has the longest coastline in the world?", de: "Welches Land hat die längste Küstenlinie der Welt?" }, cca3: "CAN", tier: 2 },
@@ -76,3 +78,12 @@ export const FACT_QUESTIONS: FactQuestion[] = [
     source: place.source,
   })),
 ];
+
+export const FACT_QUESTIONS: FactQuestion[] = [
+  ...V2_FACT_QUESTIONS,
+  ...HERITAGE_DISCOVERIES.map((place) => ({ q: place.question, cca3: place.cca3, tier: place.tier, source: place.source })),
+];
+
+export function factQuestionsForSeed(seed?: string): FactQuestion[] {
+  return isPreviousGeoSeed(seed) ? V2_FACT_QUESTIONS : FACT_QUESTIONS;
+}

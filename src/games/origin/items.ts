@@ -1,4 +1,5 @@
 import { LANDMARKS, LEGACY_LANDMARKS } from "@/data/landmarks";
+import { HERITAGE_DISCOVERIES } from "@/data/heritage-discoveries";
 
 export type ItemCategory =
   | "animal"
@@ -236,9 +237,14 @@ const AMBIGUOUS_ITEMS = new Set([
   "Tango Bandoneon", "Aquavit", "Kabaddi", "Sepak Takraw", "Buzkashi", "Pelota",
 ]);
 
-export const ITEMS: OriginItem[] = [
+export const V2_ORIGIN_ITEMS: OriginItem[] = [
   ...LEGACY_ITEMS.filter((item) => !AMBIGUOUS_ITEMS.has(item.en)),
   ...LANDMARKS.map((place): OriginItem => ({ ...place, category: "symbol", emoji: "🏛️" })),
+];
+
+export const ITEMS: OriginItem[] = [
+  ...V2_ORIGIN_ITEMS,
+  ...HERITAGE_DISCOVERIES.map((place): OriginItem => ({ ...place, category: "symbol", emoji: "🏛️" })),
 ];
 
 export const LEGACY_ORIGIN_ITEMS: OriginItem[] = [

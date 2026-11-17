@@ -256,6 +256,7 @@ export function QuizGame({
       </div>
 
       <div className="mx-auto flex w-full max-w-md flex-1 flex-col px-4 py-5">
+        <p className="mb-2 text-center text-sm leading-relaxed text-muted-foreground">{t(`games.${gameId}.short`)}</p>
         <AnimatePresence mode="wait">
           <motion.div
             key={round.key}
@@ -302,14 +303,16 @@ export function QuizGame({
                       disabled={answered}
                       onClick={() => pickOption(o.id)}
                       className={cn(
-                        "flex min-h-12 min-w-0 items-center justify-center break-words rounded-xl border-2 px-4 py-3 text-center text-sm font-semibold transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary active:scale-[0.98]",
+                        "flex min-h-14 min-w-0 items-center justify-center gap-2 break-words rounded-xl border px-4 py-3 text-center text-sm font-semibold transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary active:scale-[0.98]",
                         !answered && "border-border bg-card hover:border-primary/50 hover:bg-muted/50",
                         answered && isCorrect && "border-success bg-success/15 text-success",
                         answered && isSelected && !isCorrect && "border-danger bg-danger/15 text-danger",
                         answered && !isCorrect && !isSelected && "border-border bg-card opacity-50"
                       )}
                     >
-                      {o.label}
+                      <span className="min-w-0 break-words">{o.label}</span>
+                      {answered && isCorrect && <Check className="h-4 w-4 shrink-0" aria-label={t("common.correct")} />}
+                      {answered && isSelected && !isCorrect && <X className="h-4 w-4 shrink-0" aria-label={t("common.wrong")} />}
                     </button>
                   );
                 })}
@@ -339,12 +342,12 @@ export function QuizGame({
                   {!answered && (
                     <Button
                       size="lg"
-                      className="px-4"
+                      className="h-12 gap-2 px-4"
                       onClick={submitTyped}
                       disabled={!typed.trim()}
                       aria-label={t("type.submit")}
                     >
-                      <CornerDownLeft className="h-5 w-5" />
+                      <CornerDownLeft className="h-4 w-4" aria-hidden /><span className="text-sm">{locale === "de" ? "Prüfen" : "Check"}</span>
                     </Button>
                   )}
                 </div>
@@ -354,13 +357,13 @@ export function QuizGame({
               </div>
             )}
 
-            <div ref={feedbackRef} className="mt-4 min-h-14 scroll-mb-6">
+            <div ref={feedbackRef} className="mt-4 min-h-14 scroll-mb-24">
               <AnimatePresence>
                 {answered && (
                   <motion.div
                     initial={reducedMotion ? false : { opacity: 0, y: 8 }}
                     animate={{ opacity: 1, y: 0 }}
-                    className="space-y-2"
+                    className={cn("space-y-3 rounded-2xl p-4", lastCorrect ? "bg-success/10" : "bg-danger/10")}
                     role="status"
                     aria-live="polite"
                   >
@@ -375,7 +378,7 @@ export function QuizGame({
                             <span className="flex items-center gap-1">
                               <X className="h-5 w-5" /> {timedOut ? t("common.timeUp") : t("common.wrong")}
                             </span>
-                            <span className="text-xs font-normal text-muted-foreground">
+                            <span className="mt-1 text-sm font-medium leading-relaxed text-foreground">
                               {t("common.theAnswerWas", { answer: round.answerLabel })}
                               {gameOverRef.current && ` · ${t("common.gameOver")}`}
                             </span>
@@ -383,7 +386,7 @@ export function QuizGame({
                         )}
                       </div>
                       <Button ref={nextRef} onClick={next} className="shrink-0 gap-1.5">
-                        {gameOverRef.current || idx + 1 >= total ? t("common.continue") : t("common.next")}
+                        {gameOverRef.current || idx + 1 >= total ? (locale === "de" ? "Ergebnis" : "Results") : t("common.next")}
                         <ArrowRight className="h-4 w-4" />
                       </Button>
                     </div>

@@ -1,0 +1,23 @@
+{
+  "schemaVersion": 1,
+  "kind": "development-only-surface-index",
+  "compatibility": "Descriptive direct record; native Impeccable CLI loading was not verified.",
+  "briefs": [
+    {
+      "primaryTarget": "src/app/page.tsx",
+      "relatedTargets": [
+        "src/components/layout/header.tsx",
+        "src/components/layout/bottom-nav.tsx",
+        "src/components/game-card.tsx",
+        "src/components/game/game-shell.tsx",
+        "src/components/game/hud.tsx",
+        "src/components/game/game-help.tsx",
+        "src/components/ui/button.tsx",
+        "src/components/ui/card.tsx",
+        "src/components/ui/modal.tsx"
+      ],
+      "mode": "operate",
+      "path": "surface-briefs/geo-home-shared-play.md"
+    }
+  ]
+}

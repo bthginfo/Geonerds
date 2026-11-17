@@ -29,7 +29,7 @@ function initialSeed(): number {
 }
 
 export function GridGame({ difficulty, practice, onFinish, onExit }: PlayHandlers) {
-  const { t } = useT();
+  const { t, locale } = useT();
   const [seed, setSeed] = useState(initialSeed);
   const puzzle = useMemo(() => generateGrid(COUNTRIES, difficulty, seed), [difficulty, seed]);
   const [answers, setAnswers] = useState<Record<number, string>>({});
@@ -107,8 +107,13 @@ export function GridGame({ difficulty, practice, onFinish, onExit }: PlayHandler
   }
 
   async function copyBoard() {
-    await navigator.clipboard?.writeText(window.location.href);
-    setFeedback(t("grid.feedback.copied"));
+    try {
+      if (!navigator.clipboard?.writeText) throw new Error("clipboard_unavailable");
+      await navigator.clipboard.writeText(window.location.href);
+      setFeedback(t("grid.feedback.copied"));
+    } catch {
+      setFeedback(locale === "de" ? "Der Link konnte nicht kopiert werden. Teile stattdessen die Adresse aus der Browserleiste." : "The link could not be copied. Share the address from your browser instead.");
+    }
   }
 
   return (
@@ -150,7 +155,7 @@ export function GridGame({ difficulty, practice, onFinish, onExit }: PlayHandler
         </div>
       </main>
 
-      <CountryPicker open={selected !== null} onClose={() => setSelected(null)} onSubmit={submit} used={new Set(Object.values(answers))} />
+      <CountryPicker open={selected !== null} onClose={() => setSelected(null)} onSubmit={submit} used={new Set(Object.values(answers))} rowConstraint={selected !== null ? puzzle.rows[Math.floor(selected / 3)] : undefined} columnConstraint={selected !== null ? puzzle.columns[selected % 3] : undefined} />
     </div>
   );
 }
@@ -174,12 +179,13 @@ function ConstraintLabel({ constraint }: { constraint: GridConstraint }) {
   return <div title={label} className="flex min-h-14 items-center justify-center rounded-lg border border-border/70 bg-muted/35 px-1 text-center text-[9px] font-extrabold leading-[1.15] text-foreground sm:min-h-20 sm:px-2 sm:text-xs">{label}</div>;
 }
 
-function CountryPicker({ open, onClose, onSubmit, used }: { open: boolean; onClose: () => void; onSubmit: (code: string) => void; used: Set<string> }) {
+function CountryPicker({ open, onClose, onSubmit, used, rowConstraint, columnConstraint }: { open: boolean; onClose: () => void; onSubmit: (code: string) => void; used: Set<string>; rowConstraint?: GridConstraint; columnConstraint?: GridConstraint }) {
   const { t, locale } = useT(); const [query, setQuery] = useState("");
   const normalized = query.trim().toLocaleLowerCase(locale);
   const countries = useMemo(() => COUNTRIES.filter((country) => country.independent && (!normalized || countryName(country, locale).toLocaleLowerCase(locale).includes(normalized))).sort((a, b) => countryName(a, locale).localeCompare(countryName(b, locale))).slice(0, 40), [locale, normalized]);
   return <Modal open={open} onClose={onClose} title={t("grid.pickerTitle")} className="sm:max-w-lg">
-    <label className="relative block"><Search className="pointer-events-none absolute left-3 top-3.5 h-4 w-4 text-muted-foreground" /><input autoFocus value={query} onChange={(event) => setQuery(event.target.value)} placeholder={t("grid.searchPlaceholder")} className="h-11 w-full rounded-xl border border-border bg-background pl-10 pr-3 text-base outline-none focus:ring-2 focus:ring-cyan-500" /></label>
+    {rowConstraint && columnConstraint && <div className="mb-4"><p className="mb-2 text-xs leading-relaxed text-muted-foreground">{locale === "de" ? "Deine Antwort muss beide Bedingungen erfüllen:" : "Your answer must match both clues:"}</p><div className="grid grid-cols-2 gap-2"><ConstraintLabel constraint={rowConstraint} /><ConstraintLabel constraint={columnConstraint} /></div></div>}
+    <label className="relative block"><span className="sr-only">{t("grid.searchPlaceholder")}</span><Search className="pointer-events-none absolute left-3 top-3.5 h-4 w-4 text-muted-foreground" aria-hidden /><input autoFocus value={query} onChange={(event) => setQuery(event.target.value)} placeholder={t("grid.searchPlaceholder")} className="h-11 w-full rounded-xl border border-border bg-background pl-10 pr-3 text-base outline-none focus:ring-2 focus:ring-cyan-500" /></label>
     <p className="mt-2 text-xs text-muted-foreground">{t("grid.searchHint")}</p>
     <div className="mt-3 grid max-h-[52vh] grid-cols-1 gap-1.5 overflow-y-auto pr-1 sm:grid-cols-2">
       {countries.map((country) => <button key={country.cca3} disabled={used.has(country.cca3)} onClick={() => { setQuery(""); onSubmit(country.cca3); }} className="flex min-h-12 items-center gap-3 rounded-xl border border-border bg-background px-3 py-2 text-left transition hover:border-cyan-500/50 disabled:opacity-35"><FlagImage code={country.flag} alt="" className="w-8 shrink-0" /><span className="truncate text-sm font-bold">{countryName(country, locale)}</span>{used.has(country.cca3) && <Check className="ml-auto h-4 w-4" />}</button>)}

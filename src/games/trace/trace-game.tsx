@@ -241,6 +241,7 @@ export function TraceGame({ difficulty, roundCount, practice, onFinish, onExit }
             ))}
           </svg>
           <canvas
+            aria-label={locale === "de" ? "Zeichenfläche für den Flussverlauf" : "River course drawing canvas"}
             ref={canvasRef}
             width={W}
             height={H}
@@ -258,6 +259,8 @@ export function TraceGame({ difficulty, roundCount, practice, onFinish, onExit }
             </div>
           )}
         </div>
+
+        {revealed && <p role="status" className="mt-3 flex w-full max-w-sm flex-wrap justify-center gap-x-4 gap-y-1 text-xs font-medium"><span className="inline-flex items-center gap-2"><span className="h-0.5 w-5 bg-blue-600" aria-hidden />{locale === "de" ? "Deine Zeichnung" : "Your drawing"}</span><span className="inline-flex items-center gap-2"><span className="h-0.5 w-5 bg-cyan-600" aria-hidden />{locale === "de" ? "Richtiger Verlauf" : "Actual course"}</span></p>}
 
         <div className="mt-5 flex w-full max-w-sm gap-2">
           {!revealed ? (

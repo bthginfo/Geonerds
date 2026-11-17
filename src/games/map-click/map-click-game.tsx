@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { RotateCcw, SkipForward } from "lucide-react";
+import { RotateCcw, SkipForward, ArrowRight } from "lucide-react";
 import type { Country } from "@/lib/types";
 import type { PlayHandlers } from "@/components/game/game-shell";
 import { WorldMap, type MapDot } from "@/components/map/world-map";
@@ -60,6 +60,8 @@ export function MapClickGame({ difficulty, roundCount, timed, variant, scope, se
   const hitsRef = useRef<string[]>([]);
   const wrongCountRef = useRef(0);
   const pendingRef = useRef(new Set<ReturnType<typeof setTimeout>>());
+  const nextLockRef = useRef(false);
+  useEffect(() => { nextLockRef.current = false; }, [idx]);
 
   function later(callback: () => void, delay: number) {
     const timer = setTimeout(() => {
@@ -130,7 +132,11 @@ export function MapClickGame({ difficulty, roundCount, timed, variant, scope, se
   }
 
   function advance() {
-    if (finishedRef.current) return;
+    if (finishedRef.current || !outcome || nextLockRef.current) return;
+    nextLockRef.current = true;
+    pendingRef.current.forEach(clearTimeout);
+    pendingRef.current.clear();
+    setFlash(null);
     if (idx + 1 >= targets.length) {
       finishGame();
       return;
@@ -144,16 +150,12 @@ export function MapClickGame({ difficulty, roundCount, timed, variant, scope, se
     lockRef.current = false;
   }
 
-  function reveal(ccn3: string, ok: boolean, delay: number) {
+  function reveal(ccn3: string, ok: boolean) {
     if (finishedRef.current) return;
     answeredRef.current += 1;
     setOutcome(ok ? "correct" : "revealed");
     setFlash({ ccn3, ok });
     if (ok) setFound((f) => new Set(f).add(ccn3));
-    later(() => {
-      setFlash(null);
-      advance();
-    }, delay);
   }
 
   function skip() {
@@ -162,7 +164,7 @@ export function MapClickGame({ difficulty, roundCount, timed, variant, scope, se
     sound.wrong();
     haptic.error();
     setStreak(0);
-    reveal(String(target.ccn3), false, 750);
+    reveal(String(target.ccn3), false);
   }
 
   function handlePick(ccn3: string) {
@@ -180,7 +182,7 @@ export function MapClickGame({ difficulty, roundCount, timed, variant, scope, se
       const ns = streak + 1;
       bestRef.current = Math.max(bestRef.current, ns);
       setStreak(ns);
-      reveal(ccn3, true, 650);
+      reveal(ccn3, true);
     } else {
       sound.wrong();
       haptic.error();
@@ -203,7 +205,7 @@ export function MapClickGame({ difficulty, roundCount, timed, variant, scope, se
       setWrongCount(nextWrong);
       if (nextWrong >= MAX_WRONG) {
         lockRef.current = true;
-        later(() => reveal(String(target.ccn3), false, 750), 250);
+        later(() => reveal(String(target.ccn3), false), 250);
       }
     }
   }
@@ -218,9 +220,9 @@ export function MapClickGame({ difficulty, roundCount, timed, variant, scope, se
         {timed ? <TimerPill ms={timeLeft} danger={timeLeft < 10000} /> : <RoundPill current={idx + 1} total={targets.length} />}
       </GameTopBar>
 
-      <div className="mx-auto flex w-full max-w-3xl items-center gap-3 px-4 py-3">
+      <div className="mx-auto flex w-full max-w-3xl flex-wrap items-center gap-3 px-4 py-3">
         <FlagImage code={target.flag} alt="" hideText className="aspect-[4/3] w-12 shadow" />
-        <div className="min-w-0">
+        <div className="min-w-0 flex-1 basis-32">
           <div className="text-xs uppercase tracking-wide text-muted-foreground">
             {t("mapclick.found", { count: found.size, total: targets.length })}
             {!practice && <> · {t("mapclick.triesLeft", { n: MAX_WRONG - wrongCount })}</>}
@@ -258,6 +260,7 @@ export function MapClickGame({ difficulty, roundCount, timed, variant, scope, se
             {t(`mapclick.proximity.${proximity}`)}
           </span>
         )}
+        {outcome && <Button onClick={advance} className="ml-auto h-auto min-h-11 gap-2 px-3 py-2">{idx + 1 >= targets.length ? (locale === "de" ? "Ergebnis" : "Results") : t("common.next")}<ArrowRight className="h-4 w-4" aria-hidden /></Button>}
       </div>
 
       <div className="relative min-h-0 flex-1 overflow-hidden bg-sky-50 dark:bg-slate-900/40">

@@ -88,8 +88,6 @@ export const viewport: Viewport = {
   ],
   width: "device-width",
   initialScale: 1,
-  maximumScale: 1,
-  userScalable: false,
 };
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
@@ -103,7 +101,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
         <Providers>
           <div className="flex min-h-dvh flex-col">
             <Header />
-            <main className="flex flex-1 flex-col">{children}</main>
+            <main id="main-content" className="flex min-w-0 flex-1 flex-col">{children}</main>
             <Footer />
             <BottomNav />
           </div>

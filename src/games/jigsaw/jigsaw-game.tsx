@@ -388,7 +388,7 @@ export function JigsawGame({ difficulty, roundCount, practice, onFinish, onExit 
           </div>
           <p className="mt-3 text-xs leading-relaxed text-muted-foreground">{t(`jigsaw.instructions.${difficulty}`)}</p>
           <div className="mt-3 min-h-11" aria-live="polite">
-            {feedback === "wrong" && <div className="rounded-xl border border-destructive/35 bg-destructive/10 px-3 py-2 text-xs font-bold text-destructive">{t("jigsaw.wrongDirection")}</div>}
+            {feedback === "wrong" && <div className="rounded-xl bg-danger/10 px-3 py-3 text-sm font-semibold text-danger">{t("jigsaw.wrongDirection")}</div>}
             {feedback === "correct" && <div className="rounded-xl border border-emerald-500/35 bg-emerald-500/10 px-3 py-2 text-xs font-bold text-emerald-700 dark:text-emerald-300">{t("jigsaw.correctPlacement")}</div>}
             {feedback === "round" && <div className="rounded-xl border border-emerald-500/35 bg-emerald-500/10 px-3 py-2 text-xs font-bold text-emerald-700 dark:text-emerald-300">{t("jigsaw.neighborhoodComplete")}</div>}
             {feedback === "hint" && hintSector && <div className="rounded-xl border border-amber-500/35 bg-amber-500/10 px-3 py-2 text-xs font-bold text-amber-800 dark:text-amber-300">{t("jigsaw.hintDirection", { direction: t(`jigsaw.sector.${hintSector}`) })}</div>}

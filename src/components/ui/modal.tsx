@@ -1,7 +1,8 @@
 "use client";
 
 import * as React from "react";
-import { AnimatePresence, motion } from "framer-motion";
+import { createPortal } from "react-dom";
+import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useT } from "@/i18n/I18nProvider";
@@ -14,19 +15,27 @@ interface ModalProps {
   className?: string;
 }
 
+const activeDialogs: HTMLElement[] = [];
+let unlockedBodyOverflow = "";
+
 export function Modal({ open, onClose, title, children, className }: ModalProps) {
   const { locale } = useT();
+  const reducedMotion = useReducedMotion();
+  const [mounted, setMounted] = React.useState(false);
   const titleId = React.useId();
   const dialogRef = React.useRef<HTMLDivElement>(null);
   const closeRef = React.useRef(onClose);
+  React.useEffect(() => { setMounted(true); }, []);
   React.useEffect(() => { closeRef.current = onClose; }, [onClose]);
 
   React.useEffect(() => {
-    if (!open) return;
+    if (!open || !mounted) return;
     const dialog = dialogRef.current;
     if (!dialog) return;
     const previousFocus = document.activeElement instanceof HTMLElement ? document.activeElement : null;
-    const previousOverflow = document.body.style.overflow;
+    if (activeDialogs.length === 0) unlockedBodyOverflow = document.body.style.overflow;
+    activeDialogs.push(dialog);
+    const isTopDialog = () => activeDialogs[activeDialogs.length - 1] === dialog;
     dialog.inert = false;
     const focusable = () => Array.from(dialog.querySelectorAll<HTMLElement>(
       'button:not([disabled]), a[href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])',
@@ -36,6 +45,7 @@ export function Modal({ open, onClose, title, children, className }: ModalProps)
       (elements.find((element) => element.hasAttribute("data-autofocus")) ?? elements[0] ?? dialog).focus({ preventScroll: true });
     });
     const onKey = (e: KeyboardEvent) => {
+      if (!isTopDialog()) return;
       if (e.key === "Escape") { e.preventDefault(); closeRef.current(); return; }
       if (e.key !== "Tab") return;
       const elements = focusable();
@@ -49,6 +59,7 @@ export function Modal({ open, onClose, title, children, className }: ModalProps)
       }
     };
     const onFocus = (e: FocusEvent) => {
+      if (!isTopDialog()) return;
       if (e.target instanceof Node && !dialog.contains(e.target)) (focusable()[0] ?? dialog).focus({ preventScroll: true });
     };
     window.addEventListener("keydown", onKey);
@@ -60,53 +71,57 @@ export function Modal({ open, onClose, title, children, className }: ModalProps)
       document.removeEventListener("focusin", onFocus);
       // Framer Motion keeps the closing panel mounted during its exit animation.
       dialog.inert = true;
-      document.body.style.overflow = previousOverflow;
-      if (previousFocus?.isConnected) previousFocus.focus({ preventScroll: true });
+      const index = activeDialogs.indexOf(dialog);
+      if (index >= 0) activeDialogs.splice(index, 1);
+      if (activeDialogs.length === 0) document.body.style.overflow = unlockedBodyOverflow;
+      const remainingDialog = activeDialogs[activeDialogs.length - 1];
+      if (previousFocus?.isConnected && (!remainingDialog || remainingDialog.contains(previousFocus))) previousFocus.focus({ preventScroll: true });
     };
-  }, [open]);
+  }, [open, mounted]);
 
-  return (
+  if (!mounted) return null;
+  return createPortal(
     <AnimatePresence>
       {open && (
         <motion.div
-          className="fixed inset-0 z-50 flex items-end justify-center sm:items-center p-0 sm:p-4"
+          className="fixed inset-0 z-50 flex items-end justify-center p-0 sm:items-center sm:p-5"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
         >
-          <div aria-hidden="true" className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={onClose} />
+          <div aria-hidden="true" className="absolute inset-0 bg-black/35" onClick={onClose} />
           <motion.div
             ref={dialogRef}
             role="dialog"
             aria-modal="true"
             aria-labelledby={title ? titleId : undefined}
+            aria-label={title ? undefined : "Dialog"}
             tabIndex={-1}
             className={cn(
-              "relative z-10 w-full min-w-0 sm:max-w-md max-h-[88dvh] overflow-y-auto rounded-t-2xl sm:rounded-2xl border border-border bg-card p-5 shadow-xl outline-none",
+              "relative z-10 max-h-[90dvh] w-full min-w-0 overflow-y-auto overscroll-contain rounded-t-[24px] bg-card px-5 pb-[max(20px,env(safe-area-inset-bottom))] pt-5 shadow-2xl outline-none sm:max-w-md sm:rounded-2xl sm:p-6",
               className
             )}
-            initial={{ y: 40, opacity: 0, scale: 0.98 }}
+            initial={reducedMotion ? false : { y: 24, opacity: 0.8 }}
             animate={{ y: 0, opacity: 1, scale: 1 }}
-            exit={{ y: 40, opacity: 0, scale: 0.98 }}
-            transition={{ type: "spring", stiffness: 320, damping: 30 }}
+            exit={reducedMotion ? { opacity: 0 } : { y: 24, opacity: 0 }}
+            transition={{ duration: reducedMotion ? 0 : 0.2, ease: [0.16, 1, 0.3, 1] }}
           >
-            {title && (
-              <div className="mb-3 flex items-center justify-between gap-2">
-                <h2 id={titleId} className="min-w-0 text-lg font-semibold">{title}</h2>
+              <div className="mb-4 flex items-center justify-between gap-3">
+                {title ? <h2 id={titleId} className="min-w-0 text-xl font-bold tracking-tight">{title}</h2> : <span />}
                 <button
                   type="button"
                   onClick={onClose}
                   aria-label={locale === "de" ? "Schließen" : "Close"}
-                  className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg text-muted-foreground hover:bg-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                  className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-muted/80 text-muted-foreground hover:bg-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                 >
                   <X className="h-5 w-5" />
                 </button>
               </div>
-            )}
             {children}
           </motion.div>
         </motion.div>
       )}
-    </AnimatePresence>
+    </AnimatePresence>,
+    document.body
   );
 }

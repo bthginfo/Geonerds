@@ -18,14 +18,14 @@ export function WeeklyCard() {
   return (
     <Link
       href="/weekly"
-      className="group flex w-full items-center gap-3 rounded-xl border border-border bg-card/70 px-4 py-3 transition-colors hover:border-primary/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+      className="geo-game-row group flex min-h-20 w-full items-center gap-3 px-4 py-3 focus-visible:outline-offset-[-3px]"
     >
-      <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
+      <span className="shrink-0 text-primary">
         <Swords aria-hidden="true" className="h-5 w-5" />
       </span>
       <div className="min-w-0 flex-1">
-        <div className="text-sm font-bold">{t("weekly.title")}</div>
-        <div className="text-xs text-muted-foreground">
+        <div className="text-sm font-semibold">{t("weekly.title")}</div>
+        <div className="mt-1 text-xs leading-relaxed text-muted-foreground">
           {done ? (
             <span className="inline-flex items-center gap-1 text-success">
               <Check className="h-3.5 w-3.5" />
@@ -36,7 +36,7 @@ export function WeeklyCard() {
           )}
         </div>
       </div>
-      <ChevronRight className="h-5 w-5 shrink-0 text-muted-foreground transition-transform group-hover:translate-x-0.5" />
+      <ChevronRight aria-hidden="true" className="h-4 w-4 shrink-0 text-muted-foreground" />
     </Link>
   );
 }

@@ -2,7 +2,7 @@
 
 import { useMemo } from "react";
 import Link from "next/link";
-import { Flame, Award, ChevronRight, Gamepad2, Sparkles, Swords } from "lucide-react";
+import { Flame, Award, ChevronRight, Gamepad2, Globe2, Settings2, Swords, Star } from "lucide-react";
 import { useT } from "@/i18n/I18nProvider";
 import { useAllRuns } from "@/hooks/use-scores";
 import { useAuth } from "@/store/auth";
@@ -58,63 +58,63 @@ export default function ProfilePage() {
   const favGame = favorite && getGame(favorite) ? favorite : null;
 
   return (
-    <div className="mx-auto w-full max-w-2xl px-4 py-8 pb-24">
-      {/* Level header */}
-      <div className="flex items-center gap-4 rounded-3xl border border-border bg-card p-5 shadow-sm">
-        <span className="relative flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-sky-500 to-indigo-600 text-white shadow">
+    <div className="mx-auto w-full min-w-0 max-w-2xl px-4 py-6 pb-28 sm:py-8">
+      <header className="mb-5 flex items-center justify-between gap-3">
+        <h1 className="text-2xl font-bold tracking-tight">{t("nav.profile")}</h1>
+        <Link href="/settings" className="inline-flex min-h-11 items-center gap-2 rounded-xl px-3 text-sm font-medium text-primary hover:bg-primary/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"><Settings2 className="h-4 w-4" aria-hidden />{t("settings.title")}</Link>
+      </header>
+      <section className="geo-surface p-5 sm:p-6" aria-label={locale === "de" ? "Dein Fortschritt" : "Your progress"}>
+      <div className="flex min-w-0 items-center gap-4">
+        <span aria-label={`${locale === "de" ? "Level" : "Level"} ${level.level}`} className="relative flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl bg-primary/10 text-primary">
           <span className="text-2xl font-extrabold">{level.level}</span>
         </span>
         <div className="min-w-0 flex-1">
-          <div className="truncate text-lg font-bold">{user?.name ?? t("profile.guest")}</div>
-          <div className="flex items-center gap-2 text-sm text-muted-foreground">
+          <div className="break-words text-xl font-bold">{user?.name ?? t("profile.guest")}</div>
+          <div className="mt-1 flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
             <span>{rankName(level.rank, locale)}</span>
             {stats.dexMastered > 0 && <span className="rounded-md bg-amber-500/15 px-1.5 py-0.5 text-[10px] font-black uppercase tracking-wide text-amber-600 dark:text-amber-400">{locale === "de" ? "Atlas-Meister" : "Atlas Master"} · {stats.dexMastered}</span>}
             {level.prestige > 0 && (
               <span className="inline-flex items-center gap-0.5 rounded-full bg-amber-500/15 px-2 py-0.5 text-xs font-bold text-amber-600 dark:text-amber-400">
-                ✦ {t("profile.prestige", { n: level.prestige })}
+                <Star className="h-3.5 w-3.5" aria-hidden /> {t("profile.prestige", { n: level.prestige })}
               </span>
             )}
           </div>
-          <div className="mt-2 h-2 overflow-hidden rounded-full bg-muted">
+          <div role="progressbar" aria-label={locale === "de" ? "Fortschritt zum nächsten Level" : "Progress to next level"} aria-valuemin={0} aria-valuemax={100} aria-valuenow={Math.round(level.progress * 100)} className="mt-3 h-2 overflow-hidden rounded-full bg-muted">
             <div
-              className="h-full rounded-full bg-gradient-to-r from-sky-500 to-indigo-600"
+              className="h-full rounded-full bg-primary"
               style={{ width: `${Math.round(level.progress * 100)}%` }}
             />
           </div>
-          <div className="mt-1 text-[11px] text-muted-foreground">
+          <div className="mt-2 text-xs text-muted-foreground">
             {t("profile.xpToNext", { n: formatNumber(Math.max(0, level.levelSpan - level.intoLevel), locale) })}
           </div>
         </div>
       </div>
+      <dl className="mt-5 grid grid-cols-3 gap-3 border-t border-border pt-5">
+        <Tile label={t("home.gamesPlayed")} value={formatNumber(stats.totalRuns, locale)} />
+        <Tile label={t("home.totalPoints")} value={formatNumber(stats.totalScore, locale)} />
+        <Tile label={t("common.accuracy")} value={`${acc}%`} />
+      </dl>
+      <p className="mt-4 text-xs leading-relaxed text-muted-foreground">{locale === "de" ? "Fortschritt und Spielstatistik auf diesem Gerät. Deine Online-Ergebnisse findest du in der Rangliste." : "Progress and play stats on this device. Find your online results in the leaderboard."}</p>
+      </section>
 
-      <Link href="/challenges" className="mt-4 flex min-h-16 items-center gap-3 rounded-2xl border border-primary/25 bg-primary/5 p-4 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"><Swords className="h-5 w-5 shrink-0 text-primary" /><div className="min-w-0 flex-1"><p className="font-semibold">{locale === "de" ? "Deine Herausforderungen" : "Your challenges"}</p><p className="mt-0.5 text-xs text-muted-foreground">{locale === "de" ? "Einladungen, offene Duelle und Ergebnisse" : "Invitations, active encounters and results"}</p></div><ChevronRight className="h-4 w-4 text-primary" /></Link>
+      {!user && <div className="mt-4 flex flex-wrap items-center justify-between gap-3 rounded-xl bg-primary/5 p-4"><p className="min-w-0 flex-1 text-sm leading-relaxed">{t("profile.signInCta")}</p><Link href="/settings" className="inline-flex min-h-11 shrink-0 items-center rounded-xl bg-primary px-4 text-sm font-semibold text-primary-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">{t("account.signIn")}</Link></div>}
+
+      <div className="geo-surface mt-5 divide-y divide-border overflow-hidden">
+      <Link href="/challenges" className="flex min-h-20 items-center gap-3 p-4 transition-colors hover:bg-muted/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring"><Swords className="h-5 w-5 shrink-0 text-primary" aria-hidden /><div className="min-w-0 flex-1"><p className="font-semibold">{locale === "de" ? "Spiele gemeinsam" : "Play together"}</p><p className="mt-1 text-sm text-muted-foreground">{locale === "de" ? "Sofort gegen Bots oder echte GeoNerds herausfordern" : "Instant bot training or challenges with real GeoNerds"}</p></div><ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground" aria-hidden /></Link>
 
       {community.badgeIds.includes("game-creator") && <GameCreatorAward />}
       {community.badgeIds.includes(CONTRIBUTOR_BADGE_ID) && <ContributorAward />}
 
-      {/* Stat tiles */}
-      <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3">
-        <Tile label={t("home.gamesPlayed")} value={formatNumber(stats.totalRuns, locale)} />
-        <Tile label={t("home.totalPoints")} value={formatNumber(stats.totalScore, locale)} />
-        <Tile label={t("common.accuracy")} value={`${acc}%`} />
-        <Tile label={t("common.streak")} value={String(stats.bestStreak)} />
-        <Tile label={t("profile.dailyStreak")} value={`${dailyStreak} 🔥`} />
-        <Tile label={t("profile.badges")} value={`${earned.length}/${BADGES.length}`} />
-      </div>
-
       {/* Country collection */}
       <Link
         href="/collection"
-        className="mt-4 flex items-center gap-3 rounded-2xl border border-amber-500/25 bg-gradient-to-br from-amber-500/10 to-orange-500/10 p-4 transition-colors hover:border-amber-500/50"
+        className="flex min-h-20 items-center gap-3 p-4 transition-colors hover:bg-muted/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring"
       >
-        <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-amber-500 to-orange-600 text-white shadow">
-          <Sparkles className="h-5 w-5" />
-        </span>
+        <Globe2 className="h-5 w-5 shrink-0 text-primary" aria-hidden />
         <div className="min-w-0 flex-1">
-          <div className="text-xs uppercase tracking-wide text-muted-foreground">{t("collection.title")}</div>
-          <div className="font-semibold">
-            {dexCollected.collected} / {dexCollected.total}
-          </div>
+          <div className="font-semibold">{t("collection.title")}</div>
+          <p className="mt-1 text-sm text-muted-foreground">{dexCollected.collected} / {dexCollected.total} {locale === "de" ? "Länder entdeckt" : "countries discovered"}</p>
         </div>
         <ChevronRight className="h-5 w-5 text-muted-foreground" />
       </Link>
@@ -123,27 +123,26 @@ export default function ProfilePage() {
       {favGame && (
         <Link
           href={`/play/${favGame}`}
-          className="mt-4 flex items-center gap-3 rounded-2xl border border-border bg-card p-4 transition-colors hover:bg-muted/40"
+          className="flex min-h-20 items-center gap-3 p-4 transition-colors hover:bg-muted/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring"
         >
-          <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-muted text-primary">
-            <Gamepad2 className="h-5 w-5" />
-          </span>
+          <Gamepad2 className="h-5 w-5 shrink-0 text-primary" aria-hidden />
           <div className="min-w-0 flex-1">
-            <div className="text-xs uppercase tracking-wide text-muted-foreground">{t("profile.favorite")}</div>
+            <div className="text-xs text-muted-foreground">{t("profile.favorite")}</div>
             <div className="font-semibold">{t(`games.${favGame}.name`)}</div>
           </div>
           <ChevronRight className="h-5 w-5 text-muted-foreground" />
         </Link>
       )}
+      </div>
 
       {/* Badges preview */}
-      <div className="mt-4 rounded-2xl border border-border bg-card p-4">
+      <section className="geo-surface mt-5 p-4 sm:p-5" aria-labelledby="profile-badges-title">
         <div className="mb-3 flex items-center justify-between">
-          <div className="flex items-center gap-2 font-semibold">
-            <Award className="h-5 w-5 text-warning" />
+          <h2 id="profile-badges-title" className="flex items-center gap-2 font-semibold">
+            <Award className="h-5 w-5 text-warning" aria-hidden />
             {t("badges.title")}
-          </div>
-          <Link href="/badges" className="inline-flex items-center gap-0.5 text-sm text-primary hover:underline">
+          </h2>
+          <Link href="/badges" className="inline-flex min-h-11 items-center gap-0.5 rounded-lg text-sm text-primary hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
             {t("profile.viewAll")}
             <ChevronRight className="h-4 w-4" />
           </Link>
@@ -158,7 +157,8 @@ export default function ProfilePage() {
                 <span
                   key={b.id}
                   title={badgeName(b, locale)}
-                  className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-amber-400 to-orange-500 text-white shadow-sm"
+                  aria-label={badgeName(b, locale)}
+                  className="flex h-11 w-11 items-center justify-center rounded-xl bg-warning/10 text-warning"
                 >
                   <Icon className="h-5 w-5" />
                 </span>
@@ -171,16 +171,9 @@ export default function ProfilePage() {
             )}
           </div>
         )}
-      </div>
+      </section>
 
-      {!user && (
-        <div className="mt-4 flex items-center justify-between gap-3 rounded-2xl border border-primary/40 bg-primary/5 p-4">
-          <span className="text-sm">{t("profile.signInCta")}</span>
-          <Link href="/settings" className="shrink-0 rounded-lg bg-primary px-3 py-1.5 text-sm font-semibold text-primary-foreground">
-            {t("account.signIn")}
-          </Link>
-        </div>
-      )}
+      <details className="geo-surface mt-5 p-4 sm:p-5"><summary className="flex min-h-11 cursor-pointer items-center font-semibold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">{locale === "de" ? "Mehr Spielstatistik" : "More play stats"}</summary><dl className="mt-3 grid grid-cols-3 gap-3 border-t border-border pt-4"><Tile label={t("common.streak")} value={String(stats.bestStreak)} /><Tile label={t("profile.dailyStreak")} value={String(dailyStreak)} /><Tile label={t("profile.badges")} value={`${earned.length}/${BADGES.length}`} /></dl></details>
 
       {/* Flame footer flair */}
       {dailyStreak >= 3 && (
@@ -195,9 +188,9 @@ export default function ProfilePage() {
 
 function Tile({ label, value }: { label: string; value: string }) {
   return (
-    <div className="rounded-xl border border-border bg-card p-3 text-center">
-      <div className="text-xl font-bold tabular-nums">{value}</div>
-      <div className="mt-0.5 text-[11px] text-muted-foreground">{label}</div>
+    <div className="min-w-0">
+      <dd className="break-words text-xl font-bold tabular-nums">{value}</dd>
+      <dt className="mt-1 text-xs leading-relaxed text-muted-foreground">{label}</dt>
     </div>
   );
 }

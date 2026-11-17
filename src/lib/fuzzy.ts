@@ -1,4 +1,6 @@
 import { distance } from "fastest-levenshtein";
+import { COUNTRIES } from "@/data/countries";
+import { CAPITAL_DE, COUNTRY_ALIASES } from "@/games/aliases";
 
 const LEADING_ARTICLES = ["the", "le", "la", "les", "el", "der", "die", "das"];
 
@@ -6,6 +8,7 @@ const LEADING_ARTICLES = ["the", "le", "la", "les", "el", "der", "die", "das"];
 export function normalize(input: string): string {
   let s = input
     .toLowerCase()
+    .replace(/ß/g, "ss")
     .normalize("NFD")
     .replace(/[̀-ͯ]/g, "") // combining marks
     .replace(/&/g, " and ")
@@ -17,6 +20,27 @@ export function normalize(input: string): string {
     s = parts.slice(1).join(" ");
   }
   return s;
+}
+
+// A correctly spelled *different* place is not a spelling mistake. Without
+// this guard, e.g. Iran/Iraq and Rome/Lomé fall inside the typo allowance.
+// Sets retain genuine shared names (Luxembourg, Congo) rather than arbitrarily
+// assigning them to whichever country happens to occur first in the snapshot.
+const placeIdentities = new Map<string, Set<string>>();
+function registerPlace(name: string, identity: string) {
+  const key = normalize(name).replace(/\s/g, "");
+  if (!key) return;
+  const identities = placeIdentities.get(key) ?? new Set<string>();
+  identities.add(identity);
+  placeIdentities.set(key, identities);
+}
+for (const country of COUNTRIES) {
+  for (const name of [country.name.en, country.name.de, ...(COUNTRY_ALIASES[country.cca3] ?? [])]) {
+    registerPlace(name, `country:${country.cca3}`);
+  }
+  for (const name of [country.capital, CAPITAL_DE[country.cca3]]) {
+    if (name) registerPlace(name, `capital:${country.cca3}`);
+  }
 }
 
 /** Edit-distance tolerance allowed for a "correct" answer of a given length. */
@@ -41,6 +65,13 @@ export function matchAnswer(guess: string, accepted: string[]): MatchResult {
   const g = normalize(guess);
   if (!g) return { status: "wrong", suggestion: null, distance: Infinity };
 
+  const guessIdentities = placeIdentities.get(g.replace(/\s/g, ""));
+  const acceptedIdentities = new Set(accepted.flatMap((candidate) =>
+    [...(placeIdentities.get(normalize(candidate).replace(/\s/g, "")) ?? [])],
+  ));
+  const differentKnownPlace = Boolean(guessIdentities?.size && acceptedIdentities.size &&
+    ![...guessIdentities!].some((identity) => acceptedIdentities.has(identity)));
+
   let best = Infinity;
   let bestOriginal: string | null = null;
 
@@ -56,6 +87,7 @@ export function matchAnswer(guess: string, accepted: string[]): MatchResult {
   }
 
   if (bestOriginal === null) return { status: "wrong", suggestion: null, distance: Infinity };
+  if (differentKnownPlace) return { status: "wrong", suggestion: null, distance: best };
 
   const len = normalize(bestOriginal).length;
   const tol = allowedTypos(len);

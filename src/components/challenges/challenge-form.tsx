@@ -1,8 +1,8 @@
 "use client";
 
-import { useId, useRef, useState } from "react";
+import { useEffect, useId, useRef, useState } from "react";
 import Link from "next/link";
-import { Bot, Check, Loader2, Play, Send } from "lucide-react";
+import { Bot, Check, Link2, Loader2, Play, Send, UsersRound } from "lucide-react";
 import { CHALLENGE_GAME_IDS, CHALLENGE_ROUND_COUNTS, type GeoChallengeGameId, type GeoChallengeInviteType } from "@/lib/challenges";
 import { BOT_CHALLENGE_GAME_IDS } from "@/lib/challenge-bots";
 import { apiCreateGeoChallenge } from "@/lib/challenge-online";
@@ -18,8 +18,7 @@ import { ChallengeRules } from "./challenge-summary";
 import { ChallengeShareLink } from "./challenge-share-link";
 import { OpponentPicker } from "./opponent-picker";
 
-const inputClass = "mt-1.5 min-h-11 w-full min-w-0 rounded-lg border border-border bg-background px-3 py-2 text-sm outline-none focus:border-primary focus:ring-2 focus:ring-ring/20 disabled:cursor-not-allowed disabled:opacity-65";
-const METHODS: GeoChallengeInviteType[] = ["bot", "random", "direct", "open", "link"];
+const inputClass = "geo-control mt-2 w-full min-w-0 disabled:cursor-not-allowed disabled:opacity-65";
 type CreatedInvite = { id: string; method: GeoChallengeInviteType; gameId: GeoChallengeGameId; opponentName?: string; sharePath?: string };
 
 export function ChallengeForm({ initialOpponent = "", initialBot = false, onCreated }: { initialOpponent?: string; initialBot?: boolean; onCreated: (id: string, method: GeoChallengeInviteType) => void }) {
@@ -38,6 +37,12 @@ export function ChallengeForm({ initialOpponent = "", initialBot = false, onCrea
   const [error, setError] = useState<string>();
   const [created, setCreated] = useState<CreatedInvite | null>(null);
   const submitLock = useRef(false);
+  const createdRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (!created) return;
+    const node = createdRef.current;
+    if (node && node.getBoundingClientRect().bottom > window.innerHeight) node.scrollIntoView({ block: "nearest", behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth" });
+  }, [created]);
   const config = getGame(gameId)!;
   const modes = config.modes ?? ["choice"];
   const roundCounts = CHALLENGE_ROUND_COUNTS.filter((count) => count !== 0 || config.countOptions?.includes(0));
@@ -95,13 +100,18 @@ export function ChallengeForm({ initialOpponent = "", initialBot = false, onCrea
     finally { submitLock.current = false; setBusy(false); }
   }
 
-  return <section className="w-full min-w-0 rounded-2xl border border-border bg-card p-4 sm:p-5" aria-labelledby={`${id}-title`}>
-    <h2 id={`${id}-title`} className="text-xl font-bold">{locale === "de" ? "Finde dein Gegenüber" : "Find your opponent"}</h2>
+  return <section className="geo-surface w-full min-w-0 p-4 sm:p-5" aria-labelledby={`${id}-title`}>
+    <h2 id={`${id}-title`} className="text-xl font-bold">{locale === "de" ? "Wie möchtest du spielen?" : "How would you like to play?"}</h2>
     <form onSubmit={send} className="mt-4">
       <fieldset disabled={busy} className="min-w-0 space-y-4">
-        <fieldset className="min-w-0"><legend className="mb-2 text-sm font-semibold">{locale === "de" ? "Gegen wen möchtest du spielen?" : "Who would you like to play?"}</legend>
-          <div className="grid grid-cols-1 gap-2 min-[380px]:grid-cols-2">{METHODS.map((value) => <label key={value} className={cn("relative flex min-h-12 min-w-0 cursor-pointer items-center gap-2 rounded-lg border px-3 py-2 text-sm leading-snug", value === "bot" && "min-[380px]:col-span-2", method === value ? "border-primary bg-primary/5 font-semibold" : "border-border hover:bg-muted/40")}><input type="radio" name="invitationType" value={value} checked={method === value} onChange={() => chooseMethod(value)} className="peer h-4 w-4 shrink-0 accent-primary" />{value === "bot" && <Bot className="h-4 w-4 shrink-0 text-primary" aria-hidden />}<span className="min-w-0 [overflow-wrap:anywhere]">{methodNames[value]}</span><span className="pointer-events-none absolute inset-0 rounded-lg peer-focus-visible:ring-2 peer-focus-visible:ring-ring" /></label>)}</div>
-          <p className="mt-2 text-xs leading-relaxed text-muted-foreground">{descriptions[method]}</p>
+        <fieldset className="min-w-0"><legend className="sr-only">{locale === "de" ? "Gegen wen möchtest du spielen?" : "Who would you like to play?"}</legend>
+          <div className="geo-segmented grid grid-cols-3">
+            <button type="button" aria-pressed={method === "bot"} onClick={() => chooseMethod("bot")} className="geo-segment flex min-w-0 flex-col items-center justify-center gap-1.5 px-1 py-3 text-xs sm:text-sm"><Bot className="h-5 w-5" aria-hidden /><span>{locale === "de" ? "Sofort spielen" : "Play now"}</span></button>
+            <button type="button" aria-pressed={method !== "bot" && method !== "link"} onClick={() => { if (method === "bot" || method === "link") chooseMethod("random"); }} className="geo-segment flex min-w-0 flex-col items-center justify-center gap-1.5 px-1 py-3 text-xs sm:text-sm"><UsersRound className="h-5 w-5" aria-hidden /><span>{locale === "de" ? "GeoNerds" : "GeoNerds"}</span></button>
+            <button type="button" aria-pressed={method === "link"} onClick={() => chooseMethod("link")} className="geo-segment flex min-w-0 flex-col items-center justify-center gap-1.5 px-1 py-3 text-xs sm:text-sm"><Link2 className="h-5 w-5" aria-hidden /><span>{locale === "de" ? "Link teilen" : "Share a link"}</span></button>
+          </div>
+          {method !== "bot" && method !== "link" && <div className="mt-3 space-y-1.5">{(["random", "direct", "open"] as const).map((value) => <label key={value} className={cn("flex min-h-11 cursor-pointer items-center gap-3 rounded-xl px-3 py-2 text-sm focus-within:ring-2 focus-within:ring-ring", method === value ? "bg-primary/5 font-semibold" : "hover:bg-muted/40")}><input type="radio" name="invitationType" value={value} checked={method === value} onChange={() => chooseMethod(value)} className="h-4 w-4 shrink-0 accent-primary" />{methodNames[value]}</label>)}</div>}
+          <p className="mt-3 text-xs leading-relaxed text-muted-foreground">{descriptions[method]}</p>
         </fieldset>
         {method === "bot" && <label className="block min-w-0 text-sm font-semibold">{locale === "de" ? "Bot-Stärke" : "Bot strength"}<select name="botDifficulty" value={botDifficulty} onChange={(event) => setBotDifficulty(event.target.value as Difficulty)} aria-describedby={`${id}-bot-strength-help`} className={inputClass}>{["easy", "medium", "hard"].map((value) => <option key={value} value={value}>{t(`difficulty.${value}`)}</option>)}</select><span id={`${id}-bot-strength-help`} className="mt-1.5 block text-xs font-normal leading-relaxed text-muted-foreground">{locale === "de" ? "Bestimmt die Leistung von GeoBot, unabhängig von der Frageschwierigkeit unter „Weitere Einstellungen“." : "Sets GeoBot’s performance, independently of question difficulty in More settings."}</span></label>}
         {method === "direct" && <OpponentPicker value={opponent} onChange={(name) => { setOpponent(name); setError(undefined); }} disabled={busy} />}
@@ -109,8 +119,8 @@ export function ChallengeForm({ initialOpponent = "", initialBot = false, onCrea
           <label className="min-w-0 text-sm font-semibold">{locale === "de" ? "Spiel" : "Game"}<select name="gameId" value={gameId} onChange={(event) => chooseGame(event.target.value as GeoChallengeGameId)} className={inputClass}>{gameOptions.filter((value) => getGame(value)).map((value) => <option key={value} value={value}>{t(`games.${value}.name`)}</option>)}</select></label>
           <label className="min-w-0 text-sm font-semibold">{t("setup.rounds")}<select name="rounds" value={rounds} onChange={(event) => setRounds(Number(event.target.value))} className={inputClass}>{roundCounts.map((count) => <option key={count} value={count}>{count === 0 ? t("setup.all") : count}</option>)}</select></label>
         </div>
-        <details className="border-y border-border">
-          <summary className="min-h-11 cursor-pointer py-3 text-sm font-semibold text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">{locale === "de" ? "Weitere Einstellungen" : "More settings"}</summary>
+        <details className="geo-inset px-3">
+          <summary className="min-h-11 cursor-pointer py-3 text-sm font-semibold text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">{locale === "de" ? "Spiel anpassen" : "Customize game"}<span className="ml-2 text-xs font-normal text-muted-foreground">{t(`difficulty.${difficulty}`)} · {t(`mode.${mode}`)}</span></summary>
           <div className="space-y-3 pb-4 pt-1">
             <label className="block text-xs font-semibold">{method === "bot" ? (locale === "de" ? "Frageschwierigkeit" : "Question difficulty") : t("common.difficulty")}<select name="difficulty" value={difficulty} disabled={!config.supportsDifficulty} onChange={(event) => setDifficulty(event.target.value as Difficulty)} className={inputClass}>{["easy", "medium", "hard"].map((value) => <option key={value} value={value}>{t(`difficulty.${value}`)}</option>)}</select>{!config.supportsDifficulty && <span className="mt-1.5 block font-normal leading-relaxed text-muted-foreground">{locale === "de" ? "Dieses Spiel hat einen festen Schwierigkeitsgrad." : "This game uses a fixed difficulty."}</span>}</label>
             <label className="block text-xs font-semibold">{t("common.mode")}<select name="mode" value={mode} disabled={modes.length === 1} onChange={(event) => setMode(event.target.value as AnswerMode)} className={inputClass}>{modes.map((value) => <option key={value} value={value}>{t(`mode.${value}`)}</option>)}</select>{modes.length === 1 && <span className="mt-1.5 block font-normal leading-relaxed text-muted-foreground">{locale === "de" ? "Dieses Spiel unterstützt nur diesen Antwortmodus." : "This is the only answer mode this game supports."}</span>}</label>
@@ -124,7 +134,7 @@ export function ChallengeForm({ initialOpponent = "", initialBot = false, onCrea
         <Button type="submit" className="h-auto min-h-12 w-full gap-2 px-3 py-3" disabled={busy}>{busy ? <Loader2 className="h-4 w-4 shrink-0 animate-spin" aria-hidden /> : method === "bot" ? <Play className="h-4 w-4 shrink-0" aria-hidden /> : <Send className="h-4 w-4 shrink-0" aria-hidden />}<span className="min-w-0 whitespace-normal">{busy ? method === "bot" ? (locale === "de" ? "Bot-Duell wird vorbereitet…" : "Preparing bot duel…") : (locale === "de" ? "Einladung wird erstellt…" : "Creating invitation…") : cta}</span></Button>
       </fieldset>
     </form>
-    {created && <div className="mt-4 border-t border-border pt-4">
+    {created && <div ref={createdRef} className="mt-4 scroll-mt-24 rounded-xl bg-success/5 p-4">
       <p role="status" className="flex items-start gap-2 text-sm font-semibold"><Check className="mt-0.5 h-4 w-4 shrink-0 text-success" aria-hidden /><span className="min-w-0 break-words">{created.method === "bot" ? (locale === "de" ? "GeoBot ist bereit. Du kannst sofort spielen." : "GeoBot is ready. You can play right away.") : created.method === "open" || created.method === "link" ? (locale === "de" ? "Warten auf ein Gegenüber" : "Waiting for an opponent") : (locale === "de" ? `Einladung an ${created.opponentName ?? "dein Gegenüber"} gesendet` : `Invitation sent to ${created.opponentName ?? "your opponent"}`)}</span></p>
       <p className="mt-1.5 text-xs leading-relaxed text-muted-foreground">{created.method === "bot" ? (locale === "de" ? "Keine Einladung nötig. Das Training zählt nicht für deine Duell-Rangliste." : "No invitation needed. This training does not count toward your duel ranking.") : created.method === "link" ? (locale === "de" ? "Teile den Link. Die erste Annahme belegt den Platz. Mit einem Gast bleibt das Spiel zwanglos und ohne Ranglistenwertung." : "Share the link. The first acceptance claims the seat. Games with guests are casual and do not count toward duel rankings.") : created.method === "open" ? (locale === "de" ? "Deine Einladung ist jetzt in den offenen Herausforderungen sichtbar. Du kannst sie auch teilen." : "Your invitation is now visible in Open challenges. You can share it too.") : (locale === "de" ? "Dein Gegenüber hat drei Tage Zeit, die Einladung anzunehmen." : "Your opponent has three days to accept.")}</p>
       {created.sharePath && <div className="mt-3"><ChallengeShareLink key={created.id} path={created.sharePath} /></div>}

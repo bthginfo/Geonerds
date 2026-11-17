@@ -1,4 +1,5 @@
 import { EXTRA_PEAKS } from "@/games/mountains/peaks";
+import { HERITAGE_CITIES } from "@/data/heritage-cities";
 
 export interface Place {
   en: string;
@@ -7,6 +8,7 @@ export interface Place {
   lng: number;
   /** Present for new city entries, also shared with City Compass. */
   cca3?: string;
+  tier?: 1 | 2 | 3;
 }
 
 /** Famous cities and landmarks for Pin the Place (coords as [lat, lng]).
@@ -157,4 +159,5 @@ export const EXTRA_PLACES: Place[] = [
   ...EXTRA_PEAKS.map((peak) => ({ en: peak.en, de: peak.de, lat: peak.lat, lng: peak.lng })),
 ];
 
-export const PLACES: Place[] = [...LEGACY_PLACES, ...EXTRA_PLACES];
+export const V2_PLACES: Place[] = [...LEGACY_PLACES, ...EXTRA_PLACES];
+export const PLACES: Place[] = [...V2_PLACES, ...HERITAGE_CITIES.map((city) => ({ ...city, tier: 3 as const }))];

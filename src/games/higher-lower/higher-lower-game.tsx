@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { ChevronUp, ChevronDown, Check, X } from "lucide-react";
+import { ChevronUp, ChevronDown, Check, X, ArrowRight } from "lucide-react";
 import type { Country } from "@/lib/types";
 import type { PlayHandlers } from "@/components/game/game-shell";
 import { COUNTRIES, countryName } from "@/data/countries";
@@ -98,22 +98,18 @@ export function HigherLowerGame({ practice, onFinish, onExit }: PlayHandlers) {
   const [revealed, setRevealed] = useState(false);
   const [lastCorrect, setLastCorrect] = useState(false);
   const startRef = useRef(Date.now());
-  const transitionTimerRef = useRef<number | null>(null);
+  const advanceLockRef = useRef(false);
+  const finishedRef = useRef(false);
   const hitsRef = useRef<string[]>([]);
   const answerLockRef = useRef(false);
 
-  useEffect(
-    () => () => {
-      if (transitionTimerRef.current !== null) window.clearTimeout(transitionTimerRef.current);
-    },
-    []
-  );
+  useEffect(() => { advanceLockRef.current = false; }, [pair]);
 
   const aVal = metricValue(pair.a, pair.metric);
   const bVal = metricValue(pair.b, pair.metric);
 
   function guess(higher: boolean) {
-    if (revealed || answerLockRef.current) return;
+    if (revealed || answerLockRef.current || finishedRef.current) return;
     answerLockRef.current = true;
     const isHigher = bVal > aVal;
     const isCorrect = higher === isHigher;
@@ -138,14 +134,18 @@ export function HigherLowerGame({ practice, onFinish, onExit }: PlayHandlers) {
       if (!practice) setLives((l) => l - 1);
     }
 
-    transitionTimerRef.current = window.setTimeout(() => {
-      const livesLeft = lives - (isCorrect || practice ? 0 : 1);
-      if (livesLeft <= 0) {
+  }
+
+  function next() {
+    if (!revealed || advanceLockRef.current || finishedRef.current) return;
+    advanceLockRef.current = true;
+      if (lives <= 0) {
+        finishedRef.current = true;
         onFinish({
-          score: score + (isCorrect ? scoreForAnswer({ correct: true, difficulty: "medium" }) : 0),
-          correct: correct + (isCorrect ? 1 : 0),
-          total: total + 1,
-          bestStreak: Math.max(bestStreak, isCorrect ? streak + 1 : bestStreak),
+          score,
+          correct,
+          total,
+          bestStreak,
           durationMs: Date.now() - startRef.current,
           mode: "endless",
           countryHits: hitsRef.current,
@@ -155,7 +155,6 @@ export function HigherLowerGame({ practice, onFinish, onExit }: PlayHandlers) {
       setPair(nextPair(pair.b));
       setRevealed(false);
       answerLockRef.current = false;
-    }, 1200);
   }
 
   const metricLabel = t(`hl.metric.${pair.metric}`);
@@ -197,12 +196,12 @@ export function HigherLowerGame({ practice, onFinish, onExit }: PlayHandlers) {
                   {formatMetric(bVal, pair.metric, locale)}
                 </motion.div>
               ) : (
-                <motion.div key="btns" className="mt-3 flex gap-2" exit={{ opacity: 0 }}>
-                  <Button size="lg" variant="success" className="gap-1" onClick={() => guess(true)}>
+                <motion.div key="btns" className="mt-3 grid w-full grid-cols-2 gap-2" exit={{ opacity: 0 }}>
+                  <Button size="lg" variant="secondary" className="h-auto min-h-12 min-w-0 gap-1 px-2 py-3" onClick={() => guess(true)}>
                     <ChevronUp className="h-5 w-5" />
                     {t("hl.higher")}
                   </Button>
-                  <Button size="lg" variant="danger" className="gap-1" onClick={() => guess(false)}>
+                  <Button size="lg" variant="secondary" className="h-auto min-h-12 min-w-0 gap-1 px-2 py-3" onClick={() => guess(false)}>
                     <ChevronDown className="h-5 w-5" />
                     {t("hl.lower")}
                   </Button>
@@ -211,6 +210,7 @@ export function HigherLowerGame({ practice, onFinish, onExit }: PlayHandlers) {
             </AnimatePresence>
           </div>
         </div>
+        {revealed && <div className="mt-4 space-y-3"><p role="status" className={cn("rounded-xl p-3 text-center text-sm font-semibold", lastCorrect ? "bg-success/10 text-success" : "bg-danger/10 text-danger")}>{lastCorrect ? t("common.correct") : t("common.wrong")}{" · "}{countryName(pair.b, locale)}: {formatMetric(bVal, pair.metric, locale)}</p><Button onClick={next} className="h-auto min-h-12 w-full gap-2 py-3">{lives <= 0 ? (locale === "de" ? "Ergebnis ansehen" : "View results") : t("common.next")}<ArrowRight className="h-4 w-4" aria-hidden /></Button></div>}
       </div>
     </div>
   );
