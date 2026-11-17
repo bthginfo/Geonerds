@@ -65,6 +65,11 @@ const GeoBalanceGame = dynamic(
   () => import("@/games/geo-balance/geo-balance-game").then((module) => module.GeoBalanceGame),
   { loading: ColorFlagLoading },
 );
+const AtlasRelayGame = dynamic(() => import("@/games/atlas-relay/atlas-relay-game").then((m) => m.AtlasRelayGame), { loading: ColorFlagLoading });
+const WorldCircuitGame = dynamic(() => import("@/games/world-circuit/world-circuit-game").then((m) => m.WorldCircuitGame), { loading: ColorFlagLoading });
+const LatitudeLabGame = dynamic(() => import("@/games/latitude-lab/latitude-lab-game").then((m) => m.LatitudeLabGame), { loading: ColorFlagLoading });
+const CoastlineCaseGame = dynamic(() => import("@/games/coastline-case/coastline-case-game").then((m) => m.CoastlineCaseGame), { loading: ColorFlagLoading });
+const ClimatePassportGame = dynamic(() => import("@/games/climate-passport/climate-passport-game").then((m) => m.ClimatePassportGame), { loading: ColorFlagLoading });
 
 const COMPONENTS: Partial<Record<GameId, (h: PlayHandlers) => React.ReactNode>> = {
   expedition: (h) => <ExpeditionGame {...h} />,
@@ -99,6 +104,11 @@ const COMPONENTS: Partial<Record<GameId, (h: PlayHandlers) => React.ReactNode>> 
   adastra: (h) => <AdastraGame {...h} />,
   "atlas-match": (h) => <AtlasMatchGame {...h} />,
   "geo-balance": (h) => <GeoBalanceGame {...h} />,
+  "atlas-relay": (h) => <AtlasRelayGame {...h} />,
+  "world-circuit": (h) => <WorldCircuitGame {...h} />,
+  "latitude-lab": (h) => <LatitudeLabGame {...h} />,
+  "coastline-case": (h) => <CoastlineCaseGame {...h} />,
+  "climate-passport": (h) => <ClimatePassportGame {...h} />,
 };
 
 export default function PlayPage() {

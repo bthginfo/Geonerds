@@ -25,7 +25,7 @@ export const GAME_CATEGORIES: GameCategory[] = [
     name: { de: "Karten & Formen", en: "Maps & shapes" },
     description: { de: "Vom Umriss zum Ort: Schärfe deinen Blick für Geografie.", en: "From silhouette to location: sharpen your geographic eye." },
     icon: Shapes,
-    games: ["outline", "map-click", "country-radar", "draw", "trace", "jigsaw", "city-compass", "adastra"],
+    games: ["outline", "map-click", "country-radar", "draw", "trace", "jigsaw", "city-compass", "adastra", "latitude-lab", "coastline-case"],
   },
   {
     id: "logic",
@@ -39,14 +39,14 @@ export const GAME_CATEGORIES: GameCategory[] = [
     name: { de: "Weltwissen", en: "World knowledge" },
     description: { de: "Städte, Sprachen und Superlative: Wie gut kennst du unseren Planeten?", en: "Cities, languages and superlatives: how well do you know our planet?" },
     icon: Globe2,
-    games: ["capitals", "trivia", "higher-lower", "ranking", "languages", "origin", "nameall", "mountains", "millionaire"],
+    games: ["capitals", "trivia", "higher-lower", "ranking", "languages", "origin", "nameall", "mountains", "millionaire", "climate-passport"],
   },
   {
     id: "expeditions",
     name: { de: "Expeditionen & Routen", en: "Expeditions & routes" },
     description: { de: "Brich auf, plane deine Reise und entdecke neue Perspektiven.", en: "Set out, chart a route and discover a fresh perspective." },
     icon: Compass,
-    games: ["expedition", "pin", "route", "waters"],
+    games: ["expedition", "pin", "route", "waters", "atlas-relay", "world-circuit"],
   },
 ];
 

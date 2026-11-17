@@ -1,6 +1,20 @@
 # Five next GeoNerds games
 
-Research: 17 November 2026. These are original concepts, **not implemented or advertised as available** in this release. Public rules show useful mechanics, not reliable player-count or revenue rankings. No competitor text, images, puzzles or implementation is copied.
+Research: 17 November 2026. All five concepts are now implemented; the shipping scope below distinguishes actual mechanics from future ideas. Public rules show useful mechanics, not reliable player-count or revenue rankings. No competitor text, images, puzzles or implementation is copied.
+
+## Shipping scope — 18 November 2026
+
+- `/play/atlas-relay`: branching, provably solvable country missions, complete valid-answer sets, three attempts, map/search and an actual successful-country trail. Two conditions on Easy/Medium, usually three on Hard. No fabricated player rarity.
+- `/play/world-circuit`: tap/reorder a round trip with four to six required cities, exact optimum, distance allowance and an attainable optional bonus detour. Great-circle distances, not real flight services.
+- `/play/latitude-lab`: genuinely continuous north–south placement, tap/drag and keyboard/range controls, explicit tolerance and per-city actual/guessed reveal.
+- `/play/coastline-case`: 340 source-derived coast fragments across 145 countries, four name-only options or typing, progressively wider views and a latitude clue. Actual eligible pool varies by difficulty. No invented outline or shared land-border segments.
+- `/play/climate-passport`: 65 source-linked NASA POWER/MERRA-2 city profiles for 1991–2020. Separate temperature/precipitation charts, month inspection, real-data season wheel, two priced geographic hints and computed observations. Precipitation includes water-equivalent snow; grid estimates are not station observations.
+
+All use DE/EN, untimed finite runs, manual advancement, sound/haptics preferences and the existing local score/XP/Dex/result pipeline. Coastline/Climate offer All for their eligible finite pools. Combinatorial games instead offer 5/10/25 rounds; practice deals 25, not all possible permutations. Each is featured for one calendar month, then stays in its permanent category. Flag Quiz retains the first regular slot. Online duel allowlists and old challenge seed protocols are unchanged in this release; the planned daily equal-seed/social formats below are not newly implemented.
+
+Source/license details and regeneration: [new-world-data.md](new-world-data.md).
+
+## Original design notes (not every future extension is in the shipping scope)
 
 References: [Farflung](https://farflung.game/) (multiple correct answers and reward for less obvious choices), [Travle](https://travle.earth/) (route reasoning), [Worldle](https://worldle.teuteuf.fr/) (useful distance/direction feedback), [MapTap](https://www.maptap.space/) (place, inspect, confirm rather than accidental taps). Design reference: [Apple Materials](https://developer.apple.com/design/human-interface-guidelines/materials): glass belongs to controls/navigation, leaving content legible.
 
@@ -44,7 +58,7 @@ Identify a region from an animated annual climate profile: temperature curve, mo
 
 - Twist: a comparative two-profile round asks whether two very different-looking cities could have similar seasons. It teaches a different geographic skill from flags and capitals.
 - Replay: authentic city climate normals, mixed seasonal puzzles and difficulty based on similarity of distractors.
-- Prerequisite: source and license a consistent climate-normal dataset (same reference years). Do **not** generate realistic-looking invented climate charts or mix incomparable stations. This concept needs data work before implementation.
+- Prerequisite resolved for the shipped single-profile game: NASA POWER gridded 1991–2020 climatology. Comparative two-profile rounds, elevation/landscape hints and formal climate-class exercises remain future ideas. Do **not** invent realistic-looking climate charts or mix incomparable reference periods.
 
 ## Suggested order
 

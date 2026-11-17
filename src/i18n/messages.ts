@@ -1,6 +1,7 @@
 import type { Locale } from "@/lib/types";
 import { REFRESH_MESSAGES } from "@/games/refresh-messages";
 import { LEGACY_REFRESH_MESSAGES } from "@/games/legacy-refresh-messages";
+import { NEW_WORLD_MESSAGES } from "@/games/new-world/messages";
 
 type Dict = Record<string, string>;
 
@@ -8,6 +9,7 @@ export const messages: Record<Locale, Dict> = {
   en: {
     ...REFRESH_MESSAGES.en,
     ...LEGACY_REFRESH_MESSAGES.en,
+    ...NEW_WORLD_MESSAGES.en,
     "home.gamesFound.one": "1 game to explore",
     "home.gamesFound.other": "{n} games to explore",
     "games.adastra.name": "Adastra",
@@ -862,6 +864,7 @@ export const messages: Record<Locale, Dict> = {
   de: {
     ...REFRESH_MESSAGES.de,
     ...LEGACY_REFRESH_MESSAGES.de,
+    ...NEW_WORLD_MESSAGES.de,
     "home.gamesFound.one": "1 Spiel entdecken",
     "home.gamesFound.other": "{n} Spiele entdecken",
     "games.adastra.name": "Adastra",

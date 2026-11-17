@@ -18,6 +18,35 @@
       ],
       "mode": "operate",
       "path": "surface-briefs/geo-home-shared-play.md"
+    },
+    {
+      "primaryTarget": "src/games/atlas-relay/atlas-relay-game.tsx",
+      "relatedTargets": [
+        "src/games/atlas-relay/generator.ts",
+        "src/games/world-circuit/world-circuit-game.tsx",
+        "src/games/world-circuit/generator.ts",
+        "src/games/latitude-lab/latitude-lab-game.tsx",
+        "src/games/latitude-lab/generator.ts",
+        "src/games/coastline-case/coastline-case-game.tsx",
+        "src/games/coastline-case/generator.ts",
+        "src/games/climate-passport/climate-passport-game.tsx",
+        "src/games/climate-passport/climate-chart.tsx",
+        "src/games/climate-passport/generator.ts",
+        "src/games/new-world/catalog.ts",
+        "src/games/new-world/counts.ts",
+        "src/games/new-world/messages.ts",
+        "src/games/new-world/travel-map.tsx",
+        "src/app/play/[game]/page.tsx",
+        "src/games/registry.ts",
+        "src/games/categories.ts",
+        "src/lib/types.ts",
+        "src/i18n/messages.ts",
+        "src/data/coastline-fragments.json",
+        "src/data/climate-profiles.json",
+        "docs/new-world-data.md"
+      ],
+      "mode": "operate",
+      "path": "surface-briefs/geo-five-new-games.md"
     }
   ]
 }

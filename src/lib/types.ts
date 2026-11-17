@@ -57,7 +57,12 @@ export type GameId =
   | "country-radar"
   | "adastra"
   | "atlas-match"
-  | "geo-balance";
+  | "geo-balance"
+  | "atlas-relay"
+  | "world-circuit"
+  | "latitude-lab"
+  | "coastline-case"
+  | "climate-passport";
 
 export type Difficulty = "easy" | "medium" | "hard";
 

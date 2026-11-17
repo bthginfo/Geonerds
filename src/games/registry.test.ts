@@ -3,6 +3,16 @@ import { GAMES } from "./registry";
 import { translate } from "@/i18n/messages";
 
 describe("game registry editorial order", () => {
+  it("integrates five untimed, bilingual games with truthful count options", () => {
+    for (const id of ["atlas-relay", "world-circuit", "latitude-lab", "coastline-case", "climate-passport"]) {
+      const game = GAMES.find((entry) => entry.id === id);
+      expect(game?.supportsTimed).toBe(false);
+      expect(game?.supportsDifficulty).toBe(true);
+      for (const locale of ["en", "de"] as const) for (const key of [`games.${id}.name`, `games.${id}.short`, `games.${id}.desc`, `howto.${id}`, game!.setupNoteKey!]) expect(translate(locale, key)).not.toBe(key);
+    }
+    for (const id of ["atlas-relay", "world-circuit", "latitude-lab"]) expect(GAMES.find((game) => game.id === id)?.countOptions).not.toContain(0);
+    for (const id of ["coastline-case", "climate-passport"]) expect(GAMES.find((game) => game.id === id)?.countOptions).toContain(0);
+  });
   it("keeps Flag Quiz first on Home", () => {
     expect(GAMES[0].id).toBe("flags");
   });
