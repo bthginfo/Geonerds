@@ -81,3 +81,11 @@ The four puzzles offer a **daily board** (identical for everyone per UTC date an
 - In game: a single-row top bar (more room on phones), number keys 1–9 for choices, numbered answer badges.
 - Results: *Up next* suggestions, one from the same theme and one from elsewhere.
 - SEO: every `/play/<id>` URL now has its own title, description and canonical URL.
+
+## 7. Follow-ups shipped the same day
+
+- **Sideways scroll on phones (fixed):** for players with saved scores, the screen-reader "Best" label in game tiles was positioned against the page instead of the tile and escaped the horizontal shelf, widening the document to ~1,350px. Tiles and shelves are now positioning contexts, and `body { overflow-x: clip }` guards against page-level sideways scroll.
+- **Popular this week** merges anonymous counters with saved account runs from the last 7 days (maximum per game, never the sum), so the shelf shows live data from day one.
+- **Vercel Web Analytics** loads only after "Accept all" (cookieless; query strings stripped). Settings has a privacy toggle to withdraw consent. Collection starts once Web Analytics is enabled for the project in the Vercel dashboard (Analytics tab).
+- **Atlas Blast pieces** are picked per country by the best overlap with the real shape (mean IoU 0.67 → 0.70) at unchanged piece size; bot run length stayed equal or longer.
+- **Lint:** `npx eslint src` is clean, including the Poke-/Wine-Nerds areas.
