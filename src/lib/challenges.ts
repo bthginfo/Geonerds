@@ -4,16 +4,19 @@ import { validateName } from "@/lib/validate";
 import { validGeoScore } from "@/lib/score-validation";
 import { supportsBotGame } from "@/lib/challenge-bots";
 
+/** Games that accept new challenges. */
 export const CHALLENGE_GAME_IDS = [
-  "flags", "capitals", "outline", "trivia", "waters", "neighbors", "origin", "mountains", "languages",
-  "flag-pie", "city-compass", "flag-mosaic", "country-radar", "adastra",
+  "flags", "capitals", "outline", "waters", "neighbors", "origin",
+  "flag-pie", "flag-mosaic", "country-radar", "adastra",
 ] as const;
+/** Retired games that only exist in historical challenge records. */
+export const LEGACY_CHALLENGE_GAME_IDS = ["trivia", "mountains", "languages", "city-compass"] as const;
 /** Zero means the complete available question pool, as in normal game setup. */
 export const CHALLENGE_ROUND_COUNTS = [10, 25, 50, 0] as const;
 export const CHALLENGE_INVITE_TTL_MS = 3 * 24 * 60 * 60 * 1000;
 export const CHALLENGE_PLAY_TTL_MS = 7 * 24 * 60 * 60 * 1000;
 export type GeoChallengeInviteType = "direct" | "random" | "open" | "link" | "bot";
-export type GeoChallengeGameId = (typeof CHALLENGE_GAME_IDS)[number];
+export type GeoChallengeGameId = (typeof CHALLENGE_GAME_IDS)[number] | (typeof LEGACY_CHALLENGE_GAME_IDS)[number];
 export type GeoChallengeStatus = "pending" | "active" | "resolved" | "declined" | "cancelled" | "expired";
 export type GeoChallengeAction = "accept" | "decline" | "cancel";
 export type GeoChallengeOutcome = "win" | "loss" | "draw";

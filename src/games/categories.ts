@@ -1,4 +1,4 @@
-import { Flag, Shapes, Network, Globe2, Compass, Sparkles, type LucideIcon } from "lucide-react";
+import { Flag, Shapes, Network, Globe2, Puzzle, Sparkles, type LucideIcon } from "lucide-react";
 import type { GameId, Locale } from "@/lib/types";
 import { GAMES, type GameConfig } from "./registry";
 import { isFeaturedGame } from "./featured";
@@ -18,35 +18,35 @@ export const GAME_CATEGORIES: GameCategory[] = [
     name: { de: "Flaggen & Farben", en: "Flags & colors" },
     description: { de: "Erkenne die Welt an ihren Farben, Mustern und Symbolen.", en: "Read the world through its colors, patterns and symbols." },
     icon: Flag,
-    games: ["flags", "colorflag", "flag-pie", "flag-mosaic"],
+    games: ["flags", "colorflag", "flag-pie", "flag-mosaic", "atlas-match"],
+  },
+  {
+    id: "puzzles",
+    name: { de: "Rätsel & Wortspiele", en: "Puzzles & words" },
+    description: { de: "Jeden Tag ein neues Brett: gruppieren, buchstabieren, entschlüsseln.", en: "A fresh board every day: group, spell and decode the world." },
+    icon: Puzzle,
+    games: ["geo-groups", "letter-atlas", "place-trails", "geo-brackets"],
   },
   {
     id: "maps",
     name: { de: "Karten & Formen", en: "Maps & shapes" },
     description: { de: "Vom Umriss zum Ort: Schärfe deinen Blick für Geografie.", en: "From silhouette to location: sharpen your geographic eye." },
     icon: Shapes,
-    games: ["outline", "map-click", "country-radar", "draw", "trace", "jigsaw", "city-compass", "adastra", "latitude-lab", "coastline-case"],
+    games: ["map-click", "outline", "country-radar", "pin", "jigsaw", "draw", "atlas-blast", "waters", "adastra"],
   },
   {
     id: "logic",
     name: { de: "Logik & Verbindungen", en: "Logic & connections" },
     description: { de: "Kombiniere Hinweise, finde Zusammenhänge und denke um die Ecke.", en: "Connect the clues, uncover relationships and think a step ahead." },
     icon: Network,
-    games: ["grid", "minesweeper", "connections", "neighbors", "border-chain", "atlas-match", "geo-balance"],
+    games: ["grid", "minesweeper", "border-chain", "connections", "neighbors", "route"],
   },
   {
     id: "knowledge",
     name: { de: "Weltwissen", en: "World knowledge" },
-    description: { de: "Städte, Sprachen und Superlative: Wie gut kennst du unseren Planeten?", en: "Cities, languages and superlatives: how well do you know our planet?" },
+    description: { de: "Städte, Zahlen und Kultur: Wie gut kennst du unseren Planeten?", en: "Cities, numbers and culture: how well do you know our planet?" },
     icon: Globe2,
-    games: ["capitals", "trivia", "higher-lower", "ranking", "languages", "origin", "nameall", "mountains", "millionaire", "climate-passport"],
-  },
-  {
-    id: "expeditions",
-    name: { de: "Expeditionen & Routen", en: "Expeditions & routes" },
-    description: { de: "Brich auf, plane deine Reise und entdecke neue Perspektiven.", en: "Set out, chart a route and discover a fresh perspective." },
-    icon: Compass,
-    games: ["expedition", "pin", "route", "waters", "atlas-relay", "world-circuit"],
+    games: ["capitals", "higher-lower", "ranking", "origin", "nameall", "millionaire"],
   },
 ];
 

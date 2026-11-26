@@ -62,7 +62,12 @@ export type GameId =
   | "world-circuit"
   | "latitude-lab"
   | "coastline-case"
-  | "climate-passport";
+  | "climate-passport"
+  | "geo-groups"
+  | "letter-atlas"
+  | "place-trails"
+  | "geo-brackets"
+  | "atlas-blast";
 
 export type Difficulty = "easy" | "medium" | "hard";
 

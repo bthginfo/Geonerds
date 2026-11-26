@@ -27,7 +27,7 @@ export function GameTopBar({
       role="region"
       aria-label={title}
     >
-      <div className="mx-auto flex min-h-14 w-full max-w-3xl flex-wrap items-center gap-x-1 gap-y-1 px-3 py-1.5 sm:gap-x-2">
+      <div className="mx-auto flex min-h-14 w-full max-w-3xl items-center gap-1 px-2 py-1.5 sm:gap-2 sm:px-3">
         {onExit ? (
           <button
             onClick={onExit}
@@ -47,14 +47,14 @@ export function GameTopBar({
         )}
         <div
           className={cn(
-            "min-w-0 flex-1 break-words text-sm font-semibold",
+            "min-w-0 flex-1 truncate text-sm font-semibold max-[359px]:sr-only",
             compactMobileTitle && "max-[419px]:text-xs"
           )}
         >
           {title}
         </div>
+        <div className="ml-auto flex min-w-0 flex-wrap items-center justify-end gap-1 sm:gap-1.5">{children}</div>
         <GameHelpButton />
-        <div className="flex min-w-0 basis-full flex-wrap items-center justify-end gap-1.5 pb-1 sm:basis-auto sm:pb-0">{children}</div>
       </div>
     </div>
   );

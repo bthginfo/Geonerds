@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { trackPlay } from "@/lib/play-stats-client";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
@@ -58,6 +59,7 @@ export default function WeeklyPage() {
         timed={false}
         onExit={() => router.push("/")}
         onFinish={(r) => {
+          trackPlay("weekly", "finish");
           const marks = r.marks ?? [];
           record({ week, score: r.score, correct: r.correct, total: r.total, marks });
           useDex.getState().record("weekly", r.countryHits ?? []);
@@ -95,7 +97,7 @@ export default function WeeklyPage() {
             </span>
             <h1 className="mt-4 text-2xl font-bold">{t("weekly.title")}</h1>
             <p className="mt-2 text-sm text-muted-foreground">{t("weekly.subtitle", { n: WEEKLY_COUNT })}</p>
-            <Button size="lg" className="mt-6 w-full gap-2" onClick={() => setPlaying(true)}>
+            <Button size="lg" className="mt-6 w-full gap-2" onClick={() => { trackPlay("weekly", "start"); setPlaying(true); }}>
               <Play className="h-5 w-5" />
               {t("weekly.play")}
             </Button>

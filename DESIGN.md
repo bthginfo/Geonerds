@@ -262,3 +262,13 @@ The help modal has exit, focus containment, Escape dismissal and focus restorati
 - **Don't** treat this document as proof of measured contrast, browser completeness or flawless native iOS behavior.
 
 Not canonized: task-specific uppercase advanced-setting labels, very small navigation/badge captions, and route-specific legacy styling are not promoted into reusable visual rules. Existing companion-product palettes remain scoped to their own routes. No unmeasured contrast or untested route behavior is legitimized by this record.
+
+## Game identity on Home (26 November 2026)
+
+The overhaul keeps the tokens, Geist hierarchy, glass-only-for-chrome rule and accessibility commitments above, and adds colour identity per game:
+
+- **Hero** (`.geo-hero`): one saturated blue–violet banner with a line-drawn globe; white primary action (*Play today's puzzle*) and a translucent secondary (*Surprise me*). It is the only large gradient on the page.
+- **Game tiles** (`GameTile`, `GameArt`, `.geo-tile`): opaque cards whose cover uses the registry `gradient`, a faint graticule and a motif drawn from the game itself (real flags, a 4×4 group grid, letter tiles, block pieces) or the game icon. Covers are decorative (`aria-hidden`); name and short description carry the meaning. Status chips (*New*, *Daily*, *Solved today*, rank) sit on the cover; personal best and streak sit below the text.
+- **Shelves** (`.geo-shelf`): swipe rows with scroll snap on phones, grids from `sm` upward.
+- **Setup**: the same cover art heads the setup card; settings use one segmented-control language, and the Start button stays sticky at the bottom on long setups.
+- **In game**: the top bar is one row (exit, title, status pills, help); choice answers carry number badges that match keys 1–9 on pointer devices.

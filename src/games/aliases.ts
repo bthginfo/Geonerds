@@ -31,6 +31,11 @@ export const COUNTRY_ALIASES: Record<string, string[]> = {
 
 /** German capital names where they differ from the English/default. Keyed by cca3. */
 export const CAPITAL_DE: Record<string, string> = {
+  PAN: "Panama-Stadt",
+  GTM: "Guatemala-Stadt",
+  CUB: "Havanna",
+  VAT: "Vatikanstadt",
+  LUX: "Luxemburg",
   RUS: "Moskau",
   AUT: "Wien",
   ITA: "Rom",

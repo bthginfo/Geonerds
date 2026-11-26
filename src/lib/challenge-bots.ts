@@ -4,7 +4,7 @@ import { createSeededRandom } from "./random";
 import { scoreForAnswer } from "./scoring";
 
 /** These games share the real quiz scoring rules, including wrong-answer penalties. */
-export const BOT_CHALLENGE_GAME_IDS = ["flags", "capitals", "outline", "waters", "origin", "mountains", "languages"] as const;
+export const BOT_CHALLENGE_GAME_IDS = ["flags", "capitals", "outline", "waters", "origin"] as const;
 export const BOT_NAME = "GeoBot";
 export const MAX_BOT_ROUNDS = 1000;
 
@@ -30,7 +30,7 @@ export function buildBotAttempt(config: GeoChallengeConfig, strength: Difficulty
     || (config.rounds > 0 && total > config.rounds)) throw new RangeError("Invalid bot challenge settings");
   const random = createSeededRandom(`${privateSeed}:geo-bot-v1:${config.gameId}`);
   const profile = PROFILES[strength];
-  const limitMs = config.gameId === "mountains" ? 12000 : 10000;
+  const limitMs = 10000;
   let score = 0, correct = 0, streak = 0, bestStreak = 0, durationMs = 0;
   for (let round = 0; round < total; round++) {
     // Consume the same draws at every strength; profile selection never shifts RNG.

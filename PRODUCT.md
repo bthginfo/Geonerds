@@ -17,7 +17,8 @@ A bilingual DE/EN geography arcade with varied games, meaningful learning feedba
 ## Capabilities and Constraints
 
 - Existing Next.js 16 / React / Tailwind application, same GitHub repository and domain.
-- GEO catalogue, daily/weekly mixed runs, saved progression, XP/ranks/badges, country Dex and mastery-gated outlines/recipes.
+- GEO catalogue (30 games after the 26 Nov 2026 clean-up), daily puzzles with a shared daily board per difficulty, daily/weekly mixed runs, saved progression, XP/ranks/badges, country Dex and mastery-gated outlines/recipes.
+- Retired games stay resolvable by name for historical scores, badges and challenges (`src/games/retired.ts`); catalogue decisions use anonymous play counters (`gn_play_stats`) and account runs.
 - Accounts, public badges, device/global/duel leaderboards, seeded asynchronous challenges, shareable guest invitations, random/open challenges, immediate unranked bot training in supported games.
 - Community submissions, private administrator review and targeted release notifications.
 - Preserve accounts, scores, saved progress, rules, geography source credits and compatibility of existing challenge seeds.
@@ -31,7 +32,7 @@ Preserve GeoNerds name and globe logo. The November 2026 request explicitly pins
 
 ## Evidence on Hand
 
-Actual country data, country/river geometry, standalone flag artwork, sourced NASA night photographs and source-linked geographic content in the repository. No usage statistics establishing competitor popularity are available.
+Actual country data, country/river geometry, standalone flag artwork, sourced NASA night photographs and source-linked geographic content in the repository. Account play data and a sourced format research summary are recorded in `docs/geo-overhaul-2026-11-26.md`; competitor popularity figures are never shown to players.
 
 ## Product Principles
 

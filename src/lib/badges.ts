@@ -25,6 +25,8 @@ export interface Stats {
   perfectRounds: number;
   bigPerfect: number;
   distinctGames: number;
+  /** Distinct games played that are still in the catalogue. */
+  distinctCurrentGames: number;
   hardRuns: number;
   hardPerfect: number;
   typeRuns: number;
@@ -155,6 +157,7 @@ export function computeStats(
     perfectRounds,
     bigPerfect,
     distinctGames: lifetime ? Object.keys(lifetime.games).length : games.size,
+    distinctCurrentGames: GAMES.filter((game) => (lifetime ? Object.prototype.hasOwnProperty.call(lifetime.games, game.id) : games.has(game.id))).length,
     hardRuns,
     hardPerfect,
     typeRuns,
@@ -188,6 +191,8 @@ export interface Badge {
   tier?: BadgeTier;
   progress?: (s: Stats) => BadgeProgress;
   hidden?: boolean;
+  /** Tied to a retired game: kept for players who earned it, no longer listed as a goal. */
+  legacy?: boolean;
 }
 
 const g = (s: Stats, id: string) => s.correctByGame[id] ?? 0;
@@ -235,7 +240,7 @@ export const BADGES: Badge[] = [
   { id: "sampler", icon: Compass, name: { en: "Sampler", de: "Schnupperer" }, desc: { en: "Try 5 different games", de: "5 verschiedene Spiele" }, earned: (s) => s.distinctGames >= 5 },
   { id: "explorer", icon: Globe2, name: { en: "Explorer", de: "Entdecker" }, desc: { en: "Try 10 different games", de: "10 verschiedene Spiele" }, earned: (s) => s.distinctGames >= 10 },
   { id: "allgames", icon: Globe2, name: { en: "Globetrotter", de: "Weltenbummler" }, desc: { en: "Try 15 different games", de: "15 verschiedene Spiele" }, earned: (s) => s.distinctGames >= 15 },
-  { id: "completionist", icon: Crown, name: { en: "Completionist", de: "Komplettist" }, desc: { en: "Try every single game", de: "Wirklich jedes Spiel" }, earned: (s) => s.distinctGames >= GAMES.length, category: "journey", tier: "mythic", progress: (s) => ({ current: s.distinctGames, target: GAMES.length }) },
+  { id: "completionist", icon: Crown, name: { en: "Completionist", de: "Komplettist" }, desc: { en: "Try every single game", de: "Wirklich jedes Spiel" }, earned: (s) => s.distinctCurrentGames >= GAMES.length, category: "journey", tier: "mythic", progress: (s) => ({ current: s.distinctCurrentGames, target: GAMES.length }) },
 
   // ── Difficulty & style ──────────────────────────────────
   { id: "hardMode", icon: Swords, name: { en: "Hard Mode", de: "Harter Modus" }, desc: { en: "Win points on hard difficulty", de: "Punkte auf Schwer holen" }, earned: (s) => s.hardRuns >= 1 },
@@ -256,11 +261,11 @@ export const BADGES: Badge[] = [
   { id: "map250", icon: MapPin, name: { en: "Cartophile", de: "Kartenkenner" }, desc: { en: "Find 250 countries on the map", de: "250 Länder auf der Karte finden" }, earned: (s) => g(s, "map-click") >= 250 },
   { id: "outline30", icon: Shapes, name: { en: "Shape Shifter", de: "Formen-Kenner" }, desc: { en: "30 correct outlines", de: "30 Umrisse richtig" }, earned: (s) => g(s, "outline") >= 30 },
   { id: "draw20", icon: Pencil, name: { en: "Cartographer", de: "Kartograf" }, desc: { en: "20 good drawings", de: "20 gute Zeichnungen" }, earned: (s) => g(s, "draw") + g(s, "trace") >= 20 },
-  { id: "trace15", icon: PenLine, name: { en: "River Tracer", de: "Fluss-Zeichner" }, desc: { en: "Trace 15 rivers", de: "15 Flüsse nachzeichnen" }, earned: (s) => g(s, "trace") >= 15 },
-  { id: "lang30", icon: Languages, name: { en: "Polyglot", de: "Polyglott" }, desc: { en: "30 correct in Scripts & Money", de: "30 richtig bei Schrift & Währung" }, earned: (s) => g(s, "languages") >= 30 },
+  { id: "trace15", icon: PenLine, name: { en: "River Tracer", de: "Fluss-Zeichner" }, desc: { en: "Trace 15 rivers", de: "15 Flüsse nachzeichnen" }, earned: (s) => g(s, "trace") >= 15, legacy: true },
+  { id: "lang30", icon: Languages, name: { en: "Polyglot", de: "Polyglott" }, desc: { en: "30 correct in Scripts & Money", de: "30 richtig bei Schrift & Währung" }, earned: (s) => g(s, "languages") >= 30, legacy: true },
   { id: "waters20", icon: Waves, name: { en: "Hydrologist", de: "Hydrologe" }, desc: { en: "20 rivers & lakes", de: "20 Flüsse & Seen" }, earned: (s) => g(s, "waters") >= 20 },
   { id: "waters50", icon: Waves, name: { en: "Oceanographer", de: "Ozeanograf" }, desc: { en: "50 rivers & lakes", de: "50 Flüsse & Seen" }, earned: (s) => g(s, "waters") >= 50 },
-  { id: "trivia30", icon: Lightbulb, name: { en: "Know-It-All", de: "Besserwisser" }, desc: { en: "30 correct trivia", de: "30 Trivia richtig" }, earned: (s) => g(s, "trivia") >= 30 },
+  { id: "trivia30", icon: Lightbulb, name: { en: "Know-It-All", de: "Besserwisser" }, desc: { en: "30 correct trivia", de: "30 Trivia richtig" }, earned: (s) => g(s, "trivia") >= 30, legacy: true },
   { id: "neighbors20", icon: Fingerprint, name: { en: "Detective", de: "Detektiv" }, desc: { en: "20 correct in Who Am I?", de: "20 richtig bei Wer bin ich?" }, earned: (s) => g(s, "neighbors") >= 20 },
   { id: "route", icon: Route, name: { en: "Wayfarer", de: "Wegfinder" }, desc: { en: "Complete a land route", de: "Einen Landweg schaffen" }, earned: (s) => g(s, "route") >= 1 },
   { id: "routePro", icon: Route, name: { en: "Road Tripper", de: "Roadtripper" }, desc: { en: "20 correct route steps", de: "20 richtige Wegschritte" }, earned: (s) => g(s, "route") >= 20 },
@@ -270,7 +275,7 @@ export const BADGES: Badge[] = [
   { id: "borderchain30", icon: Spline, name: { en: "Chain Gang", de: "Kettenmeister" }, desc: { en: "30 correct neighbours", de: "30 richtige Nachbarn" }, earned: (s) => g(s, "border-chain") >= 30 },
   { id: "origin30", icon: Sparkles, name: { en: "Culture Vulture", de: "Kulturkenner" }, desc: { en: "30 correct origins", de: "30 richtige Herkünfte" }, earned: (s) => g(s, "origin") >= 30 },
   { id: "nameall50", icon: ListChecks, name: { en: "Lister", de: "Auflister" }, desc: { en: "Name 50 countries in Name All", de: "50 Länder bei Alle nennen" }, earned: (s) => g(s, "nameall") >= 50 },
-  { id: "mountains25", icon: Mountain, name: { en: "Mountaineer", de: "Bergsteiger" }, desc: { en: "Identify 25 peaks", de: "25 Gipfel erkennen" }, earned: (s) => g(s, "mountains") >= 25 },
+  { id: "mountains25", icon: Mountain, name: { en: "Mountaineer", de: "Bergsteiger" }, desc: { en: "Identify 25 peaks", de: "25 Gipfel erkennen" }, earned: (s) => g(s, "mountains") >= 25, legacy: true },
   { id: "nerd10", icon: GraduationCap, name: { en: "Geo-Nerd", de: "Geo-Nerd" }, desc: { en: "Reach question 10 in the quiz", de: "Frage 10 im Quiz erreichen" }, earned: (s) => (s.maxTotalByGame["millionaire"] ?? 0) >= 10 },
   { id: "nerd20", icon: Brain, name: { en: "Geo Genius", de: "Geo-Genie" }, desc: { en: "Reach question 20 in the quiz", de: "Frage 20 im Quiz erreichen" }, earned: (s) => (s.maxTotalByGame["millionaire"] ?? 0) >= 20 },
 
@@ -305,7 +310,7 @@ export const BADGES: Badge[] = [
   { id: "flags500", icon: Flag, name: { en: "Flag Deity", de: "Flaggen-Gottheit" }, desc: { en: "500 correct flags", de: "500 Flaggen richtig" }, earned: (s) => g(s, "flags") >= 500 },
   { id: "capitals300", icon: Landmark, name: { en: "Metropolitan", de: "Metropolen-Meister" }, desc: { en: "300 correct capitals & cities", de: "300 Haupt-/Städte richtig" }, earned: (s) => g(s, "capitals") >= 300 },
   { id: "map500", icon: MapPin, name: { en: "World Master", de: "Welt-Meister" }, desc: { en: "Find 500 countries on the map", de: "500 Länder auf der Karte finden" }, earned: (s) => g(s, "map-click") >= 500 },
-  { id: "trivia100", icon: Lightbulb, name: { en: "Walking Atlas", de: "Wandelndes Lexikon" }, desc: { en: "100 correct trivia", de: "100 Trivia richtig" }, earned: (s) => g(s, "trivia") >= 100 },
+  { id: "trivia100", icon: Lightbulb, name: { en: "Walking Atlas", de: "Wandelndes Lexikon" }, desc: { en: "100 correct trivia", de: "100 Trivia richtig" }, earned: (s) => g(s, "trivia") >= 100, legacy: true },
   { id: "nerd30", icon: Brain, name: { en: "Geo Grandmaster", de: "Geo-Großmeister" }, desc: { en: "Reach question 30 in the quiz", de: "Frage 30 im Quiz erreichen" }, earned: (s) => (s.maxTotalByGame["millionaire"] ?? 0) >= 30 },
 
   // ── Geo-Dex collection ──────────────────────────────────
@@ -339,6 +344,11 @@ export const BADGES: Badge[] = [
   { id: "dexMaster1", icon: Crown, name: { en: "Country Master", de: "Ländermeister" }, desc: { en: "Master your first country", de: "Meistere dein erstes Land" }, earned: (s) => s.dexMastered >= 1, category: "mastery", tier: "gold", progress: (s) => ({ current: s.dexMastered, target: 1 }) },
   { id: "dexMaster25", icon: Diamond, name: { en: "Golden Atlas", de: "Goldener Atlas" }, desc: { en: "Master 25 countries", de: "Meistere 25 Länder" }, earned: (s) => s.dexMastered >= 25, category: "mastery", tier: "mythic", progress: (s) => ({ current: s.dexMastered, target: 25 }) },
 ];
+
+/** Every current badge, plus legacy badges the player already earned. */
+export function visibleBadges(stats: Stats): Badge[] {
+  return BADGES.filter((badge) => !badge.legacy || badge.earned(stats));
+}
 
 export function earnedIds(
   runs: ScoreEntry[],

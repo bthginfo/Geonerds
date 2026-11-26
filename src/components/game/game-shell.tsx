@@ -3,7 +3,7 @@
 import { Suspense, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import { ArrowLeft, Play, HelpCircle, Info, Loader2, Swords, LockKeyhole, ChevronDown, Check, BookOpen, SlidersHorizontal } from "lucide-react";
+import { ArrowLeft, Play, HelpCircle, Info, Loader2, Swords, LockKeyhole, BookOpen, Trophy } from "lucide-react";
 import type { AnswerMode, Difficulty, GameId, RunResult } from "@/lib/types";
 import { getGame } from "@/games/registry";
 import { useT } from "@/i18n/I18nProvider";
@@ -17,7 +17,8 @@ import { dexStateOf } from "@/lib/dex";
 import { levelFromXp } from "@/lib/level";
 import { earnedIds } from "@/lib/badges";
 import { ResultScreen } from "./result-screen";
-import { cn } from "@/lib/utils";
+import { cn, formatNumber } from "@/lib/utils";
+import { GameArt } from "@/components/home/game-art";
 import { useProgression } from "@/store/progression";
 import { newRunSeed } from "@/lib/random";
 import type { GeoChallenge } from "@/lib/challenges";
@@ -28,6 +29,7 @@ import { AdastraSetupPhoto } from "@/components/community/adastra-feature";
 import { challengeAttemptStorageKey, challengeBotLabel, challengeError, challengePlayBlock, isBotChallenge, readSavedAttempt, writeSavedAttempt, type SavedChallengeAttempt } from "@/components/challenges/challenge-ui";
 import { notifyChallengeMutation } from "@/hooks/use-challenge-notifications";
 import { GameHelpContent, GameHelpProvider } from "./game-help";
+import { trackPlay } from "@/lib/play-stats-client";
 
 export interface PlayResult {
   score: number;
@@ -108,6 +110,7 @@ function GameShellContent({
   const [newCountries, setNewCountries] = useState<{ discovered: string[]; researched: string[]; unlocked: string[]; mastered: string[] }>({ discovered: [], researched: [], unlocked: [], mastered: [] });
   const [levelUp, setLevelUp] = useState<number | null>(null);
   const [howOpen, setHowOpen] = useState(false);
+  const [bestScore, setBestScore] = useState(0);
   const [challenge, setChallenge] = useState<GeoChallenge | null>(null);
   const [challengeLoading, setChallengeLoading] = useState(isChallenge);
   const [challengeFailure, setChallengeFailure] = useState<string>();
@@ -187,11 +190,18 @@ function GameShellContent({
     return () => { cancelled = true; clearInterval(timer); document.removeEventListener("visibilitychange", refresh); window.removeEventListener("focus", refresh); };
   }, [isChallenge, challengeId, phase, submitStatus, challenge?.status]);
 
+  useEffect(() => {
+    let active = true;
+    void scoreStore.bestScore(gameId).then((best) => { if (active) setBestScore(best); }).catch(() => undefined);
+    return () => { active = false; };
+  }, [gameId, phase]);
+
   if (!config) return null;
 
   async function handleFinish(r: PlayResult) {
     if (finishGuard.current) return;
     finishGuard.current = true;
+    trackPlay(gameId, "finish");
     // Practice runs never count: no XP, no badges, no leaderboard, no records.
     if (practice) {
       setPhase("setup");
@@ -282,6 +292,7 @@ function GameShellContent({
     finishGuard.current = false;
     progressGuard.current = false;
     setSeed(newRunSeed());
+    trackPlay(gameId, "start");
     setIsRecord(false);
     setNewBadges([]);
     setLevelUp(null);
@@ -310,6 +321,7 @@ function GameShellContent({
       finishGuard.current = false;
       progressGuard.current = false;
       setSeed(challenge.seed ?? undefined);
+      trackPlay(gameId, "start");
       activeRunKey.current++;
       setRunKey(activeRunKey.current);
       setPhase("playing");
@@ -381,7 +393,6 @@ function GameShellContent({
     );
   }
 
-  const Icon = config.icon;
 
   if (isChallenge && challenge) {
     return <div className="geo-aurora flex flex-1 flex-col"><div className="mx-auto w-full max-w-md px-4 py-8">
@@ -399,176 +410,97 @@ function GameShellContent({
     </div></div>;
   }
 
+  const variantIsPuzzle = config.variants?.labelKey === "puzzle.variantLabel";
+  const segmentClass = "geo-segment min-h-11 px-2 text-sm font-semibold";
+
   return (
     <div className="flex flex-1 flex-col">
-      <div className="mx-auto flex w-full max-w-xl flex-1 flex-col px-4 py-5 sm:py-8">
+      <div className="mx-auto flex w-full max-w-xl flex-1 flex-col px-4 pb-8 pt-4 sm:pt-6">
         <Link
           href="/"
-          className="mb-4 inline-flex min-h-11 w-fit items-center gap-1.5 rounded-lg text-sm font-medium text-primary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+          className="mb-3 inline-flex min-h-11 w-fit items-center gap-1.5 rounded-lg text-sm font-medium text-primary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
         >
           <ArrowLeft className="h-4 w-4" />
           {t("nav.home")}
         </Link>
 
-        <div className="flex items-start gap-4">
-          <span
-            className={cn(
-              "flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-primary/10 text-primary"
-            )}
-          >
-            <Icon className="h-7 w-7" aria-hidden />
-          </span>
-          <div className="min-w-0 flex-1"><h1 className="text-2xl font-bold tracking-tight">{t(`games.${gameId}.name`)}</h1><p className="mt-1 text-sm leading-relaxed text-muted-foreground">{t(`games.${gameId}.short`)}</p>
-          <button
-            onClick={() => setHowOpen(true)}
-            className="mt-1 inline-flex min-h-11 items-center gap-1.5 rounded-lg text-sm font-medium text-primary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
-          >
-            <HelpCircle className="h-4 w-4" />
-            {t("nav.howto")}
-          </button>
+        <div className="overflow-hidden rounded-3xl bg-card shadow-sm">
+          <GameArt game={config} className="h-28 sm:h-36" />
+          <div className="px-4 pb-4 pt-4 sm:px-5">
+            <h1 className="text-2xl font-extrabold tracking-tight">{t(`games.${gameId}.name`)}</h1>
+            <p className="mt-1 text-sm leading-relaxed text-muted-foreground">{t(`games.${gameId}.short`)}</p>
+            <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1">
+              <button
+                onClick={() => setHowOpen(true)}
+                className="inline-flex min-h-11 items-center gap-1.5 rounded-lg text-sm font-semibold text-primary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+              >
+                <HelpCircle className="h-4 w-4" />
+                {t("nav.howto")}
+              </button>
+              {bestScore > 0 && <span className="inline-flex items-center gap-1.5 text-sm font-semibold tabular-nums text-muted-foreground"><Trophy className="h-4 w-4 text-amber-600 dark:text-amber-400" aria-hidden />{locale === "de" ? "Bestwert" : "Best"} {formatNumber(bestScore, locale)}</span>}
+            </div>
           </div>
         </div>
 
         {config.setupNoteKey && (
-          <div className="mt-5 flex items-start gap-2 rounded-xl border border-primary/30 bg-primary/5 p-3 text-xs leading-relaxed text-muted-foreground">
+          <div className="mt-4 flex items-start gap-2 rounded-2xl bg-primary/5 p-3 text-xs leading-relaxed text-muted-foreground ring-1 ring-inset ring-primary/20">
             <Info className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
             <span>{t(config.setupNoteKey)}</span>
           </div>
         )}
 
-        <section className="geo-surface mt-5 rounded-2xl p-4 sm:p-5" aria-label={locale === "de" ? "Schnell starten" : "Quick start"}>
-          <div className="geo-segmented grid grid-cols-2 gap-1">
-            <button type="button" className="geo-segment inline-flex min-h-11 items-center justify-center gap-2 px-3 text-sm font-semibold" aria-pressed={!practice} onClick={() => setPractice(false)}><Play className="h-4 w-4" aria-hidden />{locale === "de" ? "Spielen" : "Play"}</button>
-            <button type="button" className="geo-segment inline-flex min-h-11 items-center justify-center gap-2 px-3 text-sm font-semibold" aria-pressed={practice} onClick={() => setPractice(true)}><BookOpen className="h-4 w-4" aria-hidden />{locale === "de" ? "Üben" : "Practice"}</button>
-          </div>
-          <p className="mt-2 text-xs leading-relaxed text-muted-foreground">{practice ? t("setup.practice.desc") : locale === "de" ? "Sammle Punkte und erweitere deine Länder-Sammlung." : "Earn points and grow your country collection."}</p>
-
-          {config.supportsDifficulty && <fieldset className="mt-5"><legend className="mb-2 text-sm font-semibold">{t("common.difficulty")}</legend><div className="geo-segmented grid grid-cols-3 gap-1">{DIFFICULTIES.map((d) => <button key={d} type="button" aria-pressed={difficulty === d} onClick={() => setDifficulty(d)} className="geo-segment min-h-11 px-1 text-sm font-semibold">{t(`difficulty.${d}`)}</button>)}</div></fieldset>}
-
-          {config.countOptions && !practice && <fieldset className="mt-5"><legend className="mb-2 text-sm font-semibold">{t("setup.rounds")}</legend><div className="flex flex-wrap gap-2">{config.countOptions.map((n) => <button key={n} type="button" aria-pressed={roundCount === n} onClick={() => setRoundCount(n)} className={cn("inline-flex min-h-11 min-w-11 flex-1 items-center justify-center gap-1 rounded-xl px-3 text-sm font-semibold transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary", roundCount === n ? "bg-primary text-primary-foreground" : "bg-muted text-foreground hover:bg-muted/70")}>{roundCount === n && <Check className="h-3.5 w-3.5 shrink-0" aria-hidden />}{n === 0 ? t(gameId === "adastra" ? "adastra.allPhotos" : "setup.all") : n}</button>)}</div></fieldset>}
-
-          <p className="mt-4 text-xs leading-relaxed text-muted-foreground">{[config.modes && t(`mode.${mode}`), config.variants && t(`scope.${variant}`), config.supportsTimed && !practice && (timed ? (locale === "de" ? "Mit Timer" : "Timer on") : (locale === "de" ? "Ohne Timer" : "No timer"))].filter(Boolean).join(" · ")}</p>
-          <Button size="lg" className="mt-4 h-auto min-h-14 w-full gap-2 px-4 py-3" onClick={startPlaying}><Play className="h-5 w-5 shrink-0" aria-hidden /><span className="whitespace-normal">{practice ? (locale === "de" ? "Übungsrunde starten" : "Start practice") : t("common.start")}</span></Button>
-        </section>
-
-        <details className="group mt-4 rounded-2xl bg-muted/45">
-          <summary className="flex min-h-14 cursor-pointer list-none items-center gap-2 rounded-2xl px-4 text-sm font-semibold focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"><SlidersHorizontal className="h-4 w-4 text-muted-foreground" aria-hidden />{locale === "de" ? "Alle Spieleinstellungen" : "All game settings"}<ChevronDown className="ml-auto h-4 w-4 transition-transform group-open:rotate-180" aria-hidden /></summary>
-          <div className="space-y-5 border-t border-border/60 p-4 sm:p-5">
-          {config.variants && (
-            <div>
-              <h2 className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                {t(config.variants.labelKey)}
-              </h2>
-              <div className="flex flex-wrap gap-2">
-                {config.variants.options.map((v) => (
-                  <button
-                    key={v}
-                    type="button"
-                    aria-pressed={variant === v}
-                    onClick={() => setVariant(v)}
-                    className={cn(
-                      "min-h-11 rounded-xl border px-3 py-2 text-sm font-semibold transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary",
-                      variant === v
-                        ? "border-primary bg-primary/5 text-foreground"
-                        : "border-border bg-card text-muted-foreground hover:bg-muted/40"
-                    )}
-                  >
-                    {t(`scope.${v}`)}
-                  </button>
-                ))}
-              </div>
+        <section className="geo-surface mt-4 space-y-5 rounded-3xl p-4 sm:p-5" aria-label={locale === "de" ? "Spiel einrichten" : "Set up the game"}>
+          <div>
+            <div className="geo-segmented grid grid-cols-2 gap-1">
+              <button type="button" className={cn(segmentClass, "gap-2")} aria-pressed={!practice} onClick={() => setPractice(false)}><Play className="h-4 w-4" aria-hidden />{locale === "de" ? "Spielen" : "Play"}</button>
+              <button type="button" className={cn(segmentClass, "gap-2")} aria-pressed={practice} onClick={() => setPractice(true)}><BookOpen className="h-4 w-4" aria-hidden />{locale === "de" ? "Üben" : "Practice"}</button>
             </div>
+            <p className="mt-2 text-xs leading-relaxed text-muted-foreground">{practice ? t("setup.practice.desc") : locale === "de" ? "Sammle Punkte und erweitere deine Länder-Sammlung." : "Earn points and grow your country collection."}</p>
+          </div>
+
+          {config.variants && (
+            <fieldset>
+              <legend className="mb-2 text-sm font-semibold">{t(config.variants.labelKey)}</legend>
+              {variantIsPuzzle ? (
+                <>
+                  <div className="geo-segmented grid grid-cols-2 gap-1">
+                    {config.variants.options.map((v) => <button key={v} type="button" aria-pressed={variant === v} onClick={() => setVariant(v)} className={segmentClass}>{t(`scope.${v}`)}</button>)}
+                  </div>
+                  <p className="mt-2 text-xs leading-relaxed text-muted-foreground">{t(`puzzle.${variant}.desc`)}</p>
+                </>
+              ) : (
+                <div className="flex flex-wrap gap-2">
+                  {config.variants.options.map((v) => (
+                    <button key={v} type="button" aria-pressed={variant === v} onClick={() => setVariant(v)} className={cn("min-h-11 rounded-xl px-3.5 text-sm font-semibold transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary", variant === v ? "bg-foreground text-background" : "bg-muted text-muted-foreground hover:text-foreground")}>{t(`scope.${v}`)}</button>
+                  ))}
+                </div>
+              )}
+            </fieldset>
           )}
 
           {config.supportsDifficulty && (
-            <div>
-              <h2 className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                {t("common.difficulty")}
-              </h2>
-              <div className="grid gap-2">
-                {DIFFICULTIES.map((d) => (
-                  <OptionRow
-                    key={d}
-                    active={difficulty === d}
-                    title={t(`difficulty.${d}`)}
-                    desc={t(gameId === "adastra" ? `adastra.difficulty.${d}` : `difficulty.${d}.desc`)}
-                    onClick={() => setDifficulty(d)}
-                  />
-                ))}
-              </div>
-            </div>
+            <fieldset>
+              <legend className="mb-2 text-sm font-semibold">{t("common.difficulty")}</legend>
+              <div className="geo-segmented grid grid-cols-3 gap-1">{DIFFICULTIES.map((d) => <button key={d} type="button" aria-pressed={difficulty === d} onClick={() => setDifficulty(d)} className={segmentClass}>{t(`difficulty.${d}`)}</button>)}</div>
+              <p className="mt-2 text-xs leading-relaxed text-muted-foreground">{t(gameId === "adastra" ? `adastra.difficulty.${difficulty}` : `difficulty.${difficulty}.desc`)}</p>
+            </fieldset>
           )}
 
           {config.modes && config.modes.length > 1 && (
-            <div>
-              <h2 className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                {t("common.mode")}
-              </h2>
-              <div className="grid gap-2">
-                {config.modes.map((m) => (
-                  <OptionRow
-                    key={m}
-                    active={mode === m}
-                    title={t(`mode.${m}`)}
-                    desc={t(`mode.${m}.desc`)}
-                    onClick={() => setMode(m)}
-                  />
-                ))}
-              </div>
-            </div>
+            <fieldset>
+              <legend className="mb-2 text-sm font-semibold">{t("common.mode")}</legend>
+              <div className="geo-segmented grid grid-cols-2 gap-1">{config.modes.map((m) => <button key={m} type="button" aria-pressed={mode === m} onClick={() => setMode(m)} className={segmentClass}>{t(`mode.${m}`)}</button>)}</div>
+              <p className="mt-2 text-xs leading-relaxed text-muted-foreground">{t(`mode.${mode}.desc`)}</p>
+            </fieldset>
           )}
 
-          <button
-            type="button"
-            role="switch"
-            aria-checked={practice}
-            onClick={() => setPractice((v) => !v)}
-            className={cn(
-              "flex w-full items-center justify-between rounded-xl border-2 px-4 py-3 text-left transition-colors",
-              practice ? "border-primary bg-primary/5" : "border-border bg-card"
-            )}
-          >
-            <div>
-              <div className="font-semibold">{t("setup.practice")}</div>
-              <div className="text-xs text-muted-foreground">{t("setup.practice.desc")}</div>
-            </div>
-            <span
-              className={cn(
-                "inline-flex h-7 w-12 shrink-0 items-center rounded-full px-0.5 transition-colors",
-                practice ? "bg-primary" : "bg-input"
-              )}
-            >
-              <span
-                className={cn(
-                  "inline-block h-6 w-6 rounded-full bg-white shadow transition-transform duration-200",
-                  practice ? "translate-x-5" : "translate-x-0"
-                )}
-              />
-            </span>
-          </button>
-
           {config.countOptions && !practice && (
-            <div>
-              <h2 className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                {t("setup.rounds")}
-              </h2>
-              <div className="grid grid-cols-4 gap-2">
-                {config.countOptions.map((n) => (
-                  <button
-                    key={n}
-                    onClick={() => setRoundCount(n)}
-                    className={cn(
-                      "rounded-xl border-2 py-2.5 text-sm font-semibold transition-all",
-                      roundCount === n
-                        ? "border-primary bg-primary/5 text-foreground"
-                        : "border-border bg-card text-muted-foreground hover:bg-muted/40"
-                    )}
-                  >
-                    {n === 0 ? t(gameId === "adastra" ? "adastra.allPhotos" : "setup.all") : n}
-                  </button>
-                ))}
+            <fieldset>
+              <legend className="mb-2 text-sm font-semibold">{t("setup.rounds")}</legend>
+              <div className="geo-segmented grid gap-1" style={{ gridTemplateColumns: `repeat(${config.countOptions.length}, minmax(0, 1fr))` }}>
+                {config.countOptions.map((n) => <button key={n} type="button" aria-pressed={roundCount === n} onClick={() => setRoundCount(n)} className={segmentClass}>{n === 0 ? t(gameId === "adastra" ? "adastra.allPhotos" : "setup.all") : n}</button>)}
               </div>
-            </div>
+            </fieldset>
           )}
 
           {config.supportsTimed && !practice && (
@@ -577,29 +509,20 @@ function GameShellContent({
               role="switch"
               aria-checked={timed}
               onClick={() => setTimed((v) => !v)}
-              className="flex w-full items-center justify-between rounded-xl border-2 border-border bg-card px-4 py-3 text-left"
+              className="flex w-full items-center justify-between gap-3 rounded-2xl bg-muted/60 px-4 py-3 text-left focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
             >
-              <div>
-                <div className="font-semibold">{t("setup.timed")}</div>
-                <div className="text-xs text-muted-foreground">{t("setup.timed.desc")}</div>
-              </div>
-              <span
-                className={cn(
-                  "inline-flex h-7 w-12 shrink-0 items-center rounded-full px-0.5 transition-colors",
-                  timed ? "bg-primary" : "bg-input"
-                )}
-              >
-                <span
-                  className={cn(
-                    "inline-block h-6 w-6 rounded-full bg-white shadow transition-transform duration-200",
-                    timed ? "translate-x-5" : "translate-x-0"
-                  )}
-                />
+              <span>
+                <span className="block text-sm font-semibold">{t("setup.timed")}</span>
+                <span className="block text-xs text-muted-foreground">{t("setup.timed.desc")}</span>
+              </span>
+              <span className={cn("inline-flex h-7 w-12 shrink-0 items-center rounded-full px-0.5 transition-colors", timed ? "bg-primary" : "bg-input")}>
+                <span className={cn("inline-block h-6 w-6 rounded-full bg-white shadow transition-transform duration-200", timed ? "translate-x-5" : "translate-x-0")} />
               </span>
             </button>
           )}
-          </div>
-        </details>
+
+          <Button size="lg" className="sticky bottom-[max(12px,env(safe-area-inset-bottom))] z-10 h-auto min-h-14 w-full gap-2 rounded-2xl px-4 py-3 text-base shadow-lg shadow-primary/25" onClick={startPlaying}><Play className="h-5 w-5 shrink-0 fill-current" aria-hidden /><span className="whitespace-normal">{practice ? (locale === "de" ? "Übungsrunde starten" : "Start practice") : t("common.start")}</span></Button>
+        </section>
         {gameId === "adastra" && <details className="mt-4"><summary className="min-h-11 cursor-pointer py-3 text-sm font-medium text-primary">{locale === "de" ? "Bildvorschau ansehen" : "See photo preview"}</summary><AdastraSetupPhoto /></details>}
       </div>
 
@@ -610,43 +533,6 @@ function GameShellContent({
         </Button>
       </Modal>
     </div>
-  );
-}
-
-function OptionRow({
-  active,
-  title,
-  desc,
-  onClick,
-}: {
-  active: boolean;
-  title: string;
-  desc: string;
-  onClick: () => void;
-}) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      aria-pressed={active}
-      className={cn(
-        "flex min-h-14 items-center justify-between rounded-xl border px-4 py-3 text-left transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary",
-        active
-          ? "border-primary bg-primary/5"
-          : "border-border bg-card hover:border-border/80 hover:bg-muted/40"
-      )}
-    >
-      <div>
-        <div className="font-semibold">{title}</div>
-        <div className="text-xs text-muted-foreground">{desc}</div>
-      </div>
-      <span
-        className={cn(
-          "ml-3 h-4 w-4 shrink-0 rounded-full border-2",
-          active ? "border-primary bg-primary" : "border-muted-foreground/40"
-        )}
-      />
-    </button>
   );
 }
 

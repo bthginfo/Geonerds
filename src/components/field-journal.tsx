@@ -11,7 +11,7 @@ import { DEX_POOL, MASTER_GAMES, MASTER_TOTAL, dexGameCount, dexRawHits, dexStat
 import { countryName } from "@/data/countries";
 import { cn } from "@/lib/utils";
 import { useAllRuns } from "@/hooks/use-scores";
-import { BADGES, badgeName, badgeProgress, badgeTier, computeStats } from "@/lib/badges";
+import { visibleBadges, badgeName, badgeProgress, badgeTier, computeStats } from "@/lib/badges";
 
 export function FieldJournal() {
   const { locale } = useT();
@@ -29,7 +29,7 @@ export function FieldJournal() {
     .map((country) => ({ country, score: dexRawHits(hits[country.cca3]), games: dexGameCount(hits[country.cca3]) }))
     .sort((a, b) => (Math.min(b.score / MASTER_TOTAL, b.games / MASTER_GAMES) - Math.min(a.score / MASTER_TOTAL, a.games / MASTER_GAMES)))[0];
   const stats = computeStats(runs ?? [], hits, progression);
-  const nextBadge = BADGES.map((badge) => ({ badge, progress: badgeProgress(badge, stats) }))
+  const nextBadge = visibleBadges(stats).map((badge) => ({ badge, progress: badgeProgress(badge, stats) }))
     .filter((item) => !item.badge.earned(stats) && item.progress && item.progress.target > 0)
     .sort((a, b) => (b.progress!.current / b.progress!.target) - (a.progress!.current / a.progress!.target) || a.badge.id.localeCompare(b.badge.id))[0];
 

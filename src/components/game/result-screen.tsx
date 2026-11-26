@@ -15,6 +15,9 @@ import { getCountryByCca3, countryName } from "@/data/countries";
 import { SupportLink } from "@/components/support-cta";
 import { formatNumber, formatTime } from "@/lib/utils";
 import { ChallengeResultPanel, type ChallengeResultState } from "@/components/challenges/challenge-result";
+import { GAMES, getGame, type GameConfig } from "@/games/registry";
+import { GAME_CATEGORIES } from "@/games/categories";
+import { GameArt } from "@/components/home/game-art";
 
 export function ResultScreen({
   result,
@@ -210,11 +213,37 @@ export function ResultScreen({
           </Link>
         </div>
 
+        {!challenge && <UpNext gameId={result.gameId} seed={result.createdAt} />}
+
         <div className="mt-5 border-t border-border/60 pt-3">
           <SupportLink />
         </div>
       </motion.div>
     </div>
+  );
+}
+
+/** Two related suggestions: one from the same theme, one from elsewhere, so players discover more. */
+function UpNext({ gameId, seed }: { gameId: string; seed: number }) {
+  const { t, locale } = useT();
+  const own = GAME_CATEGORIES.find((category) => category.games.some((id) => id === gameId));
+  const pick = (ids: readonly string[], offset: number) => ids.length ? ids[(Math.abs(Math.floor(seed / 1000)) + offset) % ids.length] : undefined;
+  const sameTheme = pick((own?.games ?? []).filter((id) => id !== gameId), 0);
+  const elsewhere = pick(GAMES.map((game) => game.id).filter((id) => id !== gameId && !own?.games.some((entry) => entry === id)), 7);
+  const games = [sameTheme, elsewhere].map((id) => (id ? getGame(id) : undefined)).filter((game): game is GameConfig => Boolean(game));
+  if (!games.length) return null;
+  return (
+    <section className="mt-6 text-left" aria-labelledby="up-next-title">
+      <h2 id="up-next-title" className="mb-2.5 text-sm font-bold">{locale === "de" ? "Als Nächstes" : "Up next"}</h2>
+      <div className="grid grid-cols-2 gap-3">
+        {games.map((game) => (
+          <Link key={game.id} href={`/play/${game.id}`} className="geo-tile overflow-hidden rounded-2xl bg-card ring-1 ring-inset ring-border focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary">
+            <GameArt game={game} className="h-16" />
+            <span className="block px-3 py-2.5 text-sm font-semibold leading-snug">{t(`games.${game.id}.name`)}</span>
+          </Link>
+        ))}
+      </div>
+    </section>
   );
 }
 

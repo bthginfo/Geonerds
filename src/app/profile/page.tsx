@@ -7,7 +7,7 @@ import { useT } from "@/i18n/I18nProvider";
 import { useAllRuns } from "@/hooks/use-scores";
 import { useAuth } from "@/store/auth";
 import { useDaily } from "@/store/daily";
-import { BADGES, computeStats, badgeName } from "@/lib/badges";
+import { visibleBadges, computeStats, badgeName } from "@/lib/badges";
 import { useDex } from "@/store/dex";
 import { dexStateOf, DEX_POOL } from "@/lib/dex";
 import { levelFromXp, rankName } from "@/lib/level";
@@ -38,7 +38,8 @@ export default function ProfilePage() {
 
   const stats = useMemo(() => computeStats(runs ?? [], dexHits, progression, community.badgeIds), [runs, dexHits, progression, community.badgeIds]);
   const level = useMemo(() => levelFromXp(stats.totalScore), [stats.totalScore]);
-  const earned = useMemo(() => BADGES.filter((b) => b.earned(stats)), [stats]);
+  const badgeList = useMemo(() => visibleBadges(stats), [stats]);
+  const earned = useMemo(() => badgeList.filter((b) => b.earned(stats)), [badgeList, stats]);
   const dailyStreak = useMemo(() => streakFromDates(Object.keys(dailyResults)), [dailyResults]);
 
   const { acc, favorite } = useMemo(() => {
@@ -173,7 +174,7 @@ export default function ProfilePage() {
         )}
       </section>
 
-      <details className="geo-surface mt-5 p-4 sm:p-5"><summary className="flex min-h-11 cursor-pointer items-center font-semibold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">{locale === "de" ? "Mehr Spielstatistik" : "More play stats"}</summary><dl className="mt-3 grid grid-cols-3 gap-3 border-t border-border pt-4"><Tile label={t("common.streak")} value={String(stats.bestStreak)} /><Tile label={t("profile.dailyStreak")} value={String(dailyStreak)} /><Tile label={t("profile.badges")} value={`${earned.length}/${BADGES.length}`} /></dl></details>
+      <details className="geo-surface mt-5 p-4 sm:p-5"><summary className="flex min-h-11 cursor-pointer items-center font-semibold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">{locale === "de" ? "Mehr Spielstatistik" : "More play stats"}</summary><dl className="mt-3 grid grid-cols-3 gap-3 border-t border-border pt-4"><Tile label={t("common.streak")} value={String(stats.bestStreak)} /><Tile label={t("profile.dailyStreak")} value={String(dailyStreak)} /><Tile label={t("profile.badges")} value={`${earned.length}/${badgeList.length}`} /></dl></details>
 
       {/* Flame footer flair */}
       {dailyStreak >= 3 && (

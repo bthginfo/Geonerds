@@ -55,13 +55,14 @@ describe("honest, independently seeded training bots", () => {
     expect(easyQuestions.correct).toBe(hardQuestions.correct);
     expect(hardQuestions.score).toBeGreaterThanOrEqual(easyQuestions.score);
   });
-  it("does not award hidden speed points in untimed mode and honors the actual mountain timer", () => {
+  it("does not award hidden speed points in untimed mode and stays within the quiz timer", () => {
     const untimed = buildBotAttempt(config, "hard", "fixed", 10);
     const timed = buildBotAttempt({ ...config, timed: true }, "hard", "fixed", 10);
     expect(timed.correct).toBe(untimed.correct);
     expect(timed.score).toBeGreaterThan(untimed.score);
-    const mountain = buildBotAttempt({ ...config, gameId: "mountains", timed: true, variant: "" }, "easy", "timer", 10);
-    expect(mountain.durationMs).toBeGreaterThan(10_000);
+    const waters = buildBotAttempt({ ...config, gameId: "waters", timed: true, variant: "" }, "easy", "timer", 10);
+    expect(waters.durationMs).toBeGreaterThan(10_000);
+    expect(() => buildBotAttempt({ ...config, gameId: "mountains" as never, variant: "" }, "easy", "timer", 10)).toThrow();
   });
   it.each([0, -1, 11, 1001, Infinity, NaN, 1.5])("rejects invalid or oversize count %s", (total) => {
     expect(() => buildBotAttempt(config, "medium", "fixed", total)).toThrow();

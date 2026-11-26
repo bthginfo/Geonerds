@@ -9,6 +9,7 @@ import type { FeedbackFilter, FeedbackStatus, FeedbackSubmission } from "@/lib/c
 import { apiAdminFeedback, apiSendBotFeedbackReply, apiSetFeedbackStatus, type AdminFeedbackResult } from "@/lib/community-online";
 import { cn, formatNumber } from "@/lib/utils";
 import { useAuth } from "@/store/auth";
+import { AdminPlayStats } from "@/components/community/admin-play-stats";
 
 export default function FeedbackAdminPage() {
   const { locale } = useT();
@@ -37,7 +38,7 @@ export default function FeedbackAdminPage() {
           <StatePanel title={de ? "Dieser Bereich ist privat" : "This area is private"}>
             <p>{de ? "Nur das TheCreator-Konto kann Einsendungen ansehen. Deine eigenen Ideen kannst du auf der Startseite teilen." : "Only the TheCreator account can view submissions. You can share your own ideas from Home."}</p>
           </StatePanel>
-        ) : <FeedbackInbox key={user.id} userId={user.id} />}
+        ) : <><AdminPlayStats /><FeedbackInbox key={user.id} userId={user.id} /></>}
       </div>
     </div>
   );

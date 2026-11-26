@@ -3,9 +3,8 @@ import { COUNTRIES, getCountryByCca3 } from "@/data/countries";
 import { LANDMARKS, LEGACY_LANDMARKS } from "@/data/landmarks";
 import { CITIES, V2_CITIES, LEGACY_CITIES } from "@/games/capitals/cities";
 import { ITEMS, V2_ORIGIN_ITEMS, LEGACY_ORIGIN_ITEMS } from "@/games/origin/items";
-import { PEAKS, LEGACY_PEAKS } from "@/games/mountains/peaks";
+import { PEAKS, LEGACY_PEAKS } from "@/games/pin/peaks";
 import { PLACES, V2_PLACES, LEGACY_PLACES } from "@/games/pin/places";
-import { COMPASS_CITIES, V2_COMPASS_CITIES, LEGACY_COMPASS_CITIES } from "@/games/city-compass/cities";
 import { FACT_QUESTIONS, V2_FACT_QUESTIONS, factQuestionsForSeed } from "./fact-questions";
 import { triviaClues } from "./facts";
 import { GEO_CONTENT_SEED_PREFIX, isLegacyGeoSeed, isPreviousGeoSeed } from "./geo-content-version";
@@ -16,7 +15,6 @@ describe("expanded geography content and old duel compatibility", () => {
     expect(LEGACY_ORIGIN_ITEMS).toHaveLength(165);
     expect(LEGACY_PEAKS).toHaveLength(72);
     expect(LEGACY_PLACES).toHaveLength(112);
-    expect(LEGACY_COMPASS_CITIES).toHaveLength(247);
     expect(Object.values(LEGACY_CITIES).flat()).toHaveLength(166);
     expect(LANDMARKS.length - LEGACY_LANDMARKS.length).toBe(60);
     expect(V2_FACT_QUESTIONS).toHaveLength(180);
@@ -26,8 +24,6 @@ describe("expanded geography content and old duel compatibility", () => {
     expect(PEAKS).toHaveLength(84);
     expect(V2_PLACES).toHaveLength(148);
     expect(PLACES).toHaveLength(158);
-    expect(V2_COMPASS_CITIES).toHaveLength(271);
-    expect(COMPASS_CITIES).toHaveLength(281);
     expect(Object.values(V2_CITIES).flat()).toHaveLength(291);
     expect(Object.values(CITIES).flat().length).toBeGreaterThan(Object.values(V2_CITIES).flat().length);
     expect(Object.values(CITIES).flat().length).toBeGreaterThanOrEqual(290);
