@@ -21,7 +21,12 @@ import {
   pieceSequence,
   placeOnBoard,
   placeTrayPiece,
+  pieceFits,
   placementPoints,
+  rotateCells,
+  rotateTrayPiece,
+  orientedShape,
+  trayShape,
   previewClear,
   suggestAnchor,
   summarize,
@@ -30,6 +35,9 @@ import {
 } from "./engine";
 
 const DIFFICULTIES: Difficulty[] = ["easy", "medium", "hard"];
+
+/** No two orthogonal neighbours are free, so no piece of 3+ cells fits in any rotation. */
+const checkerboard = (fill: number) => emptyBoard().map((_, index) => ((Math.floor(index / BOARD_SIZE) + (index % BOARD_SIZE)) % 2 === 0 ? fill : 0));
 
 function connected(cells: readonly (readonly [number, number])[]): boolean {
   const keys = new Set(cells.map(([r, c]) => `${r},${c}`));
@@ -97,8 +105,8 @@ describe("board logic", () => {
 
   it("rejects out-of-bounds and overlapping placements", () => {
     const board = emptyBoard();
-    expect(canPlace(board, bar, 0, 5)).toBe(true);
-    expect(canPlace(board, bar, 0, 6)).toBe(false);
+    expect(canPlace(board, bar, 0, BOARD_SIZE - 3)).toBe(true);
+    expect(canPlace(board, bar, 0, BOARD_SIZE - 2)).toBe(false);
     expect(canPlace(board, bar, -1, 0)).toBe(false);
     const placed = placeOnBoard(board, bar, 3, 3, 7);
     expect(placed[cellIndex(3, 4)]).toBe(7);
@@ -110,33 +118,33 @@ describe("board logic", () => {
     const board = emptyBoard();
     for (let col = 0; col < BOARD_SIZE; col++) board[cellIndex(2, col)] = 1;
     for (let row = 0; row < BOARD_SIZE; row++) board[cellIndex(row, 5)] = 2;
-    board[cellIndex(7, 0)] = 3;
+    board[cellIndex(BOARD_SIZE - 1, 0)] = 3;
     const lines = findFullLines(board);
     expect(lines).toEqual({ rows: [2], cols: [5] });
     const { board: next, cleared } = clearLines(board, lines);
-    expect(cleared).toHaveLength(15);
+    expect(cleared).toHaveLength(2 * BOARD_SIZE - 1);
     expect(next.filter((cell) => cell !== 0)).toEqual([3]);
   });
 
   it("previews the cells a placement would clear", () => {
     const board = emptyBoard();
     for (let col = 3; col < BOARD_SIZE; col++) board[cellIndex(0, col)] = 1;
-    expect(previewClear(board, bar, 0, 0)).toHaveLength(8);
+    expect(previewClear(board, bar, 0, 0)).toHaveLength(BOARD_SIZE);
     expect(previewClear(board, bar, 1, 0)).toHaveLength(0);
   });
 
   it("detects when no piece fits", () => {
     // Checkerboard: no two orthogonal neighbours are free, so no 3+ cell piece fits.
-    const board = emptyBoard().map((_, index) => ((Math.floor(index / BOARD_SIZE) + index) % 2 === 0 ? 1 : 0));
+    const board = checkerboard(1);
     for (const piece of Object.values(PIECES)) expect(fitsAnywhere(board, piece)).toBe(false);
-    expect(anyTrayFits(board, [{ index: 0, cca3: "FRA", naming: "unknown" }, null, null])).toBe(false);
+    expect(anyTrayFits(board, [{ index: 0, cca3: "FRA", naming: "unknown", rotation: 0 }, null, null])).toBe(false);
     expect(suggestAnchor(board, getPiece("FRA"))).toBeNull();
-    expect(anyTrayFits(emptyBoard(), [null, { index: 1, cca3: "FRA", naming: "unknown" }, null])).toBe(true);
+    expect(anyTrayFits(emptyBoard(), [null, { index: 1, cca3: "FRA", naming: "unknown", rotation: 2 }, null])).toBe(true);
   });
 
   it("ends the run when the remaining tray pieces do not fit", () => {
     const run = createRun("over-test", "medium");
-    const blocked = emptyBoard().map((_, index) => ((Math.floor(index / BOARD_SIZE) + index) % 2 === 0 ? 9 : 0));
+    const blocked = checkerboard(9);
     const slot = 0;
     const shape = getPiece(run.tray[slot]!.cca3);
     // Free a spot for exactly this piece, keep everything else checkered.
@@ -146,6 +154,60 @@ describe("board logic", () => {
     expect(next).not.toBeNull();
     expect(next!.over).toBe(true);
     expect(placeTrayPiece(next!, 1, 0, 0)).toBeNull();
+  });
+});
+
+describe("rotation", () => {
+  it("turns cells 90° clockwise and swaps width and height", () => {
+    // L shape: ##
+    //          #.
+    //          #.
+    const l = { cells: [[0, 0], [0, 1], [1, 0], [2, 0]] as const, w: 2, h: 3 };
+    const once = rotateCells(l.cells, l.w, l.h);
+    expect(once).toEqual({ cells: [[0, 0], [0, 1], [0, 2], [1, 2]], w: 3, h: 2 });
+    let current: { cells: readonly (readonly [number, number])[]; w: number; h: number } = l;
+    for (let i = 0; i < 4; i++) current = rotateCells(current.cells, current.w, current.h);
+    expect(current).toEqual({ cells: [[0, 0], [0, 1], [1, 0], [2, 0]], w: 2, h: 3 });
+  });
+
+  it("keeps every rotation a valid piece with the north-up outline", () => {
+    for (const piece of Object.values(PIECES)) {
+      for (const rotation of [1, 2, 3] as const) {
+        const shape = orientedShape(piece.cca3, rotation);
+        expect(shape.cells).toHaveLength(piece.cells.length);
+        expect([shape.w, shape.h]).toEqual(rotation % 2 ? [piece.h, piece.w] : [piece.w, piece.h]);
+        expect(connected(shape.cells)).toBe(true);
+        for (const [r, c] of shape.cells) expect(r < shape.h && c < shape.w && r >= 0 && c >= 0).toBe(true);
+        expect(shape.outline).toBe(piece.outline);
+        expect(shape.box).toEqual(piece.box);
+      }
+    }
+  });
+
+  it("counts a piece as fitting when any rotation fits", () => {
+    const tall = Object.values(PIECES).find((piece) => piece.w === 1 && piece.h >= 3)!;
+    // Only a single free horizontal strip remains in the top row.
+    const board = emptyBoard().map((_, index) => (index < tall.h ? 0 : 1));
+    expect(fitsAnywhere(board, tall)).toBe(false);
+    expect(fitsAnywhere(board, orientedShape(tall.cca3, 1))).toBe(true);
+    expect(pieceFits(board, tall.cca3)).toBe(true);
+    expect(anyTrayFits(board, [{ index: 0, cca3: tall.cca3, naming: "unknown", rotation: 0 }, null, null])).toBe(true);
+  });
+
+  it("only ends the run when no rotation of any tray piece fits", () => {
+    const run = createRun("rotate-over", "hard");
+    const tall = Object.values(PIECES).find((piece) => piece.w === 1 && piece.h >= 3)!;
+    const board = emptyBoard().map((_, index) => (index < tall.h ? 0 : 1));
+    const state: BlastState = { ...run, board, tray: [{ index: 0, cca3: tall.cca3, naming: "unknown", rotation: 0 }, null, null] };
+    expect(placeTrayPiece(state, 0, 0, 0)).toBeNull();
+    const turned = rotateTrayPiece(state, 0);
+    expect(turned.tray[0]!.rotation).toBe(1);
+    const placed = placeTrayPiece(turned, 0, 0, 0)!;
+    expect(placed).not.toBeNull();
+    expect(placed.placements[1].rotation).toBe(1);
+    // The run continues only if one of the fresh pieces fits in some rotation.
+    expect(placed.over).toBe(!placed.tray.some((piece) => piece && pieceFits(placed.board, piece.cca3)));
+    expect(rotateTrayPiece(rotateTrayPiece(rotateTrayPiece(turned, 0), 0), 0).tray[0]!.rotation).toBe(0);
   });
 });
 
@@ -189,9 +251,9 @@ describe("scoring", () => {
     // Fill row 7 except where the piece's bottom row lands at the left edge.
     const board = emptyBoard();
     const bottom = bar.cells.filter(([r]) => r === bar.h - 1).map(([, c]) => c);
-    for (let col = 0; col < BOARD_SIZE; col++) if (!bottom.includes(col)) board[cellIndex(7, col)] = 99;
+    for (let col = 0; col < BOARD_SIZE; col++) if (!bottom.includes(col)) board[cellIndex(BOARD_SIZE - 1, col)] = 99;
     state = { ...state, board, combo: 1 };
-    const row = 7 - (bar.h - 1);
+    const row = BOARD_SIZE - 1 - (bar.h - 1);
     if (canPlace(board, bar, row, 0)) {
       const next = placeTrayPiece(state, 0, row, 0)!;
       expect(next.last!.linesCleared).toBeGreaterThanOrEqual(1);
@@ -203,18 +265,20 @@ describe("scoring", () => {
   });
 });
 
-/** Deterministic bot: names every other piece (correctly when its index is even), places first fit. */
+/** Deterministic bot: names every other piece (correctly when its index is even), rotates until it fits, places nearest the centre. */
 function playOut(seed: string, difficulty: Difficulty, practice = false) {
   let state = createRun(seed, difficulty, practice);
   let moves = 0;
   while (!state.over && moves < 1500) {
-    const slot = state.tray.findIndex((piece) => piece && fitsAnywhere(state.board, getPiece(piece.cca3)));
+    const slot = state.tray.findIndex((piece) => piece && pieceFits(state.board, piece.cca3));
+    expect(slot).toBeGreaterThanOrEqual(0);
+    for (let turn = 0; turn < 4 && !fitsAnywhere(state.board, trayShape(state.tray[slot]!)); turn++) state = rotateTrayPiece(state, slot);
     const piece = state.tray[slot]!;
     if (piece.index % 2 === 0) {
       const choices = trayChoices(state, slot);
       state = nameTrayPiece(state, slot, piece.index % 4 === 0 ? piece.cca3 : choices.find((code) => code !== piece.cca3)!);
     }
-    const anchor = suggestAnchor(state.board, getPiece(piece.cca3))!;
+    const anchor = suggestAnchor(state.board, trayShape(piece))!;
     state = placeTrayPiece(state, slot, anchor.row, anchor.col)!;
     moves++;
   }

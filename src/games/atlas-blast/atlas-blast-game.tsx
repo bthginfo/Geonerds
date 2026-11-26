@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import type { CSSProperties, KeyboardEvent as ReactKeyboardEvent, PointerEvent as ReactPointerEvent } from "react";
 import { motion, useReducedMotion } from "framer-motion";
-import { Ban, Check, CheckCircle2, Rows3, Tag, X, XCircle } from "lucide-react";
+import { Ban, Check, CheckCircle2, RotateCw, Rows3, Tag, X, XCircle } from "lucide-react";
 import type { PlayHandlers } from "@/components/game/game-shell";
 import { GameTopBar, ScorePill, StreakPill } from "@/components/game/hud";
 import { Button } from "@/components/ui/button";
@@ -23,6 +23,10 @@ import {
   fitsAnywhere,
   getPiece,
   nameTrayPiece,
+  orientedShape,
+  pieceFits,
+  rotateTrayPiece,
+  trayShape,
   placeTrayPiece,
   previewClear,
   suggestAnchor,
@@ -33,7 +37,6 @@ import {
 } from "./engine";
 import { CountryOutline, PieceBlocks, blockClass, flagSliceStyle } from "./piece-art";
 
-const GAP = 3;
 const DRAG_THRESHOLD = 6;
 
 type Anchor = { row: number; col: number };
@@ -54,6 +57,7 @@ interface DragInfo {
   pieceH: number;
   pitch: number;
   cell: number;
+  gap: number;
   grid: DOMRect;
 }
 
@@ -70,7 +74,7 @@ function centredAnchor(shape: PieceShape, row: number, col: number): Anchor {
 function fillFor(game: BlastState, id: number, index: number): CellFill | null {
   const placement = game.placements[id];
   if (!placement) return null;
-  const shape = getPiece(placement.cca3);
+  const shape = orientedShape(placement.cca3, placement.rotation);
   return {
     flag: placement.named ? country(placement.cca3).flag : null,
     w: shape.w,
@@ -93,6 +97,7 @@ export function AtlasBlastGame(handlers: PlayHandlers) {
   const [naming, setNaming] = useState<{ slot: number; pick: string | null } | null>(null);
   const [dragSlot, setDragSlot] = useState<number | null>(null);
   const [dragCell, setDragCell] = useState(40);
+  const [dragGap, setDragGap] = useState(2);
   const [message, setMessage] = useState(() => t("atlasblast.status.start"));
   const [bursts, setBursts] = useState<{ key: number; origin: Anchor; cells: (CellFill & { index: number })[] } | null>(null);
   const [floater, setFloater] = useState<{ key: number; text: string; sub: string } | null>(null);
@@ -112,9 +117,9 @@ export function AtlasBlastGame(handlers: PlayHandlers) {
 
   const name = useCallback((cca3: string) => countryName(country(cca3), locale), [locale]);
   const selectedPiece = selected !== null ? game.tray[selected] : null;
-  const selectedShape = selectedPiece ? getPiece(selectedPiece.cca3) : null;
+  const selectedShape = selectedPiece ? trayShape(selectedPiece) : null;
   const activeSlot = dragSlot ?? selected;
-  const activeShape = activeSlot !== null && game.tray[activeSlot] ? getPiece(game.tray[activeSlot]!.cca3) : null;
+  const activeShape = activeSlot !== null && game.tray[activeSlot] ? trayShape(game.tray[activeSlot]!) : null;
   const ghostValid = Boolean(ghost && activeShape && canPlace(game.board, activeShape, ghost.row, ghost.col));
   const ghostCells = useMemo(() => {
     if (!ghost || !activeShape) return new Set<number>();
@@ -124,7 +129,10 @@ export function AtlasBlastGame(handlers: PlayHandlers) {
     () => new Set(ghost && activeShape && ghostValid ? previewClear(game.board, activeShape, ghost.row, ghost.col) : []),
     [ghost, activeShape, ghostValid, game.board],
   );
-  const fits = useMemo(() => game.tray.map((piece) => (piece ? fitsAnywhere(game.board, getPiece(piece.cca3)) : false)), [game]);
+  const fits = useMemo(
+    () => game.tray.map((piece) => (piece ? { any: pieceFits(game.board, piece.cca3), now: fitsAnywhere(game.board, trayShape(piece)) } : { any: false, now: false })),
+    [game],
+  );
   const filled = game.board.filter((cell) => cell !== 0).length;
 
   const updateGhost = useCallback((next: Anchor | null) => {
@@ -170,12 +178,12 @@ export function AtlasBlastGame(handlers: PlayHandlers) {
       setMessage(t("atlasblast.status.start"));
       return;
     }
-    const shape = getPiece(piece.cca3);
+    const shape = trayShape(piece);
     setSelected(slot);
     setAim(mode);
     const label = piece.naming === "unknown" ? t("atlasblast.pieceShort", { n: slot + 1 }) : name(piece.cca3);
     if (mode === "keys") {
-      const anchor = suggestAnchor(game.board, shape) ?? centredAnchor(shape, 3, 3);
+      const anchor = suggestAnchor(game.board, shape) ?? centredAnchor(shape, 4, 4);
       updateGhost(anchor);
       setMessage(`${t("atlasblast.status.selectedKeys", { name: label })} ${describeGhost(shape, anchor, game.board)}`);
       boardRef.current?.focus();
@@ -235,6 +243,24 @@ export function AtlasBlastGame(handlers: PlayHandlers) {
     return true;
   }
 
+  function rotate(slot: number) {
+    const piece = game.tray[slot];
+    if (!piece || game.over || naming || dragSlot !== null) return;
+    const next = rotateTrayPiece(game, slot);
+    const shape = trayShape(next.tray[slot]!);
+    setGame(next);
+    haptic.tap();
+    let text = t("atlasblast.status.rotated", { name: piece.naming === "unknown" ? t("atlasblast.pieceShort", { n: slot + 1 }) : name(piece.cca3) });
+    if (selected === slot && ghostRef.current) {
+      let anchor: Anchor = { row: clamp(ghostRef.current.row, 0, BOARD_SIZE - shape.h), col: clamp(ghostRef.current.col, 0, BOARD_SIZE - shape.w) };
+      // Keyboard aiming jumps to the nearest free spot when the turned piece no longer fits here.
+      if (aim === "keys" && !canPlace(next.board, shape, anchor.row, anchor.col)) anchor = suggestAnchor(next.board, shape) ?? anchor;
+      updateGhost(anchor);
+      text += ` ${describeGhost(shape, anchor, next.board)}`;
+    }
+    setMessage(text);
+  }
+
   function openNaming(slot: number) {
     const piece = game.tray[slot];
     if (!piece || piece.naming !== "unknown" || game.over) return;
@@ -267,12 +293,13 @@ export function AtlasBlastGame(handlers: PlayHandlers) {
   function onTrayPointerDown(event: ReactPointerEvent<HTMLButtonElement>, slot: number) {
     const piece = game.tray[slot];
     if (!piece || game.over || naming || event.button !== 0 || !gridRef.current) return;
-    const shape = getPiece(piece.cca3);
+    const shape = trayShape(piece);
     const grid = gridRef.current.getBoundingClientRect();
-    const cell = (grid.width - GAP * (BOARD_SIZE - 1)) / BOARD_SIZE;
-    const pitch = cell + GAP;
-    const pieceW = shape.w * cell + (shape.w - 1) * GAP;
-    const pieceH = shape.h * cell + (shape.h - 1) * GAP;
+    const gap = parseFloat(getComputedStyle(gridRef.current).columnGap) || 2;
+    const cell = (grid.width - gap * (BOARD_SIZE - 1)) / BOARD_SIZE;
+    const pitch = cell + gap;
+    const pieceW = shape.w * cell + (shape.w - 1) * gap;
+    const pieceH = shape.h * cell + (shape.h - 1) * gap;
     const touch = event.pointerType !== "mouse";
     let grabX = pieceW / 2;
     let grabY = pieceH + Math.max(26, cell * 0.9);
@@ -286,7 +313,7 @@ export function AtlasBlastGame(handlers: PlayHandlers) {
     event.currentTarget.setPointerCapture(event.pointerId);
     dragRef.current = {
       slot, pointerId: event.pointerId, touch, startX: event.clientX, startY: event.clientY, x: event.clientX, y: event.clientY,
-      started: false, grabX, grabY, pieceW, pieceH, pitch, cell, grid,
+      started: false, grabX, grabY, pieceW, pieceH, pitch, cell, gap, grid,
     };
   }
 
@@ -308,10 +335,11 @@ export function AtlasBlastGame(handlers: PlayHandlers) {
       drag.started = true;
       setSelected(null);
       setDragCell(drag.cell);
+      setDragGap(drag.gap);
       setDragSlot(drag.slot);
     }
     positionFloat(drag);
-    const shape = getPiece(game.tray[drag.slot]!.cca3);
+    const shape = trayShape(game.tray[drag.slot]!);
     const left = drag.x - drag.grabX;
     const top = drag.y - drag.grabY;
     const cx = left + drag.pieceW / 2;
@@ -400,6 +428,11 @@ export function AtlasBlastGame(handlers: PlayHandlers) {
       setMessage(t("atlasblast.status.start"));
       return;
     }
+    if (event.key === "r" || event.key === "R") {
+      event.preventDefault();
+      rotate(selected);
+      return;
+    }
     if (event.key === "n" || event.key === "N") {
       event.preventDefault();
       openNaming(selected);
@@ -408,7 +441,7 @@ export function AtlasBlastGame(handlers: PlayHandlers) {
     const moves: Record<string, [number, number]> = { ArrowUp: [-1, 0], ArrowDown: [1, 0], ArrowLeft: [0, -1], ArrowRight: [0, 1] };
     if (moves[event.key] && (onBoard || aim === "keys")) {
       event.preventDefault();
-      const base = ghostRef.current ?? suggestAnchor(game.board, selectedShape) ?? centredAnchor(selectedShape, 3, 3);
+      const base = ghostRef.current ?? suggestAnchor(game.board, selectedShape) ?? centredAnchor(selectedShape, 4, 4);
       const [dr, dc] = moves[event.key];
       const anchor = {
         row: clamp(base.row + (ghostRef.current ? dr : 0), 0, BOARD_SIZE - selectedShape.h),
@@ -479,10 +512,10 @@ export function AtlasBlastGame(handlers: PlayHandlers) {
             onPointerMove={onBoardPointerMove}
             onPointerLeave={(event) => { if (event.pointerType === "mouse" && aim === "pointer" && dragSlot === null) updateGhost(null); }}
             onPointerUp={onBoardPointerUp}
-            className="relative touch-manipulation rounded-2xl [--board-room:340px] sm:[--board-room:372px] border border-border bg-card p-1.5 outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+            className="relative touch-manipulation rounded-2xl [--board-room:356px] sm:[--board-room:388px] border border-border bg-card p-1 sm:p-1.5 outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-background"
             style={{ width: "max(288px, min(100%, 520px, calc(100dvh - var(--board-room))))" }}
           >
-            <div ref={gridRef} className="grid grid-cols-8" style={{ gap: GAP }}>
+            <div ref={gridRef} className="grid grid-cols-9 gap-[2px] sm:gap-[3px]">
               {game.board.map((id, index) => {
                 const fill = id ? fillFor(game, id, index) : null;
                 const inGhost = ghostCells.has(index);
@@ -514,7 +547,7 @@ export function AtlasBlastGame(handlers: PlayHandlers) {
 
             {/* Clear burst */}
             {bursts && (
-              <div aria-hidden className="pointer-events-none absolute inset-0 grid grid-cols-8 p-1.5" style={{ gap: GAP }}>
+              <div aria-hidden className="pointer-events-none absolute inset-0 grid grid-cols-9 gap-[2px] p-1 sm:gap-[3px] sm:p-1.5">
                 {bursts.cells.map((cell) => {
                   const row = Math.floor(cell.index / BOARD_SIZE);
                   const col = cell.index % BOARD_SIZE;
@@ -552,19 +585,20 @@ export function AtlasBlastGame(handlers: PlayHandlers) {
           <div className="grid w-full grid-cols-3 gap-2 [--cell:14px] [--gap:2px] min-[360px]:[--cell:16px] min-[380px]:[--cell:17px] sm:[--cell:20px]" style={{ maxWidth: 520 }}>
             {game.tray.map((piece, slot) => {
               if (!piece) {
-                return <div key={`empty-${slot}`} className="flex min-h-[calc(5*var(--cell)+4*var(--gap)+3.75rem)] items-center justify-center rounded-2xl border border-dashed border-border text-xs text-muted-foreground"><span className="sr-only">{t("atlasblast.pieceUsed", { n: slot + 1 })}</span></div>;
+                return <div key={`empty-${slot}`} className="flex min-h-[calc(5*var(--cell)+4*var(--gap)+4.75rem)] items-center justify-center rounded-2xl border border-dashed border-border text-xs text-muted-foreground"><span className="sr-only">{t("atlasblast.pieceUsed", { n: slot + 1 })}</span></div>;
               }
-              const shape = getPiece(piece.cca3);
-              const noRoom = !fits[slot];
+              const shape = trayShape(piece);
+              const noRoom = !fits[slot].any;
+              const rotateHint = fits[slot].any && !fits[slot].now;
               const isSelected = selected === slot || dragSlot === slot;
               const known = piece.naming !== "unknown";
               const label = t("atlasblast.piece", {
                 n: slot + 1,
                 country: known ? name(piece.cca3) : t("atlasblast.pieceUnknown"),
                 cells: shape.cells.length,
-              }) + (noRoom ? `, ${t("atlasblast.pieceNoRoom")}` : "");
+              }) + (noRoom ? `, ${t("atlasblast.pieceNoRoom")}` : rotateHint ? `, ${t("atlasblast.rotateToFit")}` : "");
               return (
-                <div key={piece.index} className={cn("flex flex-col gap-1 rounded-2xl border bg-card p-1", isSelected ? "border-primary ring-2 ring-primary/40" : "border-border")}>
+                <div key={piece.index} className={cn("relative flex flex-col gap-1 rounded-2xl border bg-card p-1", isSelected ? "border-primary ring-2 ring-primary/40" : "border-border")}>
                   <button
                     ref={(element) => { trayRefs.current[slot] = element; }}
                     type="button"
@@ -577,7 +611,7 @@ export function AtlasBlastGame(handlers: PlayHandlers) {
                     onPointerCancel={(event) => endDrag(event, true)}
                     onKeyDown={(event) => onTrayKeyDown(event, slot)}
                     className={cn(
-                      "relative flex h-[calc(5*var(--cell)+4*var(--gap)+0.75rem)] touch-none select-none items-center justify-center rounded-xl outline-none transition-colors focus-visible:ring-2 focus-visible:ring-primary",
+                      "relative flex h-[calc(5*var(--cell)+4*var(--gap)+1.75rem)] touch-none pt-5 select-none items-center justify-center rounded-xl outline-none transition-colors focus-visible:ring-2 focus-visible:ring-primary",
                       isSelected ? "bg-primary/10" : "hover:bg-muted/70",
                       game.over && "cursor-default",
                     )}
@@ -588,13 +622,30 @@ export function AtlasBlastGame(handlers: PlayHandlers) {
                       animate={reducedMotion ? undefined : { scale: isSelected ? 1.06 : 1 }}
                       transition={{ duration: 0.15 }}
                     >
-                      <PieceBlocks shape={shape} flag={piece.naming === "correct" ? country(piece.cca3).flag : null} fit={5} />
+                      <PieceBlocks shape={shape} flag={piece.naming === "correct" ? country(piece.cca3).flag : null} fit={5} showOutline={piece.rotation === 0} />
                     </motion.span>
-                    {noRoom && (
-                      <span className="absolute inset-x-1 bottom-1 flex items-center justify-center gap-1 rounded-md bg-card/90 px-1 py-0.5 text-[11px] font-semibold text-danger">
-                        <Ban className="h-3 w-3 shrink-0" aria-hidden />{t("atlasblast.noRoom")}
+                    {piece.rotation !== 0 && (
+                      <span aria-hidden title={t("atlasblast.outlineNorth")} className="absolute bottom-1 left-1 flex h-8 w-8 items-center justify-center rounded-md bg-muted p-0.5">
+                        <CountryOutline shape={shape} className="max-h-full max-w-full" />
                       </span>
                     )}
+                    {(noRoom || rotateHint) && (
+                      <span className={cn("absolute inset-x-1 bottom-1 flex items-center justify-center gap-1 rounded-md bg-card/90 px-1 py-0.5 text-[11px] font-semibold", noRoom ? "text-danger" : "text-amber-700 dark:text-amber-300")}>
+                        {noRoom ? <Ban className="h-3 w-3 shrink-0" aria-hidden /> : <RotateCw className="h-3 w-3 shrink-0" aria-hidden />}
+                        {t(noRoom ? "atlasblast.noRoom" : "atlasblast.rotateToFit")}
+                      </span>
+                    )}
+                  </button>
+                  <button
+                    type="button"
+                    aria-label={t("atlasblast.rotate", { n: slot + 1 })}
+                    disabled={game.over}
+                    onClick={() => rotate(slot)}
+                    className="absolute right-0 top-0 z-10 flex h-11 w-11 items-center justify-center rounded-xl text-muted-foreground outline-none hover:text-foreground focus-visible:ring-2 focus-visible:ring-primary disabled:opacity-40"
+                  >
+                    <span className={cn("flex h-8 w-8 items-center justify-center rounded-full border bg-card shadow-sm", isSelected ? "border-primary text-primary" : "border-border")}>
+                      <RotateCw className="h-4 w-4" aria-hidden />
+                    </span>
                   </button>
                   {known ? (
                     <div className={cn("flex h-11 items-center justify-center gap-1 px-1 text-center text-[11px] font-semibold leading-[1.15]", piece.naming === "correct" ? "text-success" : "text-muted-foreground")}>
@@ -644,9 +695,10 @@ export function AtlasBlastGame(handlers: PlayHandlers) {
 
       {/* Dragged piece */}
       {dragSlot !== null && game.tray[dragSlot] && (
-        <div ref={floatRef} aria-hidden className="pointer-events-none fixed left-0 top-0 z-50 drop-shadow-[0_10px_18px_oklch(0.2_0.03_255/0.35)]" style={{ "--cell": `${dragCell}px`, "--gap": `${GAP}px` } as CSSProperties}>
+        <div ref={floatRef} aria-hidden className="pointer-events-none fixed left-0 top-0 z-50 drop-shadow-[0_10px_18px_oklch(0.2_0.03_255/0.35)]" style={{ "--cell": `${dragCell}px`, "--gap": `${dragGap}px` } as CSSProperties}>
           <PieceBlocks
-            shape={getPiece(game.tray[dragSlot]!.cca3)}
+            shape={trayShape(game.tray[dragSlot]!)}
+            showOutline={game.tray[dragSlot]!.rotation === 0}
             flag={game.tray[dragSlot]!.naming === "correct" ? country(game.tray[dragSlot]!.cca3).flag : null}
             className={cn(!ghostValid && ghost && "opacity-80")}
           />

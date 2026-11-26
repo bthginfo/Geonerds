@@ -48,10 +48,12 @@ export function PieceBlocks({
   const [minX, minY, maxX, maxY] = shape.box;
   const pad = 2;
   const u = OUTLINE_UNITS;
-  const x0 = fit ? Math.min(0, minX - pad) : 0;
-  const y0 = fit ? Math.min(0, minY - pad) : 0;
-  const x1 = fit ? Math.max(shape.w * u, maxX + pad) : shape.w * u;
-  const y1 = fit ? Math.max(shape.h * u, maxY + pad) : shape.h * u;
+  // Include the outline in the layout box only when it is drawn.
+  const withOutline = Boolean(fit) && showOutline;
+  const x0 = withOutline ? Math.min(0, minX - pad) : 0;
+  const y0 = withOutline ? Math.min(0, minY - pad) : 0;
+  const x1 = withOutline ? Math.max(shape.w * u, maxX + pad) : shape.w * u;
+  const y1 = withOutline ? Math.max(shape.h * u, maxY + pad) : shape.h * u;
   const scale = fit ? Math.min(1, (fit * u) / Math.max(x1 - x0, y1 - y0)) : 1;
   const vars = { "--pc": `calc(var(--cell) * ${scale.toFixed(3)})`, "--pg": `calc(var(--gap) * ${scale.toFixed(3)})` } as CSSProperties;
   return (
