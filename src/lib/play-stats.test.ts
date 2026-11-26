@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { FALLBACK_POPULAR, parsePlayEvent, rankPopular } from "./play-stats";
+import { FALLBACK_POPULAR, mergePopularity, parsePlayEvent, rankPopular } from "./play-stats";
 import { GAMES } from "@/games/registry";
 
 describe("anonymous play stats", () => {
@@ -21,6 +21,17 @@ describe("anonymous play stats", () => {
       { gameId: "outline", finishes: 1, starts: 1 },
     ]);
     expect(ranked.map((row) => row.gameId)).toEqual(["flags", "capitals", "outline"]);
+  });
+
+  it("merges account runs without double counting signed-in finishes", () => {
+    const merged = mergePopularity(
+      [{ gameId: "flags", starts: 10, finishes: 6 }, { gameId: "grid", starts: 2, finishes: 1 }],
+      new Map([["flags", 4], ["map-click", 5]]),
+    );
+    const byId = Object.fromEntries(merged.map((row) => [row.gameId, row]));
+    expect(byId.flags).toEqual({ gameId: "flags", starts: 10, finishes: 6 });
+    expect(byId["map-click"]).toEqual({ gameId: "map-click", starts: 5, finishes: 5 });
+    expect(rankPopular(merged).map((row) => row.gameId)).toEqual(["flags", "map-click", "grid"]);
   });
 
   it("keeps the fallback shelf within the live catalogue", () => {

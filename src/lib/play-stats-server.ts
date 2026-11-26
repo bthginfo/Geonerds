@@ -4,7 +4,7 @@ import { getDb, isDbConfigured } from "@/lib/db";
 import { adminGate } from "@/lib/community-server";
 import { sameGeoOrigin } from "@/lib/geo-challenge-server";
 import { clientIp, rateLimit } from "@/lib/ratelimit";
-import { parsePlayEvent, rankPopular, type PopularGame } from "@/lib/play-stats";
+import { mergePopularity, parsePlayEvent, rankPopular, type PopularGame } from "@/lib/play-stats";
 
 const NO_STORE = { "Cache-Control": "no-store" };
 
@@ -52,11 +52,22 @@ async function windowTotals(days: number): Promise<PopularGame[]> {
   return rows.map((row) => ({ gameId: row.game_id, starts: Number(row.starts), finishes: Number(row.finishes) }));
 }
 
+async function accountRuns(days: number): Promise<Map<string, number>> {
+  const sql = await getDb();
+  const rows = await sql<{ game_id: string; runs: number }[]>`
+    SELECT game_id, COUNT(*)::int AS runs FROM gn_scores
+    WHERE created_at >= now() - ${days}::int * interval '1 day'
+    GROUP BY game_id
+  `;
+  return new Map(rows.map((row) => [row.game_id, Number(row.runs)]));
+}
+
 /** GET /api/plays — public, aggregated "popular this week" list; CDN-cacheable. */
 export async function popularGames() {
   if (!isDbConfigured) return NextResponse.json({ configured: false, games: [] }, { headers: NO_STORE });
   try {
-    const games = rankPopular(await windowTotals(7), 8);
+    const [anonymous, accounts] = await Promise.all([windowTotals(7), accountRuns(7)]);
+    const games = rankPopular(mergePopularity(anonymous, accounts), 8);
     return NextResponse.json({ configured: true, games }, {
       headers: { "Cache-Control": "public, s-maxage=900, stale-while-revalidate=3600" },
     });

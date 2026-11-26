@@ -83,6 +83,8 @@ body {
 }
 
 body {
+  /* Safety net: the app never scrolls sideways as a page; wide content scrolls in its own container. */
+  overflow-x: clip;
   background: var(--background);
   color: var(--foreground);
   font-family: var(--font-sans);
@@ -141,7 +143,7 @@ input, textarea { caret-color: var(--primary); }
 .geo-page { width: 100%; max-width: 1152px; margin-inline: auto; padding: 28px 20px 40px; }
 .geo-section-title { font-size: 1.25rem; font-weight: 700; letter-spacing: -.025em; line-height: 1.3; }
 .geo-nav-spacer { padding-bottom: calc(88px + env(safe-area-inset-bottom, 0px)); }
-.geo-category-scroll { scrollbar-width: none; }
+.geo-category-scroll { position: relative; scrollbar-width: none; }
 .geo-category-scroll::-webkit-scrollbar { display: none; }
 .geo-game-row + .geo-game-row { border-top: 1px solid var(--border); }
 .geo-game-row { transition: background-color 160ms ease-out; }
@@ -180,7 +182,7 @@ input, textarea { caret-color: var(--primary); }
 }
 .geo-tile:active { transform: scale(.985); }
 @media (prefers-reduced-motion: reduce) { .geo-tile, .geo-tile:hover, .geo-tile:active { transform: none; transition: none; } }
-.geo-shelf { scrollbar-width: none; scroll-padding-inline: 16px; }
+.geo-shelf { position: relative; scrollbar-width: none; scroll-padding-inline: 16px; }
 .geo-shelf::-webkit-scrollbar { display: none; }
 
 /* Legacy layout hooks now use the same calm ground as the app. */

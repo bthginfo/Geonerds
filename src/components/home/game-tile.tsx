@@ -23,7 +23,7 @@ export function GameTile({ game, meta = {}, size = "md", className }: { game: Ga
     <Link
       href={`/play/${game.id}`}
       className={cn(
-        "geo-tile group flex min-w-0 flex-col overflow-hidden rounded-2xl bg-card text-card-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary",
+        "geo-tile group relative flex min-w-0 flex-col overflow-hidden rounded-2xl bg-card text-card-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary",
         className,
       )}
     >

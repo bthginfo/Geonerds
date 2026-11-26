@@ -34,5 +34,18 @@ export function rankPopular(rows: readonly PopularGame[], limit = 8): PopularGam
     .slice(0, limit);
 }
 
+/**
+ * Saved account runs are a second source while anonymous counters build up.
+ * Signed-in finishes appear in both, so the larger value is used, never the sum.
+ */
+export function mergePopularity(anonymous: readonly PopularGame[], accountRuns: ReadonlyMap<string, number>): PopularGame[] {
+  const merged = new Map<string, PopularGame>(anonymous.map((row) => [row.gameId, { ...row }]));
+  for (const [gameId, runs] of accountRuns) {
+    const row = merged.get(gameId) ?? { gameId, starts: 0, finishes: 0 };
+    merged.set(gameId, { ...row, finishes: Math.max(row.finishes, runs), starts: Math.max(row.starts, runs) });
+  }
+  return [...merged.values()];
+}
+
 /** Editorial fallback when no live counts are available (based on November 2026 account play data). */
 export const FALLBACK_POPULAR: readonly string[] = ["flags", "map-click", "capitals", "outline", "grid", "colorflag", "border-chain", "draw"];
