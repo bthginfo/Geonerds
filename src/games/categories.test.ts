@@ -64,12 +64,12 @@ describe("themed game catalog", () => {
     const launched = getGameCategories(Date.parse("2026-11-26T12:00:00Z"));
     expect(launched[0].id).toBe("new");
     expect(launched[0].games).toEqual(ids);
-    const expired = getGameCategories(Date.parse("2026-12-26T12:00:00Z"));
+    const expired = getGameCategories(Date.parse("2026-12-26T17:00:00Z"));
     expect(expired.some((category) => category.id === "new")).toBe(false);
     for (const id of ids) {
       expect(expired.find((category) => category.games.some((entry) => entry === id))?.id).toBe(GAME_CATEGORIES.find((category) => category.games.some((entry) => entry === id))?.id);
     }
-    expect(expired.find((category) => category.id === "puzzles")?.games).toEqual(["geo-groups", "letter-atlas", "place-trails", "geo-brackets"]);
+    expect(expired.find((category) => category.id === "puzzles")?.games).toEqual(["geo-groups", "letter-atlas", "place-trails", "geo-brackets", "rare-finds"]);
   });
 
   it("keeps missing or invalid feature dates in their permanent category", () => {

@@ -67,7 +67,8 @@ export type GameId =
   | "letter-atlas"
   | "place-trails"
   | "geo-brackets"
-  | "atlas-blast";
+  | "atlas-blast"
+  | "rare-finds";
 
 export type Difficulty = "easy" | "medium" | "hard";
 

@@ -63,6 +63,8 @@ const PlaceTrailsGame = dynamic(() => import("@/games/place-trails/place-trails-
 const GeoBracketsGame = dynamic(() => import("@/games/geo-brackets/geo-brackets-game").then((m) => m.GeoBracketsGame), { loading: ColorFlagLoading });
 const AtlasBlastGame = dynamic(() => import("@/games/atlas-blast/atlas-blast-game").then((m) => m.AtlasBlastGame), { loading: ColorFlagLoading });
 
+const RareFindsGame = dynamic(() => import("@/games/rare-finds/rare-finds-game").then((m) => m.RareFindsGame), { loading: ColorFlagLoading });
+
 const COMPONENTS: Partial<Record<GameId, (h: PlayHandlers) => React.ReactNode>> = {
   jigsaw: (h) => <JigsawGame {...h} />,
   connections: (h) => <ConnectionsGame {...h} />,
@@ -94,6 +96,7 @@ const COMPONENTS: Partial<Record<GameId, (h: PlayHandlers) => React.ReactNode>> 
   "place-trails": (h) => <PlaceTrailsGame {...h} />,
   "geo-brackets": (h) => <GeoBracketsGame {...h} />,
   "atlas-blast": (h) => <AtlasBlastGame {...h} />,
+  "rare-finds": (h) => <RareFindsGame {...h} />,
 };
 
 export default function PlayPage() {
