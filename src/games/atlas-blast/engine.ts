@@ -6,7 +6,7 @@ import type { Country, Difficulty } from "@/lib/types";
 
 /** Pure Atlas Blast engine: board, pieces, naming, scoring. No React. */
 
-export const BOARD_SIZE = 8;
+export const BOARD_SIZE = 9;
 export const TRAY_SIZE = 3;
 /** Outline path units per board cell (see scripts/build-atlas-blast-pieces.mjs). */
 export const OUTLINE_UNITS = 10;
@@ -46,6 +46,33 @@ export function getPiece(cca3: string): PieceShape {
   return piece;
 }
 
+/** Quarter turns clockwise. Only the blocks rotate; the outline stays north-up. */
+export type Rotation = 0 | 1 | 2 | 3;
+export const ROTATIONS: readonly Rotation[] = [0, 1, 2, 3];
+
+/** Rotates cells 90° clockwise inside a w×h box: (r, c) → (c, h − 1 − r); w and h swap. */
+export function rotateCells(cells: readonly CellOffset[], w: number, h: number): { cells: CellOffset[]; w: number; h: number } {
+  const rotated = cells.map(([r, c]) => [c, h - 1 - r] as const).sort((a, b) => a[0] - b[0] || a[1] - b[1]);
+  return { cells: rotated, w: h, h: w };
+}
+
+const oriented = new Map<string, PieceShape>();
+
+/** The piece with its blocks turned `rotation` quarter turns clockwise. */
+export function orientedShape(cca3: string, rotation: Rotation = 0): PieceShape {
+  const base = getPiece(cca3);
+  if (rotation === 0) return base;
+  const key = `${cca3}:${rotation}`;
+  let shape = oriented.get(key);
+  if (!shape) {
+    let current: { cells: readonly CellOffset[]; w: number; h: number } = base;
+    for (let turn = 0; turn < rotation; turn++) current = rotateCells(current.cells, current.w, current.h);
+    shape = { ...base, cells: current.cells, w: current.w, h: current.h };
+    oriented.set(key, shape);
+  }
+  return shape;
+}
+
 /** Easy keeps to well-known countries, medium adds tier 3, hard plays everything. */
 export const BLAST_MAX_TIER: Record<Difficulty, number> = { easy: 2, medium: 3, hard: 4 };
 export const CHOICE_COUNT: Record<Difficulty, number> = { easy: 3, medium: 3, hard: 4 };
@@ -55,9 +82,9 @@ export const CHOICE_COUNT: Record<Difficulty, number> = { easy: 3, medium: 3, ha
  * deals the atlas as it is.
  */
 const SIZE_WEIGHT: Record<Difficulty, (cells: number) => number> = {
-  easy: (n) => (n <= 5 ? 1 : n === 6 ? 0.75 : n === 7 ? 0.5 : n === 8 ? 0.35 : 0.25),
-  medium: (n) => (n <= 6 ? 1 : n === 7 ? 0.8 : n === 8 ? 0.65 : 0.5),
-  hard: () => 1,
+  easy: (n) => [1, 1, 1, 1, 1, 0.75, 0.45, 0.25, 0.15, 0.1][n] ?? 0.1,
+  medium: (n) => [1, 1, 1, 1, 1, 0.85, 0.6, 0.4, 0.3, 0.2][n] ?? 0.2,
+  hard: (n) => [1, 1, 1, 1, 1, 1, 0.75, 0.55, 0.45, 0.35][n] ?? 0.35,
 };
 
 const pools: Partial<Record<Difficulty, Country[]>> = {};
@@ -243,6 +270,11 @@ export function clearLines(board: Board, lines: FullLines): { board: number[]; c
 }
 
 /** Cells that a hypothetical placement would clear (for the ghost preview). */
+/** True when the piece fits somewhere in any of its four rotations. */
+export function pieceFits(board: Board, cca3: string): boolean {
+  return ROTATIONS.some((rotation) => fitsAnywhere(board, orientedShape(cca3, rotation)));
+}
+
 export function previewClear(board: Board, shape: Pick<PieceShape, "cells">, row: number, col: number): number[] {
   if (!canPlace(board, shape, row, col)) return [];
   const placed = placeOnBoard(board, shape, row, col, -1);
@@ -277,9 +309,12 @@ export interface TrayPiece {
   index: number;
   cca3: string;
   naming: NamingState;
+  rotation: Rotation;
 }
 
-export interface Placement { id: number; cca3: string; named: boolean; row: number; col: number }
+export interface Placement { id: number; cca3: string; named: boolean; row: number; col: number; rotation: Rotation }
+
+export const trayShape = (piece: Pick<TrayPiece, "cca3" | "rotation">) => orientedShape(piece.cca3, piece.rotation);
 
 export interface LastMove {
   placementId: number;
@@ -317,17 +352,17 @@ export interface BlastState {
 }
 
 function drawTray(seed: string, difficulty: Difficulty, from: number): TrayPiece[] {
-  return Array.from({ length: TRAY_SIZE }, (_, offset) => ({ index: from + offset, cca3: pieceAt(seed, difficulty, from + offset), naming: "unknown" as const }));
+  return Array.from({ length: TRAY_SIZE }, (_, offset) => ({ index: from + offset, cca3: pieceAt(seed, difficulty, from + offset), naming: "unknown" as const, rotation: 0 as const }));
 }
 
 export function anyTrayFits(board: Board, tray: readonly (TrayPiece | null)[]): boolean {
-  return tray.some((piece) => piece !== null && fitsAnywhere(board, getPiece(piece.cca3)));
+  return tray.some((piece) => piece !== null && pieceFits(board, piece.cca3));
 }
 
 export function createRun(seed: string, difficulty: Difficulty, practice = false): BlastState {
   const board = emptyBoard();
   const tray = drawTray(seed, difficulty, 0);
-  // Every piece is at most 5×5, so the first tray always fits the empty board.
+  // Every piece is at most 5×5, so the first tray always fits the empty 9×9 board.
   if (!anyTrayFits(board, tray)) throw new Error("First Atlas Blast tray does not fit");
   return {
     seed, difficulty, practice, board, placements: {}, tray, drawn: TRAY_SIZE,
@@ -358,11 +393,19 @@ export function nameTrayPiece(state: BlastState, slot: number, guess: string): B
   };
 }
 
-/** Places a tray piece with its top-left at (row, col). Returns null when invalid. */
+/** Turns a tray piece 90° clockwise. */
+export function rotateTrayPiece(state: BlastState, slot: number): BlastState {
+  const piece = state.tray[slot];
+  if (state.over || !piece) return state;
+  const rotation = ((piece.rotation + 1) % 4) as Rotation;
+  return { ...state, tray: state.tray.map((entry, i) => (i === slot && entry ? { ...entry, rotation } : entry)) };
+}
+
+/** Places a tray piece (in its current rotation) with its top-left at (row, col). Returns null when invalid. */
 export function placeTrayPiece(state: BlastState, slot: number, row: number, col: number): BlastState | null {
   const piece = state.tray[slot];
   if (state.over || !piece) return null;
-  const shape = getPiece(piece.cca3);
+  const shape = trayShape(piece);
   if (!canPlace(state.board, shape, row, col)) return null;
   const id = state.placed + 1;
   const named = piece.naming === "correct";
@@ -381,7 +424,7 @@ export function placeTrayPiece(state: BlastState, slot: number, row: number, col
   return {
     ...state,
     board,
-    placements: { ...state.placements, [id]: { id, cca3: piece.cca3, named, row, col } },
+    placements: { ...state.placements, [id]: { id, cca3: piece.cca3, named, row, col, rotation: piece.rotation } },
     tray,
     drawn,
     score: state.practice ? 0 : state.score + points.total,

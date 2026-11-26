@@ -25,7 +25,7 @@ const SAMPLES = 10; // samples per cell side
 const MIN_FIDELITY = 0.42;
 const MIN_FIDELITY_THIN = 0.15;
 const DETAIL_BONUS = Number(process.env.DETAIL_BONUS ?? 0.04);
-const SIZE_COST = Number(process.env.SIZE_COST ?? 0.016);
+const SIZE_COST = Number(process.env.SIZE_COST ?? 0.025);
 const UNITS = 10; // outline units per cell
 const MAX_OUTLINE = 400;
 

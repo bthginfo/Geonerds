@@ -24,12 +24,15 @@ export function blockClass(flag: string | null) {
 
 /**
  * A piece drawn with absolutely positioned blocks. Size comes from the CSS
- * variables --cell and --gap on an ancestor (or the style prop).
+ * variables --cell and --gap on an ancestor (or the style prop). With
+ * `fit`, the layout box also includes the outline (islands may reach past
+ * the blocks) and shrinks so the longer side spans at most `fit` cells.
  */
 export function PieceBlocks({
   shape,
   flag,
   showOutline = true,
+  fit,
   className,
   style,
 }: {
@@ -37,51 +40,71 @@ export function PieceBlocks({
   /** Flag code to fill the blocks with; null for the neutral colour. */
   flag: string | null;
   showOutline?: boolean;
+  fit?: number;
   className?: string;
   style?: CSSProperties;
 }) {
-  const pitch = "(var(--cell) + var(--gap))";
+  const pitch = "(var(--pc) + var(--pg))";
   const [minX, minY, maxX, maxY] = shape.box;
   const pad = 2;
+  const u = OUTLINE_UNITS;
+  const x0 = fit ? Math.min(0, minX - pad) : 0;
+  const y0 = fit ? Math.min(0, minY - pad) : 0;
+  const x1 = fit ? Math.max(shape.w * u, maxX + pad) : shape.w * u;
+  const y1 = fit ? Math.max(shape.h * u, maxY + pad) : shape.h * u;
+  const scale = fit ? Math.min(1, (fit * u) / Math.max(x1 - x0, y1 - y0)) : 1;
+  const vars = { "--pc": `calc(var(--cell) * ${scale.toFixed(3)})`, "--pg": `calc(var(--gap) * ${scale.toFixed(3)})` } as CSSProperties;
   return (
     <div
       aria-hidden
       className={cn("relative shrink-0", className)}
       style={{
-        width: `calc(${shape.w} * var(--cell) + ${shape.w - 1} * var(--gap))`,
-        height: `calc(${shape.h} * var(--cell) + ${shape.h - 1} * var(--gap))`,
+        ...vars,
+        width: fit ? `calc(${(x1 - x0) / u} * ${pitch})` : `calc(${shape.w} * var(--pc) + ${shape.w - 1} * var(--pg))`,
+        height: fit ? `calc(${(y1 - y0) / u} * ${pitch})` : `calc(${shape.h} * var(--pc) + ${shape.h - 1} * var(--pg))`,
         ...style,
       }}
     >
-      {shape.cells.map(([r, c]) => (
-        <span
-          key={`${r}-${c}`}
-          className={cn("absolute rounded-[22%]", blockClass(flag))}
-          style={{
-            left: `calc(${c} * ${pitch})`,
-            top: `calc(${r} * ${pitch})`,
-            width: "var(--cell)",
-            height: "var(--cell)",
-            ...(flag ? flagSliceStyle(flag, shape.w, shape.h, r, c) : null),
-          }}
-        />
-      ))}
-      {showOutline && (
-        <svg
-          className="pointer-events-none absolute overflow-visible"
-          style={{
-            left: `calc(${(minX - pad) / OUTLINE_UNITS} * ${pitch})`,
-            top: `calc(${(minY - pad) / OUTLINE_UNITS} * ${pitch})`,
-            width: `calc(${(maxX - minX + 2 * pad) / OUTLINE_UNITS} * ${pitch})`,
-            height: `calc(${(maxY - minY + 2 * pad) / OUTLINE_UNITS} * ${pitch})`,
-          }}
-          viewBox={`${minX - pad} ${minY - pad} ${maxX - minX + 2 * pad} ${maxY - minY + 2 * pad}`}
-          preserveAspectRatio="none"
-        >
-          <path d={shape.outline} className="fill-none stroke-white/85 dark:stroke-slate-950/85" strokeWidth={3.2} strokeLinejoin="round" vectorEffect="non-scaling-stroke" />
-          <path d={shape.outline} className="fill-slate-900/10 stroke-slate-900 dark:fill-white/10 dark:stroke-white" strokeWidth={1.4} strokeLinejoin="round" vectorEffect="non-scaling-stroke" />
-        </svg>
-      )}
+      <div
+        data-blocks
+        className="absolute"
+        style={{
+          left: `calc(${-x0 / u} * ${pitch})`,
+          top: `calc(${-y0 / u} * ${pitch})`,
+          width: `calc(${shape.w} * var(--pc) + ${shape.w - 1} * var(--pg))`,
+          height: `calc(${shape.h} * var(--pc) + ${shape.h - 1} * var(--pg))`,
+        }}
+      >
+        {shape.cells.map(([r, c]) => (
+          <span
+            key={`${r}-${c}`}
+            className={cn("absolute rounded-[22%]", blockClass(flag))}
+            style={{
+              left: `calc(${c} * ${pitch})`,
+              top: `calc(${r} * ${pitch})`,
+              width: "var(--pc)",
+              height: "var(--pc)",
+              ...(flag ? flagSliceStyle(flag, shape.w, shape.h, r, c) : null),
+            }}
+          />
+        ))}
+        {showOutline && (
+          <svg
+            className="pointer-events-none absolute overflow-visible"
+            style={{
+              left: `calc(${(minX - pad) / u} * ${pitch})`,
+              top: `calc(${(minY - pad) / u} * ${pitch})`,
+              width: `calc(${(maxX - minX + 2 * pad) / u} * ${pitch})`,
+              height: `calc(${(maxY - minY + 2 * pad) / u} * ${pitch})`,
+            }}
+            viewBox={`${minX - pad} ${minY - pad} ${maxX - minX + 2 * pad} ${maxY - minY + 2 * pad}`}
+            preserveAspectRatio="none"
+          >
+            <path d={shape.outline} className="fill-none stroke-white/85 dark:stroke-slate-950/85" strokeWidth={3.2} strokeLinejoin="round" vectorEffect="non-scaling-stroke" />
+            <path d={shape.outline} className="fill-slate-900/10 stroke-slate-900 dark:fill-white/10 dark:stroke-white" strokeWidth={1.4} strokeLinejoin="round" vectorEffect="non-scaling-stroke" />
+          </svg>
+        )}
+      </div>
     </div>
   );
 }

@@ -250,7 +250,7 @@ describe("runs", () => {
       const sequence = Array.from({ length: 20 }, (_, seed) => pieceSequence(`mix-${seed}`, difficulty, 60)).flat();
       return sequence.reduce((sum, cca3) => sum + getPiece(cca3).cells.length, 0) / sequence.length;
     };
-    expect(average("easy")).toBeLessThan(average("hard") - 0.4);
+    expect(average("easy")).toBeLessThan(average("hard") - 0.2);
     expect(pieceSequence("tiers", "easy", 200).every((cca3) => getCountryByCca3(cca3)!.difficulty <= 2)).toBe(true);
   });
 

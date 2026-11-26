@@ -1,7 +1,12 @@
 import type { Metadata } from "next";
-import { getGame } from "@/games/registry";
+import { GAMES, getGame } from "@/games/registry";
 import { isRetiredGame } from "@/games/retired";
 import { translate } from "@/i18n/messages";
+
+/** Every current game is prerendered; other ids (e.g. retired games) still render on demand. */
+export function generateStaticParams() {
+  return GAMES.map((game) => ({ game: game.id }));
+}
 
 /** Per-game titles and descriptions so every game URL has its own search snippet. */
 export async function generateMetadata({ params }: { params: Promise<{ game: string }> }): Promise<Metadata> {

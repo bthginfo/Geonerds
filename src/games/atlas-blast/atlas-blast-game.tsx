@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import type { CSSProperties, KeyboardEvent as ReactKeyboardEvent, PointerEvent as ReactPointerEvent } from "react";
-import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
+import { motion, useReducedMotion } from "framer-motion";
 import { Ban, Check, CheckCircle2, Rows3, Tag, X, XCircle } from "lucide-react";
 import type { PlayHandlers } from "@/components/game/game-shell";
 import { GameTopBar, ScorePill, StreakPill } from "@/components/game/hud";
@@ -173,7 +173,7 @@ export function AtlasBlastGame(handlers: PlayHandlers) {
     const shape = getPiece(piece.cca3);
     setSelected(slot);
     setAim(mode);
-    const label = piece.naming === "unknown" ? t("atlasblast.piece", { n: slot + 1, country: t("atlasblast.pieceUnknown"), cells: shape.cells.length }) : name(piece.cca3);
+    const label = piece.naming === "unknown" ? t("atlasblast.pieceShort", { n: slot + 1 }) : name(piece.cca3);
     if (mode === "keys") {
       const anchor = suggestAnchor(game.board, shape) ?? centredAnchor(shape, 3, 3);
       updateGhost(anchor);
@@ -181,7 +181,7 @@ export function AtlasBlastGame(handlers: PlayHandlers) {
       boardRef.current?.focus();
     } else {
       updateGhost(null);
-      setMessage(t("atlasblast.status.selected", { name: label }));
+      setMessage(t(mode === "touch" ? "atlasblast.status.selected" : "atlasblast.status.selectedPointer", { name: label }));
     }
   }
 
@@ -277,7 +277,7 @@ export function AtlasBlastGame(handlers: PlayHandlers) {
     let grabX = pieceW / 2;
     let grabY = pieceH + Math.max(26, cell * 0.9);
     if (!touch) {
-      const art = event.currentTarget.querySelector("[data-piece]")?.getBoundingClientRect();
+      const art = event.currentTarget.querySelector("[data-blocks]")?.getBoundingClientRect();
       const fx = art && art.width ? clamp((event.clientX - art.left) / art.width, 0, 1) : 0.5;
       const fy = art && art.height ? clamp((event.clientY - art.top) / art.height, 0, 1) : 0.5;
       grabX = fx * pieceW;
@@ -455,11 +455,7 @@ export function AtlasBlastGame(handlers: PlayHandlers) {
   return (
     <div className="flex flex-1 flex-col">
       <GameTopBar title={t("games.atlas-blast.name")} onExit={handlers.onExit}>
-        {practice ? (
-          <span className="rounded-full bg-muted px-2.5 py-1 text-xs font-semibold text-muted-foreground min-[420px]:text-sm">{t("atlasblast.practice")}</span>
-        ) : (
-          <ScorePill value={game.score} />
-        )}
+        {!practice && <ScorePill value={game.score} />}
         <span aria-label={t("atlasblast.lines", { n: game.lines })} className="flex items-center gap-1 rounded-full bg-muted px-2.5 py-1 text-xs font-semibold tabular-nums text-foreground min-[420px]:text-sm">
           <Rows3 className="h-3.5 w-3.5" aria-hidden />
           {game.lines}
@@ -483,8 +479,8 @@ export function AtlasBlastGame(handlers: PlayHandlers) {
             onPointerMove={onBoardPointerMove}
             onPointerLeave={(event) => { if (event.pointerType === "mouse" && aim === "pointer" && dragSlot === null) updateGhost(null); }}
             onPointerUp={onBoardPointerUp}
-            className="relative touch-manipulation rounded-2xl border border-border bg-card p-1.5 outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-background"
-            style={{ width: "max(288px, min(100%, 520px, calc(100dvh - 330px)))" }}
+            className="relative touch-manipulation rounded-2xl [--board-room:340px] sm:[--board-room:372px] border border-border bg-card p-1.5 outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+            style={{ width: "max(288px, min(100%, 520px, calc(100dvh - var(--board-room))))" }}
           >
             <div ref={gridRef} className="grid grid-cols-8" style={{ gap: GAP }}>
               {game.board.map((id, index) => {
@@ -537,26 +533,23 @@ export function AtlasBlastGame(handlers: PlayHandlers) {
               </div>
             )}
 
-            <AnimatePresence>
-              {floater && (
-                <motion.div
-                  key={floater.key}
-                  aria-hidden
-                  className="pointer-events-none absolute inset-x-0 top-[38%] z-10 flex flex-col items-center gap-1"
-                  initial={{ opacity: 0, y: 10, scale: 0.9 }}
-                  animate={{ opacity: 1, y: -6, scale: 1 }}
-                  exit={{ opacity: 0, y: -24 }}
-                  transition={{ duration: 0.35, ease: "easeOut" }}
-                >
-                  {floater.text && <span className="rounded-full bg-primary px-3 py-1 text-lg font-bold tabular-nums text-primary-foreground shadow-lg">{floater.text}</span>}
-                  {floater.sub && <span className="rounded-full bg-card px-3 py-1 text-sm font-bold text-foreground shadow-md ring-1 ring-border">{floater.sub}</span>}
-                </motion.div>
-              )}
-            </AnimatePresence>
+            {floater && (
+              <motion.div
+                key={floater.key}
+                aria-hidden
+                className="pointer-events-none absolute inset-x-0 top-[38%] z-10 flex flex-col items-center gap-1"
+                initial={{ opacity: 0, y: 10, scale: 0.9 }}
+                animate={{ opacity: [0, 1, 1, 0], y: [10, -4, -6, -18], scale: [0.9, 1, 1, 1] }}
+                transition={{ duration: 0.95, times: [0, 0.2, 0.75, 1], ease: "easeOut" }}
+              >
+                {floater.text && <span className="rounded-full bg-primary px-3 py-1 text-lg font-bold tabular-nums text-primary-foreground shadow-lg">{floater.text}</span>}
+                {floater.sub && <span className="rounded-full bg-card px-3 py-1 text-sm font-bold text-foreground shadow-md ring-1 ring-border">{floater.sub}</span>}
+              </motion.div>
+            )}
           </div>
 
           {/* Tray */}
-          <div className="grid w-full grid-cols-3 gap-2 [--cell:15px] [--gap:2px] min-[400px]:[--cell:16px] sm:[--cell:20px]" style={{ maxWidth: 520 }}>
+          <div className="grid w-full grid-cols-3 gap-2 [--cell:14px] [--gap:2px] min-[360px]:[--cell:16px] min-[380px]:[--cell:17px] sm:[--cell:20px]" style={{ maxWidth: 520 }}>
             {game.tray.map((piece, slot) => {
               if (!piece) {
                 return <div key={`empty-${slot}`} className="flex min-h-[calc(5*var(--cell)+4*var(--gap)+3.75rem)] items-center justify-center rounded-2xl border border-dashed border-border text-xs text-muted-foreground"><span className="sr-only">{t("atlasblast.pieceUsed", { n: slot + 1 })}</span></div>;
@@ -591,12 +584,11 @@ export function AtlasBlastGame(handlers: PlayHandlers) {
                   >
                     <span aria-hidden className="absolute left-1.5 top-1 text-[11px] font-semibold tabular-nums text-muted-foreground">{slot + 1}</span>
                     <motion.span
-                      data-piece
                       className={cn("flex", dragSlot === slot && "opacity-25", noRoom && "opacity-40 grayscale")}
                       animate={reducedMotion ? undefined : { scale: isSelected ? 1.06 : 1 }}
                       transition={{ duration: 0.15 }}
                     >
-                      <PieceBlocks shape={shape} flag={piece.naming === "correct" ? country(piece.cca3).flag : null} />
+                      <PieceBlocks shape={shape} flag={piece.naming === "correct" ? country(piece.cca3).flag : null} fit={5} />
                     </motion.span>
                     {noRoom && (
                       <span className="absolute inset-x-1 bottom-1 flex items-center justify-center gap-1 rounded-md bg-card/90 px-1 py-0.5 text-[11px] font-semibold text-danger">
@@ -699,7 +691,7 @@ function NamingPanel({
       role="dialog"
       aria-modal="true"
       aria-labelledby="atlas-blast-naming-title"
-      className="absolute inset-0 z-20 flex flex-col gap-3 overflow-y-auto rounded-2xl border border-border bg-card p-3 shadow-xl sm:p-4"
+      className="absolute inset-0 z-20 flex flex-col justify-center gap-3 overflow-y-auto rounded-2xl border border-border bg-card p-3 shadow-xl sm:p-5"
       initial={reducedMotion ? false : { opacity: 0, scale: 0.97 }}
       animate={{ opacity: 1, scale: 1 }}
       transition={{ duration: 0.16 }}
@@ -726,10 +718,10 @@ function NamingPanel({
                 {correct ? <CheckCircle2 className="h-5 w-5 shrink-0" aria-hidden /> : <XCircle className="h-5 w-5 shrink-0" aria-hidden />}
                 {t(correct ? "atlasblast.naming.right" : "atlasblast.naming.wrong")}
               </p>
-              <p className="mt-1 flex items-center gap-2 text-sm font-semibold">
+              <div className="mt-1 flex items-center gap-2 text-sm font-semibold">
                 <FlagImage code={country(answer).flag} className="h-5 shrink-0" rounded={false} />
                 <span>{t("atlasblast.naming.answer", { name: name(answer) })}</span>
-              </p>
+              </div>
               {correct && !practice && <p className="mt-1 text-xs text-muted-foreground">{t("atlasblast.naming.bonus")}</p>}
             </>
           ) : (
@@ -770,7 +762,7 @@ function NamingPanel({
         })}
       </div>
 
-      <div className="mt-auto flex justify-end">
+      <div className="flex justify-end">
         {answered ? (
           <Button ref={backRef} onClick={onClose} className="w-full sm:w-auto">{t("atlasblast.naming.back")}</Button>
         ) : (
@@ -806,7 +798,7 @@ function GameOverPanel({
     ...(practice ? [] : [{ label: t("atlasblast.over.score"), value: formatNumber(score, locale) }]),
     { label: t("atlasblast.over.lines"), value: formatNumber(lines, locale) },
     { label: t("atlasblast.over.placed"), value: formatNumber(placed, locale) },
-    { label: t("atlasblast.over.combo"), value: bestCombo ? `×${bestCombo}` : "–" },
+    { label: t("atlasblast.over.combo"), value: bestCombo >= 2 ? `×${bestCombo}` : "–" },
   ];
   return (
     <motion.section
