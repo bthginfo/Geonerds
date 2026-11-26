@@ -371,6 +371,8 @@ export function LetterAtlasGame(handlers: PlayHandlers) {
       const letters = normalizeLetters(event.key);
       if (!letters) return;
       event.preventDefault();
+      // Typing means playing: release focus from the hint button so Enter submits instead of re-triggering it.
+      if (!onGameKey && element?.closest("button, a")) element.blur();
       input.current.typeLetters(letters);
     }
     window.addEventListener("keydown", onKeyDown);

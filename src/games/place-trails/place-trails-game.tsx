@@ -24,17 +24,18 @@ const GAME_ID = "place-trails";
 /**
  * Trail colours: light tint with dark text, deep tint with light text in dark
  * mode (≥ 4.5:1 both). Places revealed without being found keep their colour
- * as a dashed ring on the card instead of a filled disc.
+ * as a dashed ring joined by a thin line instead of a filled disc. (Outline,
+ * not border: the global `* { border-color }` rule outranks border utilities.)
  */
 const TRAIL_STYLES = [
-  { cell: "bg-sky-200 text-sky-950 dark:bg-sky-800 dark:text-sky-50", line: "stroke-sky-200 dark:stroke-sky-800" , missed: "border-2 border-dashed border-sky-500 bg-card text-foreground dark:border-sky-400" },
-  { cell: "bg-emerald-200 text-emerald-950 dark:bg-emerald-800 dark:text-emerald-50", line: "stroke-emerald-200 dark:stroke-emerald-800" , missed: "border-2 border-dashed border-emerald-500 bg-card text-foreground dark:border-emerald-400" },
-  { cell: "bg-amber-200 text-amber-950 dark:bg-amber-700 dark:text-amber-50", line: "stroke-amber-200 dark:stroke-amber-700" , missed: "border-2 border-dashed border-amber-500 bg-card text-foreground dark:border-amber-400" },
-  { cell: "bg-rose-200 text-rose-950 dark:bg-rose-800 dark:text-rose-50", line: "stroke-rose-200 dark:stroke-rose-800" , missed: "border-2 border-dashed border-rose-500 bg-card text-foreground dark:border-rose-400" },
-  { cell: "bg-violet-200 text-violet-950 dark:bg-violet-800 dark:text-violet-50", line: "stroke-violet-200 dark:stroke-violet-800" , missed: "border-2 border-dashed border-violet-500 bg-card text-foreground dark:border-violet-400" },
-  { cell: "bg-lime-200 text-lime-950 dark:bg-lime-800 dark:text-lime-50", line: "stroke-lime-200 dark:stroke-lime-800" , missed: "border-2 border-dashed border-lime-500 bg-card text-foreground dark:border-lime-400" },
-  { cell: "bg-orange-200 text-orange-950 dark:bg-orange-800 dark:text-orange-50", line: "stroke-orange-200 dark:stroke-orange-800" , missed: "border-2 border-dashed border-orange-500 bg-card text-foreground dark:border-orange-400" },
-  { cell: "bg-fuchsia-200 text-fuchsia-950 dark:bg-fuchsia-800 dark:text-fuchsia-50", line: "stroke-fuchsia-200 dark:stroke-fuchsia-800" , missed: "border-2 border-dashed border-fuchsia-500 bg-card text-foreground dark:border-fuchsia-400" },
+  { cell: "bg-sky-200 text-sky-950 dark:bg-sky-800 dark:text-sky-50", line: "stroke-sky-200 dark:stroke-sky-800", missed: "bg-card text-foreground outline-2 -outline-offset-2 outline-dashed outline-sky-500 dark:outline-sky-400", missedLine: "stroke-sky-500 dark:stroke-sky-400" },
+  { cell: "bg-emerald-200 text-emerald-950 dark:bg-emerald-800 dark:text-emerald-50", line: "stroke-emerald-200 dark:stroke-emerald-800", missed: "bg-card text-foreground outline-2 -outline-offset-2 outline-dashed outline-emerald-500 dark:outline-emerald-400", missedLine: "stroke-emerald-500 dark:stroke-emerald-400" },
+  { cell: "bg-amber-200 text-amber-950 dark:bg-amber-700 dark:text-amber-50", line: "stroke-amber-200 dark:stroke-amber-700", missed: "bg-card text-foreground outline-2 -outline-offset-2 outline-dashed outline-amber-500 dark:outline-amber-400", missedLine: "stroke-amber-500 dark:stroke-amber-400" },
+  { cell: "bg-rose-200 text-rose-950 dark:bg-rose-800 dark:text-rose-50", line: "stroke-rose-200 dark:stroke-rose-800", missed: "bg-card text-foreground outline-2 -outline-offset-2 outline-dashed outline-rose-500 dark:outline-rose-400", missedLine: "stroke-rose-500 dark:stroke-rose-400" },
+  { cell: "bg-violet-200 text-violet-950 dark:bg-violet-800 dark:text-violet-50", line: "stroke-violet-200 dark:stroke-violet-800", missed: "bg-card text-foreground outline-2 -outline-offset-2 outline-dashed outline-violet-500 dark:outline-violet-400", missedLine: "stroke-violet-500 dark:stroke-violet-400" },
+  { cell: "bg-lime-200 text-lime-950 dark:bg-lime-800 dark:text-lime-50", line: "stroke-lime-200 dark:stroke-lime-800", missed: "bg-card text-foreground outline-2 -outline-offset-2 outline-dashed outline-lime-500 dark:outline-lime-400", missedLine: "stroke-lime-500 dark:stroke-lime-400" },
+  { cell: "bg-orange-200 text-orange-950 dark:bg-orange-800 dark:text-orange-50", line: "stroke-orange-200 dark:stroke-orange-800", missed: "bg-card text-foreground outline-2 -outline-offset-2 outline-dashed outline-orange-500 dark:outline-orange-400", missedLine: "stroke-orange-500 dark:stroke-orange-400" },
+  { cell: "bg-fuchsia-200 text-fuchsia-950 dark:bg-fuchsia-800 dark:text-fuchsia-50", line: "stroke-fuchsia-200 dark:stroke-fuchsia-800", missed: "bg-card text-foreground outline-2 -outline-offset-2 outline-dashed outline-fuchsia-500 dark:outline-fuchsia-400", missedLine: "stroke-fuchsia-500 dark:stroke-fuchsia-400" },
 ];
 
 interface FoundWord { id: number; hinted: boolean }
@@ -423,10 +424,10 @@ export function PlaceTrailsGame(handlers: PlayHandlers) {
                       key={`trail-${word.id}`}
                       points={word.path.map((cell) => cellCentre(cell, cols)).join(" ")}
                       fill="none"
-                      strokeWidth={0.3}
+                      strokeWidth={foundIds.has(word.id) ? 0.3 : 0.08}
                       strokeLinecap="round"
                       strokeLinejoin="round"
-                      className={colourOf(word.id).line}
+                      className={foundIds.has(word.id) ? colourOf(word.id).line : colourOf(word.id).missedLine}
                       initial={reducedMotion ? false : { pathLength: 0 }}
                       animate={{ pathLength: 1 }}
                       transition={{ duration: 0.4, ease: "easeOut" }}

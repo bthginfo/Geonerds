@@ -181,6 +181,7 @@ function BracketsBoard({ handlers, puzzle }: { handlers: PlayHandlers; puzzle: B
     sound.wrong();
     haptic.error();
     setFeedback({ tone: "danger", text: t("geobrackets.wrong", { guess: value }) });
+    inputRef.current?.select();
     if (!reducedMotion) void shake.start({ x: [0, -9, 9, -6, 6, -2, 0], transition: { duration: 0.38 } });
   };
 
@@ -392,7 +393,7 @@ function SentenceView({
   t: T;
 }) {
   const byId = useMemo(() => new Map(puzzle.clues.map((clue) => [clue.id, clue])), [puzzle]);
-  const render = (segment: Segment, key: string): ReactNode => {
+  const render = (segment: Segment, key: string, onFill = false): ReactNode => {
     if (segment.type === "text") return <span key={key}>{segment.text}</span>;
     if (segment.type === "given") return <span key={key} className="font-semibold">{segment.text}</span>;
     if (segment.type === "answer") {
@@ -407,7 +408,11 @@ function SentenceView({
             transition={reducedMotion ? { duration: 0.15 } : { type: "spring", stiffness: 520, damping: 22 }}
             className={cn(
               "inline-block rounded-md px-1 font-semibold leading-snug",
-              revealed ? "bg-muted text-foreground underline decoration-dotted underline-offset-4" : "bg-success/15 text-success",
+              onFill
+                ? "bg-primary-foreground/20 text-primary-foreground"
+                : revealed
+                  ? "bg-muted text-foreground underline decoration-dotted underline-offset-4"
+                  : "bg-success/15 text-success",
             )}
           >
             {revealed && <Eye className="mr-0.5 inline h-3.5 w-3.5 -translate-y-px" aria-hidden />}
@@ -421,7 +426,7 @@ function SentenceView({
     const clue = byId.get(segment.id);
     const open = clue ? isSolvable(clue, solved) && Boolean(onSelect) : false;
     const isSelected = open && segment.id === selectedId;
-    const children = segment.children.map((child, i) => render(child, `${key}.${i}`));
+    const children = segment.children.map((child, i) => render(child, `${key}.${i}`, isSelected));
     const bracket = (char: string) => (
       <span aria-hidden className={cn("font-semibold", isSelected ? "text-primary-foreground/75" : open ? "text-primary" : "text-muted-foreground")}>{char}</span>
     );
