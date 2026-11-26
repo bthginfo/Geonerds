@@ -351,7 +351,7 @@ function nameCategory(id: string, rating: 1 | 2 | 3 | 4, test: (name: string) =>
 }
 
 nameCategory("name-stan", 1, (name) => /stan$/i.test(name), (country) => ["Central Asia", "Southern Asia", "Western Asia", "Eastern Asia"].includes(country.subregion));
-nameCategory("name-guinea", 1, (name) => /guinea/i.test(name), (country) => country.cca3 === "GUY" || ["Western Africa", "Middle Africa", "Melanesia"].includes(country.subregion));
+nameCategory("name-guinea", 2, (name) => /guinea/i.test(name), (country) => country.cca3 === "GUY" || ["Western Africa", "Middle Africa", "Melanesia"].includes(country.subregion));
 
 add({
   id: "name-saint",

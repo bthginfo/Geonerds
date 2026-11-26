@@ -37,7 +37,7 @@ const TILE_STYLES: Record<LetterState, string> = {
 const KEY_STYLES: Record<LetterState, string> = {
   correct: "bg-emerald-700 text-white hover:bg-emerald-800",
   present: "bg-amber-400 text-amber-950 hover:bg-amber-300",
-  absent: "bg-slate-500 text-white hover:bg-slate-600 dark:bg-slate-700 dark:text-slate-200 dark:hover:bg-slate-600",
+  absent: "bg-slate-500 text-white hover:bg-slate-600 dark:bg-slate-950 dark:text-slate-400 dark:ring-1 dark:ring-inset dark:ring-slate-800 dark:hover:bg-slate-900",
 };
 
 function StateIcon({ state, className }: { state: LetterState; className?: string }) {
@@ -89,7 +89,7 @@ function Tile({ letter, state, index, fontSize, reduced, ghost, active, celebrat
           animate={{ scale: 1 }}
           transition={{ duration: 0.12 }}
           className={cn(
-            "absolute inset-0 flex items-center justify-center rounded-lg border-2 font-extrabold uppercase [backface-visibility:hidden]",
+            "absolute inset-0 flex items-center justify-center rounded-[18%] border-2 font-extrabold uppercase [backface-visibility:hidden]",
             letter ? "border-foreground/45 bg-card text-foreground" : active ? "border-border bg-card/80" : "border-border/70 bg-card/40",
           )}
         >
@@ -97,7 +97,7 @@ function Tile({ letter, state, index, fontSize, reduced, ghost, active, celebrat
         </motion.div>
         <div
           className={cn(
-            "absolute inset-0 flex items-center justify-center rounded-lg border-2 font-extrabold uppercase [backface-visibility:hidden] [transform:rotateX(180deg)]",
+            "absolute inset-0 flex items-center justify-center rounded-[18%] border-2 font-extrabold uppercase [backface-visibility:hidden] [transform:rotateX(180deg)]",
             state ? TILE_STYLES[state] : "border-border bg-card",
           )}
         >
@@ -110,7 +110,7 @@ function Tile({ letter, state, index, fontSize, reduced, ghost, active, celebrat
 }
 
 function ClueLine({ row, locale, t, delay, reduced }: { row?: GuessRow; locale: Locale; t: Translate; delay: number; reduced: boolean }) {
-  if (!row) return <div className="h-6" aria-hidden />;
+  if (!row) return <div className="h-5" aria-hidden />;
   const country = getCountryByCca3(row.entry.cca3);
   const clue = row.clue;
   return (
@@ -118,7 +118,7 @@ function ClueLine({ row, locale, t, delay, reduced }: { row?: GuessRow; locale: 
       initial={reduced ? false : { opacity: 0, y: -4 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.25, delay: reduced ? 0 : delay }}
-      className="flex h-6 min-w-0 items-center justify-center gap-1.5 text-xs font-medium text-muted-foreground"
+      className="flex h-5 min-w-0 items-center justify-center gap-1.5 text-xs font-medium text-muted-foreground"
     >
       {country && <FlagImage code={country.flag} className="w-5 shrink-0 rounded-[3px]" rounded={false} />}
       <span className="min-w-0 truncate text-foreground">{placeLabel(row, locale, t)}</span>
@@ -160,7 +160,7 @@ function Keyboard({ layout, states, disabled, onLetter, onEnter, onBackspace, t 
           {rowIndex === 2 && (
             <button type="button" data-letter-key disabled={disabled} onClick={onEnter} aria-label={t("letteratlas.enterLabel")}
               className={cn(base, "max-w-18 flex-[1.6] gap-1 bg-primary px-1 text-[11px] text-primary-foreground hover:brightness-110 sm:text-xs")}>
-              <CornerDownLeft className="h-4 w-4 shrink-0 max-[359px]:hidden" aria-hidden /><span className="truncate">{t("letteratlas.enter")}</span>
+              <CornerDownLeft className="h-5 w-5 shrink-0 min-[360px]:max-[419px]:hidden min-[420px]:h-4 min-[420px]:w-4" aria-hidden /><span className="truncate max-[359px]:hidden">{t("letteratlas.enter")}</span>
             </button>
           )}
           {row.split("").map((letter) => {
@@ -199,7 +199,7 @@ function AnswerCard({ target, locale, t, solved }: { target: Country; locale: Lo
       transition={{ duration: 0.3 }}
       className={cn("flex items-center gap-4 rounded-3xl border p-4", solved ? "border-emerald-600/40 bg-emerald-600/10" : "border-border bg-card")}
     >
-      <FlagImage code={target.flag} alt={t("letteratlas.flagOf", { name })} className="w-20 shrink-0 shadow-sm sm:w-24" />
+      <FlagImage code={target.flag} alt={t("letteratlas.flagOf", { name })} rounded={false} className="w-20 shrink-0 rounded-md shadow-sm sm:w-24" />
       <div className="min-w-0">
         <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-muted-foreground">{t("letteratlas.answer")}</p>
         <p className="text-xl font-extrabold leading-tight">{name}</p>
@@ -239,6 +239,7 @@ export function LetterAtlasGame(handlers: PlayHandlers) {
   const shake = useAnimationControls();
   const { schedule } = useGameTimeouts();
   const wrapRef = useRef<HTMLDivElement>(null);
+  const currentRowRef = useRef<HTMLDivElement>(null);
 
   const keyStates = useMemo(() => keyboardStates(rows), [rows]);
   const solved = rows.at(-1)?.word === answer;
@@ -253,7 +254,7 @@ export function LetterAtlasGame(handlers: PlayHandlers) {
     const level = t(`difficulty.${difficulty}`);
     const header = daily ? `GeoNerds ${game} #${dailyPuzzleNumber()} (${level})` : `GeoNerds ${game} · ${t("letteratlas.endless")} (${level})`;
     const tally = `${won ? finalRows.length : "X"}/${tries}${hints ? ` · 💡${hints}` : ""}`;
-    return [`${header} ${tally}`, ...finalRows.map((row) => shareRow(row, (km) => formatNumber(km, locale))), "geo-nerds.com"].join("\n");
+    return [header, tally, ...finalRows.map((row) => shareRow(row, (km) => formatNumber(km, locale))), "geo-nerds.com"].join("\n");
   }
 
   function reject(text: string) {
@@ -311,6 +312,8 @@ export function LetterAtlasGame(handlers: PlayHandlers) {
       if (won) { sound.finish(); haptic.success(); } else { sound.wrong(); haptic.error(); }
       if (daily && !practice) writeDailyRecord(GAME_ID, difficulty, { solved: won, score, share, at: Date.now() });
       setFinal({ solved: won, score, share, streak: daily && !practice ? dailyStreak(GAME_ID) : 0 });
+      const name = countryName(target, locale);
+      setSrMessage(`${won ? t("letteratlas.solvedTitle", { n: next.length, total: tries }) : t("letteratlas.failedTitle")}. ${t("letteratlas.answer")}: ${name}.`);
       setPhase("done");
     }, revealMs + 250);
   }
@@ -374,14 +377,21 @@ export function LetterAtlasGame(handlers: PlayHandlers) {
     return () => window.removeEventListener("keydown", onKeyDown);
   }, []);
 
+  // Keep the row being typed visible above the sticky keyboard on short screens.
+  useEffect(() => {
+    if (rows.length > 0) currentRowRef.current?.scrollIntoView({ block: "nearest", behavior: reduced ? "auto" : "smooth" });
+  }, [rows.length, reduced]);
+
   useEffect(() => {
     if (phase === "done") wrapRef.current?.scrollIntoView({ block: "nearest", behavior: reduced ? "auto" : "smooth" });
   }, [phase, reduced]);
 
   const gameName = t(`games.${GAME_ID}.name`);
   const hintLabel = hints === 0 ? t("letteratlas.hintRegion") : hints === 1 ? t("letteratlas.hintFirst") : t("letteratlas.hintsUsed");
-  const boardWidth = `min(100%, ${length * 3.1 + (length - 1) * 0.25}rem)`;
-  const tileFont = `min(1.55rem, calc((100vw - 2rem) / ${length} * 0.5))`;
+  // Tiles shrink with the viewport height too, so the board and keyboard fit on short screens.
+  const tileSize = `clamp(2.25rem, calc((100dvh - 24rem) / ${tries} - 1.5rem), 3.1rem)`;
+  const boardWidth = `min(100%, calc(${length} * ${tileSize} + ${(length - 1) * 0.25}rem))`;
+  const tileFont = `min(1.55rem, calc((100vw - 2rem) / ${length} * 0.5), calc(${tileSize} * 0.5))`;
   const playing = phase === "playing";
 
   return (
@@ -427,7 +437,7 @@ export function LetterAtlasGame(handlers: PlayHandlers) {
         {priorRecord && phase !== "done" && <p className="rounded-xl bg-muted/70 px-3 py-2 text-xs leading-relaxed text-muted-foreground">{t("letteratlas.alreadyPlayed")}</p>}
 
         <div aria-label={t("letteratlas.board")} role="group" className="mx-auto flex w-full flex-col gap-1" style={{ maxWidth: "100%" }}>
-          {Array.from({ length: tries }, (_, rowIndex) => {
+          {Array.from({ length: phase === "done" ? rows.length : tries }, (_, rowIndex) => {
             const row = rows[rowIndex];
             const isCurrent = playing && rowIndex === rows.length;
             const letters = row ? row.word : isCurrent ? current : "";
@@ -455,7 +465,7 @@ export function LetterAtlasGame(handlers: PlayHandlers) {
               </div>
             );
             return (
-              <div key={rowIndex} role="group" aria-label={label}>
+              <div key={rowIndex} ref={isCurrent ? currentRowRef : undefined} role="group" aria-label={label} className={isCurrent ? "scroll-mt-28 scroll-mb-64" : undefined}>
                 <div className="mx-auto" style={{ width: boardWidth }}>
                   {isCurrent ? <motion.div animate={shake}>{tiles}</motion.div> : tiles}
                 </div>
@@ -465,30 +475,31 @@ export function LetterAtlasGame(handlers: PlayHandlers) {
           })}
         </div>
 
-        <div className="flex min-h-6 items-center justify-center" aria-hidden>
-          {notice && (
-            <motion.p
-              key={notice.text}
-              initial={reduced ? false : { opacity: 0, y: 4 }}
-              animate={{ opacity: 1, y: 0 }}
-              className={cn("rounded-full px-3 py-1 text-center text-sm font-semibold", notice.tone === "error" ? "bg-danger/10 text-danger" : "bg-primary/10 text-primary")}
-            >
-              {notice.text}
-            </motion.p>
-          )}
-        </div>
         <p className="sr-only" aria-live="polite" role="status">{srMessage}</p>
 
         {phase !== "done" ? (
           <div className="sticky bottom-0 z-10 -mx-4 mt-auto bg-background/90 px-2 pb-[max(0.75rem,env(safe-area-inset-bottom))] pt-2 backdrop-blur-md sm:mx-0 sm:rounded-2xl sm:px-3">
-            <ul className="mb-2 flex flex-wrap items-center justify-center gap-x-3 gap-y-1 text-[11px] text-muted-foreground" aria-hidden>
+            <div className="mb-1.5 flex min-h-7 items-center justify-center" aria-hidden>
+              {notice ? (
+                <motion.p
+                  key={notice.text}
+                  initial={reduced ? false : { opacity: 0, y: 4 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className={cn("rounded-2xl px-3 py-1 text-center text-sm font-semibold", notice.tone === "error" ? "bg-danger/10 text-danger" : "bg-primary/10 text-primary")}
+                >
+                  {notice.text}
+                </motion.p>
+              ) : (
+                <ul className="flex flex-wrap items-center justify-center gap-x-3 gap-y-1 text-[11px] text-muted-foreground">
               {(["correct", "present", "absent"] as const).map((state) => (
                 <li key={state} className="inline-flex items-center gap-1">
                   <span className={cn("inline-flex h-3.5 w-3.5 items-center justify-center rounded-[4px] border", TILE_STYLES[state])}><StateIcon state={state} className="h-2.5 w-2.5" /></span>
                   {t(`letteratlas.legend.${state}`)}
                 </li>
               ))}
-            </ul>
+                </ul>
+              )}
+            </div>
             <Keyboard layout={KEYBOARD_ROWS[wordLocale]} states={keyStates} disabled={!playing} onLetter={typeLetters} onEnter={submit} onBackspace={backspace} t={t} />
           </div>
         ) : final && (

@@ -243,7 +243,7 @@ export function clearLines(board: Board, lines: FullLines): { board: number[]; c
 }
 
 /** Cells that a hypothetical placement would clear (for the ghost preview). */
-export function previewClear(board: Board, shape: PieceShape, row: number, col: number): number[] {
+export function previewClear(board: Board, shape: Pick<PieceShape, "cells">, row: number, col: number): number[] {
   if (!canPlace(board, shape, row, col)) return [];
   const placed = placeOnBoard(board, shape, row, col, -1);
   return clearLines(placed, findFullLines(placed)).cleared;
