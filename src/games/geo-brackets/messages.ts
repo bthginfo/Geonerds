@@ -132,7 +132,7 @@ export const GEO_BRACKETS_MESSAGES: Record<Locale, Record<string, string>> = {
     "geobrackets.yourClue": "Dein Hinweis",
     "geobrackets.pickClue": "Wähle im Satz einen hervorgehobenen Hinweis.",
     "geobrackets.inputLabel": "Deine Antwort",
-    "geobrackets.placeholder": "Land, Hauptstadt oder Kontinent",
+    "geobrackets.placeholder": "Land, Stadt oder Kontinent",
     "geobrackets.placeholderStarts": "Beginnt mit {letter} …",
     "geobrackets.check": "Prüfen",
     "geobrackets.peek": "Tipp",

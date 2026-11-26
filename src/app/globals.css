@@ -71,8 +71,10 @@
   --radius-sm: calc(var(--radius) - 0.6rem);
 }
 
-* {
-  border-color: var(--border);
+@layer base {
+  * {
+    border-color: var(--border);
+  }
 }
 
 html,
