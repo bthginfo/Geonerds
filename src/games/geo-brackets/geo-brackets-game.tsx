@@ -452,7 +452,7 @@ function SentenceView({
         className={cn(
           chipClass,
           "cursor-pointer font-medium outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-card",
-          isSelected ? "border-primary bg-primary text-primary-foreground shadow-sm shadow-primary/30" : "border-primary/60 bg-primary/10 hover:bg-primary/20",
+          isSelected ? "border-primary bg-primary text-primary-foreground shadow-sm shadow-primary/30" : "border-primary/80 bg-primary/15 hover:bg-primary/25",
         )}
       >
         {bracket("[")}

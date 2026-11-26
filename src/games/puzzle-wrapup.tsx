@@ -63,7 +63,7 @@ export function PuzzleWrapUp({
       <p className={cn("text-lg font-bold", solved ? "text-success" : "text-foreground")}>{title}</p>
       {detail && <p className="mx-auto mt-1 max-w-sm text-sm leading-relaxed text-muted-foreground">{detail}</p>}
       {share && (
-        <pre className="mx-auto mt-4 w-fit max-w-full overflow-x-auto whitespace-pre rounded-2xl bg-muted/70 px-4 py-3 text-left font-mono text-sm leading-snug" aria-label={de ? "Ergebnis zum Teilen" : "Shareable result"}>{share}</pre>
+        <pre className="mx-auto mt-4 w-fit max-w-full whitespace-pre-wrap break-words rounded-2xl bg-muted/70 px-4 py-3 text-left font-mono text-sm leading-snug" aria-label={de ? "Ergebnis zum Teilen" : "Shareable result"}>{share}</pre>
       )}
       <div className="mt-4 flex flex-wrap items-center justify-center gap-2">
         {share && (

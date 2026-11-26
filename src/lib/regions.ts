@@ -6,6 +6,7 @@ const SUBREGIONS_DE: Record<string, string> = {
   "Northern America": "Nordamerika", "Central America": "Mittelamerika", "South America": "Südamerika", Caribbean: "der Karibik",
   "Central Asia": "Zentralasien", "Eastern Asia": "Ostasien", "South-Eastern Asia": "Südostasien", "Southern Asia": "Südasien", "Western Asia": "Westasien",
   "Eastern Europe": "Osteuropa", "Northern Europe": "Nordeuropa", "Southern Europe": "Südeuropa", "Western Europe": "Westeuropa",
+  "Central Europe": "Mitteleuropa", "Southeast Europe": "Südosteuropa", "North America": "Nordamerika",
   "Australia and New Zealand": "Australien und Neuseeland", Melanesia: "Melanesien", Micronesia: "Mikronesien", Polynesia: "Polynesien",
 };
 
