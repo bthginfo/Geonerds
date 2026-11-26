@@ -35,8 +35,8 @@ export default function PrivacyPage() {
               <h2>2. Überblick</h2>
               <p>
                 GeoNerds ist ein kostenloses Geografie-Spiel. Wir legen Wert auf Datensparsamkeit: Es
-                gibt keine Werbung, kein Tracking und keine Analyse-Cookies. Die meisten Daten bleiben
-                ausschließlich auf deinem Gerät.
+                gibt keine Werbung, kein seitenübergreifendes Tracking und keine Analyse-Cookies. Die
+                meisten Daten bleiben ausschließlich auf deinem Gerät.
               </p>
             </section>
             <section>
@@ -83,6 +83,14 @@ export default function PrivacyPage() {
                 gekürzter Hashwert für eine Anfragebegrenzung verwendet. So sehen wir, welche Spiele
                 gespielt werden (Art. 6 Abs. 1 lit. f DSGVO).
               </p>
+              <p>
+                Nur wenn du im Hinweis „Alle akzeptieren“ wählst, zählen wir Seitenaufrufe zusätzlich
+                mit Vercel Web Analytics. Dabei werden keine Cookies gesetzt. Verarbeitet werden die
+                aufgerufene Seite ohne URL-Parameter, die verweisende Seite, Land, Gerätetyp, Browser
+                und Betriebssystem; Besuche werden über einen täglich wechselnden Hashwert gezählt, nicht
+                über ein Profil. Rechtsgrundlage ist deine Einwilligung (Art. 6 Abs. 1 lit. a DSGVO). Du
+                kannst sie jederzeit in den Einstellungen widerrufen.
+              </p>
             </section>
             <section>
               <h2>6. Schriftarten</h2>
@@ -117,7 +125,8 @@ export default function PrivacyPage() {
               <h2>2. Overview</h2>
               <p>
                 GeoNerds is a free geography game. We keep data collection to a minimum: there are no
-                ads, no tracking and no analytics cookies. Most data stays only on your device.
+                ads, no cross-site tracking and no analytics cookies. Most data stays only on your
+                device.
               </p>
             </section>
             <section>
@@ -162,6 +171,13 @@ export default function PrivacyPage() {
                 the date, the game and the two numbers are stored, with no account, device, cookie or
                 IP address. To prevent abuse, the IP address is briefly used as a shortened hash for
                 rate limiting. This tells us which games are being played (Art. 6(1)(f) GDPR).
+              </p>
+              <p>
+                Only if you choose &ldquo;Accept all&rdquo; in the notice do we additionally count page views with
+                Vercel Web Analytics. No cookies are set. It processes the page visited without URL
+                parameters, the referring page, country, device type, browser and operating system;
+                visits are counted with a hash that changes daily, not with a profile. The legal basis
+                is your consent (Art. 6(1)(a) GDPR). You can withdraw it at any time in Settings.
               </p>
             </section>
             <section>

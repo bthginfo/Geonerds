@@ -54,7 +54,7 @@ export function habitatSectorProfiles(round:HabitatRound,seed:string):HabitatSec
  return round.region.nodes.map((node,index)=>{
   const matches=round.validSectorIds.includes(node.id);
   if(matches)return{node,biome:round.clues.biome,weather:round.clues.weather,time:round.clues.time,matches:true};
-  let weather=profileWeather[(seedHash(`${seed}:${node.id}:weather`)+index)%profileWeather.length];
+  const weather=profileWeather[(seedHash(`${seed}:${node.id}:weather`)+index)%profileWeather.length];
   let time=profileTimes[(seedHash(`${seed}:${node.id}:time`)+index)%profileTimes.length];
   if(node.biome===round.clues.biome&&weather.en===round.clues.weather.en&&time.en===round.clues.time.en)time=profileTimes[(profileTimes.indexOf(time)+1)%profileTimes.length];
   return{node,biome:node.biome,weather,time,matches:false};
@@ -70,7 +70,7 @@ export const rangerRoundsFor=(cap:number,count:number,seed="ranger-default"):Ran
  for(let index=0;index<count;index++){const region=regions[index%regions.length],pool=bags.get(region.id)!;const cursor=cursors.get(region.id)??0,target=pool[cursor%pool.length];cursors.set(region.id,cursor+1);result.push({key:`${region.id}-${target.id}`,region,target})}return result;
 };
 export function cycleWithoutImmediateDuplicates<T>(pool:readonly T[],count:number,key:(item:T)=>string):T[]{
- if(!pool.length||count<=0)return[];const result:T[]=[];let offset=Math.max(0,count%pool.length);
+ if(!pool.length||count<=0)return[];const result:T[]=[];const offset=Math.max(0,count%pool.length);
  for(let index=0;index<count;index++){let candidate=pool[(index*7+offset)%pool.length];if(result.length>0&&key(candidate)===key(result[result.length-1]))candidate=pool[(index*7+offset+1)%pool.length];result.push(candidate)}
  return result;
 }

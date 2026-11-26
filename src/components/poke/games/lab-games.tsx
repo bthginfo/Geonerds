@@ -4,7 +4,6 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import {
   AudioLines,
   Check,
-  CircleHelp,
   Ear,
   Mic2,
   ScanLine,

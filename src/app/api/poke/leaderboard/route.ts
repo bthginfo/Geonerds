@@ -8,6 +8,8 @@ import {ensureCurrentPokeSeason} from "@/poke/server";
 export const runtime="nodejs";
 export const dynamic="force-dynamic";
 
+type LeaderboardRow=Record<string,unknown>&{user_id:string;rating?:number|null};
+
 export async function GET(req:Request){
  if(!isDbConfigured)return NextResponse.json({configured:false,rows:[],currentUser:null});
  const url=new URL(req.url);
@@ -22,7 +24,7 @@ export async function GET(req:Request){
  const season=await ensureCurrentPokeSeason();
  const session=await getSession();
  const sql=await getDb();
- let rows:any[];
+ let rows:LeaderboardRow[];
  if(board==="league"){
   rows=await sql`
    SELECT u.name,r.user_id,r.rating,r.wins,r.losses,r.draws,r.placements,r.current_streak,r.best_streak,r.matches,
@@ -60,8 +62,8 @@ export async function GET(req:Request){
    ) best
    ORDER BY rating DESC,correct DESC,(correct::float/NULLIF(total,0)) DESC,duration_ms ASC LIMIT 100
   `;
-  rows=rows.map((row:any,index:number)=>({...row,rank:index+1}));
+  rows=rows.map((row,index)=>({...row,rank:index+1}));
  }
- const mapped=rows.map((row:any)=>({...row,tier:leagueTier(Number(row.rating??1000)),movement:0}));
+ const mapped=rows.map((row)=>({...row,tier:leagueTier(Number(row.rating??1000)),movement:0}));
  return NextResponse.json({configured:true,season,board,rows:mapped,currentUser:session?mapped.find((row)=>row.user_id===session.uid)??null:null});
 }

@@ -3,10 +3,11 @@
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useTheme } from "next-themes";
-import { ArrowLeft, Languages, Palette, Volume2, Database, Vibrate, Loader2 } from "lucide-react";
+import { ArrowLeft, Languages, Palette, Volume2, Database, Vibrate, Loader2, ShieldCheck } from "lucide-react";
 import { AccountPanel } from "@/components/account/account-panel";
 import { useT } from "@/i18n/I18nProvider";
 import { useSettings } from "@/store/settings";
+import { useConsent } from "@/store/consent";
 import { Button } from "@/components/ui/button";
 import { Modal } from "@/components/ui/modal";
 import { scoreStore } from "@/lib/leaderboard/local";
@@ -15,6 +16,8 @@ import { cn } from "@/lib/utils";
 import { clearGameplayStorage } from "@/lib/reset";
 
 export default function SettingsPage() {
+  const consent = useConsent((state) => state.choice);
+  const setConsent = useConsent((state) => state.setChoice);
   const { t, locale } = useT();
   const { setLocale, sound, setSound, haptics, setHaptics } = useSettings();
   const { theme, setTheme } = useTheme();
@@ -61,6 +64,13 @@ export default function SettingsPage() {
         <Section icon={<Volume2 className="h-5 w-5" />} title={t("settings.sound")} description={de ? "Kurze Töne bei Antworten und Erfolgen." : "Short sounds for answers and achievements."}><Switch label={t("settings.sound")} checked={sound} onChange={setSound} /></Section>
         <Section icon={<Vibrate className="h-5 w-5" />} title={t("settings.haptics")} description={de ? "Sanfte Vibration, wenn dein Gerät sie unterstützt." : "Gentle vibration where your device supports it."}><Switch label={t("settings.haptics")} checked={haptics} onChange={setHaptics} /></Section>
       </div>
+    </section>
+    <section className="mt-7" aria-labelledby="settings-privacy-title">
+      <h2 id="settings-privacy-title" className="mb-3 text-base font-semibold">{de ? "Datenschutz" : "Privacy"}</h2>
+      <div className="geo-surface">
+        <Section icon={<ShieldCheck className="h-5 w-5" />} title={de ? "Anonyme Nutzungsstatistik" : "Anonymous usage statistics"} description={de ? "Seitenaufrufe mit Vercel Web Analytics zählen, ohne Cookies und ohne Profil. Abschalten wirkt nach dem nächsten Laden." : "Count page views with Vercel Web Analytics, without cookies or a profile. Turning it off applies after the next page load."}><Switch label={de ? "Anonyme Nutzungsstatistik" : "Anonymous usage statistics"} checked={consent === "accepted"} onChange={(on) => setConsent(on ? "accepted" : "necessary")} /></Section>
+      </div>
+      <p className="mt-2 px-1 text-xs text-muted-foreground"><Link href="/privacy" className="font-medium text-primary underline-offset-2 hover:underline">{de ? "Datenschutzerklärung" : "Privacy policy"}</Link></p>
     </section>
     <details className="geo-surface mt-7 p-4 sm:p-5"><summary className="flex min-h-11 cursor-pointer items-center gap-3 font-semibold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"><Database className="h-5 w-5 text-muted-foreground" aria-hidden />{t("settings.data")}</summary><p className="mb-4 mt-3 text-sm leading-relaxed text-muted-foreground">{de ? "Lokale Spielstände und Einstellungen dieses Browsers verwalten. Dein Online-Konto wird hierdurch nicht gelöscht." : "Manage saved games and settings in this browser. This does not delete your online account."}</p><Button variant="outline" className="text-danger" onClick={() => { setClearError(false); setConfirmOpen(true); }}>{t("settings.clearData")}</Button></details>
     <Modal open={confirmOpen} onClose={() => { if (!clearing) setConfirmOpen(false); }} title={de ? "Daten auf diesem Gerät löschen?" : "Clear data on this device?"}>

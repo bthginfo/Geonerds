@@ -247,7 +247,7 @@ function EvolutionLabMission({
         <FlaskConical />
         <div>
           <p className="poke-kicker">
-            {branching ? "BRANCHING FAMILY RIG" : "LINEAR FAMILY RIG"} //
+            {branching ? "BRANCHING FAMILY RIG" : "LINEAR FAMILY RIG"} {"//"}
             VERIFIED EDGES
           </p>
           <h2>

@@ -960,6 +960,7 @@ function AscensionCard({
         <b>{card.finish.replaceAll("-", " ").toUpperCase()}</b>
       </header>
       <div className="poke-ascension-art">
+        {/* eslint-disable-next-line @next/next/no-img-element -- dynamic external artwork */}
         <img
           src={src}
           onError={() => setFailed(true)}

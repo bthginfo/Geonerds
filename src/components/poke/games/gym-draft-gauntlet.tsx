@@ -74,15 +74,6 @@ export function GymDraftGauntlet({
         6,
     );
   const spent = draft.reduce((sum, id) => sum + cost(id), 0);
-  const visiblePool = pool
-    .filter((entry) => filterType === "all" || entry.types.includes(filterType))
-    .sort((a, b) =>
-      sortBy === "cost"
-        ? cost(a.id) - cost(b.id)
-        : sortBy === "speed"
-          ? b.stats.speed - a.stats.speed
-          : 0,
-    );
   const forecast = Object.entries(
     trials.reduce<Record<string, number>>(
       (counts, trial) => ({

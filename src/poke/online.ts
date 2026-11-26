@@ -10,6 +10,10 @@ export interface PokeChallenge{
 }
 export interface PokeLeaderboardRow{name:string;user_id:string;rank:number;rating:number;tier:string;wins?:number;losses?:number;draws?:number;placements?:number;current_streak?:number;matches?:number;games?:number;correct?:number;total?:number;duration_ms?:number;verified?:boolean;movement?:number}
 export interface PokeOnlineProfile{name:string;avatarSpeciesId:number;favoriteType:string;bio:string;featuredBadgeIds:string[];visibility:"public"|"private";season:PokeSeason;rating:{rating:number;tier:string;wins:number;losses:number;draws:number;placements:number;current_streak:number;best_streak:number;matches:number};awards:Array<{badge_id:string;earned_at:string;season_id:string|null}>;activity:Array<Record<string,unknown>>}
+export interface PokePublicProfile{name:string;userId:string;isSelf?:boolean;avatarSpeciesId:number;favoriteType:string;bio:string;
+ rating:{tier:string;rating:number;placements:number;wins:number;losses:number;draws:number;current_streak:number;best_streak:number;matches:number};
+ featuredBadges:Array<{badge_id:string}>;bestGames:Array<{game_id:PokeGameId;rating:number;verified:boolean}>;
+ recentChallenges:Array<{id:string;rival_name:string;winner_id:string|null;resolved_at:string}>}
 
 async function request<T>(url:string,init?:RequestInit):Promise<T&{error?:string}>{
  try{
@@ -18,7 +22,7 @@ async function request<T>(url:string,init?:RequestInit):Promise<T&{error?:string
   return {...data,ok:response.ok} as T&{error?:string};
  }catch{return {error:"offline",ok:false} as unknown as T&{error?:string}}
 }
-const post=(url:string,body:unknown,method="POST")=>request<any>(url,{method,body:JSON.stringify(body)});
+const post=(url:string,body:unknown,method="POST")=>request<Record<string,unknown>>(url,{method,body:JSON.stringify(body)});
 
 export function apiSubmitPokeScore(run:PokeRun){return post("/api/poke/scores",{...run,clientRunId:run.id}) as Promise<{ok:boolean;rating?:number;error?:string}>}
 export function getPokeSeason(){return request<{configured:boolean;season:PokeSeason|null}>("/api/poke/seasons/current")}
@@ -30,4 +34,4 @@ export function actOnPokeChallenge(id:string,action:"accept"|"decline"|"cancel")
 export function submitPokeChallengeAttempt(id:string,run:PokeRun){return post(`/api/poke/challenges/${encodeURIComponent(id)}/attempt`,{...run,clientRunId:run.id}) as Promise<{ok:boolean;resolved?:boolean;error?:string}>}
 export function getPokeProfile(){return request<{configured:boolean;profile:PokeOnlineProfile|null}>("/api/poke/profile")}
 export function updatePokeProfile(body:Pick<PokeOnlineProfile,"avatarSpeciesId"|"favoriteType"|"bio"|"featuredBadgeIds"|"visibility">){return post("/api/poke/profile",body,"PATCH") as Promise<{ok:boolean;profile?:PokeOnlineProfile;error?:string}>}
-export function getPublicPokeProfile(name:string){return request<{configured:boolean;found:boolean;private?:boolean;profile?:any}>(`/api/poke/users/${encodeURIComponent(name)}`)}
+export function getPublicPokeProfile(name:string){return request<{configured:boolean;found:boolean;private?:boolean;profile?:PokePublicProfile}>(`/api/poke/users/${encodeURIComponent(name)}`)}

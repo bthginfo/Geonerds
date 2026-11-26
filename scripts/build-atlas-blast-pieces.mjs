@@ -16,16 +16,24 @@ const ROOT = resolve(import.meta.dirname, "..");
 const RESOLUTIONS = ["50m", "10m", "110m"];
 const MIN_CELLS = 3;
 const MAX_CELLS = 9;
-// A cell counts as filled at ≥ 40 % coverage. Long, thin countries (Chile,
-// Norway, Vietnam, …) never reach that at 2–5 cells, so they fall back to a
-// lower threshold as long as the raster still holds most of the country.
-const COVERAGES = [0.4, 0.3, 0.22, 0.15];
+// Search per country: grid resolution (longest side 2–5 cells) × sub-cell
+// grid offsets × coverage thresholds; keep the raster with the best IoU
+// against the projected geometry, minus a small per-cell cost so the set
+// does not drift toward large pieces. Long, thin countries (Chile, Norway,
+// Vietnam, …) never fill cells at these resolutions, so they fall back to
+// lower thresholds as long as the raster still holds most of the country.
+const COVERAGES = [0.3, 0.35, 0.4, 0.45, 0.5, 0.55, 0.6];
+const THIN_COVERAGES = [0.22, 0.15];
+// Cell size = longest projected side / scale; the resulting piece must still
+// span 2–5 cells. Sub-cell offsets shift the grid origin.
+const SCALES = Array.from({ length: 41 }, (_, i) => Math.round((1.5 + i * 0.1) * 10) / 10);
+const OFFSETS = [0, 1 / 6, 2 / 6, 3 / 6, 4 / 6, 5 / 6];
+const FIELD = 600; // bitmap resolution along the longest side
 const MIN_RECALL = 0.5;
-const SAMPLES = 10; // samples per cell side
+const METRIC_SAMPLES = 16; // samples per cell side for the reported IoU (full-detail rings)
 const MIN_FIDELITY = 0.42;
 const MIN_FIDELITY_THIN = 0.15;
-const DETAIL_BONUS = Number(process.env.DETAIL_BONUS ?? 0.04);
-const SIZE_COST = Number(process.env.SIZE_COST ?? 0.025);
+const SIZE_COST = 0.012; // per cell; keeps the mean piece size where it was (~5.4 cells)
 const UNITS = 10; // outline units per cell
 const MAX_OUTLINE = 400;
 
@@ -143,7 +151,57 @@ function largestComponent(filled, rows, cols) {
   return best;
 }
 
-function rasterize(rings, bounds, longest, ox, oy, totalArea, threshold) {
+/**
+ * Fine even-odd scanline bitmap of the projected country plus a summed-area
+ * table, so the coverage of any square cell is an O(1) lookup.
+ */
+function coverageField(rings, bounds) {
+  const [[minX, minY], [maxX, maxY]] = bounds;
+  const px = Math.max(maxX - minX, maxY - minY) / FIELD;
+  const width = Math.ceil((maxX - minX) / px) + 1;
+  const height = Math.ceil((maxY - minY) / px) + 1;
+  const sat = new Float64Array((width + 1) * (height + 1));
+  const crossings = [];
+  for (let j = 0; j < height; j++) {
+    const y = minY + (j + 0.5) * px;
+    crossings.length = 0;
+    for (const ring of rings) {
+      for (let i = 0, k = ring.length - 1; i < ring.length; k = i++) {
+        const [xi, yi] = ring[i];
+        const [xk, yk] = ring[k];
+        if (yi > y !== yk > y) crossings.push(xi + ((y - yi) * (xk - xi)) / (yk - yi));
+      }
+    }
+    crossings.sort((a, b) => a - b);
+    const row = new Uint8Array(width);
+    for (let k = 0; k + 1 < crossings.length; k += 2) {
+      const from = Math.max(0, Math.ceil((crossings[k] - minX) / px - 0.5));
+      const to = Math.min(width - 1, Math.floor((crossings[k + 1] - minX) / px - 0.5));
+      for (let i = from; i <= to; i++) row[i] = 1;
+    }
+    let running = 0;
+    for (let i = 0; i < width; i++) {
+      running += row[i];
+      sat[(j + 1) * (width + 1) + i + 1] = sat[j * (width + 1) + i + 1] + running;
+    }
+  }
+  const total = sat[height * (width + 1) + width];
+  const lookup = (i, j) => sat[Math.min(height, Math.max(0, j)) * (width + 1) + Math.min(width, Math.max(0, i))];
+  return {
+    area: total * px * px,
+    /** Covered fraction of the square [left, left + size] × [top, top + size]. */
+    coverage(left, top, size) {
+      const i0 = Math.round((left - minX) / px);
+      const j0 = Math.round((top - minY) / px);
+      const i1 = Math.round((left + size - minX) / px);
+      const j1 = Math.round((top + size - minY) / px);
+      const inside = lookup(i1, j1) - lookup(i0, j1) - lookup(i1, j0) + lookup(i0, j0);
+      return (inside * px * px) / (size * size);
+    },
+  };
+}
+
+function coverageGrid(field, bounds, longest, ox, oy) {
   const [[minX, minY], [maxX, maxY]] = bounds;
   const size = Math.max(maxX - minX, maxY - minY) / longest;
   const x0 = minX - ox * size;
@@ -152,18 +210,22 @@ function rasterize(rings, bounds, longest, ox, oy, totalArea, threshold) {
   const rows = Math.ceil((maxY - y0) / size - 1e-9);
   const coverage = new Float64Array(rows * cols);
   for (let r = 0; r < rows; r++) {
-    for (let c = 0; c < cols; c++) {
-      let hits = 0;
-      for (let sy = 0; sy < SAMPLES; sy++) {
-        for (let sx = 0; sx < SAMPLES; sx++) {
-          if (inside(rings, x0 + (c + (sx + 0.5) / SAMPLES) * size, y0 + (r + (sy + 0.5) / SAMPLES) * size)) hits++;
-        }
-      }
-      coverage[r * cols + c] = hits / (SAMPLES * SAMPLES);
-    }
+    for (let c = 0; c < cols; c++) coverage[r * cols + c] = field.coverage(x0 + c * size, y0 + r * size, size);
   }
-  const filled = Array.from(coverage, (value) => value >= threshold);
-  const component = largestComponent(filled, rows, cols);
+  return { longest, size, x0, y0, rows, cols, coverage };
+}
+
+function cellCoverage(rings, left, top, size, samples) {
+  let hits = 0;
+  for (let sy = 0; sy < samples; sy++) {
+    for (let sx = 0; sx < samples; sx++) if (inside(rings, left + ((sx + 0.5) / samples) * size, top + ((sy + 0.5) / samples) * size)) hits++;
+  }
+  return hits / (samples * samples);
+}
+
+function candidateFrom(grid, threshold, totalArea) {
+  const { size, x0, y0, rows, cols, coverage, longest } = grid;
+  const component = largestComponent(Array.from(coverage, (value) => value >= threshold), rows, cols);
   if (!component.length) return null;
   const cellsRaw = component.map((key) => [Math.floor(key / cols), key % cols]);
   const r0 = Math.min(...cellsRaw.map(([r]) => r));
@@ -174,11 +236,54 @@ function rasterize(rings, bounds, longest, ox, oy, totalArea, threshold) {
   const intersection = component.reduce((sum, key) => sum + coverage[key], 0) * size * size;
   const union = totalArea + component.length * size * size - intersection;
   return {
-    cells, w, h, longest,
+    cells, w, h, longest, threshold, size, left: x0 + c0 * size, top: y0 + r0 * size,
     fidelity: intersection / union,
     recall: intersection / totalArea,
     transform: (x, y) => [((x - x0) / size - c0) * UNITS, ((y - y0) / size - r0) * UNITS],
   };
+}
+
+const valid = (candidate) =>
+  candidate &&
+  candidate.cells.length >= MIN_CELLS &&
+  candidate.cells.length <= MAX_CELLS &&
+  Math.max(candidate.w, candidate.h) >= 2 &&
+  Math.max(candidate.w, candidate.h) <= 5 &&
+  candidate.recall >= MIN_RECALL;
+
+/** Best raster by IoU minus a per-cell cost; thin fallback only when nothing else is faithful. */
+function chooseRaster(rings, bounds) {
+  const field = coverageField(rings, bounds);
+  const totalArea = field.area;
+  const grids = [];
+  for (const longest of SCALES) {
+    for (const ox of OFFSETS) for (const oy of OFFSETS) grids.push(coverageGrid(field, bounds, longest, ox, oy));
+  }
+  let closest = null;
+  for (const [thresholds, minFidelity] of [[COVERAGES, MIN_FIDELITY], [THIN_COVERAGES, MIN_FIDELITY_THIN]]) {
+    let best = null;
+    for (const grid of grids) {
+      for (const threshold of thresholds) {
+        const candidate = candidateFrom(grid, threshold, totalArea);
+        if (!valid(candidate)) continue;
+        const value = candidate.fidelity - SIZE_COST * candidate.cells.length;
+        if (!best || value > best.value + 1e-12) best = { ...candidate, value };
+      }
+    }
+    if (best && (!closest || best.fidelity > closest.fidelity)) closest = best;
+    if (best && best.fidelity >= minFidelity) return { best, closest };
+  }
+  return { best: null, closest };
+}
+
+/** IoU of the chosen cells against the full-detail projected geometry. */
+function measuredIoU(rings, totalArea, candidate) {
+  let intersection = 0;
+  for (const [r, c] of candidate.cells) {
+    intersection += cellCoverage(rings, candidate.left + c * candidate.size, candidate.top + r * candidate.size, candidate.size, METRIC_SAMPLES);
+  }
+  intersection *= candidate.size * candidate.size;
+  return intersection / (totalArea + candidate.cells.length * candidate.size * candidate.size - intersection);
 }
 
 function perpendicular(point, start, end) {
@@ -259,7 +364,7 @@ for (const resolution of RESOLUTIONS) {
 
 const output = {};
 const dropped = [];
-const stats = [];
+const metrics = [];
 for (const country of countries) {
   if (!country.independent || !country.ccn3) continue;
   let chosen;
@@ -282,37 +387,11 @@ for (const country of countries) {
   const ys = rings.flat().map(([, y]) => y);
   const bounds = [[Math.min(...xs), Math.min(...ys)], [Math.max(...xs), Math.max(...ys)]];
 
-  // Coarse copy of the rings for rasterising (the outline uses full detail).
-  const span = Math.max(bounds[1][0] - bounds[0][0], bounds[1][1] - bounds[0][1]);
-  const rasterRings = rings.map((ring) => simplifyRing(ring, span * 0.002)).filter((ring) => ring.length >= 3);
 
-  // Take the first coverage threshold whose best raster is faithful enough.
-  let best = null;
-  let closest = null;
-  for (const threshold of COVERAGES) {
-    let levelBest = null;
-    for (let longest = 2; longest <= 5; longest++) {
-      for (const ox of [0, 0.25, 0.5, 0.75]) {
-        for (const oy of [0, 0.25, 0.5, 0.75]) {
-          const candidate = rasterize(rasterRings, bounds, longest, ox, oy, totalArea, threshold);
-          if (!candidate) continue;
-          const n = candidate.cells.length;
-          if (n < MIN_CELLS || n > MAX_CELLS) continue;
-          if (Math.max(candidate.w, candidate.h) < 2 || Math.max(candidate.w, candidate.h) > 5) continue;
-          if (candidate.recall < MIN_RECALL) continue;
-          // Favour a faithful raster with some detail, and keep the set from
-          // filling up with 3×3 blocks (the 8×8 board needs smaller pieces too).
-          const value = candidate.fidelity + DETAIL_BONUS * longest - SIZE_COST * n;
-          if (!levelBest || value > levelBest.value) levelBest = { ...candidate, value, threshold };
-        }
-      }
-    }
-    if (!levelBest) continue;
-    if (!closest || levelBest.fidelity > closest.fidelity) closest = levelBest;
-    if (levelBest.fidelity >= (threshold === COVERAGES[0] ? MIN_FIDELITY : MIN_FIDELITY_THIN)) { best = levelBest; break; }
-  }
+  const { best, closest } = chooseRaster(rings, bounds);
   if (!best) { dropped.push(`${country.cca3}:${closest ? `fidelity ${closest.fidelity.toFixed(2)}` : "degenerate"}`); continue; }
-  stats.push(`${country.cca3} L${best.longest} n${best.cells.length} t${best.threshold} f${best.fidelity.toFixed(2)} r${best.recall.toFixed(2)}`);
+  const iou = measuredIoU(rings, totalArea, best);
+  metrics.push({ cca3: country.cca3, iou, cells: best.cells.length, longest: best.longest, threshold: best.threshold });
   const outline = outlinePath(outer, best.transform);
   if (!outline) { dropped.push(`${country.cca3}:outline`); continue; }
   // Outline bounds in the same units; islands may reach beyond the blocks.
@@ -331,7 +410,11 @@ if (dropped.length) console.log(`Dropped ${dropped.length}: ${dropped.join(", ")
 const histogram = {};
 for (const piece of Object.values(output)) histogram[piece.cells.length] = (histogram[piece.cells.length] ?? 0) + 1;
 console.log("Cells:", JSON.stringify(histogram));
-if (process.argv.includes("--stats")) console.log(stats.join("\n"));
+const ious = metrics.map((entry) => entry.iou).sort((a, b) => a - b);
+const median = ious.length % 2 ? ious[(ious.length - 1) / 2] : (ious[ious.length / 2 - 1] + ious[ious.length / 2]) / 2;
+console.log(`Cell count mean ${(metrics.reduce((sum, entry) => sum + entry.cells, 0) / metrics.length).toFixed(2)}`);
+console.log(`IoU mean ${(ious.reduce((sum, value) => sum + value, 0) / ious.length).toFixed(3)}, median ${median.toFixed(3)}`);
+console.log(`Worst 10: ${[...metrics].sort((a, b) => a.iou - b.iou).slice(0, 10).map((entry) => `${entry.cca3} ${entry.iou.toFixed(2)} (${entry.cells} cells, t${entry.threshold})`).join(", ")}`);
 if (process.argv.includes("--preview")) {
   for (const code of process.argv.slice(process.argv.indexOf("--preview") + 1)) {
     const piece = output[code];

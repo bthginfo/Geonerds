@@ -166,8 +166,9 @@ export function FieldCapture({
   }, [difficulty, drag.active, phase, result, round, tier]);
 
   useEffect(() => {
+    const pendingTimers = timers.current;
     return () => {
-      timers.current.forEach((timer) => window.clearTimeout(timer));
+      pendingTimers.forEach((timer) => window.clearTimeout(timer));
       gestureRef.current = emptyDrag();
       resolvingPointerRef.current = null;
       throwPendingRef.current = false;
@@ -341,8 +342,10 @@ export function FieldCapture({
       event.preventDefault();
   };
 
-  nativeMoveRef.current = updateGesture;
-  nativeEndRef.current = finalizeGesture;
+  useEffect(() => {
+    nativeMoveRef.current = updateGesture;
+    nativeEndRef.current = finalizeGesture;
+  });
 
   useEffect(() => {
     const move = (event: PointerEvent) => {
@@ -922,7 +925,8 @@ export function FieldCapture({
               type="button"
               onClick={(event) => {
                 event.stopPropagation();
-                terminal ? advance() : retry();
+                if (terminal) advance();
+                else retry();
               }}
             >
               {terminal

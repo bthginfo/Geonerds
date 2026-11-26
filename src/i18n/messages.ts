@@ -770,7 +770,7 @@ export const messages: Record<Locale, Dict> = {
     "support.short": "Buy me a coffee",
 
     "consent.title": "Cookies & privacy",
-    "consent.text": "GeoNerds stores your settings, scores and login on your device (local storage). Fonts are self-hosted and we use no tracking or advertising cookies. Choose whether optional cookies may be used in the future.",
+    "consent.text": "GeoNerds stores your settings, scores and login on your device (local storage). We use no advertising or tracking cookies. With \"Accept all\" we also count page views with Vercel Web Analytics, without cookies and without a profile of you.",
     "consent.accept": "Accept all",
     "consent.necessary": "Only necessary",
     "consent.more": "Learn more",
@@ -1539,7 +1539,7 @@ export const messages: Record<Locale, Dict> = {
     "support.short": "Kaffee spendieren",
 
     "consent.title": "Cookies & Datenschutz",
-    "consent.text": "GeoNerds speichert deine Einstellungen, Punkte und Anmeldung auf deinem Gerät (lokaler Speicher). Schriften werden selbst gehostet, wir nutzen keine Tracking- oder Werbe-Cookies. Wähle, ob künftig optionale Cookies genutzt werden dürfen.",
+    "consent.text": "GeoNerds speichert deine Einstellungen, Punkte und Anmeldung auf deinem Gerät (lokaler Speicher). Wir nutzen keine Werbe- oder Tracking-Cookies. Mit \"Alle akzeptieren\" zählen wir zusätzlich Seitenaufrufe mit Vercel Web Analytics, ohne Cookies und ohne Profil von dir.",
     "consent.accept": "Alle akzeptieren",
     "consent.necessary": "Nur notwendige",
     "consent.more": "Mehr erfahren",

@@ -6,6 +6,7 @@ import { Header } from "@/components/layout/header";
 import { BottomNav } from "@/components/layout/bottom-nav";
 import { Footer } from "@/components/layout/footer";
 import { CookieBanner } from "@/components/cookie-banner";
+import { ConsentAnalytics } from "@/components/consent-analytics";
 import { ServiceWorkerRegister } from "@/components/sw-register";
 
 const geistSans = Geist({ variable: "--font-sans", subsets: ["latin"] });
@@ -106,6 +107,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
             <BottomNav />
           </div>
           <CookieBanner />
+          <ConsentAnalytics />
           <ServiceWorkerRegister />
         </Providers>
       </body>

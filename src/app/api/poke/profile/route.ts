@@ -46,4 +46,4 @@ async function currentProfile(userId:string,name:string){
  const rating=ratings[0]??{rating:1000,wins:0,losses:0,draws:0,placements:0,current_streak:0,best_streak:0,matches:0};
  return {name,...camelProfile(rows[0]),season,rating:{...rating,tier:leagueTier(rating.rating)},awards,activity};
 }
-function camelProfile(row:any){return{avatarSpeciesId:row.avatar_species_id,favoriteType:row.favorite_type,bio:row.bio,featuredBadgeIds:row.featured_badge_ids,visibility:row.visibility}}
+function camelProfile(row:Record<string,unknown>){return{avatarSpeciesId:row.avatar_species_id,favoriteType:row.favorite_type,bio:row.bio,featuredBadgeIds:row.featured_badge_ids,visibility:row.visibility}}

@@ -75,7 +75,8 @@ export async function POST(req:Request,{params}:{params:Promise<{id:string}>}){
  }
 }
 
-async function updateRating(tx:any,row:any,rating:number,outcome:number){
+type Tx=import("postgres").TransactionSql;
+async function updateRating(tx:Tx,row:import("postgres").Row,rating:number,outcome:number){
  const won=outcome===1,lost=outcome===0,draw=outcome===.5;
  const streak=won?row.current_streak+1:0;
  await tx`
