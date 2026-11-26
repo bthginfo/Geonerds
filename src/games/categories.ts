@@ -25,7 +25,7 @@ export const GAME_CATEGORIES: GameCategory[] = [
     name: { de: "Rätsel & Wortspiele", en: "Puzzles & words" },
     description: { de: "Jeden Tag ein neues Brett: gruppieren, buchstabieren, entschlüsseln.", en: "A fresh board every day: group, spell and decode the world." },
     icon: Puzzle,
-    games: ["geo-groups", "letter-atlas", "place-trails", "geo-brackets"],
+    games: ["geo-groups", "letter-atlas", "place-trails", "geo-brackets", "rare-finds"],
   },
   {
     id: "maps",

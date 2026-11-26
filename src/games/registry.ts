@@ -29,6 +29,7 @@ import {
   Waypoints,
   Brackets,
   Blocks,
+  Gem,
   type LucideIcon,
 } from "lucide-react";
 import type { AnswerMode, GameId } from "@/lib/types";
@@ -323,6 +324,16 @@ export const GAMES: GameConfig[] = [
     supportsTimed: false,
     variants: { labelKey: "puzzle.variantLabel", default: "daily", options: ["daily", "endless"] },
     setupNoteKey: "geobrackets.setupNote",
+  },
+  {
+    id: "rare-finds",
+    featuredSince: "2026-11-26T17:00:00Z",
+    icon: Gem,
+    gradient: "from-violet-500 via-fuchsia-500 to-amber-400",
+    supportsDifficulty: false,
+    supportsTimed: false,
+    variants: { labelKey: "puzzle.variantLabel", default: "daily", options: ["daily", "endless"] },
+    setupNoteKey: "rarefinds.setupNote",
   },
   {
     id: "atlas-blast",

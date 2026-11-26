@@ -7,6 +7,7 @@ import { LETTER_ATLAS_MESSAGES } from "@/games/letter-atlas/messages";
 import { PLACE_TRAILS_MESSAGES } from "@/games/place-trails/messages";
 import { GEO_BRACKETS_MESSAGES } from "@/games/geo-brackets/messages";
 import { ATLAS_BLAST_MESSAGES } from "@/games/atlas-blast/messages";
+import { RARE_FINDS_MESSAGES } from "@/games/rare-finds/messages";
 
 type Dict = Record<string, string>;
 
@@ -20,6 +21,7 @@ export const messages: Record<Locale, Dict> = {
     ...PLACE_TRAILS_MESSAGES.en,
     ...GEO_BRACKETS_MESSAGES.en,
     ...ATLAS_BLAST_MESSAGES.en,
+    ...RARE_FINDS_MESSAGES.en,
     "neighbors.reveal": "Reveal another clue",
     "neighbors.clues": "{n} of {max} clues revealed",
     "neighbors.worth": "Worth {pts} pts",
@@ -789,6 +791,7 @@ export const messages: Record<Locale, Dict> = {
     ...PLACE_TRAILS_MESSAGES.de,
     ...GEO_BRACKETS_MESSAGES.de,
     ...ATLAS_BLAST_MESSAGES.de,
+    ...RARE_FINDS_MESSAGES.de,
     "neighbors.reveal": "Weiteren Hinweis aufdecken",
     "neighbors.clues": "{n} von {max} Hinweisen aufgedeckt",
     "neighbors.worth": "Wert: {pts} Pkt",

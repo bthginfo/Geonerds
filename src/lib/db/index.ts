@@ -261,6 +261,16 @@ async function ensureSchema(sql: ReturnType<typeof postgres>) {
   `;
   await sql`CREATE INDEX IF NOT EXISTS gn_play_stats_game_day_idx ON gn_play_stats (game_id, day DESC)`;
   await ensureCommunityRewards(sql);
+  // Rare Finds: anonymous per-day answer counters (no user, device or IP columns).
+  await sql`
+    CREATE TABLE IF NOT EXISTS gn_rare_answers (
+      day date NOT NULL,
+      prompt_index integer NOT NULL CHECK (prompt_index BETWEEN 0 AND 4),
+      answer text NOT NULL,
+      count integer NOT NULL DEFAULT 0 CHECK (count >= 0),
+      PRIMARY KEY (day, prompt_index, answer)
+    )
+  `;
 }
 
 /** Returns the SQL client, lazily creating the schema once. */

@@ -81,7 +81,9 @@ export default function PrivacyPage() {
                 Gespeichert werden nur Datum, Spiel und die beiden Zahlen, ohne Konto, Gerät, Cookie
                 oder IP-Adresse. Zum Schutz vor Missbrauch wird die IP-Adresse kurzzeitig als
                 gekürzter Hashwert für eine Anfragebegrenzung verwendet. So sehen wir, welche Spiele
-                gespielt werden (Art. 6 Abs. 1 lit. f DSGVO).
+                gespielt werden (Art. 6 Abs. 1 lit. f DSGVO). Im Spiel „Seltene Funde“ zählen wir
+                genauso anonym, wie oft eine Antwort auf eine Tagesaufgabe gewählt wurde, damit seltene
+                Antworten mehr Punkte bringen.
               </p>
               <p>
                 Nur wenn du im Hinweis „Alle akzeptieren“ wählst, zählen wir Seitenaufrufe zusätzlich
@@ -170,7 +172,9 @@ export default function PrivacyPage() {
                 When a game starts or ends, we increase an anonymous daily counter for that game. Only
                 the date, the game and the two numbers are stored, with no account, device, cookie or
                 IP address. To prevent abuse, the IP address is briefly used as a shortened hash for
-                rate limiting. This tells us which games are being played (Art. 6(1)(f) GDPR).
+                rate limiting. This tells us which games are being played (Art. 6(1)(f) GDPR). In Rare
+                Finds we count, just as anonymously, how often each answer to a daily prompt is chosen,
+                so rarer answers can score more.
               </p>
               <p>
                 Only if you choose &ldquo;Accept all&rdquo; in the notice do we additionally count page views with
