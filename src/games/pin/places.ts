@@ -1,4 +1,4 @@
-import { EXTRA_PEAKS } from "@/games/mountains/peaks";
+import { EXTRA_PEAKS } from "@/games/pin/peaks";
 import { HERITAGE_CITIES } from "@/data/heritage-cities";
 
 export interface Place {

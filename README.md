@@ -12,7 +12,6 @@ Deploys cleanly to Vercel.
 | Game | Description |
 |------|-------------|
 | **Flag Quiz** | Guess the country from its flag. Multiple-choice or type-the-name (with typo-tolerant fuzzy matching, EN/DE accepted). |
-| **Geo Expedition** | Choose a regional six-checkpoint campaign with branches, shared energy, stars, a final challenge and checkpoint-safe resume. |
 | **Capitals** | Match capitals to their countries — choice or typing. |
 | **Outline Quiz** | Identify a country from its silhouette alone. |
 | **Higher or Lower** | Top-Trumps style: compare countries by population, area, density or GDP. Endless streak mode. |
@@ -22,17 +21,19 @@ Deploys cleanly to Vercel.
 | **Draw the Outline** | Draw a country's shape with your finger/mouse — scored by how closely it overlaps the real borders (IoU). |
 | **Border Chain** | Name as many of a country's land neighbours as you can before the clock runs out; it chains into neighbours-of-neighbours. |
 | **Rank It** | Put countries in order by population, area, density, GDP or other geographic metrics. |
-| **Scripts & Money** | Identify countries from writing systems, language samples and currencies. |
 | **Pin the Place** | Place capitals and landmarks on a zoomable world map. |
 | **Land Route** | Build a valid country-to-country route using land borders. |
 | **Rivers & Lakes** | Identify highlighted waterways in geographic context. |
 | **Who Am I?** | Combine neighbour, language, currency and regional clues. |
-| **Trace the River** | Draw the course of a river and compare it with the real path. |
 | **Where's That From?** | Match foods, animals, inventions and traditions to their origin. |
 | **Name All** | List every country that matches a rotating geographic theme. |
-| **Mountains & Volcanoes** | Locate famous peaks and volcanoes on the map. |
 | **Color the Flag** | Reconstruct national flags from their real colour palette. |
 | **Geo-Nerd Millionaire** | Climb through progressively harder geography questions with limited lives. |
+| **Geo Groups** | Sort 16 countries into four hidden geographic groups (daily board + endless). |
+| **Letter Atlas** | Guess the hidden country letter by letter; every guess also shows distance and direction. |
+| **Place Trails** | Swipe themed place names out of a letter grid where every letter belongs to a place. |
+| **Geo Brackets** | Solve nested geography clues from the inside out. |
+| **Atlas Blast** | Block puzzle with pixelated country pieces; name the shape for double points. |
 
 Daily and weekly challenges mix these mechanics into seeded runs that are the same for every player.
 
@@ -50,6 +51,8 @@ at the boundary and on return from the background; an expired New filter falls
 back to All games. Content updates do not reset the launch timestamp.
 Adastra's first production publication was 6 October 2026 at 18:55:46 UTC; its
 feature ends on 6 November 2026 at 18:55:46 UTC, under **Maps & shapes** thereafter.
+
+The November 2026 overhaul retired twelve rarely played games and added five new ones; see [docs/geo-overhaul-2026-11-26.md](docs/geo-overhaul-2026-11-26.md) for data, reasons and research.
 
 ## Flags with giveaway text
 

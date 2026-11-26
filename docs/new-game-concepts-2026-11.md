@@ -1,5 +1,7 @@
 # Five next GeoNerds games
 
+> **Status 26 Nov 2026:** all five games below were retired after 0–2 runs in their first eight days. See [geo-overhaul-2026-11-26.md](geo-overhaul-2026-11-26.md).
+
 Research: 17 November 2026. All five concepts are now implemented; the shipping scope below distinguishes actual mechanics from future ideas. Public rules show useful mechanics, not reliable player-count or revenue rankings. No competitor text, images, puzzles or implementation is copied.
 
 ## Shipping scope — 18 November 2026

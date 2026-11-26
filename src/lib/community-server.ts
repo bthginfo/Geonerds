@@ -57,7 +57,7 @@ function pageOptions(url: URL, defaultLimit: number) {
 }
 
 /** The signed UID must still belong to the designated account in the database. */
-async function adminGate() {
+export async function adminGate() {
   const session = await getSession();
   if (!session) return { response: failure("unauthorized", 401) };
   if (!isDbConfigured) return { response: failure("not_configured", 503) };

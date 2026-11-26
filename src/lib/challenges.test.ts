@@ -9,14 +9,16 @@ const result = { gameId: "flags", difficulty: "medium", mode: "choice", score: 9
 
 describe("Geo challenge settings", () => {
   it("accepts only registered, seed-supported games", () => {
-    expect(CHALLENGE_GAME_IDS.length).toBe(14);
+    expect(CHALLENGE_GAME_IDS.length).toBe(10);
     for (const gameId of CHALLENGE_GAME_IDS) {
       const variants = gameId === "flags" ? "world" : gameId === "capitals" ? "capitals" : "";
       // New game defaults are covered by their own registry tests.
-      if (["flag-pie", "city-compass", "flag-mosaic", "country-radar"].includes(gameId)) continue;
+      if (["flag-pie", "flag-mosaic", "country-radar"].includes(gameId)) continue;
       expect(parseGeoChallengeConfig({ ...config, gameId, variant: variants, opponentName: "Explorer" })).not.toBeNull();
     }
     expect(parseGeoChallengeConfig({ ...config, gameId: "grid", opponentName: "Explorer" })).toBeNull();
+    // Retired games keep their historical records but accept no new challenges.
+    for (const gameId of ["trivia", "mountains", "languages", "city-compass"]) expect(parseGeoChallengeConfig({ ...config, gameId, variant: "", opponentName: "Explorer" })).toBeNull();
   });
   it("normalizes an actual player name without silently truncating", () => {
     expect(parseGeoChallengeConfig({ ...config, opponentName: "  Géonerd  " })?.opponentName).toBe("Géonerd");
@@ -33,7 +35,7 @@ describe("Geo challenge settings", () => {
     expect(parseGeoChallengeConfig({ ...config, opponentName: "Explorer", ...change })).toBeNull();
   });
   it("does not enable typed or timed modes unsupported by a game", () => {
-    expect(parseGeoChallengeConfig({ ...config, gameId: "languages", variant: "", mode: "type", opponentName: "Explorer" })).toBeNull();
+    expect(parseGeoChallengeConfig({ ...config, gameId: "flag-pie", variant: "", mode: "type", opponentName: "Explorer" })).toBeNull();
     expect(parseGeoChallengeConfig({ ...config, gameId: "adastra", variant: "", timed: true, opponentName: "Explorer" })).toBeNull();
     expect(parseGeoChallengeConfig({ ...config, gameId: "adastra", variant: "", mode: "type", opponentName: "Explorer" })).not.toBeNull();
   });

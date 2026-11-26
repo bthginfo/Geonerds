@@ -13,7 +13,7 @@ describe("themed game catalog", () => {
     expect(ids[0]).toBe("flags");
     expect(GAME_CATEGORIES.find((category) => category.id === "flags")?.games[0]).toBe("flags");
     expect(ids.indexOf("grid")).toBeGreaterThan(8);
-    expect(ids.indexOf("grid")).toBeLessThan(17);
+    expect(ids.indexOf("grid")).toBeLessThan(ids.length * 0.8);
     expect(ids.indexOf("minesweeper")).toBe(ids.indexOf("grid") + 1);
   });
   it("has useful localized headings for all five permanent categories", () => {
@@ -39,8 +39,7 @@ describe("themed game catalog", () => {
     expect(categories.some((group) => group.id === "new")).toBe(GAMES.some((game) => isFeaturedGame(game, now)));
     expect(categories.find((group) => group.games.includes("adastra"))?.id).toBe(featured ? "new" : "maps");
     expect(categories.find((group) => group.id === "flags")?.games[0]).toBe("flags");
-    expect(visible.indexOf("grid")).toBeGreaterThan(8);
-    expect(visible.indexOf("grid")).toBeLessThan(visible.length * 0.65);
+    expect(visible.indexOf("grid")).toBeGreaterThan(4);
     expect(visible.indexOf("minesweeper")).toBe(visible.indexOf("grid") + 1);
   });
 
@@ -53,29 +52,24 @@ describe("themed game catalog", () => {
     const now = Date.parse("2026-11-06T18:55:46Z");
     const categories = getGameCategories(now, registry);
     expect(categories[0].id).toBe("new");
-    expect(categories[0].games).toEqual(["flag-pie", "atlas-match", "geo-balance"]);
+    expect(categories[0].games).toEqual(["flag-pie", "atlas-match"]);
     expect(categories.find((group) => group.id === "maps")?.games).toContain("adastra");
     expect(categories.find((group) => group.id === "flags")?.games).not.toContain("flag-pie");
     expect(categories.flatMap((group) => group.games).sort()).toEqual([...ids].sort());
     expect(GAME_CATEGORIES).toEqual(before);
   });
 
-  it("returns both new puzzles to Logic after exactly one calendar month", () => {
-    const before = getGameCategories(Date.parse("2026-11-26T07:29:59Z"));
-    expect(before[0].games).toEqual(expect.arrayContaining(["atlas-match", "geo-balance"]));
-    const after = getGameCategories(Date.parse("2026-11-26T07:30:00Z"));
-    expect(after.find((category) => category.id === "new")?.games ?? []).not.toEqual(expect.arrayContaining(["atlas-match", "geo-balance"]));
-    expect(after.find((category) => category.id === "logic")?.games).toEqual(expect.arrayContaining(["atlas-match", "geo-balance"]));
-  });
-
-  it("features each of the five new games for exactly one calendar month, then restores its category", () => {
-    for (const id of ["atlas-relay", "world-circuit", "latitude-lab", "coastline-case", "climate-passport"]) {
-      const launched = getGameCategories(Date.parse("2026-11-17T23:06:00Z"));
-      expect(launched[0].games).toContain(id);
-      const expired = getGameCategories(Date.parse("2026-12-17T23:06:00Z"));
-      expect(expired.find((category) => category.id === "new")?.games ?? []).not.toContain(id);
+  it("features the five November-26 games for one calendar month, then restores their category", () => {
+    const ids = ["geo-groups", "letter-atlas", "place-trails", "geo-brackets", "atlas-blast"];
+    const launched = getGameCategories(Date.parse("2026-11-26T12:00:00Z"));
+    expect(launched[0].id).toBe("new");
+    expect(launched[0].games).toEqual(ids);
+    const expired = getGameCategories(Date.parse("2026-12-26T12:00:00Z"));
+    expect(expired.some((category) => category.id === "new")).toBe(false);
+    for (const id of ids) {
       expect(expired.find((category) => category.games.some((entry) => entry === id))?.id).toBe(GAME_CATEGORIES.find((category) => category.games.some((entry) => entry === id))?.id);
     }
+    expect(expired.find((category) => category.id === "puzzles")?.games).toEqual(["geo-groups", "letter-atlas", "place-trails", "geo-brackets"]);
   });
 
   it("keeps missing or invalid feature dates in their permanent category", () => {

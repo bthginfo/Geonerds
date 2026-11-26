@@ -249,6 +249,17 @@ async function ensureSchema(sql: ReturnType<typeof postgres>) {
       reset_at timestamptz NOT NULL
     )
   `;
+  // Anonymous, aggregated per-day play counters (no user, device or IP columns).
+  await sql`
+    CREATE TABLE IF NOT EXISTS gn_play_stats (
+      day date NOT NULL,
+      game_id text NOT NULL,
+      starts integer NOT NULL DEFAULT 0 CHECK (starts >= 0),
+      finishes integer NOT NULL DEFAULT 0 CHECK (finishes >= 0),
+      PRIMARY KEY (day, game_id)
+    )
+  `;
+  await sql`CREATE INDEX IF NOT EXISTS gn_play_stats_game_day_idx ON gn_play_stats (game_id, day DESC)`;
   await ensureCommunityRewards(sql);
 }
 

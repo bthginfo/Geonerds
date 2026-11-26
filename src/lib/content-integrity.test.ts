@@ -5,7 +5,7 @@ import colorFlags from "@/data/color-flags.json";
 import { COUNTRIES, getCountryByCca3 } from "@/data/countries";
 import { CITIES } from "@/games/capitals/cities";
 import { GN_BUILDER_COUNT } from "@/games/geonerd/questions";
-import { PEAKS } from "@/games/mountains/peaks";
+import { PEAKS } from "@/games/pin/peaks";
 import { ITEMS } from "@/games/origin/items";
 import { PLACES } from "@/games/pin/places";
 import { FACT_QUESTIONS } from "./fact-questions";

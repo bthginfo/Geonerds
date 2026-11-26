@@ -76,6 +76,13 @@ export default function PrivacyPage() {
                 Auslieferung und Sicherheit. Rechtsgrundlage ist Art. 6 Abs. 1 lit. f DSGVO
                 (berechtigtes Interesse an einem sicheren Betrieb).
               </p>
+              <p>
+                Wenn ein Spiel startet oder endet, erhöhen wir einen anonymen Tageszähler pro Spiel.
+                Gespeichert werden nur Datum, Spiel und die beiden Zahlen, ohne Konto, Gerät, Cookie
+                oder IP-Adresse. Zum Schutz vor Missbrauch wird die IP-Adresse kurzzeitig als
+                gekürzter Hashwert für eine Anfragebegrenzung verwendet. So sehen wir, welche Spiele
+                gespielt werden (Art. 6 Abs. 1 lit. f DSGVO).
+              </p>
             </section>
             <section>
               <h2>6. Schriftarten</h2>
@@ -149,6 +156,12 @@ export default function PrivacyPage() {
                 technically necessary access data (e.g. IP address, time, requested page) for delivery
                 and security. The legal basis is Art. 6(1)(f) GDPR (legitimate interest in secure
                 operation).
+              </p>
+              <p>
+                When a game starts or ends, we increase an anonymous daily counter for that game. Only
+                the date, the game and the two numbers are stored, with no account, device, cookie or
+                IP address. To prevent abuse, the IP address is briefly used as a shortened hash for
+                rate limiting. This tells us which games are being played (Art. 6(1)(f) GDPR).
               </p>
             </section>
             <section>

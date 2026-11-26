@@ -117,6 +117,23 @@ export function QuizGame({
     }
   }, [answered, reducedMotion]);
 
+  // Desktop shortcut: number keys 1–9 pick the matching choice.
+  useEffect(() => {
+    if (mode !== "choice" || answered || !round) return;
+    const onKey = (event: KeyboardEvent) => {
+      if (event.metaKey || event.ctrlKey || event.altKey || event.repeat) return;
+      const target = event.target as HTMLElement | null;
+      if (target && (target.isContentEditable || ["INPUT", "TEXTAREA", "SELECT"].includes(target.tagName))) return;
+      const index = Number(event.key) - 1;
+      const option = Number.isInteger(index) && index >= 0 ? round.options[index] : undefined;
+      if (!option) return;
+      event.preventDefault();
+      pickOption(option.id);
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  });
+
   function doFinish() {
     if (finishedRef.current) return;
     finishedRef.current = true;
@@ -294,7 +311,7 @@ export function QuizGame({
 
             {mode === "choice" ? (
               <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2">
-                {round.options.map((o) => {
+                {round.options.map((o, optionIndex) => {
                   const isCorrect = o.id === round.correctId;
                   const isSelected = o.id === selectedId;
                   return (
@@ -303,13 +320,14 @@ export function QuizGame({
                       disabled={answered}
                       onClick={() => pickOption(o.id)}
                       className={cn(
-                        "flex min-h-14 min-w-0 items-center justify-center gap-2 break-words rounded-xl border px-4 py-3 text-center text-sm font-semibold transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary active:scale-[0.98]",
+                        "relative flex min-h-14 min-w-0 items-center justify-center gap-2 break-words rounded-xl border px-4 py-3 text-center text-sm font-semibold transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary active:scale-[0.98]",
                         !answered && "border-border bg-card hover:border-primary/50 hover:bg-muted/50",
                         answered && isCorrect && "border-success bg-success/15 text-success",
                         answered && isSelected && !isCorrect && "border-danger bg-danger/15 text-danger",
                         answered && !isCorrect && !isSelected && "border-border bg-card opacity-50"
                       )}
                     >
+                      {!answered && optionIndex < 9 && <kbd aria-hidden="true" className="absolute left-3 top-1/2 hidden h-6 w-6 -translate-y-1/2 items-center justify-center rounded-md bg-muted font-sans text-[11px] font-semibold text-muted-foreground [@media(pointer:fine)]:inline-flex">{optionIndex + 1}</kbd>}
                       <span className="min-w-0 break-words">{o.label}</span>
                       {answered && isCorrect && <Check className="h-4 w-4 shrink-0" aria-label={t("common.correct")} />}
                       {answered && isSelected && !isCorrect && <X className="h-4 w-4 shrink-0" aria-label={t("common.wrong")} />}

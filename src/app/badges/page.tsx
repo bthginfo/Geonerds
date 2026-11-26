@@ -6,7 +6,7 @@ import { ArrowLeft, Award, Check, Lock } from "lucide-react";
 import { useT } from "@/i18n/I18nProvider";
 import { useAllRuns } from "@/hooks/use-scores";
 import { useDex } from "@/store/dex";
-import { BADGES, computeStats, badgeName, badgeDesc, badgeCategory, badgeTier, badgeProgress, type BadgeCategory } from "@/lib/badges";
+import { visibleBadges, computeStats, badgeName, badgeDesc, badgeCategory, badgeTier, badgeProgress, type BadgeCategory } from "@/lib/badges";
 import { cn } from "@/lib/utils";
 import { useProgression } from "@/store/progression";
 import { useCommunityRewards } from "@/hooks/use-community-rewards";
@@ -21,9 +21,10 @@ export default function BadgesPage() {
   const L = (en: string, de: string) => locale === "de" ? de : en;
 
   const stats = useMemo(() => computeStats(runs ?? [], dexHits, progression, community.badgeIds), [runs, dexHits, progression, community.badgeIds]);
-  const earnedCount = useMemo(() => BADGES.filter((b) => b.earned(stats)).length, [stats]);
-  const shown = useMemo(() => BADGES.filter((b) => category === "all" || badgeCategory(b) === category).sort((a, b) => Number(b.earned(stats)) - Number(a.earned(stats)) || badgeName(a, locale).localeCompare(badgeName(b, locale))), [category, stats, locale]);
-  const closest = useMemo(() => BADGES.map((badge) => ({ badge, progress: badgeProgress(badge, stats) })).filter((item) => !item.badge.earned(stats) && item.progress && item.progress.target > 0).sort((a,b) => (b.progress!.current / b.progress!.target) - (a.progress!.current / a.progress!.target)).slice(0, 3), [stats]);
+  const badges = useMemo(() => visibleBadges(stats), [stats]);
+  const earnedCount = useMemo(() => badges.filter((b) => b.earned(stats)).length, [badges, stats]);
+  const shown = useMemo(() => badges.filter((b) => category === "all" || badgeCategory(b) === category).sort((a, b) => Number(b.earned(stats)) - Number(a.earned(stats)) || badgeName(a, locale).localeCompare(badgeName(b, locale))), [badges, category, stats, locale]);
+  const closest = useMemo(() => badges.map((badge) => ({ badge, progress: badgeProgress(badge, stats) })).filter((item) => !item.badge.earned(stats) && item.progress && item.progress.target > 0).sort((a,b) => (b.progress!.current / b.progress!.target) - (a.progress!.current / a.progress!.target)).slice(0, 3), [badges, stats]);
 
   return (
     <div className="mx-auto w-full min-w-0 max-w-3xl px-4 py-6 pb-28 sm:py-8">
@@ -37,13 +38,13 @@ export default function BadgesPage() {
       <div className="mb-5">
         <div className="mb-1.5 flex items-center justify-between text-sm font-medium">
           <span className="text-muted-foreground">
-            {t("badges.progress", { earned: earnedCount, total: BADGES.length })}
+            {t("badges.progress", { earned: earnedCount, total: badges.length })}
           </span>
         </div>
-        <div role="progressbar" aria-label={t("badges.title")} aria-valuemin={0} aria-valuemax={BADGES.length} aria-valuenow={earnedCount} className="h-2.5 overflow-hidden rounded-full bg-muted">
+        <div role="progressbar" aria-label={t("badges.title")} aria-valuemin={0} aria-valuemax={badges.length} aria-valuenow={earnedCount} className="h-2.5 overflow-hidden rounded-full bg-muted">
           <div
             className="h-full rounded-full bg-primary transition-[width] motion-reduce:transition-none"
-            style={{ width: `${(earnedCount / BADGES.length) * 100}%` }}
+            style={{ width: `${(earnedCount / badges.length) * 100}%` }}
           />
         </div>
       </div>

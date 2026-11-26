@@ -217,10 +217,10 @@ export function NeighborsGame({ difficulty, mode, roundCount, timed, scope, prac
       <div className="mx-auto flex w-full max-w-md flex-1 flex-col px-4 py-5">
         <div className="text-center text-lg font-bold">{t("neighbors.promptClues")}</div>
         <div className="mt-1 flex items-center justify-center gap-2 text-center text-xs text-muted-foreground">
-          <span>{t("trivia.clues", { n: Math.min(revealed, maxClues), max: maxClues })}</span>
+          <span>{t("neighbors.clues", { n: Math.min(revealed, maxClues), max: maxClues })}</span>
           {!answered && (
             <span className="rounded-full bg-primary/10 px-2 py-0.5 font-semibold text-primary">
-              {t("trivia.worth", { pts: scoreForTrivia(revealed, difficulty) })}
+              {t("neighbors.worth", { pts: scoreForTrivia(revealed, difficulty) })}
             </span>
           )}
         </div>
@@ -247,7 +247,7 @@ export function NeighborsGame({ difficulty, mode, roundCount, timed, scope, prac
           {!answered && revealed < maxClues && (
             <Button variant="outline" className="w-full gap-2" onClick={() => setRevealed((r) => r + 1)}>
               <Plus className="h-4 w-4" />
-              {t("trivia.reveal")}
+              {t("neighbors.reveal")}
             </Button>
           )}
 

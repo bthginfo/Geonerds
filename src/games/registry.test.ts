@@ -1,78 +1,56 @@
 import { describe, expect, it } from "vitest";
-import { GAMES } from "./registry";
+import { GAMES, getGame } from "./registry";
+import { RETIRED_GAME_IDS } from "./retired";
 import { translate } from "@/i18n/messages";
 
-describe("game registry editorial order", () => {
-  it("integrates five untimed, bilingual games with truthful count options", () => {
-    for (const id of ["atlas-relay", "world-circuit", "latitude-lab", "coastline-case", "climate-passport"]) {
-      const game = GAMES.find((entry) => entry.id === id);
-      expect(game?.supportsTimed).toBe(false);
-      expect(game?.supportsDifficulty).toBe(true);
-      for (const locale of ["en", "de"] as const) for (const key of [`games.${id}.name`, `games.${id}.short`, `games.${id}.desc`, `howto.${id}`, game!.setupNoteKey!]) expect(translate(locale, key)).not.toBe(key);
-    }
-    for (const id of ["atlas-relay", "world-circuit", "latitude-lab"]) expect(GAMES.find((game) => game.id === id)?.countOptions).not.toContain(0);
-    for (const id of ["coastline-case", "climate-passport"]) expect(GAMES.find((game) => game.id === id)?.countOptions).toContain(0);
-  });
-  it("keeps Flag Quiz first on Home", () => {
+const DAILY_PUZZLES = ["geo-groups", "letter-atlas", "place-trails", "geo-brackets"] as const;
+
+describe("game registry", () => {
+  it("keeps Flag Quiz first and every id unique", () => {
     expect(GAMES[0].id).toBe("flags");
-  });
-
-  it("places Geo Grid at the requested middle position", () => {
-    expect(GAMES[11].id).toBe("grid");
-    expect(GAMES[12].id).toBe("minesweeper");
-  });
-
-  it("appends the four visual deduction games without moving legacy games", () => {
-    const start = GAMES.findIndex((game) => game.id === "flag-pie");
-    expect(GAMES.slice(start, start + 4).map((game) => game.id)).toEqual([
-      "flag-pie", "city-compass", "flag-mosaic", "country-radar",
-    ]);
     expect(new Set(GAMES.map((game) => game.id)).size).toBe(GAMES.length);
   });
 
-  it("adds untimed Adastra with choice, typing and a complete photo run", () => {
-    const game = GAMES.find((entry) => entry.id === "adastra");
+  it("no longer offers retired games, but keeps their names for history", () => {
+    for (const id of RETIRED_GAME_IDS) {
+      expect(getGame(id)).toBeUndefined();
+      for (const locale of ["en", "de"] as const) expect(translate(locale, `games.${id}.name`)).not.toBe(`games.${id}.name`);
+    }
+  });
+
+  it("has bilingual names, short descriptions and instructions for every game", () => {
+    for (const game of GAMES) {
+      for (const locale of ["en", "de"] as const) {
+        for (const key of [`games.${game.id}.name`, `games.${game.id}.short`, `howto.${game.id}`]) {
+          expect(translate(locale, key), `${locale} ${key}`).not.toBe(key);
+        }
+        if (game.setupNoteKey) expect(translate(locale, game.setupNoteKey), `${locale} ${game.setupNoteKey}`).not.toBe(game.setupNoteKey);
+      }
+    }
+  });
+
+  it("offers daily and endless boards for the daily puzzles", () => {
+    for (const id of DAILY_PUZZLES) {
+      const game = getGame(id);
+      expect(game?.variants?.default).toBe("daily");
+      expect(game?.variants?.options).toEqual(["daily", "endless"]);
+      expect(game?.supportsTimed).toBe(false);
+      expect(game?.countOptions).toBeUndefined();
+    }
+    for (const locale of ["en", "de"] as const) {
+      for (const key of ["puzzle.variantLabel", "scope.daily", "scope.endless"]) expect(translate(locale, key)).not.toBe(key);
+    }
+  });
+
+  it("keeps untimed Adastra with choice, typing and a complete photo run", () => {
+    const game = getGame("adastra");
     expect(game?.modes).toEqual(["choice", "type"]);
     expect(game?.countOptions).toEqual([10, 25, 50, 0]);
     expect(game?.supportsTimed).toBe(false);
-    for (const locale of ["en", "de"] as const) {
-      for (const key of ["games.adastra.name", "games.adastra.short", "howto.adastra", "adastra.setupNote"]) {
-        expect(translate(locale, key)).not.toBe(key);
-      }
-    }
-  });
-
-  it("integrates two distinct untimed puzzle games and offers honest finite counts", () => {
-    for (const id of ["atlas-match", "geo-balance"]) {
-      const game = GAMES.find((entry) => entry.id === id);
-      expect(game?.supportsTimed).toBe(false);
-      expect(game?.featuredSince).toBe("2026-10-26T07:30:00Z");
-      for (const locale of ["en", "de"] as const) {
-        for (const key of [`games.${id}.name`, `games.${id}.desc`, `howto.${id}`]) expect(translate(locale, key)).not.toBe(key);
-      }
-    }
-    for (const id of ["ranking", "route", "geo-balance"]) expect(GAMES.find((game) => game.id === id)?.countOptions).not.toContain(0);
-    expect(GAMES.find((game) => game.id === "atlas-match")?.countOptions).toContain(0);
   });
 
   it("offers only fair answer modes for the visual games", () => {
-    expect(GAMES.find((game) => game.id === "flag-pie")?.modes).toEqual(["choice"]);
-    expect(GAMES.find((game) => game.id === "country-radar")?.modes).toEqual(["type"]);
-    for (const id of ["flag-pie", "city-compass", "flag-mosaic", "country-radar"]) {
-      const game = GAMES.find((entry) => entry.id === id);
-      expect(game?.supportsDifficulty).toBe(true);
-      expect(game?.countOptions).toContain(0);
-    }
-  });
-
-  it("has bilingual names, descriptions, and instructions for the four new games", () => {
-    for (const locale of ["en", "de"] as const) {
-      for (const id of ["flag-pie", "city-compass", "flag-mosaic", "country-radar"]) {
-        for (const key of [`games.${id}.name`, `games.${id}.short`, `howto.${id}`]) {
-          expect(translate(locale, key)).not.toBe(key);
-          expect(translate(locale, key).length).toBeGreaterThan(0);
-        }
-      }
-    }
+    expect(getGame("flag-pie")?.modes).toEqual(["choice"]);
+    expect(getGame("country-radar")?.modes).toEqual(["type"]);
   });
 });

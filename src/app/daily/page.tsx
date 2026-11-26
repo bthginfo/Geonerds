@@ -1,6 +1,8 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { trackPlay } from "@/lib/play-stats-client";
+import { DailyPuzzleList } from "@/components/home/daily-puzzle-list";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
@@ -61,6 +63,7 @@ export default function DailyPage() {
         timed={false}
         onExit={() => router.push("/")}
         onFinish={(r) => {
+          trackPlay("daily", "finish");
           const marks = r.marks ?? [];
           record({ date: today, score: r.score, correct: r.correct, total: r.total, marks });
           useDex.getState().record("daily", r.countryHits ?? []);
@@ -104,12 +107,15 @@ export default function DailyPage() {
                 {t("daily.streak", { n: streak })}
               </div>
             )}
-            <Button size="lg" className="mt-6 w-full gap-2" onClick={() => setPlaying(true)}>
+            <Button size="lg" className="mt-6 w-full gap-2" onClick={() => { trackPlay("daily", "start"); setPlaying(true); }}>
               <Play className="h-5 w-5" />
               {t("daily.play")}
             </Button>
           </motion.div>
         )}
+        <div className="mt-8">
+          <DailyPuzzleList title={locale === "de" ? "Weitere Tagesrätsel" : "More daily puzzles"} />
+        </div>
       </div>
     </div>
   );

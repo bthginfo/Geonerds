@@ -152,6 +152,23 @@ function AnswerPanelRound({ mode, options, correctId, accepted, answered, onAnsw
     answer(result.status === "correct");
   }
 
+  useEffect(() => {
+    if (mode !== "choice" || answered) return;
+    const onKey = (event: KeyboardEvent) => {
+      if (event.metaKey || event.ctrlKey || event.altKey || event.repeat || answerLockRef.current) return;
+      const target = event.target as HTMLElement | null;
+      if (target && (target.isContentEditable || ["INPUT", "TEXTAREA", "SELECT"].includes(target.tagName))) return;
+      const index = Number(event.key) - 1;
+      const option = Number.isInteger(index) && index >= 0 ? options[index] : undefined;
+      if (!option) return;
+      event.preventDefault();
+      setSelected(option.id);
+      answer(option.id === correctId);
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  });
+
   if (mode === "choice") return (
     <div className="grid grid-cols-1 gap-2.5 min-[420px]:grid-cols-2" aria-label={t("visualgames.answers")}>
       {options.map((option, index) => (
@@ -167,7 +184,7 @@ function AnswerPanelRound({ mode, options, correctId, accepted, answered, onAnsw
             answered && option.id !== correctId && selected !== option.id && "border-border bg-card text-muted-foreground",
           )}
         >
-          <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-muted text-xs text-muted-foreground">{String.fromCharCode(65 + index)}</span>
+          <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-muted text-xs text-muted-foreground">{index + 1}</span>
           <span className="min-w-0 flex-1 break-words">{option.label}</span>
           {answered && option.id === correctId && <Check className="h-4 w-4 shrink-0" aria-hidden />}
           {answered && selected === option.id && option.id !== correctId && <X className="h-4 w-4 shrink-0" aria-hidden />}
